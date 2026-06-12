@@ -46,6 +46,24 @@ pip install pandas numpy geopandas matplotlib seaborn
 
 You'll know the sandbox is active when your prompt shows `(.venv)` at the start.
 
+> **Windows blocks the `Activate.ps1` line?** If you see *"...Activate.ps1 cannot
+> be loaded because running scripts is disabled on this system"*, that's a
+> default Windows safety setting, not a project problem. Fix it **once**, for
+> your account only (no admin needed):
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+>
+> Answer `Y` if prompted, then re-run the `Activate.ps1` line. (`RemoteSigned`
+> lets scripts on your own machine run while still blocking unsigned ones
+> downloaded from the internet — the standard developer setting.)
+>
+> **Prefer to change nothing?** Skip activation and call the sandbox's Python
+> directly instead: use `.\.venv\Scripts\python.exe` in place of `python` for
+> the install, and `..\.venv\Scripts\python.exe` once you're inside
+> `lvtshift-fr/`.
+
 ---
 
 ## 3. See it work in 2 minutes (no data needed)
@@ -112,6 +130,9 @@ ingest for it.
 
 ## 7. If something breaks
 
+- `running scripts is disabled on this system` (on the `Activate.ps1` line) →
+  run `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
+  once, then retry. See the callout in section 2.
 - `'python' is not recognized` → Python isn't on PATH; reinstall and tick the
   PATH box.
 - `ModuleNotFoundError` → the sandbox isn't active (re-run
