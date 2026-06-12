@@ -92,9 +92,18 @@ python test_synthetic.py        # bout-en-bout synthétique (sans réseau)
 
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
   ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
-- Le proxy VLC déforme la distribution parcellaire de la taxe actuelle ;
-  les agrégats (catégorie, quintile) sont robustes, les factures
-  individuelles ne le sont pas — ne jamais publier de montants par parcelle.
+- Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
+  conception, non une mesure** : toute publication doit présenter la
+  distribution **non bornée** des parts terrain à côté des résultats bornés,
+  et signaler que les cœurs denses peuvent légitimement dépasser 85 %.
+- Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
+  ignore la catégorie cadastrale et les coefficients de pondération de
+  surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
+  distribution parcellaire de la taxe actuelle — **ne jamais publier de
+  montants par parcelle**. Même agrégés (catégorie, quintile), les montants
+  de la taxe *actuelle* restent indicatifs et doivent être recoupés avec les
+  données REI par catégorie : la robustesse des agrégats vaut d'abord pour le
+  volet LVT, pas pour la base de départ.
 - DVF exclut Alsace-Moselle et Mayotte ; le DPE n'est pas représentatif du
   parc (utilisé en covariable uniquement) ; la BDNB hérite des défauts
   d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
