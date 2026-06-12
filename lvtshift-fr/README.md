@@ -88,6 +88,13 @@ python test_synthetic.py        # bout-en-bout synthétique (sans réseau)
 # puis : compléter ingest.py (BDNB, REI, Filosofi) et appeler run_pipeline.run()
 ```
 
+`run()` écrit l'export standard `output/<commune>.csv` **et**, si matplotlib
+est installé, les graphiques PNG sous `output/reports/<commune>/` : impact par
+catégorie de bien, part de parcelles à ±10 %, quintile de revenu (Filosofi) et
+distribution des variations. Les graphiques d'origine ethnique de l'export
+américain sont automatiquement ignorés (colonnes nulles par principe). Pour un
+export CSV seul : `run(..., make_report=False)`.
+
 ## Limites connues (à reproduire dans toute publication)
 
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
