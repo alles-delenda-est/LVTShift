@@ -81,12 +81,19 @@ administrative exacte, à coût marginal nul pour la structure partenaire.
 
 ## Lancer
 
+Le code vit *dans* ce dépôt (fork de LVTShift) ; le paquet `lvt` est à la
+racine et `lvtshift-fr/` à côté. On clone donc le fork, pas l'amont.
+
 ```bash
-git clone https://github.com/gregmiller00/LVTShift.git   # à côté de ce dossier
-pip install pandas numpy geopandas matplotlib
+git clone https://github.com/alles-delenda-est/LVTShift.git
+cd LVTShift
+pip install pandas numpy geopandas matplotlib seaborn
+cd lvtshift-fr
 python test_synthetic.py        # bout-en-bout synthétique (sans réseau)
 # puis : compléter ingest.py (BDNB, REI, Filosofi) et appeler run_pipeline.run()
 ```
+
+Guide pas-à-pas pour non-codeur (Windows/PowerShell) : voir **`GUIDE.md`**.
 
 `run()` écrit l'export standard `output/<commune>.csv` **et**, si matplotlib
 est installé, les graphiques PNG sous `output/reports/<commune>/` : impact par
