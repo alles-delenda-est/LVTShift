@@ -36,12 +36,49 @@ CATEGORY_MAP = {
     "dependance": "Other",
 }
 
+# Residential standard-categories for the France equity charts. The upstream
+# report's default "residential" set is US-specific, so we pass the French
+# mapping explicitly. (The minority/black quintile charts auto-skip: those
+# columns are null by design — France produces no ethnic statistics.)
+FR_RESIDENTIAL_CATEGORIES = [
+    "Single Family Residential",       # maison
+    "Condominium",                     # appartement
+    "Large Multi-Family (5+ units)",   # immeuble_collectif
+]
+
+
+def _write_report(out: pd.DataFrame, out_dir: str) -> None:
+    """Render the France-relevant PNG charts from the standard export.
+
+    Imported lazily so a CSV-only run never requires matplotlib. The upstream
+    ``create_city_report`` saves PNGs under ``{out_dir}/reports/{commune}/`` and
+    auto-skips the minority/black quintile charts when those columns are null
+    (always, for France). What remains: category impact, ±10 % share,
+    income-quintile (Filosofi), and the tax-change distribution.
+    """
+    try:
+        from lvt.viz import create_city_report
+    except ImportError as exc:  # matplotlib not installed
+        print(f"[{CFG.name}] charts skipped (matplotlib not installed): {exc}")
+        return
+    report = create_city_report(
+        out,
+        city=CFG.name.lower(),
+        output_dir=f"{out_dir}/reports",
+        show=False,
+        census_categories=FR_RESIDENTIAL_CATEGORIES,
+    )
+    print(f"[{CFG.name}] {len(report['charts_saved'])} charts -> "
+          f"{out_dir}/reports/{CFG.name.lower()}/")
+
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output") -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
-       buildings / dvf / iris_income: see estimate.py docstrings."""
+       buildings / dvf / iris_income: see estimate.py docstrings.
+       make_report: also write the PNG charts (needs matplotlib); set False
+       for a CSV-only run."""
 
     imp = estimate.improvement_value(buildings, CFG)
     p = parcels.merge(imp, on="idpar", how="left")
@@ -86,6 +123,9 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     )
     print(f"[{CFG.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
+
+    if make_report:
+        _write_report(out, out_dir)
     return out
 
 
