@@ -50,18 +50,19 @@ FR_RESIDENTIAL_CATEGORIES = [
 def _write_report(out: pd.DataFrame, out_dir: str) -> None:
     """Render the France-relevant PNG charts from the standard export.
 
-    Imported lazily so a CSV-only run never requires matplotlib. The upstream
-    ``create_city_report`` saves PNGs under ``{out_dir}/reports/{commune}/`` and
-    auto-skips the minority/black quintile charts when those columns are null
+    Imported lazily so a CSV-only run never requires matplotlib. Charts are
+    rendered in euros via charts_fr (which wraps the upstream report and swaps
+    the currency); PNGs land under ``{out_dir}/reports/{commune}/``. The
+    minority/black quintile charts auto-skip when those columns are null
     (always, for France). What remains: category impact, ±10 % share,
     income-quintile (Filosofi), and the tax-change distribution.
     """
     try:
-        from lvt.viz import create_city_report
+        from charts_fr import create_city_report_fr
     except ImportError as exc:  # matplotlib not installed
         print(f"[{CFG.name}] charts skipped (matplotlib not installed): {exc}")
         return
-    report = create_city_report(
+    report = create_city_report_fr(
         out,
         city=CFG.name.lower(),
         output_dir=f"{out_dir}/reports",
