@@ -38,8 +38,8 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 |---|---|---|
 | Transactions | DVF géolocalisé (Etalab) | modèle hédonique de valeur de marché |
 | Parcelles | Cadastre Etalab | géométries, surfaces |
-| Bâtiments | **BDNB** (CSTB) : BD TOPO + DPE + attributs appariés Fichiers fonciers | emprise, niveaux, hauteur, année, usage |
-| Recettes TFPB | REI (DGFiP) | cible exacte de neutralité budgétaire |
+| Bâtiments | **BD TOPO V3** (IGN, WFS Géoplateforme) | emprise, niveaux, hauteur, logements, usage, flag d'appariement Fichiers fonciers |
+| Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
 | Ancrages terrain | ventes de terrains à bâtir (DVF), EPTB (agrégats), comptes de patrimoine INSEE (part terrain ~45-50 %) | calibration / bornes |
 
@@ -89,9 +89,20 @@ git clone https://github.com/alles-delenda-est/LVTShift.git
 cd LVTShift
 pip install pandas numpy geopandas matplotlib seaborn
 cd lvtshift-fr
-python test_synthetic.py        # bout-en-bout synthétique (sans réseau)
-# puis : compléter ingest.py (BDNB, REI, Filosofi) et appeler run_pipeline.run()
+python test_synthetic.py            # bout-en-bout synthétique (sans réseau)
+python run_commune.py montreuil     # commune réelle, données ouvertes en direct
 ```
+
+`run_commune.py` enchaîne l'ingest réel (cadastre Etalab, DVF, bâtiments
+BD TOPO via WFS IGN, cible REI via OFGL) puis appelle le solveur LVTShift.
+Communes pré-configurées : `villeurbanne` (cœur lyonnais), `roubaix`,
+`cahors`, `figeac` (Lot rural), `montreuil`, `grenoble`, `annemasse`.
+`--layers Commune` pour ne neutraliser que la part communale ;
+`--no-report` pour un export CSV seul.
+
+> Sous Windows, exporter `PYTHONUTF8=1` avant de lancer (les libellés de
+> l'export amont contiennent des caractères Unicode que la console cp1252
+> refuse). Python 3.15+ le fera par défaut.
 
 Guide pas-à-pas pour non-codeur (Windows/PowerShell) : voir **`GUIDE.md`**.
 
@@ -104,6 +115,19 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
+- **Valorisation du foncier non bâti (maillon porteur actuel).** Les parcelles
+  sans bâtiment sont valorisées à la densité foncière bâtie médiane de la
+  commune × surface — ce qui surévalue fortement les grandes parcelles
+  rurales/agricoles (cf. Cahors, 57 % de parcelles de campagne). Le résultat
+  « le non-bâti paie davantage » repose entièrement sur ce point. Correctif
+  prévu : ancrage aux ventes de terrains à bâtir (DVF, déjà collectées) et
+  distinction constructible / agricole. **À ne montrer que sur communes denses**
+  tant que ce n'est pas traité.
+- **Appariement bâtiment ↔ parcelle.** Le rattachement par centroïde manque les
+  bâtiments à cheval sur plusieurs parcelles ou en limite : ~21 % des parcelles
+  de Montreuil (pourtant entièrement bâtie) ressortent « non bâties », gonflant
+  le non-bâti et sous-estimant le bâti. Correctif : jointure pondérée par
+  surface d'intersection.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
   ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de

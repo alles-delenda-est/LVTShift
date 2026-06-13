@@ -48,16 +48,18 @@ DATA_SOURCES = {
         "geojson/communes/{dep}/{insee}/cadastre-{insee}-parcelles.json.gz"
     ),
 
-    # BDNB (CSTB, open data): building-level database merging BD TOPO
-    # geometry+height, DPE, and fichiers-fonciers-matched attributes.
-    # Download by departement from data.gouv.fr ("bdnb" dataset) or the
-    # CSTB API. THE key open source for improvement values.
-    "bdnb_info": "https://www.data.gouv.fr/fr/datasets/base-de-donnees-nationale-des-batiments/",
-
-    # Fallback if BDNB join is poor: BD TOPO batiment via IGN Géoplateforme WFS
-    # (layer BDTOPO_V3:batiment, bbox query, returns HAUTEUR + NB_ETAGES
-    # + fichiers-fonciers-matched usage fields).
+    # Buildings: BD TOPO V3 'batiment' via IGN Géoplateforme WFS (chosen over
+    # the multi-GB BDNB departmental packages). The layer carries everything we
+    # need per-commune, no bulk download: footprint geometry, hauteur,
+    # nombre_d_etages, nombre_de_logements, usage_1, date_d_apparition, plus
+    # appariement_fichiers_fonciers (the FF-match quality flag — same content
+    # BDNB exposes, since both inherit the CEREMA MAJIC match). Queried by
+    # commune bbox in EPSG:2154, paginated (5000/req). See ingest.fetch_buildings.
     "bdtopo_wfs": "https://data.geopf.fr/wfs/ows",
+
+    # BDNB kept only as documentation/fallback if a richer building match is
+    # ever needed (departmental download from data.gouv.fr 'bdnb').
+    "bdnb_info": "https://www.data.gouv.fr/fr/datasets/base-de-donnees-nationale-des-batiments/",
 
     # DPE logements (ADEME): queryable API, filter by code INSEE.
     # Covariates only (surface, periode construction) - NOT representative
@@ -67,9 +69,12 @@ DATA_SOURCES = {
         "dpe-v2-logements-existants/lines"
     ),
 
-    # REI (DGFiP): communal tax bases, rates and produits, all taxes.
-    # Gives the EXACT revenue-neutrality target.
-    "rei": "https://www.data.gouv.fr/fr/datasets/r/{resource_id}",  # resolve on data.gouv.fr 'REI'
+    # REI (DGFiP), territorialised at commune level by OFGL on an Opendatasoft
+    # API. Long format: one row per commune × dispositif_fiscal × variable,
+    # keyed on `idcom` (INSEE code). Foncier bâti is dispositif_fiscal="FB";
+    # the revenue target is the "MONTANT RÉEL" line per beneficiary layer
+    # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
+    "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
     # Filosofi (INSEE): IRIS-level income (median, deciles, poverty).
     "filosofi_info": "https://www.insee.fr/fr/statistiques/7233950",  # check latest millesime
@@ -78,5 +83,41 @@ DATA_SOURCES = {
     "iris_contours": "https://www.data.gouv.fr/fr/datasets/contours-iris/",
 }
 
-GRENOBLE = CommuneConfig("38185", "Grenoble", "38")
-ANNEMASSE = CommuneConfig("74012", "Annemasse", "74")
+# ------------------------------------------------------------------ #
+# Communes
+# ------------------------------------------------------------------ #
+# construction_cost_eur_m2 is the turnkey replacement cost (gros + second
+# oeuvre, hors foncier, €/m² of floor area). These are *pilot* values on a
+# coarse regional gradient — Île-de-France > big metros > rural — anchored on
+# FFB / Index BT01 orders of magnitude. They MUST be recalibrated against a
+# regional FFB cost series before publication; a ±15 % move here flows linearly
+# into improvement value, so it is a first-order sensitivity, not a detail.
+# (Reported alongside the land-share band, per the README's Limites connues.)
+
+# Pre-existing (Alpes / Haute-Savoie)
+GRENOBLE = CommuneConfig("38185", "Grenoble", "38", construction_cost_eur_m2=1900.0)
+ANNEMASSE = CommuneConfig("74012", "Annemasse", "74", construction_cost_eur_m2=1900.0)
+
+# Representative pilot set (geographically + typologically diverse).
+# NB: inner Lyon uses Villeurbanne, not a Lyon arrondissement — Paris/Lyon/
+# Marseille arrondissements have INSEE codes for cadastre/DVF/buildings but no
+# separate taxe foncière (the city + métropole levy it), so OFGL's REI carries
+# no per-arrondissement FB produit. Villeurbanne is the dense, fiscally
+# autonomous inner-ring commune of the Lyon core.
+VILLEURBANNE = CommuneConfig(       # dense inner-Lyon-core commune (Rhône)
+    "69266", "Villeurbanne", "69", construction_cost_eur_m2=1950.0)
+ROUBAIX = CommuneConfig(            # post-industrial Nord metro, high vacancy
+    "59512", "Roubaix", "59", construction_cost_eur_m2=1750.0)
+CAHORS = CommuneConfig(             # le Lot préfecture, small rural town
+    "46042", "Cahors", "46", construction_cost_eur_m2=1650.0)
+MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Denis)
+    "93048", "Montreuil", "93", construction_cost_eur_m2=2150.0)
+FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
+    "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
+
+# Registry for the CLI / run_commune driver (--commune <key>)
+COMMUNES = {
+    "grenoble": GRENOBLE, "annemasse": ANNEMASSE,
+    "villeurbanne": VILLEURBANNE, "roubaix": ROUBAIX, "cahors": CAHORS,
+    "montreuil": MONTREUIL, "figeac": FIGEAC,
+}
