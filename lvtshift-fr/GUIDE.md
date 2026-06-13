@@ -102,19 +102,30 @@ After a run, look inside `lvtshift-fr/output/`:
 
 ## 5. Running it for a *real* commune
 
-This is the honest part. The synthetic test works today. For a **real**
-commune, the data-download step (`ingest.py`) is still a stub — fetching BDNB
-buildings, REI tax totals, and Filosofi incomes needs to be completed first.
-Until then, real runs aren't a one-click affair. When that's ready, the flow is:
+This now works on **live open data** — one command:
 
-1. In `config.py`, pick the commune — `GRENOBLE` and `ANNEMASSE` are pre-defined
-   (change the one line `from config import GRENOBLE as CFG` in `run_pipeline.py`).
-2. Run the ingest functions to download that commune's open data.
-3. Call `run_pipeline.run(...)` with the prepared data — same as the synthetic
-   test does at the bottom of `test_synthetic.py`.
+```powershell
+python run_commune.py montreuil
+```
 
-If you want to model a specific commune, tell me which and I'll wire up the
-ingest for it.
+It downloads that commune's parcels (cadastre), property sales (DVF), buildings
+(BD TOPO), and the real taxe-foncière total (REI via OFGL), then runs the model
+and writes the CSV + euro charts. Pre-configured communes you can swap in:
+`villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`, `grenoble`,
+`annemasse`. Add `--no-report` for a spreadsheet-only run.
+
+> On Windows, run `$env:PYTHONUTF8 = "1"` once in the same PowerShell window
+> before the command (some labels use characters the old console can't print).
+
+**Read the results sensibly:** dense, fully-built communes (Montreuil,
+Villeurbanne, Roubaix) give credible aggregates today. Sprawling rural communes
+(Cahors, Figeac) are *not* yet reliable — their large empty/agricultural parcels
+are over-valued by the current method (see the README's *Limites connues*). And
+the "vacant land pays more" headline is the single number resting on the weakest
+assumption — treat it as directional, not precise.
+
+Income-based charts (impact by neighbourhood income) don't appear yet — the
+income data (Filosofi) is the next piece to wire in.
 
 ---
 
