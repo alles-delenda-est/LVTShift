@@ -30,7 +30,7 @@ import pandas as pd
 
 import ingest
 import run_pipeline as rp
-from config import COMMUNES
+from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
 from ingest import CRS_METRIC, CRS_WGS84
 
 GRID_M = 400  # spatial fixed-effect cell size (metres) for the hedonic
@@ -80,10 +80,65 @@ def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
+def classify_and_price_land(cfg, parcels, buildings, tab):
+    """Add land_type + per-parcel land prices (classify-then-price).
+
+    - land_type from GPU zoning (U/AU->constructible, A->agricultural,
+      N->natural) for building-less parcels; parcels with a building are 'built'.
+    - constructible_eur_m2: DVF terrain-à-bâtir median by grid cell (shrunk to
+      the commune median; EPTB national fallback when comparables are thin),
+      discounted for AU 'fermée/stricte' zones.
+    - ag_eur_m2: SAFER départemental agricultural/natural €/m².
+    """
+    import geopandas as gpd
+    parcels = parcels.copy()
+
+    # --- zoning -> land_type ---
+    zoning = ingest.fetch_parcel_zoning(cfg, parcels)
+    parcels = parcels.merge(zoning, on="idpar", how="left")
+    z = parcels["zone_typ"].astype("object")
+    has_bld = parcels["idpar"].isin(buildings["idpar"])
+    constructible = z.isin(["U", "AUc", "AU", "AUs"])
+    deferred = z.isin(["AU", "AUs"])           # AU fermée/stricte
+    parcels["land_type"] = np.select(
+        [has_bld, constructible & deferred, constructible, z.eq("A"), z.eq("N")],
+        ["built", "constructible_deferred", "constructible", "agricultural", "natural"],
+        default="unknown")  # no GPU coverage -> priced as agricultural (conservative)
+
+    # --- agricultural €/m² (SAFER, by département, A vs N) ---
+    a_rate, n_rate = AG_EUR_M2_BY_DEP.get(
+        cfg.departement, AG_EUR_M2_BY_DEP["_default"])
+    parcels["ag_eur_m2"] = np.where(z.eq("N"), n_rate, a_rate)
+
+    # --- constructible €/m² from terrain-à-bâtir comparables ---
+    comps = ingest.tab_comparables(cfg, tab)
+    commune_med = float(comps["eur_m2_land"].median()) if len(comps) else None
+    enough_cells = {}
+    comps = comps.dropna(subset=["lon", "lat"]) if len(comps) else comps
+    if len(comps):
+        cpts = gpd.GeoSeries(
+            gpd.points_from_xy(comps["lon"], comps["lat"]), crs=CRS_WGS84
+        ).to_crs(CRS_METRIC)
+        comps = comps.assign(cell=_grid_cell(cpts.x.values, cpts.y.values))
+        cm = comps.groupby("cell")["eur_m2_land"].agg(["median", "count"])
+        enough_cells = cm[cm["count"] >= LAND_MODEL["min_tab_sales_cell"]]["median"].to_dict()
+    # commune base price: median if enough sales, else EPTB national fallback
+    if commune_med is not None and len(comps) >= LAND_MODEL["min_tab_sales_commune"]:
+        base = commune_med
+    else:
+        base = EPTB_EUR_M2_FALLBACK
+    parcels["constructible_eur_m2"] = parcels["cell"].map(
+        lambda c: enough_cells.get(c, base))
+    # AU fermée/stricte discount (Gemini review: deferred development potential)
+    parcels.loc[deferred.values, "constructible_eur_m2"] *= LAND_MODEL["au_strict_factor"]
+
+    return parcels
+
+
 def prepare(cfg, layers):
     """Fetch + shape all inputs for one commune."""
     parcels = ingest.fetch_parcels(cfg)
-    sales, _tab = ingest.fetch_dvf(cfg)
+    sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
     tfpb = ingest.fetch_rei_tfpb_produit(cfg, layers=layers)
 
@@ -105,6 +160,9 @@ def prepare(cfg, layers):
     parcels["type_local"] = np.where(
         parcels["category_fr"] == "maison", "Maison", "Appartement")
 
+    # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
+    parcels = classify_and_price_land(cfg, parcels, buildings, tab)
+
     # DVF: lat/lon -> same grid cell
     sales = sales.dropna(subset=["lat", "lon"]).copy()
     pts = gpd.GeoSeries(
@@ -112,10 +170,9 @@ def prepare(cfg, layers):
     ).to_crs(CRS_METRIC)
     sales["cell"] = _grid_cell(pts.x.values, pts.y.values)
 
-    n_vac = (parcels["category_fr"] == "terrain_nu").sum()
-    print(f"  [{cfg.name}] {len(parcels)} parcels "
-          f"({n_vac} vacant / no building), {len(sales)} usable DVF sales, "
-          f"{parcels['cell'].nunique()} grid cells")
+    print(f"  [{cfg.name}] {len(parcels)} parcels, {len(sales)} usable DVF "
+          f"sales, {parcels['cell'].nunique()} grid cells")
+    print("  land_type:", parcels["land_type"].value_counts().to_dict())
     return parcels, buildings, sales, tfpb
 
 
@@ -144,8 +201,18 @@ def main():
     print(f"revenue neutrality within 1%: {rev_ok}")
     chg = out.groupby("property_category")["tax_change_pct"].median().round(1)
     print("median tax change % by category:\n", chg.to_string())
-    share = (out["property_category"].value_counts(normalize=True) * 100).round(1)
-    print("parcel mix by category (%):\n", share.to_string())
+
+    # land-class composition of the levy (validates the classify-then-price fix:
+    # agricultural/natural land should bear a tiny share)
+    o = out.reset_index(drop=True)
+    o["land_type"] = parcels.reset_index(drop=True)["land_type"].values
+    lc = o.groupby("land_type").agg(
+        parcels=("new_tax", "size"),
+        levy_eur=("new_tax", "sum"),
+    )
+    lc["levy_pct"] = (100 * lc["levy_eur"] / o["new_tax"].sum()).round(1)
+    lc["levy_eur"] = lc["levy_eur"].round(0)
+    print("levy borne by land class:\n", lc.sort_values("levy_eur").to_string())
 
 
 if __name__ == "__main__":

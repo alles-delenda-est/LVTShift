@@ -100,25 +100,31 @@ def parcels_to_gdf(parcels: pd.DataFrame):
     return g.to_crs(CRS_METRIC)
 
 
-def _wfs_batiment(bbox_2154, page: int = 5000) -> list:
-    """All BD TOPO V3 'batiment' features intersecting a Lambert-93 bbox.
+def _wfs_features(typename: str, bbox_2154, page: int = 5000) -> list:
+    """All features of a Géoplateforme WFS layer intersecting a Lambert-93 bbox.
 
-    Paginates the Géoplateforme WFS (server caps a page at 5000). Geometry is
-    requested directly in EPSG:2154 so footprint areas are metric with no
-    reprojection. Returns a list of GeoJSON features.
+    Paginates the WFS (server caps a page at 5000). Geometry is requested
+    directly in EPSG:2154 so areas/joins are metric with no reprojection.
+    Used for both BD TOPO buildings and GPU zoning. Returns GeoJSON features.
     """
     minx, miny, maxx, maxy = bbox_2154
     feats, start = [], 0
     while True:
-        q = urllib.parse.urlencode({
+        params = {
             "SERVICE": "WFS", "VERSION": "2.0.0", "REQUEST": "GetFeature",
-            "TYPENAMES": "BDTOPO_V3:batiment",
+            "TYPENAMES": typename,
             "OUTPUTFORMAT": "application/json",
             "SRSNAME": "EPSG:2154",
             "BBOX": f"{minx},{miny},{maxx},{maxy},urn:ogc:def:crs:EPSG::2154",
-            "COUNT": page, "STARTINDEX": start,
-        })
-        batch = json.loads(_get(f"{SRC['bdtopo_wfs']}?{q}")).get("features", [])
+            "COUNT": page,
+        }
+        # STARTINDEX forces a sort the server can only do on a keyed layer
+        # (zone_urba has no PK). Single-page layers therefore omit it; layers
+        # that need a 2nd page (batiment, keyed) only paginate from page 2.
+        if start:
+            params["STARTINDEX"] = start
+        batch = json.loads(_get(f"{SRC['bdtopo_wfs']}?{urllib.parse.urlencode(params)}")
+                           ).get("features", [])
         feats.extend(batch)
         if len(batch) < page:
             break
@@ -143,35 +149,107 @@ def fetch_buildings(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     import geopandas as gpd
 
     pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
-    feats = _wfs_batiment(pg.total_bounds)
+    feats = _wfs_features("BDTOPO_V3:batiment", pg.total_bounds)
     if not feats:
         raise RuntimeError(
             f"BD TOPO returned no buildings for {cfg.name} "
             f"({cfg.insee_code}); check the WFS endpoint / bbox.")
 
+    keep = ["geometry", "nombre_d_etages", "hauteur", "date_d_apparition",
+            "usage_1", "nombre_de_logements", "appariement_fichiers_fonciers"]
     bg = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)
-    bg["footprint_m2"] = bg.geometry.area
-    # join on centroid-in-parcel (same pattern LVTShift uses for block groups)
-    cent = bg.copy()
-    cent["geometry"] = bg.geometry.centroid
-    j = gpd.sjoin(cent, pg, how="inner", predicate="within")
+    bg = bg[[c for c in keep if c in bg.columns]].copy()
+    bg["bld_footprint_m2"] = bg.geometry.area
 
-    year = pd.to_datetime(j.get("date_d_apparition"), errors="coerce",
+    # Area-weighted intersection join (not centroid): a building straddling a
+    # parcel boundary contributes its *overlapping* footprint to EACH parcel,
+    # so improvement value follows the land. Drops sliver overlaps from
+    # imperfect cadastre/BD-TOPO alignment (<5 m²).
+    inter = gpd.overlay(bg, pg, how="intersection", keep_geom_type=True)
+    inter["footprint_m2"] = inter.geometry.area
+    inter = inter[inter["footprint_m2"] >= 5.0].copy()
+    share = (inter["footprint_m2"] / inter["bld_footprint_m2"]).clip(upper=1.0)
+
+    year = pd.to_datetime(inter.get("date_d_apparition"), errors="coerce",
                           utc=True, format="ISO8601")
     out = pd.DataFrame({
-        "idpar": j["idpar"].values,
-        "footprint_m2": j["footprint_m2"].values,
-        "n_levels": pd.to_numeric(j.get("nombre_d_etages"), errors="coerce"),
-        "height_m": pd.to_numeric(j.get("hauteur"), errors="coerce"),
+        "idpar": inter["idpar"].values,
+        "footprint_m2": inter["footprint_m2"].values,
+        "n_levels": pd.to_numeric(inter.get("nombre_d_etages"), errors="coerce").values,
+        "height_m": pd.to_numeric(inter.get("hauteur"), errors="coerce").values,
         "year_built": year.dt.year.values,
-        "usage": j.get("usage_1").values,
-        "n_dwellings": pd.to_numeric(j.get("nombre_de_logements"), errors="coerce"),
-        "ff_match": j.get("appariement_fichiers_fonciers").values,
+        "usage": inter.get("usage_1").values,
+        # dwellings area-weighted so a shared building isn't double-counted
+        "n_dwellings": (pd.to_numeric(inter.get("nombre_de_logements"),
+                                      errors="coerce") * share).values,
+        "ff_match": inter.get("appariement_fichiers_fonciers").values,
     })
-    print(f"  [{cfg.name}] {len(out)} buildings joined to "
-          f"{out['idpar'].nunique()} parcels "
-          f"(of {len(feats)} BD TOPO features in bbox)")
+    print(f"  [{cfg.name}] {len(bg)} BD TOPO buildings -> {len(out)} parcel "
+          f"pieces on {out['idpar'].nunique()} parcels (area-weighted join)")
     return out
+
+
+# ------------------------------------------------------------------ #
+def fetch_parcel_zoning(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """GPU (Géoportail de l'Urbanisme) zoning per parcel -> idpar, zone_typ.
+
+    Classifies building-less parcels' legal constructibility. Spatial-joins each
+    parcel to the PLU/PLUi `zone_urba` polygons (dominant overlap area) and
+    returns its `typezone` (U / AUc / AUs / AU / A / N) plus the detailed
+    `libelle`. Parcels with no zoning coverage (RNU communes, slivers) come back
+    with zone_typ=None so the caller can fall back.
+    """
+    import geopandas as gpd
+
+    pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
+    feats = _wfs_features(SRC["gpu_zone_urba_layer"], pg.total_bounds)
+    if not feats:
+        print(f"  [{cfg.name}] no GPU zoning (likely RNU commune); fallback used")
+        return pd.DataFrame({"idpar": pg["idpar"], "zone_typ": None,
+                             "zone_libelle": None})
+
+    keep = ["geometry", "typezone", "libelle"]
+    zg = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)
+    zg = zg[[c for c in keep if c in zg.columns]].copy()
+
+    inter = gpd.overlay(pg, zg, how="intersection", keep_geom_type=True)
+    inter["ov_area"] = inter.geometry.area
+    # dominant zone per parcel = largest overlap
+    dom = (inter.sort_values("ov_area")
+                .groupby("idpar").tail(1)[["idpar", "typezone", "libelle"]])
+    out = pg[["idpar"]].merge(
+        dom.rename(columns={"typezone": "zone_typ", "libelle": "zone_libelle"}),
+        on="idpar", how="left")
+    cov = out["zone_typ"].notna().mean()
+    print(f"  [{cfg.name}] GPU zoning: {cov:.0%} of parcels covered "
+          f"({out['zone_typ'].value_counts().to_dict()})")
+    return out
+
+
+def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
+    """Clean terrain-à-bâtir €/m² comparables from DVF land sales.
+
+    DVF `valeur_fonciere / surface_terrain` is contaminated for most cultures
+    (mutations bundle buildings + several parcels), so we trust ONLY rows coded
+    `terrains a bâtir`, aggregate to the mutation, trim outliers, and return one
+    cleaned row per sale: idmut, eur_m2_land, lat, lon. The caller assigns grid
+    cells and computes cell/commune medians with shrinkage.
+    """
+    t = tab[tab["nature_culture"].astype(str).str.contains("bâtir", na=False)].copy()
+    if t.empty:
+        return pd.DataFrame(columns=["eur_m2_land", "lat", "lon"])
+    g = (t.groupby("id_mutation")
+          .agg(price=("valeur_fonciere", "first"),
+               surface=("surface_terrain", "sum"),
+               lat=("latitude", "mean"), lon=("longitude", "mean"))
+          .reset_index())
+    g = g[(g["surface"] > 0) & (g["price"] > 0)]
+    g["eur_m2_land"] = g["price"] / g["surface"]
+    lo, hi = g["eur_m2_land"].quantile([0.05, 0.95])
+    g = g[(g["eur_m2_land"] >= lo) & (g["eur_m2_land"] <= hi)]
+    print(f"  [{cfg.name}] {len(g)} clean terrain-à-bâtir comparables "
+          f"(median €{g['eur_m2_land'].median():,.0f}/m²)")
+    return g[["eur_m2_land", "lat", "lon"]]
 
 
 # ------------------------------------------------------------------ #

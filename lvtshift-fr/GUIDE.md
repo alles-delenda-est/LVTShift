@@ -117,12 +117,13 @@ and writes the CSV + euro charts. Pre-configured communes you can swap in:
 > On Windows, run `$env:PYTHONUTF8 = "1"` once in the same PowerShell window
 > before the command (some labels use characters the old console can't print).
 
-**Read the results sensibly:** dense, fully-built communes (Montreuil,
-Villeurbanne, Roubaix) give credible aggregates today. Sprawling rural communes
-(Cahors, Figeac) are *not* yet reliable — their large empty/agricultural parcels
-are over-valued by the current method (see the README's *Limites connues*). And
-the "vacant land pays more" headline is the single number resting on the weakest
-assumption — treat it as directional, not precise.
+**Read the results sensibly:** both dense (Montreuil, Villeurbanne, Roubaix) and
+rural (Cahors, Figeac) communes now give credible aggregates — building-less land
+is classified by its PLU zoning and priced as either development land or cheap
+farmland, so the countryside no longer distorts the result. The remaining weakest
+input is the *current-tax* baseline (see the README's *Limites connues*), so read
+the **change** by category as directional, not the starting bill. Publish by
+property category or income quintile, never as one household's bill.
 
 Income-based charts (impact by neighbourhood income) don't appear yet — the
 income data (Filosofi) is the next piece to wire in.

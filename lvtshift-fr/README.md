@@ -24,11 +24,12 @@ L'objectif est double :
 ## Architecture
 
 ```
-config.py        commune, coûts de construction, bornes de sensibilité, URLs
-ingest.py        téléchargements : DVF, cadastre, BDNB, REI, Filosofi
+config.py        communes, coûts de construction, benchmarks fonciers, URLs
+ingest.py        téléchargements : DVF, cadastre, BD TOPO, GPU, REI, (Filosofi)
 estimate.py      valeur bâti (coût de remplacement déprécié)
-                 -> hédonique DVF -> terrain résiduel ancré -> taxe actuelle
+                 -> hédonique DVF -> terrain « classer puis valoriser » -> taxe
 run_pipeline.py  orchestration + appel du solveur LVTShift réel
+run_commune.py   pilote données réelles (ingest -> solveur) pour une commune
 test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 ```
 
@@ -41,7 +42,10 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Bâtiments | **BD TOPO V3** (IGN, WFS Géoplateforme) | emprise, niveaux, hauteur, logements, usage, flag d'appariement Fichiers fonciers |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
-| Ancrages terrain | ventes de terrains à bâtir (DVF), EPTB (agrégats), comptes de patrimoine INSEE (part terrain ~45-50 %) | calibration / bornes |
+| Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
+| Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
+| Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
+| Ancrage part terrain | comptes de patrimoine INSEE (~45-50 %) | contrôle descendant |
 
 ## Méthode, en bref
 
@@ -49,9 +53,14 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    × dépréciation linéaire plancher (25 % résiduel à 80 ans).
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
    (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable.
-3. **Terrain = marché − bâti**, avec : plancher aux comparables terrains nus,
-   parcelles vacantes valorisées directement aux comparables, part terrain
-   bornée [15 %, 85 %] (chaque clip est flaggé `lv_flag`).
+3. **Terrain : classer puis valoriser.** Parcelles bâties → résiduel
+   (marché − bâti), plancher à la valeur agricole, part terrain bornée
+   [15 %, 85 %] (clips flaggés `lv_flag`). Parcelles non bâties → classées par
+   le zonage PLU (GPU `zone_urba` : U/AU constructible, A/N agricole/naturel) :
+   le constructible est valorisé aux comparables **terrains à bâtir** DVF
+   (médiane communale, repli EPTB national), le non-bâti aux prix **SAFER**
+   départementaux (~0,4–1 €/m²). Bâtiments rattachés aux parcelles par
+   **intersection pondérée par surface** (et non par centroïde).
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
@@ -115,19 +124,17 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
-- **Valorisation du foncier non bâti (maillon porteur actuel).** Les parcelles
-  sans bâtiment sont valorisées à la densité foncière bâtie médiane de la
-  commune × surface — ce qui surévalue fortement les grandes parcelles
-  rurales/agricoles (cf. Cahors, 57 % de parcelles de campagne). Le résultat
-  « le non-bâti paie davantage » repose entièrement sur ce point. Correctif
-  prévu : ancrage aux ventes de terrains à bâtir (DVF, déjà collectées) et
-  distinction constructible / agricole. **À ne montrer que sur communes denses**
-  tant que ce n'est pas traité.
-- **Appariement bâtiment ↔ parcelle.** Le rattachement par centroïde manque les
-  bâtiments à cheval sur plusieurs parcelles ou en limite : ~21 % des parcelles
-  de Montreuil (pourtant entièrement bâtie) ressortent « non bâties », gonflant
-  le non-bâti et sous-estimant le bâti. Correctif : jointure pondérée par
-  surface d'intersection.
+- **Taxe actuelle (maillon porteur désormais).** Une fois le foncier
+  correctement valorisé, le proxy de VLC (surface plancher) est l'entrée la plus
+  faible. Il attribue même un petit poids `0,002 × surface` aux parcelles non
+  bâties, si bien que le foncier rural se voit prêter un peu de taxe *foncière
+  bâtie* qu'il ne devrait pas — d'où le « non-bâti −86 % » à Cahors (la LVT
+  corrige une surcharge de la base de départ, pas une vraie baisse). À traiter :
+  retirer le terme de surface, ou modéliser la VLC par catégorie cadastrale.
+- **Nuance de zonage AU et Nh/Ah** (revue Gemini) : tout AU est traité
+  constructible avec une décote forfaitaire (AU/AUs) ; les AU *fermées* mériteraient
+  une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
+  sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
   ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de

@@ -25,8 +25,10 @@ The pipeline is a value-decomposition chain:
 - **market value** = a deliberately simple hedonic on DVF (cell × type fixed
   effects on log €/m², shrinkage toward commune-type median). `cell` is a 400 m
   grid square — a transparent spatial fixed effect, not an admin geography.
-- **land value** = market − improvement (residual), floored at vacant-land
-  comparables, land-share clipped to [15%, 85%] with every clip flagged.
+- **land value** = **classify-then-price** (see below): built parcels use the
+  residual (market − improvement), building-less parcels are classified by legal
+  constructibility and priced against the right benchmark. The single flaw of
+  the old method was applying *one* land density to *all* land.
 - **current tax** = the commune's real REI foncier-bâti produit distributed by a
   VLC proxy (floor area) — exact in aggregate, approximate per parcel.
 
@@ -43,6 +45,15 @@ propagates visibly rather than silently.
   is the `MONTANT RÉEL` line summed over the chosen beneficiary layers (default
   Commune + intercommunalité). Which layers are held neutral is an explicit
   policy choice (one of LVTShift's five upfront questions).
+- **Land classification: GPU zoning + SAFER + DVF TAB (classify-then-price).**
+  Building-less parcels are classified by Géoportail-de-l'Urbanisme `zone_urba`
+  `typezone` (U/AUc → constructible; AU/AUs → constructible-deferred, discounted;
+  A → agricultural; N → natural). Constructible land is priced from clean DVF
+  *terrain-à-bâtir* comparables (commune median, shrunk to cell where dense,
+  EPTB national fallback); agricultural/natural land from SAFER départemental
+  €/m². Buildings join parcels by **area-weighted intersection** (not centroid),
+  so a building straddling a boundary credits each parcel — killing false
+  "vacant" parcels. Verified by Gemini (France-context) and two real runs.
 
 ## Strategy
 
@@ -64,12 +75,12 @@ propagates visibly rather than silently.
   cadastre → DVF → BD TOPO → REI → solver → euro charts for any configured
   commune, **revenue-neutral to the euro** (Montreuil €101.8M, Cahors €22.7M hit
   exactly). The pipeline is no longer synthetic-only.
-- **Urban Montreuil produces a credible LVT pattern:** homes −€55 median, condos
-  −€292, industrial −€1,563, commercial −€298; under-used land moves from ~€0 to
-  bearing ~€10M (9.8%) of the levy. The mechanism behaves as theory predicts.
-- **Geography determines credibility.** Sprawling rural communes (Cahors: 57% of
-  parcels are countryside) are swamped by the vacant-land valuation artifact;
-  dense communes are clean. Showcase on urban communes until vacant land is fixed.
+- **Classify-then-price fixed the rural artifact.** After the fix, agricultural +
+  natural land in Cahors (9 083 parcels, 42% of them) bears **0.3%** of the levy
+  (was: it swamped the base); built stock bears 98.4%, and built categories shift
+  only ±3% (was −83%). In Montreuil the built stock bears 98.5%, constructible
+  vacant 1.5% — and that vacant land still pays *more* (the LVT development
+  incentive, now correctly sized). Both stay revenue-neutral to the euro.
 - **Arrondissement fiscal gotcha.** Paris/Lyon/Marseille arrondissements have
   INSEE codes for cadastre/DVF/buildings but **no separate taxe foncière** (the
   city + métropole levy it), so REI has no per-arrondissement produit. "Inner
@@ -77,18 +88,18 @@ propagates visibly rather than silently.
 
 ## Open questions / where the theory might break
 
-- **Vacant-land valuation is now the load-bearing weakness.** Valuing building-less
-  parcels at the commune's *median built-land density × area* overvalues large
-  rural/agricultural parcels wildly, and the headline "vacant land pays more"
-  rests entirely on it. Fix: anchor to DVF *terrain-à-bâtir* comparables (already
-  fetched, not yet wired), and distinguish constructible from agricultural land.
-- **Building→parcel join loses buildings.** Centroid-in-parcel misses buildings on
-  parcel boundaries or spanning several parcels, wrongly flagging ~21% of built-up
-  Montreuil parcels "vacant" — inflating vacant land and under-imputing
-  improvements. Fix: area-weighted intersection join, not centroid.
-- **Current-tax proxy remains weak** (floor-area-only VLC): ignores cadastral
-  category and weighted-surface coefficients, the two largest VLC drivers. Distorts
-  the *baseline* distribution; aggregates must be recouped against REI by category.
+- **Current-tax proxy is now the load-bearing weakness.** With land valuation
+  fixed, the baseline VLC proxy (floor-area-only) is the weakest input. It even
+  gives building-less parcels a small `0.002 × area` weight, so rural land draws
+  some *current* foncier-bâti tax it would not really owe — visible as Cahors
+  "vacant land −86%" (the LVT corrects a baseline over-charge, not a real cut).
+  It also ignores cadastral category and weighted-surface coefficients (the two
+  largest VLC drivers), so even aggregates must be recouped against REI by
+  category. Fix candidates: drop the land-area term (bâti is building-only), or
+  model VLC from cadastral category × weighted surface.
+- **AU and Nh/Ah zoning nuance** (Gemini's main flag): all AU is treated
+  constructible with a flat discount for AU/AUs; `AU fermée` deserves a steeper
+  cut and `Nh/Ah` pastilles (limited building in A/N) are currently undervalued.
 - **Non-residential market value borrows the residential €/m² surface** — flagged;
   professionnels need a separate strata (2017 VLC revision) before publication.
 - **Income (Filosofi) not yet wired** — the distributional/equity charts are off

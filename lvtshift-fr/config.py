@@ -61,6 +61,12 @@ DATA_SOURCES = {
     # ever needed (departmental download from data.gouv.fr 'bdnb').
     "bdnb_info": "https://www.data.gouv.fr/fr/datasets/base-de-donnees-nationale-des-batiments/",
 
+    # Géoportail de l'Urbanisme (GPU) zoning, same Géoplateforme WFS as BD TOPO.
+    # Layer 'wfs_du:zone_urba' carries typezone U/AU/A/N — the legal
+    # constructibility signal used to classify building-less parcels (priced as
+    # development land vs agricultural/natural land). Queried by commune bbox.
+    "gpu_zone_urba_layer": "wfs_du:zone_urba",
+
     # DPE logements (ADEME): queryable API, filter by code INSEE.
     # Covariates only (surface, periode construction) - NOT representative
     # of the stock (sale/rental/new-build selection bias).
@@ -120,4 +126,50 @@ COMMUNES = {
     "grenoble": GRENOBLE, "annemasse": ANNEMASSE,
     "villeurbanne": VILLEURBANNE, "roubaix": ROUBAIX, "cahors": CAHORS,
     "montreuil": MONTREUIL, "figeac": FIGEAC,
+}
+
+
+# ------------------------------------------------------------------ #
+# Land-valuation benchmarks (classify-then-price; see THEORY.md)
+# ------------------------------------------------------------------ #
+# Building-less parcels are classified by GPU zoning (U/AU -> constructible,
+# A/N -> agricultural/natural) and priced against the right open benchmark.
+# These tables are *pilot* anchors — refine from the primary sources before
+# publication. Crucially, agricultural land is ~2-3 orders of magnitude cheaper
+# than building land, so getting the *class* right matters far more than the
+# exact €/m²: a ±50 % error on a 0.6 €/m² farm rate is immaterial to the levy.
+
+# SAFER "Le prix des terres" 2024, €/m² (= €/ha ÷ 10 000), terres & prés libres.
+# National default 0.64; a few pilot départements nudged on the SAFER gradient.
+# Natural/forest (N zones) priced slightly below cropland.
+AG_EUR_M2_BY_DEP = {           # (agricultural A, natural/forest N)
+    "_default": (0.64, 0.49),
+    "46": (0.45, 0.35),        # Lot — Sud-Ouest, cheaper upland
+    "93": (1.00, 0.60),        # Seine-St-Denis — rich Plaine-de-France cropland
+    "59": (0.85, 0.50),        # Nord — productive cropland
+    "69": (0.70, 0.50),        # Rhône
+    "74": (0.75, 0.55),        # Haute-Savoie
+    "38": (0.60, 0.45),        # Isère
+}
+
+# EPTB (SDES) building-plot €/m² fallback when a commune has too few DVF
+# terrain-à-bâtir sales for a reliable local median. National métropole ~99 €/m²
+# (2023); kept as a single conservative national anchor (the commune DVF median
+# is always preferred when available).
+EPTB_EUR_M2_FALLBACK = 99.0
+
+# Land-model parameters.
+LAND_MODEL = {
+    # AU (à urbaniser) discount vs fully-serviced U / AUc land. AU "fermée/
+    # stricte" is development-deferred; pricing it at full U value overstates it
+    # (Gemini review's main flag). AUc (open) ≈ U; AU/AUs (strict) discounted.
+    "au_open_factor": 1.0,
+    "au_strict_factor": 0.55,
+    # Minimum clean terrain-à-bâtir sales for a *cell*-level constructible €/m²;
+    # below this we shrink toward / fall back to the commune median.
+    "min_tab_sales_cell": 8,
+    "min_tab_sales_commune": 5,
+    # Fallback buffer (m) around buildings to call a parcel constructible where
+    # GPU has no coverage (RNU communes / uncovered slivers).
+    "rnu_building_buffer_m": 25.0,
 }
