@@ -109,6 +109,62 @@ def market_value(parcels: pd.DataFrame, surface: pd.DataFrame) -> pd.DataFrame:
 # 3. Residual land value, anchored
 # ------------------------------------------------------------------ #
 
+def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
+    """Classify-then-price land value (see THEORY.md). Used when parcels carry a
+    `land_type` column (real French runs); the legacy residual path below is
+    kept for the synthetic test.
+
+    Expects per-parcel columns set upstream (run_commune):
+        land_type   built | constructible | constructible_deferred
+                    | agricultural | natural | unknown
+        market_value, improvement_value, parcel_area_m2, floor_area_m2,
+        constructible_eur_m2  (AU-discounted development €/m², from DVF TAB),
+        ag_eur_m2             (agricultural/natural €/m², from SAFER by dépt).
+
+    Pricing:
+      * built (floor_area>0): residual = market − improvement, floored at the
+        dirt (agricultural) value, land-share clipped to cfg.land_share_bounds.
+      * constructible vacant: land = development €/m² × parcel area.
+      * agricultural/natural vacant: land = ag €/m² × parcel area.
+      * unknown vacant: priced as agricultural (conservative).
+    """
+    lo, hi = cfg.land_share_bounds
+    area = pd.to_numeric(out["parcel_area_m2"], errors="coerce").fillna(0.0)
+    ag = pd.to_numeric(out.get("ag_eur_m2"), errors="coerce").fillna(0.0)
+    con = pd.to_numeric(out.get("constructible_eur_m2"), errors="coerce").fillna(0.0)
+    mv = pd.to_numeric(out["market_value"], errors="coerce").fillna(0.0)
+    imp = pd.to_numeric(out["improvement_value"], errors="coerce").fillna(0.0)
+    built = pd.to_numeric(out["floor_area_m2"], errors="coerce").fillna(0.0) > 0
+
+    land = pd.Series(0.0, index=out.index)
+    flag = out["land_type"].astype("object").copy()
+
+    # built: residual, floored at dirt value, then land-share clipped
+    resid = (mv - imp).clip(lower=0)
+    resid = resid.where(resid >= ag * area, ag * area)
+    share = resid / mv.replace(0, np.nan)
+    hi_clip = built & (share > hi)
+    lo_clip = built & (share < lo)
+    resid = resid.mask(hi_clip, hi * mv).mask(lo_clip, lo * mv)
+    land = land.mask(built, resid)
+    flag = flag.mask(built, "built_residual")
+    flag = flag.mask(hi_clip, "built_clipped_high").mask(lo_clip, "built_clipped_low")
+
+    # vacant: price by class
+    is_con = ~built & out["land_type"].isin(["constructible", "constructible_deferred"])
+    is_un = ~built & ~is_con & ~out["land_type"].isin(["agricultural", "natural"])
+    land = land.mask(is_con, con * area)
+    land = land.mask(~built & ~is_con, ag * area)   # ag/natural/unknown -> dirt
+    flag = flag.mask(is_un, "vacant_unknown_ag")
+
+    out["land_value"] = land
+    out["improvement_value"] = (mv - land).clip(lower=0).where(built, 0.0)
+    out["market_value"] = mv.where(built, land)
+    out["land_share"] = out["land_value"] / out["market_value"].replace(0, np.nan)
+    out["lv_flag"] = flag
+    return out
+
+
 def land_value_residual(p: pd.DataFrame, cfg,
                         tab_prices: pd.DataFrame | None = None) -> pd.DataFrame:
     """
@@ -120,7 +176,14 @@ def land_value_residual(p: pd.DataFrame, cfg,
 
     Adds: land_value, land_share, lv_flag
           ('residual'|'clipped_low'|'clipped_high'|'vacant_comparable')
+
+    Real French runs supply a `land_type` column and are routed to the
+    classify-then-price model (`_land_value_classified`); the body below is the
+    legacy single-density path retained for the synthetic test.
     """
+    if "land_type" in p.columns:
+        return _land_value_classified(p.copy(), cfg)
+
     out = p.copy()
     out["land_value"] = out["market_value"] - out["improvement_value"]
     out["lv_flag"] = "residual"
@@ -177,19 +240,38 @@ def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
 # ------------------------------------------------------------------ #
 
 def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
-                vlc_proxy_cols=("floor_area_m2",)) -> pd.DataFrame:
-    """
-    THE honestly-flagged weak link (replaced by FF parcel VLC when access lands).
+                vlc_proxy_cols=("floor_area_m2",),
+                category_weights: dict | None = None,
+                category_col: str = "category_fr") -> pd.DataFrame:
+    """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
-    Proxy: VLC ~ floor area x category weight (1970 tarifs were per-m²
-    by category; without the category we default to pure floor area).
-    The commune's actual TFPB produit (REI, exact) is distributed
-    proportionally to the proxy -> aggregate is right by construction,
-    distribution is approximate.
+    THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
+    access lands). The exact REI produit is shared out by a VLC proxy, so the
+    aggregate is right by construction and only the distribution is approximate.
+
+    Two deliberate design choices (France-context reviewed):
+
+    * **Built parcels only.** TFPB is a tax on *built* property; unbuilt land pays
+      the separate, much smaller TFPNB, which is **not** in our FB target. So
+      parcels with no building footprint bear **zero** current tax — they go from
+      ~0 today to a positive LVT bill (the under-used-land incentive made literal).
+      (The old code mistakenly gave them a ``0.002 × parcel_area`` share, which
+      manufactured a baseline over-charge on rural land.)
+
+    * **Proxy = floor area, no market-value tilt.** Size is the dominant VLC
+      driver. We do *not* tilt toward the hedonic market value: the 1970 VLC is
+      famously regressive vs market (central old stock under-assessed, peripheral
+      over-assessed), so a value tilt would *worsen* fidelity to the current
+      system. ``category_weights`` (e.g. weighting professionnel m² above housing
+      m², post-2017 revision) is offered only as a labelled **sensitivity**, off
+      by default — never as the published baseline.
     """
     out = p.copy()
-    w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0)
-    # non-bâti gets a small weight via land area (TFPNB is tiny in cities)
-    w = w + 0.002 * out["parcel_area_m2"].fillna(0) * (w == 0)
-    out["current_tax"] = commune_tfpb_produit * w / w.sum()
+    w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
+    if "floor_area_m2" in out.columns:        # enforce built-only
+        w = w.where(out["floor_area_m2"].fillna(0) > 0, 0.0)
+    if category_weights and category_col in out.columns:   # sensitivity only
+        w = w * out[category_col].map(category_weights).fillna(1.0)
+    total = w.sum()
+    out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out

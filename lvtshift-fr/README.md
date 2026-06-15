@@ -24,11 +24,12 @@ L'objectif est double :
 ## Architecture
 
 ```
-config.py        commune, coûts de construction, bornes de sensibilité, URLs
-ingest.py        téléchargements : DVF, cadastre, BDNB, REI, Filosofi
+config.py        communes, coûts de construction, benchmarks fonciers, URLs
+ingest.py        DVF, cadastre, BD TOPO, GPU, REI, contours IRIS, Filosofi
 estimate.py      valeur bâti (coût de remplacement déprécié)
-                 -> hédonique DVF -> terrain résiduel ancré -> taxe actuelle
+                 -> hédonique DVF -> terrain « classer puis valoriser » -> taxe
 run_pipeline.py  orchestration + appel du solveur LVTShift réel
+run_commune.py   pilote données réelles (ingest -> solveur) pour une commune
 test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 ```
 
@@ -38,10 +39,13 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 |---|---|---|
 | Transactions | DVF géolocalisé (Etalab) | modèle hédonique de valeur de marché |
 | Parcelles | Cadastre Etalab | géométries, surfaces |
-| Bâtiments | **BDNB** (CSTB) : BD TOPO + DPE + attributs appariés Fichiers fonciers | emprise, niveaux, hauteur, année, usage |
-| Recettes TFPB | REI (DGFiP) | cible exacte de neutralité budgétaire |
+| Bâtiments | **BD TOPO V3** (IGN, WFS Géoplateforme) | emprise, niveaux, hauteur, logements, usage, flag d'appariement Fichiers fonciers |
+| Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
-| Ancrages terrain | ventes de terrains à bâtir (DVF), EPTB (agrégats), comptes de patrimoine INSEE (part terrain ~45-50 %) | calibration / bornes |
+| Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
+| Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
+| Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
+| Ancrage part terrain | comptes de patrimoine INSEE (~45-50 %) | contrôle descendant |
 
 ## Méthode, en bref
 
@@ -49,9 +53,14 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    × dépréciation linéaire plancher (25 % résiduel à 80 ans).
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
    (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable.
-3. **Terrain = marché − bâti**, avec : plancher aux comparables terrains nus,
-   parcelles vacantes valorisées directement aux comparables, part terrain
-   bornée [15 %, 85 %] (chaque clip est flaggé `lv_flag`).
+3. **Terrain : classer puis valoriser.** Parcelles bâties → résiduel
+   (marché − bâti), plancher à la valeur agricole, part terrain bornée
+   [15 %, 85 %] (clips flaggés `lv_flag`). Parcelles non bâties → classées par
+   le zonage PLU (GPU `zone_urba` : U/AU constructible, A/N agricole/naturel) :
+   le constructible est valorisé aux comparables **terrains à bâtir** DVF
+   (médiane communale, repli EPTB national), le non-bâti aux prix **SAFER**
+   départementaux (~0,4–1 €/m²). Bâtiments rattachés aux parcelles par
+   **intersection pondérée par surface** (et non par centroïde).
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
@@ -89,9 +98,20 @@ git clone https://github.com/alles-delenda-est/LVTShift.git
 cd LVTShift
 pip install pandas numpy geopandas matplotlib seaborn
 cd lvtshift-fr
-python test_synthetic.py        # bout-en-bout synthétique (sans réseau)
-# puis : compléter ingest.py (BDNB, REI, Filosofi) et appeler run_pipeline.run()
+python test_synthetic.py            # bout-en-bout synthétique (sans réseau)
+python run_commune.py montreuil     # commune réelle, données ouvertes en direct
 ```
+
+`run_commune.py` enchaîne l'ingest réel (cadastre Etalab, DVF, bâtiments
+BD TOPO via WFS IGN, cible REI via OFGL) puis appelle le solveur LVTShift.
+Communes pré-configurées : `villeurbanne` (cœur lyonnais), `roubaix`,
+`cahors`, `figeac` (Lot rural), `montreuil`, `grenoble`, `annemasse`.
+`--layers Commune` pour ne neutraliser que la part communale ;
+`--no-report` pour un export CSV seul.
+
+> Sous Windows, exporter `PYTHONUTF8=1` avant de lancer (les libellés de
+> l'export amont contiennent des caractères Unicode que la console cp1252
+> refuse). Python 3.15+ le fera par défaut.
 
 Guide pas-à-pas pour non-codeur (Windows/PowerShell) : voir **`GUIDE.md`**.
 
@@ -104,6 +124,20 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
+- **Taxe actuelle (maillon porteur désormais).** La TFPB est un impôt sur le
+  **bâti** : les parcelles non bâties portent désormais **zéro** taxe actuelle
+  (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT
+  positive. *Reste faible* la répartition du produit **entre parcelles bâties**
+  au prorata de la seule surface plancher : elle ignore la catégorie cadastrale
+  et les coefficients de pondération de surface (principaux moteurs de la VLC).
+  Choix assumé : **pas** de calage sur la valeur de marché (la VLC 1970 est
+  régressive vs marché, un tel calage dégraderait la fidélité au système actuel) ;
+  une variante pondérée par catégorie n'est offerte qu'en **sensibilité**. Ne
+  jamais publier de montants de taxe actuelle à la parcelle.
+- **Nuance de zonage AU et Nh/Ah** (revue Gemini) : tout AU est traité
+  constructible avec une décote forfaitaire (AU/AUs) ; les AU *fermées* mériteraient
+  une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
+  sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
   ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
@@ -123,3 +157,7 @@ export CSV seul : `run(..., make_report=False)`.
   d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
   poids relatif résidentiel/professionnel ; à traiter par strate.
+- Revenus (Filosofi) : millésime 2021 (le dernier produit), à l'IRIS,
+  **uniquement pour les communes ≥ 5 000 habitants** ; certains IRIS sont sous
+  secret statistique (revenu manquant → exclus des quintiles). L'analyse par
+  quintile hérite de la faiblesse de la taxe actuelle : à lire en tendance.

@@ -102,19 +102,34 @@ After a run, look inside `lvtshift-fr/output/`:
 
 ## 5. Running it for a *real* commune
 
-This is the honest part. The synthetic test works today. For a **real**
-commune, the data-download step (`ingest.py`) is still a stub — fetching BDNB
-buildings, REI tax totals, and Filosofi incomes needs to be completed first.
-Until then, real runs aren't a one-click affair. When that's ready, the flow is:
+This now works on **live open data** — one command:
 
-1. In `config.py`, pick the commune — `GRENOBLE` and `ANNEMASSE` are pre-defined
-   (change the one line `from config import GRENOBLE as CFG` in `run_pipeline.py`).
-2. Run the ingest functions to download that commune's open data.
-3. Call `run_pipeline.run(...)` with the prepared data — same as the synthetic
-   test does at the bottom of `test_synthetic.py`.
+```powershell
+python run_commune.py montreuil
+```
 
-If you want to model a specific commune, tell me which and I'll wire up the
-ingest for it.
+It downloads that commune's parcels (cadastre), property sales (DVF), buildings
+(BD TOPO), and the real taxe-foncière total (REI via OFGL), then runs the model
+and writes the CSV + euro charts. Pre-configured communes you can swap in:
+`villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`, `grenoble`,
+`annemasse`. Add `--no-report` for a spreadsheet-only run.
+
+> On Windows, run `$env:PYTHONUTF8 = "1"` once in the same PowerShell window
+> before the command (some labels use characters the old console can't print).
+
+**Read the results sensibly:** both dense (Montreuil, Villeurbanne, Roubaix) and
+rural (Cahors, Figeac) communes now give credible aggregates — building-less land
+is classified by its PLU zoning and priced as either development land or cheap
+farmland, so the countryside no longer distorts the result. The remaining weakest
+input is the *current-tax* baseline (see the README's *Limites connues*), so read
+the **change** by category as directional, not the starting bill. Publish by
+property category or income quintile, never as one household's bill.
+
+Income-based charts now appear too: each parcel gets its neighbourhood (IRIS)
+median income from INSEE Filosofi, so you get the **impact by income quintile**
+— e.g. in Montreuil the poorest neighbourhoods see cuts and wealthier ones pay
+more. (Income exists only for communes of 5,000+ people, 2021 data; a few
+neighbourhoods are blank for privacy and drop out.)
 
 ---
 
@@ -123,8 +138,14 @@ ingest for it.
 - **Trust the aggregates, not the individual bills.** The per-parcel numbers
   rely on imputations; publish results **by property category or income
   quintile**, never as one household's bill.
-- The current-tax baseline is the weakest input — see the README's *Limites
-  connues* before quoting any figure.
+- **Vacant land: read the euros, not the %.** Empty land pays no *built* tax
+  today (that's correct — it's the separate non-bâti tax), so on the charts it
+  shows ~0% change but a real **euro** increase under LVT. That jump from nothing
+  to something is the whole point of the reform; the percentage is just undefined
+  from a zero base.
+- The current-tax baseline is now the weakest input (how today's bill is split
+  *between built properties*) — see the README's *Limites connues* before quoting
+  any figure.
 
 ---
 

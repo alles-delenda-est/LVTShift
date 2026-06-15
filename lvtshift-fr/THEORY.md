@@ -21,16 +21,39 @@ call its real solver unchanged.*
 
 The pipeline is a value-decomposition chain:
 - **improvement value** = depreciated replacement cost (footprint × storeys ×
-  €/m² × straight-line depreciation), from BDNB/BD TOPO geometry.
+  €/m² × straight-line depreciation), from BD TOPO building geometry/attributes.
 - **market value** = a deliberately simple hedonic on DVF (cell × type fixed
-  effects on log €/m², shrinkage toward commune-type median).
-- **land value** = market − improvement (residual), floored at vacant-land
-  comparables, land-share clipped to [15%, 85%] with every clip flagged.
-- **current tax** = the commune's real REI TFPB produit distributed by a VLC
-  proxy (floor area) — exact in aggregate, approximate per parcel.
+  effects on log €/m², shrinkage toward commune-type median). `cell` is a 400 m
+  grid square — a transparent spatial fixed effect, not an admin geography.
+- **land value** = **classify-then-price** (see below): built parcels use the
+  residual (market − improvement), building-less parcels are classified by legal
+  constructibility and priced against the right benchmark. The single flaw of
+  the old method was applying *one* land density to *all* land.
+- **current tax** = the commune's real REI foncier-bâti produit distributed by a
+  VLC proxy (floor area) — exact in aggregate, approximate per parcel.
 
 Each weak step is **flagged in-band** (`imp_quality`, `lv_flag`) so error
 propagates visibly rather than silently.
+
+### Source decisions (verified live, June 2026)
+- **Buildings: BD TOPO V3 WFS, not BDNB.** The IGN Géoplateforme exposes the same
+  MAJIC-derived attributes per building (hauteur, nombre_d_etages,
+  nombre_de_logements, usage_1, appariement_fichiers_fonciers) queryable by
+  commune bbox — avoiding the multi-GB BDNB departmental download for equivalent
+  content. Buildings join to cadastre parcels by centroid-in-polygon.
+- **Tax target: OFGL's commune-level REI API.** Foncier bâti is `FB`; the target
+  is the `MONTANT RÉEL` line summed over the chosen beneficiary layers (default
+  Commune + intercommunalité). Which layers are held neutral is an explicit
+  policy choice (one of LVTShift's five upfront questions).
+- **Land classification: GPU zoning + SAFER + DVF TAB (classify-then-price).**
+  Building-less parcels are classified by Géoportail-de-l'Urbanisme `zone_urba`
+  `typezone` (U/AUc → constructible; AU/AUs → constructible-deferred, discounted;
+  A → agricultural; N → natural). Constructible land is priced from clean DVF
+  *terrain-à-bâtir* comparables (commune median, shrunk to cell where dense,
+  EPTB national fallback); agricultural/natural land from SAFER départemental
+  €/m². Buildings join parcels by **area-weighted intersection** (not centroid),
+  so a building straddling a boundary credits each parcel — killing false
+  "vacant" parcels. Verified by Gemini (France-context) and two real runs.
 
 ## Strategy
 
@@ -48,33 +71,45 @@ propagates visibly rather than silently.
 
 ## Key discoveries
 
-- **The upstream API matches the FR code's assumptions exactly** (verified
-  against `lvt/lvt_utils.py`): `model_split_rate_tax` signature/returns, every
-  `CATEGORY_MAP` value is a valid `STANDARD_PROPERTY_CATEGORIES` member, and
-  `save_standard_export` defaults line up. The integration is real, not aspirational.
-- **The synthetic end-to-end test passes through the real solver** on a clean
-  environment (pandas 3.x) — revenue-neutral within 1%, vacant land correctly
-  pays more. No hidden version landmine.
-- **Fork layout needs one change only:** the `lvt` package sits at the repo root
-  (not a sibling `../LVTShift`), so `run_pipeline.py`'s path line drops the
-  `/ "LVTShift"` suffix. Nothing else.
+- **Real ingest now works end-to-end on live open data.** `run_commune.py` runs
+  cadastre → DVF → BD TOPO → REI → solver → euro charts for any configured
+  commune, **revenue-neutral to the euro** (Montreuil €101.8M, Cahors €22.7M hit
+  exactly). The pipeline is no longer synthetic-only.
+- **Classify-then-price fixed the rural artifact.** After the fix, agricultural +
+  natural land in Cahors (9 083 parcels, 42% of them) bears **0.3%** of the levy
+  (was: it swamped the base); built stock bears 98.4%, and built categories shift
+  only ±3% (was −83%). In Montreuil the built stock bears 98.5%, constructible
+  vacant 1.5% — and that vacant land still pays *more* (the LVT development
+  incentive, now correctly sized). Both stay revenue-neutral to the euro.
+- **Arrondissement fiscal gotcha.** Paris/Lyon/Marseille arrondissements have
+  INSEE codes for cadastre/DVF/buildings but **no separate taxe foncière** (the
+  city + métropole levy it), so REI has no per-arrondissement produit. "Inner
+  Lyon" is therefore modelled as Villeurbanne (autonomous inner-ring commune).
 
 ## Open questions / where the theory might break
 
-- **The current-tax proxy is the load-bearing weakness.** Independent review
-  (Gemini, France-context) judges a floor-area-only VLC proxy potentially
-  indefensible even at category/quintile level: it ignores cadastral category and
-  weighted-surface coefficients, the two largest VLC drivers. Candidate fixes:
-  model VLC from DVF+BDNB, or anchor to TFPB aggregates by cadastral category ×
-  IRIS. Until then, the *baseline* — not the LVT side — is what could discredit
-  the exercise.
-- **Land-share clipping distorts the tails.** Dense central parcels can genuinely
-  exceed an 85% land share; clipping must be presented as a design constraint with
-  the unclipped distribution shown alongside, not as a measurement.
-- **Building value unit mismatch** (SHON cost × SHOB-like surface) and a generic
-  €1,900/m² with a possibly-high 25% depreciation floor need regional calibration.
-- **DVF hygiene** (multi-lot mutations, non-market sales, Notaires-INSEE vs CPI
-  deflation) is assumed handled upstream of the hedonic; robustness untested on
-  real data.
-- Real ingest (BDNB, REI, Filosofi) is still `NotImplementedError` — the pipeline
-  is proven on synthetic data only.
+- **Current-tax baseline: built-only fixed; within-built proxy remains weak.**
+  The clear error is resolved — FB is a *built* tax, so building-less parcels now
+  bear zero (the old `0.002 × area` term that manufactured a rural over-charge,
+  and the "Cahors vacant −86%", are gone; vacant land correctly goes 0 → positive
+  LVT). What remains weak is distributing the produit *within* built parcels by
+  floor area alone: it ignores cadastral category and weighted-surface
+  coefficients (the largest VLC drivers). Deliberately **not** tilted toward the
+  hedonic market value — the 1970 VLC is regressive vs market, so a value tilt
+  would *worsen* fidelity to today's system (Gemini, France-context). A
+  category-weighted variant is offered only as a labelled sensitivity. The real
+  resolution is per-parcel VLC from the Fichiers Fonciers (the access argument).
+- **AU and Nh/Ah zoning nuance** (Gemini's main flag): all AU is treated
+  constructible with a flat discount for AU/AUs; `AU fermée` deserves a steeper
+  cut and `Nh/Ah` pastilles (limited building in A/N) are currently undervalued.
+- **Non-residential market value borrows the residential €/m² surface** — flagged;
+  professionnels need a separate strata (2017 VLC revision) before publication.
+- **Income (Filosofi) wired** — parcels carry their IRIS code (IGN contours WFS),
+  joined to INSEE Filosofi 2021 median disposable income; the distributional
+  quintile charts now render. Montreuil shows a *progressive* gradient (poorest
+  quintiles −10 %, richer +9/+12 %). Caveats: 2021 is the last vintage, IRIS
+  income exists only for communes ≥5 000 inhabitants, some IRIS are suppressed
+  (NaN → drop out), and the quintile split inherits the current-tax baseline
+  weakness, so read it as directional.
+- **Construction costs are coarse regional pilots** (1600–2150 €/m²); a ±15% move
+  flows linearly into improvement value, so they need FFB/BT01 calibration.
