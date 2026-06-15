@@ -104,7 +104,12 @@ propagates visibly rather than silently.
   cut and `Nh/Ah` pastilles (limited building in A/N) are currently undervalued.
 - **Non-residential market value borrows the residential €/m² surface** — flagged;
   professionnels need a separate strata (2017 VLC revision) before publication.
-- **Income (Filosofi) not yet wired** — the distributional/equity charts are off
-  until it lands; IRIS income exists only for communes ≥5 000 inhabitants.
+- **Income (Filosofi) wired** — parcels carry their IRIS code (IGN contours WFS),
+  joined to INSEE Filosofi 2021 median disposable income; the distributional
+  quintile charts now render. Montreuil shows a *progressive* gradient (poorest
+  quintiles −10 %, richer +9/+12 %). Caveats: 2021 is the last vintage, IRIS
+  income exists only for communes ≥5 000 inhabitants, some IRIS are suppressed
+  (NaN → drop out), and the quintile split inherits the current-tax baseline
+  weakness, so read it as directional.
 - **Construction costs are coarse regional pilots** (1600–2150 €/m²); a ±15% move
   flows linearly into improvement value, so they need FFB/BT01 calibration.

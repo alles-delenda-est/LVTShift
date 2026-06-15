@@ -25,7 +25,7 @@ L'objectif est double :
 
 ```
 config.py        communes, coûts de construction, benchmarks fonciers, URLs
-ingest.py        téléchargements : DVF, cadastre, BD TOPO, GPU, REI, (Filosofi)
+ingest.py        DVF, cadastre, BD TOPO, GPU, REI, contours IRIS, Filosofi
 estimate.py      valeur bâti (coût de remplacement déprécié)
                  -> hédonique DVF -> terrain « classer puis valoriser » -> taxe
 run_pipeline.py  orchestration + appel du solveur LVTShift réel
@@ -157,3 +157,7 @@ export CSV seul : `run(..., make_report=False)`.
   d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
   poids relatif résidentiel/professionnel ; à traiter par strate.
+- Revenus (Filosofi) : millésime 2021 (le dernier produit), à l'IRIS,
+  **uniquement pour les communes ≥ 5 000 habitants** ; certains IRIS sont sous
+  secret statistique (revenu manquant → exclus des quintiles). L'analyse par
+  quintile hérite de la faiblesse de la taxe actuelle : à lire en tendance.

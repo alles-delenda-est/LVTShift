@@ -2,24 +2,22 @@
 
 Usage:
     python run_commune.py cahors
-    python run_commune.py lyon3 --layers Commune        # commune share only
+    python run_commune.py villeurbanne --layers Commune   # commune share only
 
-This is the real-data analogue of test_synthetic.py: it fetches the four open
-sources (cadastre, DVF, BD TOPO buildings, REI), shapes them into the contract
-estimate.py/run_pipeline.run expect, then calls the *real* LVTShift solver.
-
-Income (Filosofi) is deliberately deferred (ingest.fetch_filosofi_iris), so
-the distributional quintile charts are skipped; category impact, the +/-10 %
-share, the tax-change distribution, and revenue-neutrality all run.
+This is the real-data analogue of test_synthetic.py: it fetches the open sources
+(cadastre, DVF, BD TOPO buildings, GPU zoning, REI, IRIS contours, Filosofi),
+shapes them into the contract estimate.py/run_pipeline.run expect, then calls
+the *real* LVTShift solver. Output: the standard CSV plus euro charts — category
+impact, the +/-10 % share, the tax-change distribution, and the income-quintile
+(distributional) charts.
 
 Honest caveats baked in here (see README 'Limites connues'):
   * `cell` is a 400 m grid square, a transparent spatial fixed effect for the
-    hedonic — NOT an administrative geography. Swap to IRIS when income lands.
+    hedonic — NOT an administrative geography (income uses the real IRIS code).
   * Non-residential parcels borrow the residential EUR/m2 surface (flagged);
     professionnels need a separate strata before publication.
-  * Rural communes carry large vacant/agricultural parcels: vacant land is
-    valued off the commune's median built land density, which can be coarse on
-    big fields. Inspect the Vacant Land category before quoting it.
+  * The current-tax baseline (floor-area VLC proxy) is the load-bearing weak
+    link for the *starting* bill — read the change by category/quintile.
 """
 
 import argparse
@@ -163,6 +161,11 @@ def prepare(cfg, layers):
     # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
     parcels = classify_and_price_land(cfg, parcels, buildings, tab)
 
+    # IRIS code per parcel + Filosofi income (drives the distributional charts)
+    parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
+                            on="idpar", how="left")
+    iris_income = ingest.fetch_filosofi_iris(cfg)
+
     # DVF: lat/lon -> same grid cell
     sales = sales.dropna(subset=["lat", "lon"]).copy()
     pts = gpd.GeoSeries(
@@ -173,7 +176,7 @@ def prepare(cfg, layers):
     print(f"  [{cfg.name}] {len(parcels)} parcels, {len(sales)} usable DVF "
           f"sales, {parcels['cell'].nunique()} grid cells")
     print("  land_type:", parcels["land_type"].value_counts().to_dict())
-    return parcels, buildings, sales, tfpb
+    return parcels, buildings, sales, tfpb, iris_income
 
 
 def main():
@@ -190,9 +193,9 @@ def main():
 
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
-    parcels, buildings, sales, tfpb = prepare(cfg, tuple(args.layers))
+    parcels, buildings, sales, tfpb, iris_income = prepare(cfg, tuple(args.layers))
 
-    out = rp.run(parcels, buildings, sales, tfpb, iris_income=None,
+    out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
 
     print("\n--- sanity checks -------------------------------------")

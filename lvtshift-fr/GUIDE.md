@@ -125,8 +125,11 @@ input is the *current-tax* baseline (see the README's *Limites connues*), so rea
 the **change** by category as directional, not the starting bill. Publish by
 property category or income quintile, never as one household's bill.
 
-Income-based charts (impact by neighbourhood income) don't appear yet — the
-income data (Filosofi) is the next piece to wire in.
+Income-based charts now appear too: each parcel gets its neighbourhood (IRIS)
+median income from INSEE Filosofi, so you get the **impact by income quintile**
+— e.g. in Montreuil the poorest neighbourhoods see cuts and wealthier ones pay
+more. (Income exists only for communes of 5,000+ people, 2021 data; a few
+neighbourhoods are blank for privacy and drop out.)
 
 ---
 

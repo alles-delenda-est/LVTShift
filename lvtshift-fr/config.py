@@ -82,11 +82,15 @@ DATA_SOURCES = {
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
-    # Filosofi (INSEE): IRIS-level income (median, deciles, poverty).
-    "filosofi_info": "https://www.insee.fr/fr/statistiques/7233950",  # check latest millesime
+    # Filosofi (INSEE): IRIS-level income. 2021 is the last produced vintage
+    # (2022 not published). CSV zip -> BASE_TD_FILO_IRIS_2021_DISP.csv (sep ';'),
+    # keyed on IRIS (9-digit code_iris), median = DISP_MED21. Covers communes
+    # >= 5 000 inhabitants only.
+    "filosofi_iris_csv": "https://www.insee.fr/fr/statistiques/fichier/8229323/BASE_TD_FILO_IRIS_2021_DISP_CSV.zip",
 
-    # IRIS contours (IGN/INSEE)
-    "iris_contours": "https://www.data.gouv.fr/fr/datasets/contours-iris/",
+    # IRIS contours, same Géoplateforme WFS. Layer attribute code_iris is the
+    # 9-digit IRIS code that joins to Filosofi. Queried by commune bbox.
+    "iris_contours_layer": "STATISTICALUNITS.IRIS:contours_iris",
 }
 
 # ------------------------------------------------------------------ #

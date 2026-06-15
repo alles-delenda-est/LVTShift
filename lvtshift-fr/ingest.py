@@ -14,6 +14,7 @@ import io
 import json
 import urllib.parse
 import urllib.request
+import zipfile
 
 import pandas as pd
 
@@ -303,22 +304,56 @@ def fetch_rei_tfpb_produit(cfg, layers=("Commune", "GFP"),
 
 
 # ------------------------------------------------------------------ #
-def fetch_filosofi_iris(cfg) -> pd.DataFrame:
-    """INSEE Filosofi at IRIS level -> iris, median_income_eur (DISP_MED).
+def fetch_parcel_iris(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """IRIS code per parcel -> idpar, iris (9-digit code_iris).
 
-    NOT on the critical path for a revenue-neutral LVT result: income only
-    drives the distributional (quintile) charts, and run_pipeline.run accepts
-    iris_income=None (those charts then auto-skip). Wired as a follow-up so the
-    headline result lands first.
-
-    When enabled: download the latest 'Revenus, pauvreté et niveau de vie
-    (Filosofi) — IRIS' file (2021 is the last produced vintage; 2022 was not),
-    keep DISP_MED per IRIS, filter to IRIS whose code starts with cfg.insee_code.
-    Caveat: Filosofi IRIS exists only for communes >=5 000 inhabitants — small
-    communes (e.g. Figeac, rural Lot) will have no IRIS income and fall back to
-    no distributional charts.
+    Spatial-joins each parcel to the IGN IRIS contours (dominant overlap area),
+    giving the join key for Filosofi income. IRIS tile the whole commune, so
+    every parcel gets one. Same WFS/overlay pattern as fetch_parcel_zoning.
     """
-    raise NotImplementedError(
-        "Filosofi IRIS income is the documented next step (distributional "
-        "charts only); the headline pipeline runs without it via "
-        "iris_income=None. See docstring for the INSEE 2021 IRIS file.")
+    import geopandas as gpd
+
+    pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
+    feats = _wfs_features(SRC["iris_contours_layer"], pg.total_bounds)
+    if not feats:
+        return pd.DataFrame({"idpar": pg["idpar"], "iris": None})
+
+    ig = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)[["geometry", "code_iris"]]
+    inter = gpd.overlay(pg, ig, how="intersection", keep_geom_type=True)
+    inter["ov_area"] = inter.geometry.area
+    dom = (inter.sort_values("ov_area").groupby("idpar").tail(1)[["idpar", "code_iris"]])
+    out = pg[["idpar"]].merge(dom, on="idpar", how="left").rename(
+        columns={"code_iris": "iris"})
+    print(f"  [{cfg.name}] IRIS join: {out['iris'].nunique()} IRIS, "
+          f"{out['iris'].notna().mean():.0%} of parcels matched")
+    return out
+
+
+def fetch_filosofi_iris(cfg) -> pd.DataFrame:
+    """INSEE Filosofi (2021) median disposable income per IRIS -> iris,
+    median_income_eur.
+
+    2021 is the last produced vintage (2022 not published). The CSV is keyed on
+    the 9-digit IRIS code; median disposable income per consumption unit is
+    DISP_MED21. We keep this commune's IRIS (code starts with cfg.insee_code).
+
+    Caveat: Filosofi IRIS exists only for communes >= 5 000 inhabitants, and some
+    IRIS are statistically suppressed (blank) — those come back NaN and simply
+    drop out of the income quintiles. Income drives only the distributional
+    charts; run_pipeline.run still works with iris_income=None.
+    """
+    raw = _get(SRC["filosofi_iris_csv"])
+    with zipfile.ZipFile(io.BytesIO(raw)) as z:
+        name = next(n for n in z.namelist()
+                    if n.upper().endswith(".CSV") and not n.lower().startswith("meta"))
+        with z.open(name) as fh:
+            df = pd.read_csv(fh, sep=";", dtype={"IRIS": str})
+
+    df = df[df["IRIS"].str.startswith(cfg.insee_code)].copy()
+    df["median_income_eur"] = pd.to_numeric(df["DISP_MED21"], errors="coerce")
+    out = (df[["IRIS", "median_income_eur"]]
+           .rename(columns={"IRIS": "iris"})
+           .dropna(subset=["median_income_eur"]))
+    print(f"  [{cfg.name}] Filosofi: {len(out)} IRIS with income "
+          f"(median €{out['median_income_eur'].median():,.0f})")
+    return out

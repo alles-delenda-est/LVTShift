@@ -115,9 +115,11 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # minority/black left null - France produces no ethnic statistics
     # (constitutional principle), flag this in any cross-city comparison.
     if iris_income is not None:
+        # real runs carry a true IRIS code; the synthetic test keys on `cell`
+        income_key = "iris" if "iris" in p.columns else "cell"
         p = p.merge(iris_income.rename(columns={
             "iris": "std_geoid", "median_income_eur": "median_income"}),
-            left_on="cell", right_on="std_geoid", how="left")
+            left_on=income_key, right_on="std_geoid", how="left")
 
     name = cfg.name.lower().replace(" ", "")
     Path(out_dir).mkdir(exist_ok=True)
