@@ -79,6 +79,8 @@ print("median tax change % by category:\n", chg.to_string())
 rev_ok = abs(out["new_tax"].sum() / TFPB - 1) < 0.01
 print(f"revenue neutrality within 1%: {rev_ok}")
 assert rev_ok
-assert (out.loc[out.property_category == "Vacant Land", "tax_change_pct"]
-        .median() > 0), "vacant land should pay MORE under LVT"
+# FB is a built-only tax: vacant land pays ~0 today, then a positive LVT bill.
+vac = out["property_category"] == "Vacant Land"
+assert out.loc[vac, "current_tax"].sum() == 0, "vacant land is not in the FB base"
+assert (out.loc[vac, "new_tax"] > 0).mean() > 0.9, "vacant land should pay LVT"
 print("ALL CHECKS PASSED ✅")

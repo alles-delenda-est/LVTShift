@@ -47,7 +47,7 @@ FR_RESIDENTIAL_CATEGORIES = [
 ]
 
 
-def _write_report(out: pd.DataFrame, out_dir: str) -> None:
+def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
     """Render the France-relevant PNG charts from the standard export.
 
     Imported lazily so a CSV-only run never requires matplotlib. Charts are
@@ -57,38 +57,42 @@ def _write_report(out: pd.DataFrame, out_dir: str) -> None:
     (always, for France). What remains: category impact, ±10 % share,
     income-quintile (Filosofi), and the tax-change distribution.
     """
+    name = cfg.name.lower().replace(" ", "")
     try:
         from charts_fr import create_city_report_fr
     except ImportError as exc:  # matplotlib not installed
-        print(f"[{CFG.name}] charts skipped (matplotlib not installed): {exc}")
+        print(f"[{cfg.name}] charts skipped (matplotlib not installed): {exc}")
         return
     report = create_city_report_fr(
         out,
-        city=CFG.name.lower(),
+        city=name,
         output_dir=f"{out_dir}/reports",
         show=False,
         census_categories=FR_RESIDENTIAL_CATEGORIES,
     )
-    print(f"[{CFG.name}] {len(report['charts_saved'])} charts -> "
-          f"{out_dir}/reports/{CFG.name.lower()}/")
+    print(f"[{cfg.name}] {len(report['charts_saved'])} charts -> "
+          f"{out_dir}/reports/{name}/")
 
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output", make_report: bool = True) -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True, cfg=CFG) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
+       cfg: CommuneConfig for the commune being modelled (construction cost,
+       split ratio, name used for output paths). Defaults to the module CFG
+       so the synthetic test keeps working unchanged.
        make_report: also write the PNG charts (needs matplotlib); set False
        for a CSV-only run."""
 
-    imp = estimate.improvement_value(buildings, CFG)
+    imp = estimate.improvement_value(buildings, cfg)
     p = parcels.merge(imp, on="idpar", how="left")
     p[["improvement_value", "floor_area_m2"]] = \
         p[["improvement_value", "floor_area_m2"]].fillna(0)
 
     surface, _trans = estimate.fit_hedonic(dvf)
     p = estimate.market_value(p, surface)
-    p = estimate.land_value_residual(p, CFG)
+    p = estimate.land_value_residual(p, cfg)
     p = estimate.current_tax(p, commune_tfpb_produit)
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
@@ -99,7 +103,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
-        land_improvement_ratio=CFG.split_rate_ratio,
+        land_improvement_ratio=cfg.split_rate_ratio,
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
@@ -111,22 +115,25 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # minority/black left null - France produces no ethnic statistics
     # (constitutional principle), flag this in any cross-city comparison.
     if iris_income is not None:
+        # real runs carry a true IRIS code; the synthetic test keys on `cell`
+        income_key = "iris" if "iris" in p.columns else "cell"
         p = p.merge(iris_income.rename(columns={
             "iris": "std_geoid", "median_income_eur": "median_income"}),
-            left_on="cell", right_on="std_geoid", how="left")
+            left_on=income_key, right_on="std_geoid", how="left")
 
+    name = cfg.name.lower().replace(" ", "")
     Path(out_dir).mkdir(exist_ok=True)
     out = save_standard_export(
-        df=p, city=CFG.name.lower(),
-        output_path=f"{out_dir}/{CFG.name.lower()}.csv",
-        model_type=f"split_rate:{CFG.split_rate_ratio}",
+        df=p, city=name,
+        output_path=f"{out_dir}/{name}.csv",
+        model_type=f"split_rate:{cfg.split_rate_ratio}",
         land_millage=land_mill, improvement_millage=imp_mill,
     )
-    print(f"[{CFG.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
+    print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 
     if make_report:
-        _write_report(out, out_dir)
+        _write_report(out, out_dir, cfg)
     return out
 
 
