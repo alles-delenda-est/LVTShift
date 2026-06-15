@@ -124,13 +124,16 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
-- **Taxe actuelle (maillon porteur désormais).** Une fois le foncier
-  correctement valorisé, le proxy de VLC (surface plancher) est l'entrée la plus
-  faible. Il attribue même un petit poids `0,002 × surface` aux parcelles non
-  bâties, si bien que le foncier rural se voit prêter un peu de taxe *foncière
-  bâtie* qu'il ne devrait pas — d'où le « non-bâti −86 % » à Cahors (la LVT
-  corrige une surcharge de la base de départ, pas une vraie baisse). À traiter :
-  retirer le terme de surface, ou modéliser la VLC par catégorie cadastrale.
+- **Taxe actuelle (maillon porteur désormais).** La TFPB est un impôt sur le
+  **bâti** : les parcelles non bâties portent désormais **zéro** taxe actuelle
+  (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT
+  positive. *Reste faible* la répartition du produit **entre parcelles bâties**
+  au prorata de la seule surface plancher : elle ignore la catégorie cadastrale
+  et les coefficients de pondération de surface (principaux moteurs de la VLC).
+  Choix assumé : **pas** de calage sur la valeur de marché (la VLC 1970 est
+  régressive vs marché, un tel calage dégraderait la fidélité au système actuel) ;
+  une variante pondérée par catégorie n'est offerte qu'en **sensibilité**. Ne
+  jamais publier de montants de taxe actuelle à la parcelle.
 - **Nuance de zonage AU et Nh/Ah** (revue Gemini) : tout AU est traité
   constructible avec une décote forfaitaire (AU/AUs) ; les AU *fermées* mériteraient
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)

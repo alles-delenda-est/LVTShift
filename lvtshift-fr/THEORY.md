@@ -88,15 +88,17 @@ propagates visibly rather than silently.
 
 ## Open questions / where the theory might break
 
-- **Current-tax proxy is now the load-bearing weakness.** With land valuation
-  fixed, the baseline VLC proxy (floor-area-only) is the weakest input. It even
-  gives building-less parcels a small `0.002 × area` weight, so rural land draws
-  some *current* foncier-bâti tax it would not really owe — visible as Cahors
-  "vacant land −86%" (the LVT corrects a baseline over-charge, not a real cut).
-  It also ignores cadastral category and weighted-surface coefficients (the two
-  largest VLC drivers), so even aggregates must be recouped against REI by
-  category. Fix candidates: drop the land-area term (bâti is building-only), or
-  model VLC from cadastral category × weighted surface.
+- **Current-tax baseline: built-only fixed; within-built proxy remains weak.**
+  The clear error is resolved — FB is a *built* tax, so building-less parcels now
+  bear zero (the old `0.002 × area` term that manufactured a rural over-charge,
+  and the "Cahors vacant −86%", are gone; vacant land correctly goes 0 → positive
+  LVT). What remains weak is distributing the produit *within* built parcels by
+  floor area alone: it ignores cadastral category and weighted-surface
+  coefficients (the largest VLC drivers). Deliberately **not** tilted toward the
+  hedonic market value — the 1970 VLC is regressive vs market, so a value tilt
+  would *worsen* fidelity to today's system (Gemini, France-context). A
+  category-weighted variant is offered only as a labelled sensitivity. The real
+  resolution is per-parcel VLC from the Fichiers Fonciers (the access argument).
 - **AU and Nh/Ah zoning nuance** (Gemini's main flag): all AU is treated
   constructible with a flat discount for AU/AUs; `AU fermée` deserves a steeper
   cut and `Nh/Ah` pastilles (limited building in A/N) are currently undervalued.

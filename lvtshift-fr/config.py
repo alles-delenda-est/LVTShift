@@ -173,3 +173,16 @@ LAND_MODEL = {
     # GPU has no coverage (RNU communes / uncovered slivers).
     "rnu_building_buffer_m": 25.0,
 }
+
+# Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.
+# The published baseline distributes the FB produit by floor area only (size is
+# the dominant VLC driver). These relative per-m² weights are a *labelled
+# sensitivity* to show how a category-differentiated baseline (professionnel m²
+# carry more VLC than housing m², esp. post-2017 revision) would shift the
+# winners/losers — pass to estimate.current_tax(category_weights=...). NOT a
+# measurement: the levels are illustrative, not grounded in per-commune VLC.
+# Do NOT tilt toward market value (would erase the 1970 base's real regressivity).
+CATEGORY_VLC_WEIGHTS_SENSITIVITY = {
+    "maison": 1.0, "appartement": 1.0, "immeuble_collectif": 1.0,
+    "commerce": 1.8, "industriel": 1.4, "dependance": 0.5, "terrain_nu": 0.0,
+}

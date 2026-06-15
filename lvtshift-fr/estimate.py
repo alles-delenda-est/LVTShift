@@ -240,19 +240,38 @@ def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
 # ------------------------------------------------------------------ #
 
 def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
-                vlc_proxy_cols=("floor_area_m2",)) -> pd.DataFrame:
-    """
-    THE honestly-flagged weak link (replaced by FF parcel VLC when access lands).
+                vlc_proxy_cols=("floor_area_m2",),
+                category_weights: dict | None = None,
+                category_col: str = "category_fr") -> pd.DataFrame:
+    """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
-    Proxy: VLC ~ floor area x category weight (1970 tarifs were per-m²
-    by category; without the category we default to pure floor area).
-    The commune's actual TFPB produit (REI, exact) is distributed
-    proportionally to the proxy -> aggregate is right by construction,
-    distribution is approximate.
+    THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
+    access lands). The exact REI produit is shared out by a VLC proxy, so the
+    aggregate is right by construction and only the distribution is approximate.
+
+    Two deliberate design choices (France-context reviewed):
+
+    * **Built parcels only.** TFPB is a tax on *built* property; unbuilt land pays
+      the separate, much smaller TFPNB, which is **not** in our FB target. So
+      parcels with no building footprint bear **zero** current tax — they go from
+      ~0 today to a positive LVT bill (the under-used-land incentive made literal).
+      (The old code mistakenly gave them a ``0.002 × parcel_area`` share, which
+      manufactured a baseline over-charge on rural land.)
+
+    * **Proxy = floor area, no market-value tilt.** Size is the dominant VLC
+      driver. We do *not* tilt toward the hedonic market value: the 1970 VLC is
+      famously regressive vs market (central old stock under-assessed, peripheral
+      over-assessed), so a value tilt would *worsen* fidelity to the current
+      system. ``category_weights`` (e.g. weighting professionnel m² above housing
+      m², post-2017 revision) is offered only as a labelled **sensitivity**, off
+      by default — never as the published baseline.
     """
     out = p.copy()
-    w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0)
-    # non-bâti gets a small weight via land area (TFPNB is tiny in cities)
-    w = w + 0.002 * out["parcel_area_m2"].fillna(0) * (w == 0)
-    out["current_tax"] = commune_tfpb_produit * w / w.sum()
+    w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
+    if "floor_area_m2" in out.columns:        # enforce built-only
+        w = w.where(out["floor_area_m2"].fillna(0) > 0, 0.0)
+    if category_weights and category_col in out.columns:   # sensitivity only
+        w = w * out[category_col].map(category_weights).fillna(1.0)
+    total = w.sum()
+    out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out

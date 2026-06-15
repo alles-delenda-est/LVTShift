@@ -135,8 +135,14 @@ income data (Filosofi) is the next piece to wire in.
 - **Trust the aggregates, not the individual bills.** The per-parcel numbers
   rely on imputations; publish results **by property category or income
   quintile**, never as one household's bill.
-- The current-tax baseline is the weakest input — see the README's *Limites
-  connues* before quoting any figure.
+- **Vacant land: read the euros, not the %.** Empty land pays no *built* tax
+  today (that's correct — it's the separate non-bâti tax), so on the charts it
+  shows ~0% change but a real **euro** increase under LVT. That jump from nothing
+  to something is the whole point of the reform; the percentage is just undefined
+  from a zero base.
+- The current-tax baseline is now the weakest input (how today's bill is split
+  *between built properties*) — see the README's *Limites connues* before quoting
+  any figure.
 
 ---
 
