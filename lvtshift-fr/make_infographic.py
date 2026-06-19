@@ -28,8 +28,11 @@ COLOR = {"cahors": "#2e7d32", "montreuil": "#1565c0", "roubaix": "#c62828",
 RES = ["Single Family Residential", "Condominium", "Large Multi-Family (5+ units)"]
 CAT_FR = {"Single Family Residential": "Maison", "Condominium": "Appartement",
           "Large Multi-Family (5+ units)": "Immeuble collectif",
-          "Commercial": "Commerce", "Industrial": "Industrie", "Other": "Autre"}
-CAT_ORDER = ["Maison", "Appartement", "Immeuble collectif", "Commerce", "Industrie"]
+          "Commercial": "Commerce", "Industrial": "Industrie", "Other": "Autre",
+          "Vacant Land": "Terrain sous-utilisé"}
+# vacant land first: its bar is the new bill on land that paid ~0 before
+CAT_ORDER = ["Terrain sous-utilisé", "Maison", "Appartement",
+             "Immeuble collectif", "Commerce", "Industrie"]
 QLAB = ["Q1\n(+ pauvre)", "Q2", "Q3", "Q4", "Q5\n(+ aisé)"]
 
 
@@ -44,8 +47,9 @@ def load(commune):
     if b["inc"].nunique() >= 5:
         q = pd.qcut(b["inc"], 5, labels=["Q1", "Q2", "Q3", "Q4", "Q5"], duplicates="drop")
         quint = b.groupby(q, observed=True)["tax_change_pct"].median()
-    cats = (df[~vac].groupby("property_category")["tax_change_pct"].median()
-            .rename(index=CAT_FR))
+    # median € change by category, incl. vacant land (whose % is undefined from
+    # a ~0 base, but whose euro change is meaningful: the new bill on idle land)
+    cats_eur = df.groupby("property_category")["tax_change"].median().rename(index=CAT_FR)
     chg = df["tax_change"]
     p_more = 100 * (chg > 1).mean()
     p_less = 100 * (chg < -1).mean()
@@ -56,7 +60,7 @@ def load(commune):
         "income_med": df["inc"].median(),
         "vacant_share": 100 * df.loc[vac, "new_tax"].sum() / df["new_tax"].sum(),
         "p_more": p_more, "p_less": p_less, "p_flat": 100 - p_more - p_less,
-        "quint": quint, "cats": cats,
+        "quint": quint, "cats_eur": cats_eur,
     }
 
 
@@ -143,33 +147,40 @@ def main(communes):
     axq.text(0.0, -0.135, "← baisses pour les quartiers modestes      hausses pour les "
              "quartiers aisés →", transform=axq.transAxes, fontsize=9, color="#666")
 
-    # ---- category panel ----
-    axc = fig.add_subplot(gs[1, 3:6])
-    cats = [c for c in CAT_ORDER if any(c in d["cats"].index for d in data)]
-    y = np.arange(len(cats)); h = 0.8 / len(data)
+    # ---- category small multiples: median € change incl. vacant land ----
+    # (one auto-scaled mini per commune: euro changes differ ~10x across communes,
+    #  and € works for vacant land where % is undefined)
+    fig.text(0.655, 0.605, "Variation médiane par catégorie (€ / parcelle)",
+             fontsize=13.5, fontweight="bold", va="bottom")
+    sub = gs[1, 3:6].subgridspec(3, 1, hspace=1.05)
     for j, d in enumerate(data):
-        vals = [d["cats"].get(c, np.nan) for c in cats]
-        axc.barh(y + (j - (len(data) - 1) / 2) * h, vals, height=h,
-                 color=COLOR[d["key"]], label=d["name"])
-    axc.axvline(0, color="#999", lw=1)
-    axc.set_yticks(y); axc.set_yticklabels(cats, fontsize=10)
-    axc.invert_yaxis()
-    axc.set_title("Impact par catégorie de bien", fontsize=13.5, fontweight="bold",
-                  loc="left", pad=8)
-    axc.set_xlabel("Variation médiane de la taxe (%)", fontsize=10.5)
-    axc.grid(axis="x", color="#eee"); axc.set_axisbelow(True)
-    for s in ("top", "right"):
-        axc.spines[s].set_visible(False)
-    axc.text(1.0, -0.135, "Terrain sous-utilisé : passe de ~0 à positif (incite à bâtir)",
-             transform=axc.transAxes, fontsize=9, color="#666", ha="right")
+        axe = fig.add_subplot(sub[j])
+        med = d["cats_eur"]
+        present = [c for c in CAT_ORDER if c in med.index]
+        vals = [med[c] for c in present]
+        colors = ["#2e7d32" if v < 0 else "#c62828" for v in vals]
+        yy = np.arange(len(present))
+        axe.barh(yy, vals, color=colors, height=0.72)
+        axe.axvline(0, color="#999", lw=0.8)
+        axe.set_yticks(yy); axe.set_yticklabels(present, fontsize=7.8)
+        axe.invert_yaxis()
+        axe.tick_params(axis="x", labelsize=7)
+        axe.set_title(d["name"], color=COLOR[d["key"]], fontsize=10.5,
+                      fontweight="bold", loc="left", pad=2)
+        for s in ("top", "right"):
+            axe.spines[s].set_visible(False)
+        axe.margins(x=0.18)
+    fig.text(0.655, 0.105, "Vert = paie moins · rouge = paie plus.  Le terrain "
+             "sous-utilisé payait ~0 € : sa barre est la nouvelle cotisation.",
+             fontsize=8.3, color="#666", va="top")
 
     # ---- footer ----
-    fig.text(0.045, 0.075,
+    fig.text(0.045, 0.06,
              "À recettes constantes (vérifié à l'euro)  ·  données ouvertes uniquement "
              "(cadastre, DVF, BD TOPO, DPE, GPU, REI/OFGL, IRIS, Filosofi)  ·  "
              "valeur du terrain imputée par méthode résiduelle.",
              fontsize=9.2, color="#555")
-    fig.text(0.045, 0.045,
+    fig.text(0.045, 0.032,
              "À lire en agrégat (catégorie / quintile), jamais comme une facture "
              "individuelle. La répartition de la taxe actuelle entre bâtis est le maillon "
              "le plus faible : lire les variations comme une tendance.  Voir METHODOLOGIE.md.",
