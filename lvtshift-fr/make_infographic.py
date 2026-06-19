@@ -46,12 +46,16 @@ def load(commune):
         quint = b.groupby(q, observed=True)["tax_change_pct"].median()
     cats = (df[~vac].groupby("property_category")["tax_change_pct"].median()
             .rename(index=CAT_FR))
+    chg = df["tax_change"]
+    p_more = 100 * (chg > 1).mean()
+    p_less = 100 * (chg < -1).mean()
     return {
         "key": commune, "name": cfg.name, "dept": DEPT.get(cfg.departement, cfg.departement),
         "n": len(df), "produit": df["new_tax"].sum(),
         "land_mill": df["land_millage"].iloc[0], "imp_mill": df["improvement_millage"].iloc[0],
         "income_med": df["inc"].median(),
         "vacant_share": 100 * df.loc[vac, "new_tax"].sum() / df["new_tax"].sum(),
+        "p_more": p_more, "p_less": p_less, "p_flat": 100 - p_more - p_less,
         "quint": quint, "cats": cats,
     }
 
@@ -66,17 +70,22 @@ def main(communes):
     fig = plt.figure(figsize=(16, 10), dpi=150)
     fig.patch.set_facecolor("white")
     gs = fig.add_gridspec(2, 6, height_ratios=[0.95, 2.7],
-                          left=0.045, right=0.965, top=0.85, bottom=0.155,
+                          left=0.045, right=0.965, top=0.825, bottom=0.155,
                           hspace=0.30, wspace=0.9)
 
     # ---- title ----
-    fig.text(0.045, 0.965, "Taxe foncière → valeur du terrain : qui gagne, qui paie ?",
+    fig.text(0.045, 0.975, "Taxe foncière → valeur du terrain : qui gagne, qui paie ?",
              fontsize=23, fontweight="bold", va="top")
-    fig.text(0.045, 0.925,
+    fig.text(0.045, 0.937,
              "Simulation d'un transfert de la taxe foncière vers une taxe sur la valeur "
              "du foncier (LVT), à recettes constantes, sur données ouvertes — "
              f"{len(data)} communes françaises.",
              fontsize=12.5, color="#444", va="top")
+    fig.text(0.045, 0.902,
+             "L'impôt se déplace du bâti vers le terrain : le bâti dense paie moins ; "
+             "le foncier sous-utilisé et les parcelles très foncières paient plus "
+             "(à recettes constantes, il y a forcément des perdants).",
+             fontsize=11, color="#111", fontweight="bold", va="top")
 
     # ---- commune cards ----
     for i, d in enumerate(data):
@@ -91,18 +100,29 @@ def main(communes):
                 va="center", transform=ax.transAxes, alpha=0.9)
         lines = [
             (f"{d['n']:,}".replace(",", " "), "parcelles"),
-            (euro(d["produit"]), "produit TFPB (cible exacte)"),
-            (f"{d['land_mill']:.2f} : {d['imp_mill']:.2f}", "taux terrain : bâti (pour 1000)"),
-            (f"{d['income_med']:,.0f} €".replace(",", " "), "revenu médian du quartier"),
-            (f"{d['vacant_share']:.1f} %", "du prélèvement sur le foncier sous-utilisé"),
+            (euro(d["produit"]), "produit TFPB"),
+            (f"{d['land_mill']:.2f} : {d['imp_mill']:.2f}", "taux terrain : bâti"),
+            (f"{d['income_med']:,.0f} €".replace(",", " "), "revenu médian"),
         ]
-        y = 0.74
+        y = 0.72
         for val, lab in lines:
-            ax.text(0.06, y, val, fontsize=13, fontweight="bold", va="center",
+            ax.text(0.06, y, val, fontsize=12.5, fontweight="bold", va="center",
                     color=COLOR[d["key"]], transform=ax.transAxes)
-            ax.text(0.06, y - 0.075, lab, fontsize=8.3, color="#555", va="center",
-                    transform=ax.transAxes)
-            y -= 0.165
+            ax.text(0.94, y, lab, fontsize=8.6, color="#555", va="center",
+                    ha="right", transform=ax.transAxes)
+            y -= 0.15
+        # who pays more vs less — the honest win/lose split (revenue-neutral!)
+        x0, w, yb, hb = 0.06, 0.88, 0.085, 0.06
+        for frac, col in [(d["p_less"], "#2e7d32"), (d["p_flat"], "#cfcfcf"),
+                          (d["p_more"], "#c62828")]:
+            ax.add_patch(plt.Rectangle((x0, yb), w * frac / 100, hb, transform=ax.transAxes,
+                         facecolor=col, edgecolor="none"))
+            x0 += w * frac / 100
+        ax.text(0.06, yb + hb + 0.05, f"{d['p_more']:.0f} % paient PLUS", fontsize=8.8,
+                fontweight="bold", color="#c62828", va="center", transform=ax.transAxes)
+        ax.text(0.94, yb + hb + 0.05, f"{d['p_less']:.0f} % moins", fontsize=8.8,
+                fontweight="bold", color="#2e7d32", ha="right", va="center",
+                transform=ax.transAxes)
 
     # ---- income quintile panel (the hero) ----
     axq = fig.add_subplot(gs[1, 0:3])
