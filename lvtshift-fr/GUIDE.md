@@ -147,6 +147,9 @@ neighbourhoods are blank for privacy and drop out.)
   *between built properties*) — see the README's *Limites connues* before quoting
   any figure.
 
+> Want the full method — every data source, formula, assumption, and limitation
+> in one place? See **`METHODOLOGY.md`**.
+
 ---
 
 ## 7. If something breaks

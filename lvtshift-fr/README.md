@@ -70,6 +70,9 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
 
+Référence méthodologique complète (sources, formules, paramètres, validation,
+limites) : **`METHODOLOGY.md`**.
+
 Note comparaisons internationales : les colonnes `minority_pct`/`black_pct`
 de l'export standard restent vides — la France ne produit pas de
 statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
@@ -79,7 +82,8 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 | Limitation de la démo | Variable FF qui la résout |
 |---|---|
 | VLC approximée par la surface plancher | VLC réelle par parcelle/local |
-| Surfaces bâti estimées (BDNB/BD TOPO) | surfaces déclarées par local |
+| Surfaces bâti estimées (BD TOPO) | surfaces déclarées par local |
+| Année de construction inférée (DPE) | année de construction exacte par local |
 | Pas de typologie de propriétaires | table propriétaires (HLM, SCI, personnes physiques…) |
 | Pas de vacance | indicateur de vacance 5 ans glissants |
 | Exonérations ignorées | champs d'exonération par local |
@@ -153,9 +157,9 @@ export CSV seul : `run(..., make_report=False)`.
   de la taxe *actuelle* restent indicatifs et doivent être recoupés avec les
   données REI par catégorie : la robustesse des agrégats vaut d'abord pour le
   volet LVT, pas pour la base de départ.
-- DVF exclut Alsace-Moselle et Mayotte ; le DPE n'est pas représentatif du
-  parc (utilisé en covariable uniquement) ; la BDNB hérite des défauts
-  d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
+- DVF exclut Alsace-Moselle et Mayotte ; les bâtiments viennent de BD TOPO V3
+  (emprise + attributs dérivés MAJIC, flag d'appariement fichiers fonciers
+  conservé), l'appariement bâtiment ↔ parcelle se fait par intersection pondérée.
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
   poids relatif résidentiel/professionnel ; à traiter par strate.
 - Année de construction (DPE) : la période est issue des DPE (logements
