@@ -139,6 +139,11 @@ des baisses et les plus aisés paient plus. (Le revenu n'existe que pour les
 communes de 5 000+ habitants, données 2021 ; quelques quartiers sont vides pour
 raison de confidentialité et sortent de l'analyse.)
 
+**Comparer plusieurs communes sur une page :** après en avoir lancé quelques-unes,
+créez une infographie partageable avec
+`python make_infographic.py cahors montreuil roubaix` (les communes de votre
+choix, déjà exécutées). Elle est écrite dans `output/infographic.png`.
+
 ---
 
 ## 6. Lire les résultats avec discernement (important)
