@@ -190,6 +190,78 @@ def fetch_buildings(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+# DPE construction-period band -> representative build year (band midpoint).
+# Standard French eras. "avant 1948" -> 1930: anything ≤1945 is age≥80 and hits
+# the depreciation floor anyway, so the exact value barely matters. The pre-2021
+# bands are the published DPE categories.
+DPE_PERIODE_TO_YEAR = {
+    "avant 1948": 1930, "1948-1974": 1961, "1975-1977": 1976,
+    "1978-1982": 1980, "1983-1988": 1985, "1989-2000": 1994,
+    "2001-2005": 2003, "2006-2012": 2009, "2013-2021": 2017,
+    "après 2021": 2022,
+}
+
+
+def fetch_dpe_parcel_year(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """DPE construction period -> representative build year per parcel.
+
+    BD TOPO's date_d_apparition is a database first-appearance date, not a build
+    year, and is frequently null (100 % in Cahors). DPE carries the real
+    construction *era* per dwelling, geolocated. We fetch every DPE for the
+    commune, map the period band to a midpoint year, spatially join the points to
+    parcels, and take the per-parcel median year. The pipeline uses this where
+    present and falls back to BD TOPO / median-age imputation elsewhere.
+
+    Returns (per_parcel, commune_median_year):
+      * per_parcel: idpar, year_built_dpe — the parcel-specific era where DPEs fall.
+      * commune_median_year: the dwelling-weighted median construction year for
+        the commune, a data-driven fallback for parcels with no parcel-specific
+        year (incl. non-residential and never-diagnosed) — far better than the
+        all-NaN-year degeneracy (which collapses every built parcel onto the
+        land-share clip when BD TOPO's year is null, as in Cahors).
+
+    Residential only (DPE scope) — a documented selection bias; used as an
+    improvement where present plus a commune fallback, not a complete source.
+    """
+    import geopandas as gpd
+
+    q = urllib.parse.urlencode({
+        "size": 10000, "select": "periode_construction,_geopoint",
+        "qs": f'code_insee_ban:"{cfg.insee_code}"',
+    })
+    url = f"{SRC['dpe_lines']}?{q}"
+    rows = []
+    while url:
+        d = json.loads(_get(url))
+        rows.extend(d.get("results", []))
+        url = d.get("next")
+    empty = pd.DataFrame(columns=["idpar", "year_built_dpe"])
+    if not rows:
+        print(f"  [{cfg.name}] DPE: no records; depreciation falls back to BD TOPO")
+        return empty, None
+
+    df = pd.DataFrame(rows)
+    df["year"] = df["periode_construction"].map(DPE_PERIODE_TO_YEAR)
+    df = df.dropna(subset=["year", "_geopoint"])
+    if df.empty:
+        return empty, None
+    commune_median_year = int(round(df["year"].median()))
+
+    latlon = df["_geopoint"].str.split(",", expand=True).astype(float)  # "lat,lon"
+    pts = gpd.GeoDataFrame(
+        df[["year"]],
+        geometry=gpd.points_from_xy(latlon[1], latlon[0]), crs=CRS_WGS84
+    ).to_crs(CRS_METRIC)
+
+    pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
+    j = gpd.sjoin(pts, pg, how="inner", predicate="within")
+    out = (j.groupby("idpar")["year"].median().round().astype(int)
+            .reset_index().rename(columns={"year": "year_built_dpe"}))
+    print(f"  [{cfg.name}] DPE: {len(rows)} records -> year on {len(out)} parcels "
+          f"({len(out) / max(len(pg), 1):.0%}); commune median era {commune_median_year}")
+    return out, commune_median_year
+
+
 # ------------------------------------------------------------------ #
 def fetch_parcel_zoning(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     """GPU (Géoportail de l'Urbanisme) zoning per parcel -> idpar, zone_typ.

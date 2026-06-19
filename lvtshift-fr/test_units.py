@@ -122,6 +122,28 @@ def test_improvement_value_imputes_missing_levels():
     assert out["imp_quality"].iloc[0] == "imputed_levels"
 
 
+def test_newer_building_depreciates_less():
+    # the construction-year fix matters because year drives building value,
+    # which drives the residual land value
+    old = estimate.improvement_value(pd.DataFrame([_bld(year_built=1961.0)]), CFG)
+    new = estimate.improvement_value(pd.DataFrame([_bld(year_built=2017.0)]), CFG)
+    assert new["improvement_value"].iloc[0] > old["improvement_value"].iloc[0]
+
+
+# ------------------------------------------------------------------ #
+# DPE construction-period -> year mapping
+# ------------------------------------------------------------------ #
+
+def test_dpe_period_year_mapping_complete_and_monotonic():
+    m = ingest.DPE_PERIODE_TO_YEAR
+    bands = ["avant 1948", "1948-1974", "1975-1977", "1978-1982", "1983-1988",
+             "1989-2000", "2001-2005", "2006-2012", "2013-2021", "après 2021"]
+    assert set(bands) <= set(m), "all standard DPE eras must be mapped"
+    years = [m[b] for b in bands]
+    assert years == sorted(years), "midpoint years must increase with the era"
+    assert all(1900 <= y <= 2026 for y in years)
+
+
 # ------------------------------------------------------------------ #
 # tab_comparables: trust only terrains-à-bâtir, trim outliers
 # ------------------------------------------------------------------ #

@@ -2,6 +2,7 @@
 
 A no-jargon guide to actually running this on your own machine. If a step
 errors, copy the red text and ask — don't guess.
+*(Version française : **`GUIDE.fr.md`**.)*
 
 > **What it does, in one sentence:** it estimates, parcel by parcel, who would
 > pay more or less if a French commune shifted its *taxe foncière* onto the
@@ -146,6 +147,9 @@ neighbourhoods are blank for privacy and drop out.)
 - The current-tax baseline is now the weakest input (how today's bill is split
   *between built properties*) — see the README's *Limites connues* before quoting
   any figure.
+
+> Want the full method — every data source, formula, assumption, and limitation
+> in one place? See **`METHODOLOGY.md`**.
 
 ---
 

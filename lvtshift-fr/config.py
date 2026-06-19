@@ -67,12 +67,17 @@ DATA_SOURCES = {
     # development land vs agricultural/natural land). Queried by commune bbox.
     "gpu_zone_urba_layer": "wfs_du:zone_urba",
 
-    # DPE logements (ADEME): queryable API, filter by code INSEE.
-    # Covariates only (surface, periode construction) - NOT representative
-    # of the stock (sale/rental/new-build selection bias).
-    "dpe_api": (
+    # DPE logements existants (ADEME, depuis juillet 2021): data-fair API,
+    # filter by code_insee_ban. We use `periode_construction` (era band) +
+    # `_geopoint` to anchor depreciation per parcel — far better than BD TOPO's
+    # date_d_apparition, which is the database first-appearance date (often
+    # null: 100 % of Cahors buildings) not a true construction year.
+    # Caveat: residential only, and covers diagnosed dwellings (sale/rental/
+    # renovation), so it under-covers never-traded and non-residential stock —
+    # used where present, with a documented fallback.
+    "dpe_lines": (
         "https://data.ademe.fr/data-fair/api/v1/datasets/"
-        "dpe-v2-logements-existants/lines"
+        "meg-83tjwtg8dyz4vv7h1dqe/lines"
     ),
 
     # REI (DGFiP), territorialised at commune level by OFGL on an Opendatasoft

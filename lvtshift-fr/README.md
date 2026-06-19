@@ -25,7 +25,7 @@ L'objectif est double :
 
 ```
 config.py        communes, coûts de construction, benchmarks fonciers, URLs
-ingest.py        DVF, cadastre, BD TOPO, GPU, REI, contours IRIS, Filosofi
+ingest.py        DVF, cadastre, BD TOPO, GPU, DPE, REI, contours IRIS, Filosofi
 estimate.py      valeur bâti (coût de remplacement déprécié)
                  -> hédonique DVF -> terrain « classer puis valoriser » -> taxe
 run_pipeline.py  orchestration + appel du solveur LVTShift réel
@@ -40,6 +40,7 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Transactions | DVF géolocalisé (Etalab) | modèle hédonique de valeur de marché |
 | Parcelles | Cadastre Etalab | géométries, surfaces |
 | Bâtiments | **BD TOPO V3** (IGN, WFS Géoplateforme) | emprise, niveaux, hauteur, logements, usage, flag d'appariement Fichiers fonciers |
+| Année de construction | **DPE logements existants** (ADEME) | période de construction → dépréciation (BD TOPO `date_d_apparition` peu fiable/souvent nulle) |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
@@ -69,6 +70,9 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
 
+Référence méthodologique complète (sources, formules, paramètres, validation,
+limites) : **`METHODOLOGIE.md`** (français) / `METHODOLOGY.md` (anglais).
+
 Note comparaisons internationales : les colonnes `minority_pct`/`black_pct`
 de l'export standard restent vides — la France ne produit pas de
 statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
@@ -78,7 +82,8 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 | Limitation de la démo | Variable FF qui la résout |
 |---|---|
 | VLC approximée par la surface plancher | VLC réelle par parcelle/local |
-| Surfaces bâti estimées (BDNB/BD TOPO) | surfaces déclarées par local |
+| Surfaces bâti estimées (BD TOPO) | surfaces déclarées par local |
+| Année de construction inférée (DPE) | année de construction exacte par local |
 | Pas de typologie de propriétaires | table propriétaires (HLM, SCI, personnes physiques…) |
 | Pas de vacance | indicateur de vacance 5 ans glissants |
 | Exonérations ignorées | champs d'exonération par local |
@@ -152,11 +157,17 @@ export CSV seul : `run(..., make_report=False)`.
   de la taxe *actuelle* restent indicatifs et doivent être recoupés avec les
   données REI par catégorie : la robustesse des agrégats vaut d'abord pour le
   volet LVT, pas pour la base de départ.
-- DVF exclut Alsace-Moselle et Mayotte ; le DPE n'est pas représentatif du
-  parc (utilisé en covariable uniquement) ; la BDNB hérite des défauts
-  d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
+- DVF exclut Alsace-Moselle et Mayotte ; les bâtiments viennent de BD TOPO V3
+  (emprise + attributs dérivés MAJIC, flag d'appariement fichiers fonciers
+  conservé), l'appariement bâtiment ↔ parcelle se fait par intersection pondérée.
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
   poids relatif résidentiel/professionnel ; à traiter par strate.
+- Année de construction (DPE) : la période est issue des DPE (logements
+  **diagnostiqués** uniquement — biais de sélection), mappée à l'année médiane de
+  la tranche ; pour les parcelles sans DPE on retombe sur l'**année médiane
+  communale** (issue des DPE résidentiels), appliquée aussi au non-résidentiel.
+  Nette amélioration sur la base dégénérée précédente (bâti ≈ 0 quand l'année BD
+  TOPO est nulle), mais généralisation à documenter.
 - Revenus (Filosofi) : millésime 2021 (le dernier produit), à l'IRIS,
   **uniquement pour les communes ≥ 5 000 habitants** ; certains IRIS sont sous
   secret statistique (revenu manquant → exclus des quintiles). L'analyse par

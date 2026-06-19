@@ -21,7 +21,10 @@ call its real solver unchanged.*
 
 The pipeline is a value-decomposition chain:
 - **improvement value** = depreciated replacement cost (footprint × storeys ×
-  €/m² × straight-line depreciation), from BD TOPO building geometry/attributes.
+  €/m² × straight-line depreciation), from BD TOPO building geometry. The
+  construction era driving depreciation comes from **ADEME DPE** per parcel (BD
+  TOPO's date_d_apparition is a database first-appearance date, often null), with
+  a commune-median-era fallback so age never degenerates to "unknown".
 - **market value** = a deliberately simple hedonic on DVF (cell × type fixed
   effects on log €/m², shrinkage toward commune-type median). `cell` is a 400 m
   grid square — a transparent spatial fixed effect, not an admin geography.
@@ -81,6 +84,16 @@ propagates visibly rather than silently.
   only ±3% (was −83%). In Montreuil the built stock bears 98.5%, constructible
   vacant 1.5% — and that vacant land still pays *more* (the LVT development
   incentive, now correctly sized). Both stay revenue-neutral to the euro.
+- **Construction year was a hidden degeneracy.** BD TOPO's date_d_apparition is
+  null for whole communes (100 % of Cahors), so every building's age was
+  "unknown" → building value ≈ 0 → every built parcel pinned at the 85 %
+  land-share clip. Anchoring depreciation on DPE eras (parcel-specific where
+  diagnosed, commune-median otherwise) un-pins it: Cahors built parcels move from
+  100 % clipped / 0.85 median land share to 0 % clipped / 0.54 — a land/building
+  split (~53/47) that matches INSEE comptes de patrimoine (~45-50 % land). The
+  effect is large where buildings are a real share of value (cheap-land communes)
+  and negligible where land dominates and the clip legitimately binds (Montreuil
+  stays ~0.85) — the residual's sensitivity to building value, made visible.
 - **Arrondissement fiscal gotcha.** Paris/Lyon/Marseille arrondissements have
   INSEE codes for cadastre/DVF/buildings but **no separate taxe foncière** (the
   city + métropole levy it), so REI has no per-arrondissement produit. "Inner
@@ -113,3 +126,9 @@ propagates visibly rather than silently.
   weakness, so read it as directional.
 - **Construction costs are coarse regional pilots** (1600–2150 €/m²); a ±15% move
   flows linearly into improvement value, so they need FFB/BT01 calibration.
+- **DPE construction year carries selection bias.** DPE covers diagnosed (sold/
+  rented/renovated) *residential* dwellings, so the commune-median-era fallback
+  applies a residential-diagnosed median to non-residential and never-diagnosed
+  parcels (Gemini: a clear improvement over the degenerate baseline, but the
+  generalisation must be flagged). Era→year uses band midpoints (mitigated for
+  pre-1948 stock, which hits the depreciation floor regardless).
