@@ -133,12 +133,27 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     return parcels
 
 
-def prepare(cfg, layers):
+def prepare(cfg, layers, use_dpe=True):
     """Fetch + shape all inputs for one commune."""
     parcels = ingest.fetch_parcels(cfg)
     sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
     tfpb = ingest.fetch_rei_tfpb_produit(cfg, layers=layers)
+
+    # Construction year: BD TOPO's date_d_apparition is unreliable/often null,
+    # so anchor depreciation on the DPE construction era per parcel where present
+    # (fallback: BD TOPO year, then median-age imputation in improvement_value).
+    if use_dpe:
+        dpe_year, dpe_median = ingest.fetch_dpe_parcel_year(cfg, parcels)
+        if len(dpe_year):
+            buildings = buildings.merge(dpe_year, on="idpar", how="left")
+            buildings["year_built"] = buildings["year_built_dpe"].fillna(
+                buildings["year_built"])
+            buildings = buildings.drop(columns=["year_built_dpe"])
+        # data-driven fallback for parcels with no DPE and no BD TOPO year,
+        # so depreciation never degenerates to the all-NaN -> zero-building case
+        if dpe_median is not None:
+            buildings["year_built"] = buildings["year_built"].fillna(dpe_median)
 
     # Parcels: official area (fallback to geometry), centroid -> grid cell
     pg = ingest.parcels_to_gdf(parcels)
@@ -189,11 +204,15 @@ def main():
     ap.add_argument("--out-dir", default="output")
     ap.add_argument("--no-report", action="store_true",
                     help="CSV only, skip the PNG charts")
+    ap.add_argument("--no-dpe", action="store_true",
+                    help="don't anchor construction year on DPE (BD TOPO only) "
+                         "— for the depreciation side-by-side")
     args = ap.parse_args()
 
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
-    parcels, buildings, sales, tfpb, iris_income = prepare(cfg, tuple(args.layers))
+    parcels, buildings, sales, tfpb, iris_income = prepare(
+        cfg, tuple(args.layers), use_dpe=not args.no_dpe)
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)

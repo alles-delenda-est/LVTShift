@@ -25,7 +25,7 @@ L'objectif est double :
 
 ```
 config.py        communes, coûts de construction, benchmarks fonciers, URLs
-ingest.py        DVF, cadastre, BD TOPO, GPU, REI, contours IRIS, Filosofi
+ingest.py        DVF, cadastre, BD TOPO, GPU, DPE, REI, contours IRIS, Filosofi
 estimate.py      valeur bâti (coût de remplacement déprécié)
                  -> hédonique DVF -> terrain « classer puis valoriser » -> taxe
 run_pipeline.py  orchestration + appel du solveur LVTShift réel
@@ -40,6 +40,7 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Transactions | DVF géolocalisé (Etalab) | modèle hédonique de valeur de marché |
 | Parcelles | Cadastre Etalab | géométries, surfaces |
 | Bâtiments | **BD TOPO V3** (IGN, WFS Géoplateforme) | emprise, niveaux, hauteur, logements, usage, flag d'appariement Fichiers fonciers |
+| Année de construction | **DPE logements existants** (ADEME) | période de construction → dépréciation (BD TOPO `date_d_apparition` peu fiable/souvent nulle) |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
@@ -157,6 +158,12 @@ export CSV seul : `run(..., make_report=False)`.
   d'appariement BD TOPO ↔ fichiers fonciers (flag de fiabilité conservé).
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
   poids relatif résidentiel/professionnel ; à traiter par strate.
+- Année de construction (DPE) : la période est issue des DPE (logements
+  **diagnostiqués** uniquement — biais de sélection), mappée à l'année médiane de
+  la tranche ; pour les parcelles sans DPE on retombe sur l'**année médiane
+  communale** (issue des DPE résidentiels), appliquée aussi au non-résidentiel.
+  Nette amélioration sur la base dégénérée précédente (bâti ≈ 0 quand l'année BD
+  TOPO est nulle), mais généralisation à documenter.
 - Revenus (Filosofi) : millésime 2021 (le dernier produit), à l'IRIS,
   **uniquement pour les communes ≥ 5 000 habitants** ; certains IRIS sont sous
   secret statistique (revenu manquant → exclus des quintiles). L'analyse par
