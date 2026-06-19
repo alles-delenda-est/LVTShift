@@ -71,7 +71,7 @@ Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
 
 Référence méthodologique complète (sources, formules, paramètres, validation,
-limites) : **`METHODOLOGY.md`**.
+limites) : **`METHODOLOGIE.md`** (français) / `METHODOLOGY.md` (anglais).
 
 Note comparaisons internationales : les colonnes `minority_pct`/`black_pct`
 de l'export standard restent vides — la France ne produit pas de

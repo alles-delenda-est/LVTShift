@@ -2,9 +2,10 @@
 
 The complete, citeable methods reference for the French Land Value Tax (LVT)
 pilot: every data source, formula, parameter, and limitation in one place.
-Companion docs: `README.md` (French summary), `THEORY.md` (operating theory and
-open questions), `GUIDE.md` (plain-English how-to). When this file and the code
-disagree, the code is canonical — keep this in sync with it.
+Companion docs: **`METHODOLOGIE.md`** (parallel French version), `README.md`
+(French summary), `THEORY.md` (operating theory and open questions), `GUIDE.md`
+(plain-English how-to). When this file and the code disagree, the code is
+canonical — keep both this file and `METHODOLOGIE.md` in sync with it.
 
 ## 1. Purpose and scope
 

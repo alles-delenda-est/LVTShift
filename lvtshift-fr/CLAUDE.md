@@ -43,6 +43,7 @@ test_units.py    offline unit tests of the pure logic
 
 ## Docs
 
-`METHODOLOGY.md` (full methods reference) · `THEORY.md` (operating theory, open
-questions) · `README.md` (French summary) · `GUIDE.md` (plain-English how-to).
-Keep `METHODOLOGY.md` in sync when the method changes; the code is canonical.
+`METHODOLOGY.md` (full methods reference, EN) · `METHODOLOGIE.md` (parallel FR)
+· `THEORY.md` (operating theory, open questions) · `README.md` (French summary) ·
+`GUIDE.md` (plain-English how-to). Keep both methodology files in sync when the
+method changes; the code is canonical.
