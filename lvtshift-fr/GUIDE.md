@@ -2,6 +2,7 @@
 
 A no-jargon guide to actually running this on your own machine. If a step
 errors, copy the red text and ask — don't guess.
+*(Version française : **`GUIDE.fr.md`**.)*
 
 > **What it does, in one sentence:** it estimates, parcel by parcel, who would
 > pay more or less if a French commune shifted its *taxe foncière* onto the
