@@ -20,6 +20,7 @@ estimate.py      improvement value, hedonic market value, classify-then-price
 run_pipeline.py  orchestration; calls upstream model_split_rate_tax + export
 run_commune.py   live-data driver for one commune (python run_commune.py <key>)
 charts_fr.py     euro-localised wrapper over the upstream report
+make_infographic.py  one-page comparison infographic across communes (FR labels)
 test_synthetic.py  end-to-end test through the real solver (offline)
 test_units.py    offline unit tests of the pure logic
 ```

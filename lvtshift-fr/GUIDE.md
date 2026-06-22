@@ -132,6 +132,10 @@ median income from INSEE Filosofi, so you get the **impact by income quintile**
 more. (Income exists only for communes of 5,000+ people, 2021 data; a few
 neighbourhoods are blank for privacy and drop out.)
 
+**Compare several communes on one page:** after running a few, build a shareable
+infographic with `python make_infographic.py cahors montreuil roubaix` (any
+communes you've run). It lands in `output/infographic.png`.
+
 ---
 
 ## 6. Reading the results sensibly (important)
