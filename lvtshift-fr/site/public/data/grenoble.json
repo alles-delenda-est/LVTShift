@@ -1,0 +1,140 @@
+{
+  "commune_key": "grenoble",
+  "insee": "38185",
+  "name": "Grenoble",
+  "departement": "38",
+  "reference_year": 2025,
+  "model_type": "split_rate:4.0",
+  "headline": {
+    "parcels_modeled": 5000,
+    "tax_base_eur": 30480582930.829636,
+    "land_base_eur": 21987063872.324364,
+    "improvement_base_eur": 8493519058.50527,
+    "land_share_pct": 72.1,
+    "neutral_levy_eur": 95000000.00000001,
+    "gross_shifted_eur": 25155227.05941523,
+    "net_shifted_eur": 12577613.52970762,
+    "gross_pct_of_levy": 26.5,
+    "net_pct_of_levy": 13.2,
+    "gross_bps_of_base": 8.3,
+    "currency": "EUR"
+  },
+  "headline_sensitivity": {
+    "delta_pt": 10.0,
+    "base": {
+      "land_share_pct": 72.1,
+      "gross_pct_of_levy": 26.5,
+      "net_pct_of_levy": 13.2,
+      "median_change_pct_residential": -1.3,
+      "share_paying_more_pct": 51.7
+    },
+    "low": {
+      "land_share_pct": 62.1,
+      "gross_pct_of_levy": 24.6,
+      "net_pct_of_levy": 12.3,
+      "median_change_pct_residential": -1.9,
+      "share_paying_more_pct": 45.7
+    },
+    "high": {
+      "land_share_pct": 82.1,
+      "gross_pct_of_levy": 28.1,
+      "net_pct_of_levy": 14.1,
+      "median_change_pct_residential": -1.6,
+      "share_paying_more_pct": 51.8
+    }
+  },
+  "by_category": [
+    {
+      "category": "Condominium",
+      "label_fr": "Appartement (copropriété)",
+      "parcels": 2731,
+      "share_of_parcels_pct": 54.6,
+      "median_change_pct": 0.3,
+      "median_change_eur": 52.0,
+      "count_paying_more": 1468,
+      "share_paying_more_pct": 53.8
+    },
+    {
+      "category": "Single Family Residential",
+      "label_fr": "Maison individuelle",
+      "parcels": 1539,
+      "share_of_parcels_pct": 30.8,
+      "median_change_pct": -4.1,
+      "median_change_eur": -156.0,
+      "count_paying_more": 634,
+      "share_paying_more_pct": 41.2
+    },
+    {
+      "category": "Commercial",
+      "label_fr": "Commerce",
+      "parcels": 472,
+      "share_of_parcels_pct": 9.4,
+      "median_change_pct": -2.8,
+      "median_change_eur": -200.0,
+      "count_paying_more": 227,
+      "share_paying_more_pct": 48.1
+    },
+    {
+      "category": "Vacant Land",
+      "label_fr": "Terrain nu / non bâti",
+      "parcels": 258,
+      "share_of_parcels_pct": 5.2,
+      "median_change_pct": null,
+      "median_change_eur": 10855.0,
+      "count_paying_more": 258,
+      "share_paying_more_pct": 100.0
+    }
+  ],
+  "by_income_quintile": null,
+  "by_improvement_ratio": [
+    {
+      "bucket": "vacant",
+      "label": "Terrain nu (0 %)",
+      "parcels": 0,
+      "value_eur": 0.0,
+      "value_pct_of_base": 0.0,
+      "share_of_gross_change_pct": 0.0
+    },
+    {
+      "bucket": "lt10",
+      "label": "Très sous-bâti (<10 %)",
+      "parcels": 0,
+      "value_eur": 0.0,
+      "value_pct_of_base": 0.0,
+      "share_of_gross_change_pct": 0.0
+    },
+    {
+      "bucket": "r10_25",
+      "label": "Sous-bâti (10–25 %)",
+      "parcels": 2725,
+      "value_eur": 17766561763.538727,
+      "value_pct_of_base": 58.3,
+      "share_of_gross_change_pct": 53.5
+    },
+    {
+      "bucket": "r25_50",
+      "label": "Sous-bâti (25–50 %)",
+      "parcels": 1692,
+      "value_eur": 9771669174.470657,
+      "value_pct_of_base": 32.1,
+      "share_of_gross_change_pct": 27.4
+    },
+    {
+      "bucket": "ge50",
+      "label": "Bâti (≥50 %)",
+      "parcels": 583,
+      "value_eur": 2942351992.8202457,
+      "value_pct_of_base": 9.7,
+      "share_of_gross_change_pct": 19.2
+    }
+  ],
+  "provenance": {
+    "construction_cost_eur_m2": 1900.0,
+    "land_share_bounds": [
+      0.15,
+      0.85
+    ],
+    "note": "Agrégats uniquement — imputations honnêtes au niveau catégorie/quintile, jamais à la parcelle."
+  },
+  "currency": "EUR"
+}

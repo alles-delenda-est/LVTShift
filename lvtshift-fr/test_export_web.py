@@ -111,3 +111,44 @@ def test_resolve_at_land_share_rejects_degenerate_share():
     df["taxable_improvement_value"] = 0.0   # s == 1
     with pytest.raises(ValueError):
         ew._resolve_at_land_share(df, 0.5, 4.0, float(df["current_tax"].sum()))
+
+
+def test_aggregate_guard_rejects_per_parcel_and_forbidden_tokens():
+    good = {
+        "commune_key": "x", "insee": "1", "name": "X", "departement": "1",
+        "reference_year": 2025, "model_type": "split_rate:4.0",
+        "headline": {"currency": "EUR"}, "headline_sensitivity": {},
+        "by_category": [], "by_income_quintile": None,
+        "by_improvement_ratio": [], "provenance": {}, "currency": "EUR",
+    }
+    ew.assert_aggregate_only(good)                 # no raise
+
+    with pytest.raises(AssertionError):
+        bad = dict(good); bad["parcels_detail"] = [{"id": 1}]   # stray per-parcel array
+        ew.assert_aggregate_only(bad)
+
+    with pytest.raises(AssertionError):
+        leak = dict(good); leak["provenance"] = {"note": "std_geoid leaked"}
+        ew.assert_aggregate_only(leak)
+
+
+def test_payload_assembles_for_toy(monkeypatch, tmp_path):
+    # write a toy commune CSV and point load_parcels at it via a fake config
+    import config
+    df = _toy_df()
+    (tmp_path / "x.csv").write_text(df.to_csv(index=False), encoding="utf-8")
+
+    class _Cfg:
+        insee_code, name, departement, reference_year, split_rate_ratio = \
+            "00000", "X", "00", 2025, 4.0
+        construction_cost_eur_m2 = 1900.0
+        land_share_bounds = (0.15, 0.85)
+    monkeypatch.setitem(config.COMMUNES, "x", _Cfg())
+
+    payload = ew.build_commune_payload("x", out_dir=str(tmp_path))
+    ew.assert_aggregate_only(payload)
+    assert payload["headline"]["parcels_modeled"] == 4
+    assert payload["by_income_quintile"] is None   # only 2 distinct incomes
+    blob = json.dumps(payload, ensure_ascii=False)
+    for bad in ("$", "_usd", "minority_pct", "black_pct", "std_geoid"):
+        assert bad not in blob

@@ -200,3 +200,96 @@ def build_headline_sensitivity(df: pd.DataFrame, ratio: float, delta_pt: float =
         "low": _resolve_at_land_share(df, lo, ratio, current_revenue),
         "high": _resolve_at_land_share(df, hi, ratio, current_revenue),
     }
+
+
+ALLOWED_TOP_KEYS = {
+    "commune_key", "insee", "name", "departement", "reference_year",
+    "model_type", "headline", "headline_sensitivity", "by_category",
+    "by_income_quintile", "by_improvement_ratio", "provenance", "currency",
+}
+FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$")
+
+
+def assert_aggregate_only(payload: dict) -> None:
+    """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
+    extra = set(payload) - ALLOWED_TOP_KEYS
+    assert not extra, f"unexpected top-level keys (possible per-parcel leak): {extra}"
+    assert len(payload["by_improvement_ratio"]) <= 5
+    assert len(payload["by_category"]) <= 10
+    if payload["by_income_quintile"] is not None:
+        assert len(payload["by_income_quintile"]) <= 5
+    blob = json.dumps(payload, ensure_ascii=False)
+    for tok in FORBIDDEN_TOKENS:
+        assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
+
+
+def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
+    from config import COMMUNES
+    cfg = COMMUNES[commune_key]
+    df = load_parcels(commune_key, out_dir)
+    return {
+        "commune_key": commune_key,
+        "insee": cfg.insee_code,
+        "name": cfg.name,
+        "departement": cfg.departement,
+        "reference_year": getattr(cfg, "reference_year", None),
+        "model_type": f"split_rate:{cfg.split_rate_ratio}",
+        "headline": build_headline(df),
+        "headline_sensitivity": build_headline_sensitivity(df, cfg.split_rate_ratio),
+        "by_category": build_by_category(df),
+        "by_income_quintile": build_by_income_quintile(df),
+        "by_improvement_ratio": build_buckets(df),
+        "provenance": {
+            "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
+            "land_share_bounds": list(cfg.land_share_bounds),
+            "note": ("Agrégats uniquement — imputations honnêtes au niveau "
+                     "catégorie/quintile, jamais à la parcelle."),
+        },
+        "currency": "EUR",
+    }
+
+
+def export_commune(commune_key: str, out_dir: str = "output",
+                   data_dir: str = "site/public/data") -> Path:
+    payload = build_commune_payload(commune_key, out_dir)
+    assert_aggregate_only(payload)
+    Path(data_dir).mkdir(parents=True, exist_ok=True)
+    path = Path(data_dir) / f"{commune_key}.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def export_all(out_dir: str = "output", data_dir: str = "site/public/data") -> dict:
+    from config import COMMUNES
+    index = []
+    for key, cfg in COMMUNES.items():
+        slug = cfg.name.lower().replace(" ", "")
+        if not (Path(out_dir) / f"{slug}.csv").exists():
+            continue
+        export_commune(key, out_dir, data_dir)
+        h = build_headline(load_parcels(key, out_dir))
+        index.append({
+            "commune_key": key, "name": cfg.name, "insee": cfg.insee_code,
+            "departement": cfg.departement,
+            "parcels_modeled": h["parcels_modeled"],
+            "land_share_pct": h["land_share_pct"],
+            "gross_pct_of_levy": h["gross_pct_of_levy"],
+        })
+    Path(data_dir).mkdir(parents=True, exist_ok=True)
+    (Path(data_dir) / "index.json").write_text(
+        json.dumps({"communes": index, "currency": "EUR"}, ensure_ascii=False, indent=2),
+        encoding="utf-8")
+    return {"exported": [c["commune_key"] for c in index]}
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="Export aggregate JSON for the advocacy site.")
+    ap.add_argument("commune", nargs="?", help="commune key; omit to export all available")
+    ap.add_argument("--out-dir", default="output")
+    ap.add_argument("--data-dir", default="site/public/data")
+    a = ap.parse_args()
+    if a.commune:
+        print("wrote", export_commune(a.commune, a.out_dir, a.data_dir))
+    else:
+        print(export_all(a.out_dir, a.data_dir))

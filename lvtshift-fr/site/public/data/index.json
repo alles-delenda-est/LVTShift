@@ -1,0 +1,41 @@
+{
+  "communes": [
+    {
+      "commune_key": "grenoble",
+      "name": "Grenoble",
+      "insee": "38185",
+      "departement": "38",
+      "parcels_modeled": 5000,
+      "land_share_pct": 72.1,
+      "gross_pct_of_levy": 26.5
+    },
+    {
+      "commune_key": "roubaix",
+      "name": "Roubaix",
+      "insee": "59512",
+      "departement": "59",
+      "parcels_modeled": 33917,
+      "land_share_pct": 57.0,
+      "gross_pct_of_levy": 29.7
+    },
+    {
+      "commune_key": "cahors",
+      "name": "Cahors",
+      "insee": "46042",
+      "departement": "46",
+      "parcels_modeled": 21796,
+      "land_share_pct": 54.0,
+      "gross_pct_of_levy": 14.8
+    },
+    {
+      "commune_key": "montreuil",
+      "name": "Montreuil",
+      "insee": "93048",
+      "departement": "93",
+      "parcels_modeled": 14189,
+      "land_share_pct": 83.9,
+      "gross_pct_of_levy": 16.8
+    }
+  ],
+  "currency": "EUR"
+}
