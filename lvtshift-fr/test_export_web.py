@@ -41,3 +41,36 @@ def test_build_buckets_partition_and_sum():
     # Vacant Land has 0 improvement -> 1 parcel in the vacant bucket
     assert next(b for b in buckets if b["bucket"] == "vacant")["parcels"] == 1
     assert abs(sum(b["value_pct_of_base"] for b in buckets) - 100.0) < 0.5
+
+
+def test_by_category_win_lose_honest():
+    cats = {c["category"]: c for c in ew.build_by_category(_toy_df())}
+    sfr = cats["Single Family Residential"]
+    assert sfr["label_fr"] == "Maison individuelle"
+    assert sfr["count_paying_more"] == 0          # −100 € → pays less
+    assert sfr["share_paying_more_pct"] == 0.0
+    vac = cats["Vacant Land"]
+    assert vac["count_paying_more"] == 1          # +350 € → pays more
+    assert vac["share_paying_more_pct"] == 100.0
+
+
+def test_income_quintile_none_when_no_income():
+    df = _toy_df()
+    df["median_income"] = np.nan
+    assert ew.build_by_income_quintile(df) is None
+
+
+def test_income_quintile_returns_bins_when_present():
+    rng = np.random.default_rng(0)
+    df = pd.DataFrame({
+        "property_category": np.where(rng.random(200) < 0.7,
+                                      "Single Family Residential", "Commercial"),
+        "current_tax": rng.uniform(500, 2000, 200),
+        "tax_change": rng.uniform(-200, 200, 200),
+        "tax_change_pct": rng.uniform(-20, 20, 200),
+        "median_income": rng.uniform(18000, 40000, 200),
+    })
+    q = ew.build_by_income_quintile(df)
+    assert q is not None and len(q) == 5
+    assert [r["quintile"] for r in q] == [1, 2, 3, 4, 5]
+    assert all("median_change_pct_residential" in r for r in q)

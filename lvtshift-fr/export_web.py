@@ -100,3 +100,49 @@ def build_buckets(df: pd.DataFrame) -> list:
             "share_of_gross_change_pct": _pct(gross, total_gross),
         })
     return out
+
+
+def build_by_category(df: pd.DataFrame) -> list:
+    n = len(df)
+    out = []
+    for cat, sub in df.groupby("property_category"):
+        chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        out.append({
+            "category": cat,
+            "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
+            "parcels": int(len(sub)),
+            "share_of_parcels_pct": _pct(len(sub), n),
+            "median_change_pct": round(float(chg_pct.median()), 1) if len(chg_pct) else None,
+            "median_change_eur": round(float(sub["tax_change"].median()), 0),
+            "count_paying_more": int((sub["tax_change"] > 0).sum()),
+            "share_paying_more_pct": _pct(int((sub["tax_change"] > 0).sum()), len(sub)),
+        })
+    out.sort(key=lambda r: r["parcels"], reverse=True)
+    return out
+
+
+def build_by_income_quintile(df: pd.DataFrame):
+    if "median_income" not in df.columns or df["median_income"].notna().sum() == 0:
+        return None
+    d = df[df["median_income"].notna()].copy()
+    try:
+        d["_q"] = pd.qcut(d["median_income"], 5, labels=[1, 2, 3, 4, 5], duplicates="drop")
+    except ValueError:
+        return None
+    if d["_q"].nunique() < 5:
+        return None
+    res = d[d["property_category"].isin(FR_RESIDENTIAL)]
+    out = []
+    for q in [1, 2, 3, 4, 5]:
+        sub = d[d["_q"] == q]
+        rsub = res[res["_q"] == q]
+        sub_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        res_pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        out.append({
+            "quintile": int(q),
+            "median_income_eur": round(float(sub["median_income"].median()), 0),
+            "median_change_pct": round(float(sub_pct.median()), 1) if len(sub_pct) else None,
+            "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
+            "parcels": int(len(sub)),
+        })
+    return out
