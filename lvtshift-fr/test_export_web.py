@@ -74,3 +74,31 @@ def test_income_quintile_returns_bins_when_present():
     assert q is not None and len(q) == 5
     assert [r["quintile"] for r in q] == [1, 2, 3, 4, 5]
     assert all("median_change_pct_residential" in r for r in q)
+
+
+def test_sensitivity_brackets_base_through_real_solver():
+    from lvt.lvt_utils import model_split_rate_tax
+    # _toy_df()'s new_tax/tax_change are hand-crafted for the pure-arithmetic
+    # tests (Tasks 2-3). The sensitivity check needs a *solver-consistent*
+    # frame, because in production new_tax IS the solver's output. So re-solve
+    # the toy land/improvement values through the real solver and rebuild the
+    # change columns before asserting. (Do NOT change _toy_df itself.)
+    df = _toy_df()
+    _lm, _im, _rev, solved = model_split_rate_tax(
+        df=df.copy(), land_value_col="taxable_land_value",
+        improvement_value_col="taxable_improvement_value",
+        current_revenue=float(df["current_tax"].sum()), land_improvement_ratio=4.0)
+    df["new_tax"] = solved["new_tax"].to_numpy(dtype=float)
+    df["tax_change"] = df["new_tax"] - df["current_tax"]
+    df["tax_change_pct"] = 100.0 * df["tax_change"] / df["current_tax"]
+
+    s = ew.build_headline_sensitivity(df, ratio=4.0, delta_pt=10.0)
+    assert set(s) == {"delta_pt", "base", "low", "high"}
+    # land share ordering: low < base < high
+    assert s["low"]["land_share_pct"] < s["base"]["land_share_pct"] < s["high"]["land_share_pct"]
+    # re-solving at the base share reproduces the headline gross within rounding
+    h = ew.build_headline(df)
+    assert abs(s["base"]["gross_pct_of_levy"] - h["gross_pct_of_levy"]) < 1.0
+    for leg in ("base", "low", "high"):
+        assert "median_change_pct_residential" in s[leg]
+        assert "share_paying_more_pct" in s[leg]

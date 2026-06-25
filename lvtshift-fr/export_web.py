@@ -146,3 +146,52 @@ def build_by_income_quintile(df: pd.DataFrame):
             "parcels": int(len(sub)),
         })
     return out
+
+
+def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
+                           ratio: float, current_revenue: float) -> dict:
+    """Re-solve the split-rate model with the aggregate land share tilted to
+    `target_share`, holding total base and revenue fixed. Uniform per-parcel
+    scaling preserves the relative structure of land vs improvement values."""
+    from lvt.lvt_utils import model_split_rate_tax
+    land = df["taxable_land_value"].to_numpy(dtype=float)
+    imp = df["taxable_improvement_value"].to_numpy(dtype=float)
+    current = df["current_tax"].to_numpy(dtype=float)
+    base = float((land + imp).sum())
+    s = float(land.sum()) / base
+    f_land = target_share / s
+    f_imp = (1.0 - target_share) / (1.0 - s)
+    tmp = pd.DataFrame({"_land": land * f_land, "_imp": imp * f_imp})
+    _lm, _im, _rev, solved = model_split_rate_tax(
+        df=tmp, land_value_col="_land", improvement_value_col="_imp",
+        current_revenue=current_revenue, land_improvement_ratio=ratio)
+    chg = solved["new_tax"].to_numpy(dtype=float) - current
+    gross = float(np.abs(chg).sum())
+    net = float(chg[chg > 0].sum())
+    res_mask = df["property_category"].isin(FR_RESIDENTIAL).to_numpy()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        res_pct = 100.0 * chg[res_mask] / current[res_mask]
+    res_pct = pd.Series(res_pct).replace([np.inf, -np.inf], np.nan).dropna()
+    return {
+        "land_share_pct": round(100.0 * target_share, 1),
+        "gross_pct_of_levy": _pct(gross, current_revenue),
+        "net_pct_of_levy": _pct(net, current_revenue),
+        "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
+        "share_paying_more_pct": _pct(int((chg > 0).sum()), len(chg)),
+    }
+
+
+def build_headline_sensitivity(df: pd.DataFrame, ratio: float, delta_pt: float = 10.0) -> dict:
+    current_revenue = float(df["current_tax"].sum())
+    land = float(df["taxable_land_value"].sum())
+    base = land + float(df["taxable_improvement_value"].sum())
+    s = land / base
+    d = delta_pt / 100.0
+    lo = min(0.99, max(0.01, s - d))
+    hi = min(0.99, max(0.01, s + d))
+    return {
+        "delta_pt": delta_pt,
+        "base": _resolve_at_land_share(df, s, ratio, current_revenue),
+        "low": _resolve_at_land_share(df, lo, ratio, current_revenue),
+        "high": _resolve_at_land_share(df, hi, ratio, current_revenue),
+    }
