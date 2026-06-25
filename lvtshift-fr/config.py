@@ -129,12 +129,19 @@ MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Deni
     "93048", "Montreuil", "93", construction_cost_eur_m2=2150.0)
 FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
     "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
+SETE = CommuneConfig(               # Méditerranée — port/tourist, second homes
+    "34301", "Sète", "34", construction_cost_eur_m2=1850.0)
+LA_ROCHELLE = CommuneConfig(        # Atlantique — prosperous tourist port
+    "17300", "La Rochelle", "17", construction_cost_eur_m2=1850.0)
+MULHOUSE = CommuneConfig(           # Est/Rhin — Alsatian post-industrial, vacant
+    "68224", "Mulhouse", "68", construction_cost_eur_m2=1800.0)
 
 # Registry for the CLI / run_commune driver (--commune <key>)
 COMMUNES = {
     "grenoble": GRENOBLE, "annemasse": ANNEMASSE,
     "villeurbanne": VILLEURBANNE, "roubaix": ROUBAIX, "cahors": CAHORS,
     "montreuil": MONTREUIL, "figeac": FIGEAC,
+    "sete": SETE, "larochelle": LA_ROCHELLE, "mulhouse": MULHOUSE,
 }
 
 
@@ -159,6 +166,9 @@ AG_EUR_M2_BY_DEP = {           # (agricultural A, natural/forest N)
     "69": (0.70, 0.50),        # Rhône
     "74": (0.75, 0.55),        # Haute-Savoie
     "38": (0.60, 0.45),        # Isère
+    "34": (0.80, 0.50),        # Hérault — Méditerranée, vignoble/maraîchage
+    "17": (0.75, 0.45),        # Charente-Maritime — Atlantique cropland
+    "68": (0.95, 0.55),        # Haut-Rhin — rich Alsatian plain
 }
 
 # EPTB (SDES) building-plot €/m² fallback when a commune has too few DVF
