@@ -51,3 +51,17 @@ def test_validate_commune_degrades_gracefully(tmp_path):
     assert any(c["independence"] == "independent" and c["status"] != "non disponible"
                for c in out["checks"])
     assert (tmp_path / "x.validation.json").exists()
+
+
+def test_fetch_cadastre_agreement_degrades_on_crs_failure(monkeypatch):
+    # A cadastre GeoJSON with no embedded CRS makes p.to_crs(2154) raise; the
+    # fetch must degrade to None, never propagate (graceful-degradation contract).
+    from shapely.geometry import Polygon
+    import geopandas as gpd
+    naive = gpd.GeoDataFrame(geometry=[Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])])  # crs=None
+    monkeypatch.setattr(ve, "_read_geojson_gz", lambda url: naive)
+
+    class _Cfg:
+        insee_code, departement = "00000", "00"
+
+    assert ve.fetch_cadastre_agreement(_Cfg()) is None

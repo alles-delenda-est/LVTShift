@@ -69,12 +69,20 @@ def _read_geojson_gz(url: str):
 
 
 def fetch_cadastre_agreement(cfg, cache_dir="output/validation_cache"):
-    """Live cadastre batiments-vs-parcelles agreement; None if unavailable."""
+    """Live cadastre batiments-vs-parcelles agreement; None if unavailable.
+
+    Never raises: a fetch, a missing CRS, or a sjoin failure all degrade to None
+    (the validation layer must never crash the caller on a bad external source).
+    """
     p = _read_geojson_gz(CADASTRE_PARCELLES_URL.format(dep=cfg.departement, insee=cfg.insee_code))
     b = _read_geojson_gz(CADASTRE_BATIMENTS_URL.format(dep=cfg.departement, insee=cfg.insee_code))
     if p is None or b is None or len(p) == 0:
         return None
-    return building_agreement_rate(p.to_crs(2154), b.to_crs(2154))
+    try:
+        return building_agreement_rate(p.to_crs(2154), b.to_crs(2154))
+    except Exception as exc:  # missing/invalid CRS, sjoin failure — degrade
+        print(f"  [validate] cadastre agreement failed for {cfg.insee_code}: {exc}")
+        return None
 
 
 def fetch_insee_vacancy(insee_code: str, cache_dir="output/validation_cache"):
@@ -85,12 +93,12 @@ def fetch_insee_vacancy(insee_code: str, cache_dir="output/validation_cache"):
     """
     import re, urllib.request
     cache = Path(cache_dir) / f"insee_vacancy_{insee_code}.txt"
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    if cache.exists():
-        try:
+    try:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        if cache.exists():
             return float(cache.read_text(encoding="utf-8").strip())
-        except ValueError:
-            return None
+    except (ValueError, OSError):
+        return None
     try:
         req = urllib.request.Request(
             INSEE_DOSSIER_URL.format(insee=insee_code),
@@ -172,7 +180,7 @@ def validate_commune(commune_key, df, cfg, cache_dir="output/validation_cache",
     }
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     (Path(data_dir) / f"{commune_key}.validation.json").write_text(
-        json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+        json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return out
 
 
