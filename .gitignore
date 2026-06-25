@@ -137,6 +137,12 @@ analysis/reports/
 *.temp
 *~
 
+# The advocacy site SHIPS its aggregate JSON (build-time data for the Next.js
+# app). These overrides re-include it despite the data/ and *.json rules above.
+# The per-parcel CSVs in output/ stay ignored — only aggregates are published.
+!lvtshift-fr/site/public/data/
+!lvtshift-fr/site/public/data/*.json
+
 # macOS
 .DS_Store
 .DS_Store?

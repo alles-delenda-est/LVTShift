@@ -131,6 +131,11 @@ def test_aggregate_guard_rejects_per_parcel_and_forbidden_tokens():
         leak = dict(good); leak["provenance"] = {"note": "std_geoid leaked"}
         ew.assert_aggregate_only(leak)
 
+    with pytest.raises(AssertionError):
+        oversized = dict(good)
+        oversized["by_category"] = [{"category": str(i)} for i in range(11)]  # 11 > 10
+        ew.assert_aggregate_only(oversized)
+
 
 def test_payload_assembles_for_toy(monkeypatch, tmp_path):
     # write a toy commune CSV and point load_parcels at it via a fake config

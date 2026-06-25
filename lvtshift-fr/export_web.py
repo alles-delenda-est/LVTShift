@@ -33,12 +33,16 @@ FR_RESIDENTIAL = {
 }
 
 
+def _slug(cfg) -> str:
+    """Output-file slug for a commune (matches run_pipeline's naming)."""
+    return cfg.name.lower().replace(" ", "")
+
+
 def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
     """Read the per-parcel standard export for one commune (modeled parcels only)."""
     from config import COMMUNES
     cfg = COMMUNES[commune_key]
-    slug = cfg.name.lower().replace(" ", "")
-    path = Path(out_dir) / f"{slug}.csv"
+    path = Path(out_dir) / f"{_slug(cfg)}.csv"
     if not path.exists():
         raise FileNotFoundError(
             f"No model output for {commune_key} at {path}; "
@@ -214,9 +218,9 @@ def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
     assert not extra, f"unexpected top-level keys (possible per-parcel leak): {extra}"
-    assert len(payload["by_improvement_ratio"]) <= 5
-    assert len(payload["by_category"]) <= 10
-    if payload["by_income_quintile"] is not None:
+    assert len(payload.get("by_improvement_ratio") or []) <= 5
+    assert len(payload.get("by_category") or []) <= 10
+    if payload.get("by_income_quintile") is not None:
         assert len(payload["by_income_quintile"]) <= 5
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
@@ -249,35 +253,44 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     }
 
 
-def export_commune(commune_key: str, out_dir: str = "output",
-                   data_dir: str = "site/public/data") -> Path:
-    payload = build_commune_payload(commune_key, out_dir)
+def _write_commune_json(payload: dict, data_dir: str) -> Path:
+    """Guard then write one commune payload to <data_dir>/<commune_key>.json."""
     assert_aggregate_only(payload)
     Path(data_dir).mkdir(parents=True, exist_ok=True)
-    path = Path(data_dir) / f"{commune_key}.json"
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    path = Path(data_dir) / f"{payload['commune_key']}.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return path
+
+
+def _index_entry(payload: dict) -> dict:
+    """Teaser fields for index.json, taken from an already-built payload."""
+    h = payload["headline"]
+    return {
+        "commune_key": payload["commune_key"], "name": payload["name"],
+        "insee": payload["insee"], "departement": payload["departement"],
+        "parcels_modeled": h["parcels_modeled"],
+        "land_share_pct": h["land_share_pct"],
+        "gross_pct_of_levy": h["gross_pct_of_levy"],
+    }
+
+
+def export_commune(commune_key: str, out_dir: str = "output",
+                   data_dir: str = "site/public/data") -> Path:
+    return _write_commune_json(build_commune_payload(commune_key, out_dir), data_dir)
 
 
 def export_all(out_dir: str = "output", data_dir: str = "site/public/data") -> dict:
     from config import COMMUNES
     index = []
     for key, cfg in COMMUNES.items():
-        slug = cfg.name.lower().replace(" ", "")
-        if not (Path(out_dir) / f"{slug}.csv").exists():
+        if not (Path(out_dir) / f"{_slug(cfg)}.csv").exists():
             continue
-        export_commune(key, out_dir, data_dir)
-        h = build_headline(load_parcels(key, out_dir))
-        index.append({
-            "commune_key": key, "name": cfg.name, "insee": cfg.insee_code,
-            "departement": cfg.departement,
-            "parcels_modeled": h["parcels_modeled"],
-            "land_share_pct": h["land_share_pct"],
-            "gross_pct_of_levy": h["gross_pct_of_levy"],
-        })
+        payload = build_commune_payload(key, out_dir)   # load the CSV exactly once
+        _write_commune_json(payload, data_dir)
+        index.append(_index_entry(payload))
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     (Path(data_dir) / "index.json").write_text(
-        json.dumps({"communes": index, "currency": "EUR"}, ensure_ascii=False, indent=2),
+        json.dumps({"communes": index, "currency": "EUR"}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8")
     return {"exported": [c["commune_key"] for c in index]}
 
