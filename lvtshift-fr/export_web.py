@@ -159,6 +159,11 @@ def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
     current = df["current_tax"].to_numpy(dtype=float)
     base = float((land + imp).sum())
     s = float(land.sum()) / base
+    if not 0.0 < s < 1.0:
+        raise ValueError(
+            f"cannot tilt land share: base land share is {s:.3f} (need 0 < s < 1). "
+            "The commune frame has all-land or all-improvement value, so uniform "
+            "scaling is undefined.")
     f_land = target_share / s
     f_imp = (1.0 - target_share) / (1.0 - s)
     tmp = pd.DataFrame({"_land": land * f_land, "_imp": imp * f_imp})

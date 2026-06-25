@@ -102,3 +102,12 @@ def test_sensitivity_brackets_base_through_real_solver():
     for leg in ("base", "low", "high"):
         assert "median_change_pct_residential" in s[leg]
         assert "share_paying_more_pct" in s[leg]
+
+
+def test_resolve_at_land_share_rejects_degenerate_share():
+    # all-land (s==1) or all-improvement (s==0) makes uniform tilting undefined;
+    # the guard must raise rather than silently propagate NaN through the solver.
+    df = _toy_df()
+    df["taxable_improvement_value"] = 0.0   # s == 1
+    with pytest.raises(ValueError):
+        ew._resolve_at_land_share(df, 0.5, 4.0, float(df["current_tax"].sum()))
