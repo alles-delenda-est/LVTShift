@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadIndex, loadCommune, communeKeys, loadRegister } from "@/lib/data";
+import { loadIndex, loadCommune, loadValidation, communeKeys, loadRegister } from "@/lib/data";
 
 describe("data loaders", () => {
   it("loads the index with the 9 modelled communes", () => {
@@ -12,7 +12,15 @@ describe("data loaders", () => {
     const c = loadCommune("montreuil");
     expect(c.headline.currency).toBe("EUR");
     expect(c.headline_sensitivity.base.land_share_pct).toBeTypeOf("number");
-    expect(["object"]).toContain(typeof c.by_category);
+    expect(Array.isArray(c.by_category)).toBe(true);
+    expect(c.by_category.length).toBeGreaterThan(0);
+  });
+  it("rejects keys that could escape the data directory", () => {
+    expect(() => loadCommune("../../etc/passwd")).toThrow(/invalid commune key/);
+    expect(() => loadValidation("a/b")).toThrow(/invalid commune key/);
+  });
+  it("returns null for a missing validation file (but a valid key)", () => {
+    expect(loadValidation("mulhouse")).toBeNull(); // not modellable -> no validation file
   });
   it("tolerates a null income quintile (small communes)", () => {
     const cahors = loadCommune("cahors");
