@@ -71,6 +71,14 @@ propagates visibly rather than silently.
 4. **The access argument.** Each open-data compromise maps to a specific Fichiers
    fonciers (CEREMA/DGFiP) variable that would resolve it — making the demo itself
    the case for administrative data access.
+5. **Coverage is a finding, not a silent failure.** `preflight.py` probes every
+   source per commune and runs the post-run validations, classifying each
+   OK/WARN/FAIL with an analysed cause and adaptation, and writes a register
+   (`docs/INGESTION_REGISTER.md` + `site/public/data/ingestion_register.json`).
+   A commune that cannot be modelled is *documented with its reason*, never
+   dropped quietly — the register is itself part of the transparency argument.
+   The advocacy-site data layer (`export_web.py`) emits aggregate-only JSON per
+   commune (+ `validate_external.py` independent checks) for the public site.
 
 ## Key discoveries
 
@@ -98,6 +106,25 @@ propagates visibly rather than silently.
   INSEE codes for cadastre/DVF/buildings but **no separate taxe foncière** (the
   city + métropole levy it), so REI has no per-arrondissement produit. "Inner
   Lyon" is therefore modelled as Villeurbanne (autonomous inner-ring commune).
+- **Alsace-Moselle is a hard coverage boundary.** Depts 57/67/68 record sales in
+  the **Livre Foncier** (German-law registry), not the DGFiP DVF — so the open
+  DVF dataset has *no* file for them (Mulhouse/Colmar/Strasbourg/Metz all 404;
+  verified). With no sales there is no hedonic and no terrain-à-bâtir floor, so
+  these communes are **not modellable by this method** — not a transient miss,
+  not fixable by retry or fallback. Mulhouse is therefore documented in the
+  register as a coverage gap and excluded from the modelled panel (now 9: it was
+  the "Est/Rhin" slot). A Livre-Foncier ingest would be the only fix.
+- **The full 9-commune panel runs on live data.** One background pass ran all
+  ten; nine succeeded revenue-neutral, Mulhouse failed structurally. Re-running
+  also replaced a stale Grenoble sample (5 000-row/3-IRIS) with the real
+  12 853-parcel run — a reminder that cached CSVs can silently predate the
+  pipeline, which the register's post-run checks now catch.
+- **Imputed land share runs systematically high in hot markets.** The register
+  shows 6 of 9 communes above a 40–65 % land-share band (Montreuil 84 %, La
+  Rochelle 83.5 %, Villeurbanne 72 %). Partly the genuine LVT thesis (land
+  dominates value in high-demand cores), but the magnitude points at the
+  construction-cost calibration (too-low €/m² → inflated land residual) — the
+  first-order sensitivity below, now visible per commune rather than asserted.
 
 ## Open questions / where the theory might break
 
@@ -123,7 +150,10 @@ propagates visibly rather than silently.
   quintiles −10 %, richer +9/+12 %). Caveats: 2021 is the last vintage, IRIS
   income exists only for communes ≥5 000 inhabitants, some IRIS are suppressed
   (NaN → drop out), and the quintile split inherits the current-tax baseline
-  weakness, so read it as directional.
+  weakness, so read it as directional. **Small communes can't form 5 quintiles**
+  at all — Cahors and Figeac have too few distinct IRIS incomes, so the exporter
+  emits `null` and no quintile chart is published (the register flags this per
+  commune via the real `build_by_income_quintile`, not a proxy).
 - **Construction costs are coarse regional pilots** (1600–2150 €/m²); a ±15% move
   flows linearly into improvement value, so they need FFB/BT01 calibration.
 - **DPE construction year carries selection bias.** DPE covers diagnosed (sold/
