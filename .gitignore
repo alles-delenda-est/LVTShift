@@ -143,6 +143,12 @@ analysis/reports/
 !lvtshift-fr/site/public/data/
 !lvtshift-fr/site/public/data/*.json
 
+# The Next.js app legitimately needs JSON configs (package.json, tsconfig.json,
+# package-lock.json, …) which the blanket *.json rule above would ignore. Track
+# all JSON under the site EXCEPT its build/dep dirs (node_modules/ and .next/
+# stay ignored via lvtshift-fr/site/.gitignore, so git never descends into them).
+!lvtshift-fr/site/**/*.json
+
 # macOS
 .DS_Store
 .DS_Store?
