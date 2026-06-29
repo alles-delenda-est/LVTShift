@@ -25,6 +25,25 @@ from config import DATA_SOURCES as SRC
 CRS_METRIC = 2154
 CRS_WGS84 = 4326
 
+# Departments excluded from the open DVF dataset: Alsace-Moselle records sales in
+# the Livre Foncier (German-law registry), not the DGFiP DVF files. Any commune
+# here cannot be valued by the DVF-hedonic method. See preflight.ALSACE_MOSELLE.
+ALSACE_MOSELLE_DEPTS = {"57", "67", "68"}
+
+
+class IngestUnavailable(RuntimeError):
+    """A required open-data source is unavailable for this commune.
+
+    `source` names the dataset; `analysis` is a plain-language reason. Raised
+    instead of a cryptic downstream error so the driver can detect, signal, and
+    register the failure rather than crash opaquely.
+    """
+
+    def __init__(self, source: str, analysis: str):
+        self.source = source
+        self.analysis = analysis
+        super().__init__(f"{source} unavailable: {analysis}")
+
 
 def _get(url: str, timeout: int = 180) -> bytes:
     print(f"  GET {url[:120]}{'...' if len(url) > 120 else ''}")
@@ -51,6 +70,17 @@ def fetch_dvf(cfg) -> pd.DataFrame:
             frames.append(pd.read_csv(io.BytesIO(_get(url))))
         except Exception as e:  # year may not exist yet
             print(f"  [skip {y}] {e}")
+    if not frames:
+        if cfg.departement in ALSACE_MOSELLE_DEPTS:
+            raise IngestUnavailable(
+                "DVF",
+                f"Alsace-Moselle (dépt {cfg.departement}) : ventes enregistrées au "
+                "Livre Foncier, absentes du DVF ouvert — commune non modélisable "
+                "par la méthode hédonique DVF.")
+        raise IngestUnavailable(
+            "DVF",
+            f"aucun fichier DVF pour {cfg.insee_code} sur "
+            f"{cfg.dvf_years[0]}–{cfg.dvf_years[-1]} (vérifier l'INSEE / le chemin).")
     d = pd.concat(frames, ignore_index=True)
 
     d = d[d["nature_mutation"] == "Vente"].copy()

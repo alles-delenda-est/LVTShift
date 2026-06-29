@@ -1,0 +1,745 @@
+{
+  "communes": [
+    {
+      "commune_key": "grenoble",
+      "insee": "38185",
+      "name": "Grenoble",
+      "departement": "38",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 12,853 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (65 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 65
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 70.0 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 70.0
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "annemasse",
+      "insee": "74012",
+      "name": "Annemasse",
+      "departement": "74",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 5,111 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (10 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 10
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 70.0 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 70.0
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "villeurbanne",
+      "insee": "69266",
+      "name": "Villeurbanne",
+      "departement": "69",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 10,753 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (45 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 45
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 72.4 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 72.4
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "roubaix",
+      "insee": "59512",
+      "name": "Roubaix",
+      "departement": "59",
+      "modellable": true,
+      "verdict": "OK",
+      "n_fail": 0,
+      "n_warn": 0,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 33,917 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (34 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 34
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Part foncière 57.0 % (bande 40–65 %).",
+          "adaptation": null,
+          "detail": {
+            "land_share_pct": 57.0
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "cahors",
+      "insee": "46042",
+      "name": "Cahors",
+      "departement": "46",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 21,796 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (9 valeurs distinctes).",
+          "adaptation": "Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.",
+          "detail": {
+            "quintile_bins": 0,
+            "distinct_incomes": 9
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Part foncière 54.0 % (bande 40–65 %).",
+          "adaptation": null,
+          "detail": {
+            "land_share_pct": 54.0
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "montreuil",
+      "insee": "93048",
+      "name": "Montreuil",
+      "departement": "93",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 14,189 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (40 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 40
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 83.9 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 83.9
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "figeac",
+      "insee": "46102",
+      "name": "Figeac",
+      "departement": "46",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 12,809 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (4 valeurs distinctes).",
+          "adaptation": "Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.",
+          "detail": {
+            "quintile_bins": 0,
+            "distinct_incomes": 4
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Part foncière 58.4 % (bande 40–65 %).",
+          "adaptation": null,
+          "detail": {
+            "land_share_pct": 58.4
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "sete",
+      "insee": "34301",
+      "name": "Sète",
+      "departement": "34",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 11,272 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (17 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 17
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 71.5 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 71.5
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "larochelle",
+      "insee": "17300",
+      "name": "La Rochelle",
+      "departement": "17",
+      "modellable": true,
+      "verdict": "WARN",
+      "n_fail": 0,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "OK",
+          "message": "DVF complet : 5/5 années.",
+          "adaptation": null,
+          "detail": {
+            "years_available": 5
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "OK",
+          "message": "Exécuté : 29,108 parcelles.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "revenue_neutrality",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Neutralité des recettes : écart 0.00 %.",
+          "adaptation": null,
+          "detail": {
+            "deviation_pct": 0.0
+          }
+        },
+        {
+          "check": "income_quintiles",
+          "category": "validation",
+          "severity": "OK",
+          "message": "Quintiles de revenu : 5/5 bins produits (29 revenus IRIS distincts).",
+          "adaptation": null,
+          "detail": {
+            "quintile_bins": 5,
+            "distinct_incomes": 29
+          }
+        },
+        {
+          "check": "land_share_band",
+          "category": "validation",
+          "severity": "WARN",
+          "message": "Part foncière 83.5 % (bande 40–65 %).",
+          "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+          "detail": {
+            "land_share_pct": 83.5
+          }
+        }
+      ]
+    },
+    {
+      "commune_key": "mulhouse",
+      "insee": "68224",
+      "name": "Mulhouse",
+      "departement": "68",
+      "modellable": false,
+      "verdict": "FAIL",
+      "n_fail": 1,
+      "n_warn": 1,
+      "checks": [
+        {
+          "check": "dvf_coverage",
+          "category": "source",
+          "severity": "FAIL",
+          "message": "Dépt 68 (Alsace-Moselle) : ventes au Livre Foncier, absentes du DVF ouvert.",
+          "adaptation": "Non modélisable par la méthode hédonique DVF. Pistes : source Livre Foncier (DGFiP/ANCT) ou retrait du panel.",
+          "detail": {
+            "dept": "68",
+            "years_available": 0,
+            "structural": "alsace_moselle_dvf_exclusion"
+          }
+        },
+        {
+          "check": "cadastre_parcelles",
+          "category": "source",
+          "severity": "OK",
+          "message": "Parcellaire cadastral disponible.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "cadastre_batiments",
+          "category": "source",
+          "severity": "OK",
+          "message": "Bâti cadastral (DGFiP) disponible pour le contrôle croisé.",
+          "adaptation": null,
+          "detail": {}
+        },
+        {
+          "check": "model_ran",
+          "category": "run",
+          "severity": "WARN",
+          "message": "Modèle non exécuté (pas de sortie standard).",
+          "adaptation": null,
+          "detail": {}
+        }
+      ]
+    }
+  ]
+}
