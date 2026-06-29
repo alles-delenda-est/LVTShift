@@ -5,9 +5,27 @@
       "name": "Grenoble",
       "insee": "38185",
       "departement": "38",
-      "parcels_modeled": 5000,
-      "land_share_pct": 72.1,
-      "gross_pct_of_levy": 26.5
+      "parcels_modeled": 12853,
+      "land_share_pct": 70.0,
+      "gross_pct_of_levy": 33.9
+    },
+    {
+      "commune_key": "annemasse",
+      "name": "Annemasse",
+      "insee": "74012",
+      "departement": "74",
+      "parcels_modeled": 5111,
+      "land_share_pct": 70.0,
+      "gross_pct_of_levy": 19.3
+    },
+    {
+      "commune_key": "villeurbanne",
+      "name": "Villeurbanne",
+      "insee": "69266",
+      "departement": "69",
+      "parcels_modeled": 10753,
+      "land_share_pct": 72.4,
+      "gross_pct_of_levy": 12.3
     },
     {
       "commune_key": "roubaix",
@@ -35,6 +53,33 @@
       "parcels_modeled": 14189,
       "land_share_pct": 83.9,
       "gross_pct_of_levy": 16.8
+    },
+    {
+      "commune_key": "figeac",
+      "name": "Figeac",
+      "insee": "46102",
+      "departement": "46",
+      "parcels_modeled": 12809,
+      "land_share_pct": 58.4,
+      "gross_pct_of_levy": 11.6
+    },
+    {
+      "commune_key": "sete",
+      "name": "Sète",
+      "insee": "34301",
+      "departement": "34",
+      "parcels_modeled": 11272,
+      "land_share_pct": 71.5,
+      "gross_pct_of_levy": 21.3
+    },
+    {
+      "commune_key": "larochelle",
+      "name": "La Rochelle",
+      "insee": "17300",
+      "departement": "17",
+      "parcels_modeled": 29108,
+      "land_share_pct": 83.5,
+      "gross_pct_of_levy": 23.8
     }
   ],
   "currency": "EUR"

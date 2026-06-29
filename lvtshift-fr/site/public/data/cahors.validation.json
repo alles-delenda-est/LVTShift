@@ -1,0 +1,40 @@
+{
+  "commune_key": "cahors",
+  "insee": "46042",
+  "name": "Cahors",
+  "departement": "46",
+  "checks": [
+    {
+      "benchmark": "Vacance des logements (INSEE)",
+      "independence": "independent",
+      "external_value_pct": null,
+      "model_comparable_pct": 81.9,
+      "model_comparable_label": "part sous-bâtie/vacante de la base (valeur)",
+      "status": "non disponible",
+      "note": "Corrélation directionnelle entre communes (vacance INSEE vs foncier sous-utilisé), pas une égalité par commune."
+    },
+    {
+      "benchmark": "Part du foncier dans la valeur (ancrage national)",
+      "independence": "independent",
+      "model_land_share_pct": 54.0,
+      "band": [
+        40.0,
+        65.0
+      ],
+      "within_band": true,
+      "status": "ok",
+      "note": "Ancrage INSEE comptes de patrimoine ~45–50 % national ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
+    },
+    {
+      "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",
+      "independence": "data-quality",
+      "cadastre_built_share_pct": 51.4,
+      "model_built_share_pct": 45.8,
+      "n_parcels_cadastre": 21796,
+      "n_buildings_cadastre": 17068,
+      "gap_pt": 5.6,
+      "status": "ok",
+      "note": "Accord entre deux cartes du bâti d'agences différentes ; contrôle qualité de l'entrée 'bâti', pas de la valorisation."
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "commune_key": "figeac",
+  "insee": "46102",
+  "name": "Figeac",
+  "departement": "46",
+  "reference_year": 2025,
+  "model_type": "split_rate:4.0",
+  "headline": {
+    "parcels_modeled": 12809,
+    "tax_base_eur": 3171838886.799949,
+    "land_base_eur": 1851719873.5754433,
+    "improvement_base_eur": 1320119013.224506,
+    "land_share_pct": 58.4,
+    "neutral_levy_eur": 10022009.0,
+    "gross_shifted_eur": 1161318.5957570458,
+    "net_shifted_eur": 580659.2978785229,
+    "gross_pct_of_levy": 11.6,
+    "net_pct_of_levy": 5.8,
+    "gross_bps_of_base": 3.7,
+    "currency": "EUR"
+  },
+  "headline_sensitivity": {
+    "delta_pt": 10.0,
+    "base": {
+      "land_share_pct": 58.4,
+      "gross_pct_of_levy": 11.6,
+      "net_pct_of_levy": 5.8,
+      "median_change_pct_residential": -2.1,
+      "share_paying_more_pct": 70.9
+    },
+    "low": {
+      "land_share_pct": 48.4,
+      "gross_pct_of_levy": 10.7,
+      "net_pct_of_levy": 5.3,
+      "median_change_pct_residential": -2.0,
+      "share_paying_more_pct": 70.8
+    },
+    "high": {
+      "land_share_pct": 68.4,
+      "gross_pct_of_levy": 12.4,
+      "net_pct_of_levy": 6.2,
+      "median_change_pct_residential": -2.1,
+      "share_paying_more_pct": 71.5
+    }
+  },
+  "by_category": [
+    {
+      "category": "Vacant Land",
+      "label_fr": "Terrain nu / non bâti",
+      "parcels": 6677,
+      "share_of_parcels_pct": 52.1,
+      "median_change_pct": null,
+      "median_change_eur": 5.0,
+      "count_paying_more": 6677,
+      "share_paying_more_pct": 100.0
+    },
+    {
+      "category": "Single Family Residential",
+      "label_fr": "Maison individuelle",
+      "parcels": 4484,
+      "share_of_parcels_pct": 35.0,
+      "median_change_pct": -3.3,
+      "median_change_eur": -5.0,
+      "count_paying_more": 1849,
+      "share_paying_more_pct": 41.2
+    },
+    {
+      "category": "Condominium",
+      "label_fr": "Appartement (copropriété)",
+      "parcels": 695,
+      "share_of_parcels_pct": 5.4,
+      "median_change_pct": -0.3,
+      "median_change_eur": -5.0,
+      "count_paying_more": 254,
+      "share_paying_more_pct": 36.5
+    },
+    {
+      "category": "Commercial",
+      "label_fr": "Commerce",
+      "parcels": 371,
+      "share_of_parcels_pct": 2.9,
+      "median_change_pct": -0.3,
+      "median_change_eur": -7.0,
+      "count_paying_more": 133,
+      "share_paying_more_pct": 35.8
+    },
+    {
+      "category": "Other",
+      "label_fr": "Autre / dépendance",
+      "parcels": 310,
+      "share_of_parcels_pct": 2.4,
+      "median_change_pct": -3.3,
+      "median_change_eur": -7.0,
+      "count_paying_more": 93,
+      "share_paying_more_pct": 30.0
+    },
+    {
+      "category": "Large Multi-Family (5+ units)",
+      "label_fr": "Immeuble collectif (5+ logements)",
+      "parcels": 173,
+      "share_of_parcels_pct": 1.4,
+      "median_change_pct": -0.3,
+      "median_change_eur": -9.0,
+      "count_paying_more": 69,
+      "share_paying_more_pct": 39.9
+    },
+    {
+      "category": "Industrial",
+      "label_fr": "Industriel",
+      "parcels": 99,
+      "share_of_parcels_pct": 0.8,
+      "median_change_pct": -3.3,
+      "median_change_eur": -191.0,
+      "count_paying_more": 2,
+      "share_paying_more_pct": 2.0
+    }
+  ],
+  "by_income_quintile": null,
+  "by_improvement_ratio": [
+    {
+      "bucket": "vacant",
+      "label": "Terrain nu (0 %)",
+      "parcels": 6677,
+      "value_eur": 69400164.72080523,
+      "value_pct_of_base": 2.2,
+      "share_of_gross_change_pct": 27.5
+    },
+    {
+      "bucket": "lt10",
+      "label": "Très sous-bâti (<10 %)",
+      "parcels": 0,
+      "value_eur": 0.0,
+      "value_pct_of_base": 0.0,
+      "share_of_gross_change_pct": 0.0
+    },
+    {
+      "bucket": "r10_25",
+      "label": "Sous-bâti (10–25 %)",
+      "parcels": 16,
+      "value_eur": 3737526.4211122477,
+      "value_pct_of_base": 0.1,
+      "share_of_gross_change_pct": 0.3
+    },
+    {
+      "bucket": "r25_50",
+      "label": "Sous-bâti (25–50 %)",
+      "parcels": 5834,
+      "value_eur": 2975174853.0641336,
+      "value_pct_of_base": 93.8,
+      "share_of_gross_change_pct": 60.5
+    },
+    {
+      "bucket": "ge50",
+      "label": "Bâti (≥50 %)",
+      "parcels": 282,
+      "value_eur": 123526342.59389833,
+      "value_pct_of_base": 3.9,
+      "share_of_gross_change_pct": 11.8
+    }
+  ],
+  "provenance": {
+    "construction_cost_eur_m2": 1600.0,
+    "land_share_bounds": [
+      0.15,
+      0.85
+    ],
+    "note": "Agrégats uniquement — imputations honnêtes au niveau catégorie/quintile, jamais à la parcelle."
+  },
+  "currency": "EUR"
+}
