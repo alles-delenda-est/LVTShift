@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  /* Palette civique */
+  --color-marine:  #1a2744;
+  --color-rouge:   #b5281e;
+  --color-creme:   #f6f4f0;
+  --color-encre:   #1c1917;
+  --color-gris:    #6b6560;
+  --color-lisere:  #d6d1ca;
+
+  /* Typographie */
+  --font-display: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-body:    'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+html {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
