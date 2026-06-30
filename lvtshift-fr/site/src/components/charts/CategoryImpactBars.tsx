@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * CategoryImpactBars — horizontal diverging bars showing median_change_pct
@@ -28,23 +28,7 @@ import {
 import type { TooltipProps } from "recharts";
 import type { CategoryRow } from "@/lib/types";
 import { pct, signedPct, eurosExact } from "@/lib/format";
-
-const MARINE    = "#1a2744";
-const ROUGE     = "#b5281e";
-const GREEN     = "#2a6244";
-const CREME     = "#f6f4f0";
-const ENCRE     = "#1c1917";
-const GRIS      = "#6b6560";
-const GRIS_PALE = "#b0a89f";
-const LISERE    = "#d6d1ca";
-
-void MARINE; // imported but colour only used via GREEN/ROUGE/GRIS_PALE per-cell
-
-const TICK = {
-  fontFamily: "var(--font-body)",
-  fontSize: 11,
-  fill: GRIS,
-} as const;
+import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 
 /* ── extended row ─────────────────────────────────────────────────── */
 
@@ -188,9 +172,7 @@ export default function CategoryImpactBars({
         <XAxis
           type="number"
           domain={domain}
-          tickFormatter={(v: number) =>
-            v === 0 ? "0" : `${v > 0 ? "+" : ""}${v} %`
-          }
+          tickFormatter={(v: number) => signedPct(v)}
           tick={TICK}
           axisLine={{ stroke: LISERE }}
           tickLine={{ stroke: LISERE }}

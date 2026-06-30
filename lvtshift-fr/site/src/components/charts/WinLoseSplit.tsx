@@ -23,20 +23,7 @@ import {
 import type { TooltipProps } from "recharts";
 import type { CategoryRow } from "@/lib/types";
 import { pct } from "@/lib/format";
-
-const MARINE  = "#1a2744";
-const ROUGE   = "#b5281e";
-const CREME   = "#f6f4f0";
-const ENCRE   = "#1c1917";
-const GRIS    = "#6b6560";
-const LISERE  = "#d6d1ca";
-
-/* Recharts tick style matching the site's font variables */
-const TICK = {
-  fontFamily: "var(--font-body)",
-  fontSize: 11,
-  fill: GRIS,
-} as const;
+import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
 
 /* ── data shape ─────────────────────────────────────────────────── */
 
@@ -78,7 +65,7 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
       <p>
         Paie moins ou pareil&nbsp;:{" "}
         <strong style={{ color: "#6ec4a4" }}>
-          {pct(100 - (row.share_paying_more_pct ?? 0))}
+          {pct(row.share_paying_more_pct === null ? null : 100 - row.share_paying_more_pct)}
         </strong>
       </p>
     </div>

@@ -13,12 +13,8 @@
 
 import type { Sensitivity, SensitivityLeg } from "@/lib/types";
 import { pct, signedPct } from "@/lib/format";
+import { MARINE, CREME, ENCRE, GRIS, LISERE } from "./theme";
 
-const MARINE  = "#1a2744";
-const CREME   = "#f6f4f0";
-const ENCRE   = "#1c1917";
-const GRIS    = "#6b6560";
-const LISERE  = "#d6d1ca";
 const BG_BASE = "#e8edf5"; // light marine tint for the "base" column
 
 export interface SensitivityBandProps {
@@ -168,10 +164,10 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
         <tbody>
           {/* Row: Transfert brut */}
           <tr>
-            <td style={{ ...cell, background: CREME }}>
+            <th scope="row" style={{ ...cell, background: CREME }}>
               <span style={labelStyle}>Transfert brut</span>
               <span style={subLabelStyle}>% du prélèvement total</span>
-            </td>
+            </th>
             {scenarios.map(({ key, leg, isBase }) => (
               <td
                 key={key}
@@ -186,7 +182,8 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
 
           {/* Row: Variation médiane résidentielle */}
           <tr>
-            <td
+            <th
+              scope="row"
               style={{
                 ...cell,
                 background: CREME,
@@ -195,7 +192,7 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
             >
               <span style={labelStyle}>Variation médiane résidentielle</span>
               <span style={subLabelStyle}>logements</span>
-            </td>
+            </th>
             {scenarios.map(({ key, leg, isBase }) => (
               <td
                 key={key}

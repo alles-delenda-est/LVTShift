@@ -10,18 +10,13 @@
 
 import type { Headline } from "@/lib/types";
 import { euros, pct } from "@/lib/format";
+import { MARINE, ROUGE, CREME, GRIS, LISERE } from "./theme";
 
 export interface HeadlineCardsProps {
   headline: Headline;
   /** Pass commune.headline_sensitivity.base.share_paying_more_pct */
   sharePayingMorePct: number | null;
 }
-
-const MARINE = "#1a2744";
-const ROUGE  = "#b5281e";
-const CREME  = "#f6f4f0";
-const GRIS   = "#6b6560";
-const LISERE = "#d6d1ca";
 
 interface StatDef {
   id: string;

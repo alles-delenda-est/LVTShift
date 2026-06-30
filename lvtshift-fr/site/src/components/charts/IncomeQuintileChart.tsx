@@ -25,19 +25,7 @@ import {
 import type { TooltipProps } from "recharts";
 import type { QuintileRow } from "@/lib/types";
 import { euros, signedPct } from "@/lib/format";
-
-const ROUGE   = "#b5281e";
-const GREEN   = "#2a6244";
-const CREME   = "#f6f4f0";
-const ENCRE   = "#1c1917";
-const GRIS    = "#6b6560";
-const LISERE  = "#d6d1ca";
-
-const TICK = {
-  fontFamily: "var(--font-body)",
-  fontSize: 11,
-  fill: GRIS,
-} as const;
+import { ROUGE, GREEN, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
 
 /* ── tooltip ──────────────────────────────────────────────────────── */
 
@@ -129,7 +117,7 @@ function NullQuintileNote() {
         lineHeight: 1.6,
       }}
     >
-      Revenu IRIS trop peu varié dans cette commune pour un découpage en quintiles.
+      Revenu IRIS trop peu varié dans cette commune pour un découpage en quintiles
     </div>
   );
 }
@@ -182,9 +170,7 @@ export default function IncomeQuintileChart({
           />
           <YAxis
             domain={domain}
-            tickFormatter={(v: number) =>
-              v === 0 ? "0 %" : `${v > 0 ? "+" : ""}${v} %`
-            }
+            tickFormatter={(v: number) => signedPct(v)}
             tick={TICK}
             axisLine={false}
             tickLine={false}
