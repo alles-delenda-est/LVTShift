@@ -195,7 +195,9 @@ export default function MethodologiePage() {
             toutes les parcelles — source d&apos;artefacts importants dans
             les communes rurales. Désormais, le foncier agricole et naturel
             ne représente qu&apos;une fraction infime de l&apos;assiette
-            (0,3&nbsp;% à Cahors, contre 98,4&nbsp;% pour le bâti).
+            imposable (de l&apos;ordre de 0,3&nbsp;% à Cahors) ;
+            l&apos;essentiel de la valeur du sol provient du foncier urbain
+            constructible.
           </p>
 
           <div className="border-l-4 border-lisere pl-5 text-sm text-gris">
