@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadIndex, loadCommune, loadValidation, communeKeys, loadRegister } from "@/lib/data";
+import { loadIndex, loadCommune, loadValidation, loadRegister } from "@/lib/data";
 
 describe("data loaders", () => {
   it("loads the index with the 9 modelled communes", () => {

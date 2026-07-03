@@ -21,7 +21,7 @@ export default function ResultatsPage() {
           Résultats par commune
         </h2>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed">
-          Sélectionnez une commune pour explorer les effets simulés d'une
+          Sélectionnez une commune pour explorer les effets simulés d&apos;une
           réforme de la taxe foncière vers une taxation de la valeur des
           terrains, à recettes constantes. Les résultats sont exprimés en
           variation médiane et en proportion de propriétaires concernés.
