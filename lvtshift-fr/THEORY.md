@@ -125,6 +125,29 @@ propagates visibly rather than silently.
   dominates value in high-demand cores), but the magnitude points at the
   construction-cost calibration (too-low €/m² → inflated land residual) — the
   first-order sensitivity below, now visible per commune rather than asserted.
+- **The "owner-occupier pays less" message is only half true — and the model
+  says which half.** The campaign's instinct (shifting off buildings spares the
+  resident household) holds for **apartments**, whose land is split across the
+  copropriété, so they are building-heavy and mostly pay *less*. It fails for the
+  **individual house on a valuable plot**, which is land-heavy: in dense/high-land
+  communes the large majority of *maisons individuelles* pay **more** — Villeurbanne
+  90.8 %, Annemasse 90.2 %, Grenoble 88.9 %, Sète 89.5 % (median change +15 to
+  +29 %) — while in cheap-land communes (Roubaix 25.8 %, La Rochelle 27.2 %) most
+  pay less. The determinant is the property's land share, not tenure. This is the
+  honest core of the distributional story and a genuine tension for advocacy: the
+  reform is *not* a free lunch for all owner-occupiers. The site states this
+  plainly (the sceptiques pager + a data-grounded callout reading live figures)
+  rather than repeating the comfortable slogan — but the framing of the campaign
+  message itself is a decision for the domain expert, not the model.
+- **The advocacy site is built (advocacy-site branch, 9-commune panel).** A
+  Next.js 15 site presents the aggregate results: a landing essential, an
+  interactive `/resultats` explorer (commune picker → headline cards, win/lose,
+  category impact, income-quintile chart or the null-note, ±10pt sensitivity
+  band), six MDX argument pagers adapted from the Comms drafts, and a
+  méthodologie page carrying the validation table, the ingestion register, and
+  the honest limits (Paris absent, Mulhouse non-modellable, the calibration
+  caveat, the small-commune quintile gap). It reads the aggregate JSON at build
+  time; it never touches per-parcel data or the upstream solver.
 
 ## Open questions / where the theory might break
 
