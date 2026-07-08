@@ -40,7 +40,6 @@ def load(commune):
     cfg = COMMUNES[commune]
     df = pd.read_csv(f"output/{commune}.csv")
     df["inc"] = pd.to_numeric(df.get("median_income"), errors="coerce")
-    vac = df["property_category"] == "Vacant Land"
     # income quintiles over residential built parcels
     b = df[(df["current_tax"] > 0) & df["property_category"].isin(RES)].dropna(subset=["inc"])
     quint = None
@@ -58,7 +57,9 @@ def load(commune):
         "n": len(df), "produit": df["new_tax"].sum(),
         "land_mill": df["land_millage"].iloc[0], "imp_mill": df["improvement_millage"].iloc[0],
         "income_med": df["inc"].median(),
-        "vacant_share": 100 * df.loc[vac, "new_tax"].sum() / df["new_tax"].sum(),
+        # NB: p_more/p_less/p_flat are computed over ALL parcels, including
+        # agricultural/natural ones (~42 % of Cahors parcels, all ~flat), so
+        # the "flat" band is structurally inflated in rural communes.
         "p_more": p_more, "p_less": p_less, "p_flat": 100 - p_more - p_less,
         "quint": quint, "cats_eur": cats_eur,
     }

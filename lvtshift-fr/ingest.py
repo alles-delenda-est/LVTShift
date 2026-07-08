@@ -39,9 +39,14 @@ def fetch_dvf(cfg) -> pd.DataFrame:
 
     Cleaning applied (document every drop in the methods note):
       - keep nature_mutation == 'Vente'
-      - drop multi-disposition mutations (same id_mutation, several rows
-        with conflicting locals) unless surfaces can be summed coherently
       - keep type_local in (Maison, Appartement); TAB kept separately
+      - aggregate multi-row mutations (same id_mutation) by summing the
+        Maison/Appartement surfaces against the mutation's full price.
+        KNOWN BIAS (see METHODOLOGY §6): annex locals (Dépendance) and
+        rows outside the commune are excluded from the surface sum but
+        their value stays in the price, so €/m² is overstated for
+        mutations bundling annexes or spanning communes. The percentile
+        trim catches extremes, not the systematic middle.
       - drop price or surface nulls; trim 1st/99th pctile of €/m²
     """
     frames = []
@@ -405,9 +410,12 @@ def fetch_filosofi_iris(cfg) -> pd.DataFrame:
     """INSEE Filosofi (2021) median disposable income per IRIS -> iris,
     median_income_eur.
 
-    2021 is the last produced vintage (2022 not published). The CSV is keyed on
-    the 9-digit IRIS code; median disposable income per consumption unit is
-    DISP_MED21. We keep this commune's IRIS (code starts with cfg.insee_code).
+    Vintage: 2021. INSEE published a « Filosofi 2 » 2023 vintage with
+    IRIS-level indicators in May 2026 (methodological break, not directly
+    comparable); 2021 is retained pending evaluation — see METHODOLOGY §6.
+    The CSV is keyed on the 9-digit IRIS code; median disposable income per
+    consumption unit is DISP_MED21. We keep this commune's IRIS (code starts
+    with cfg.insee_code).
 
     Caveat: Filosofi IRIS exists only for communes >= 5 000 inhabitants, and some
     IRIS are statistically suppressed (blank) — those come back NaN and simply
