@@ -87,10 +87,12 @@ DATA_SOURCES = {
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
-    # Filosofi (INSEE): IRIS-level income. 2021 is the last produced vintage
-    # (2022 not published). CSV zip -> BASE_TD_FILO_IRIS_2021_DISP.csv (sep ';'),
-    # keyed on IRIS (9-digit code_iris), median = DISP_MED21. Covers communes
-    # >= 5 000 inhabitants only.
+    # Filosofi (INSEE): IRIS-level income, 2021 vintage. NB: INSEE published a
+    # « Filosofi 2 » 2023 vintage with IRIS-level indicators in May 2026
+    # (methodological break, not directly comparable with 2021); 2021 is
+    # retained here pending evaluation — see METHODOLOGY §6. CSV zip ->
+    # BASE_TD_FILO_IRIS_2021_DISP.csv (sep ';'), keyed on IRIS (9-digit
+    # code_iris), median = DISP_MED21. Covers communes >= 5 000 inhabitants only.
     "filosofi_iris_csv": "https://www.insee.fr/fr/statistiques/fichier/8229323/BASE_TD_FILO_IRIS_2021_DISP_CSV.zip",
 
     # IRIS contours, same Géoplateforme WFS. Layer attribute code_iris is the
@@ -148,9 +150,12 @@ COMMUNES = {
 # than building land, so getting the *class* right matters far more than the
 # exact €/m²: a ±50 % error on a 0.6 €/m² farm rate is immaterial to the levy.
 
-# SAFER "Le prix des terres" 2024, €/m² (= €/ha ÷ 10 000), terres & prés libres.
-# National default 0.64; a few pilot départements nudged on the SAFER gradient.
-# Natural/forest (N zones) priced slightly below cropland.
+# SAFER « Le prix des terres », édition 2025 (marché 2024), €/m² (= €/ha ÷
+# 10 000), terres & prés libres. The 6 400 €/ha national figure is from the
+# 2025 publication covering 2024 sales — NOT the 2024 publication, which
+# reported 6 200 €/ha for 2023 sales (the 2026 edition, 2025 sales, gives
+# 6 460). National default 0.64; a few pilot départements nudged on the SAFER
+# gradient. Natural/forest (N zones) priced slightly below cropland.
 AG_EUR_M2_BY_DEP = {           # (agricultural A, natural/forest N)
     "_default": (0.64, 0.49),
     "46": (0.45, 0.35),        # Lot — Sud-Ouest, cheaper upland

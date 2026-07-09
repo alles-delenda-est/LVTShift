@@ -30,11 +30,11 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Buildings | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, commune bbox | current | footprint, storeys, height, dwellings, usage, FF-match flag |
 | Construction era | DPE logements existants (ADEME) | data-fair API by `code_insee_ban` | since 07/2021 | depreciation (period band → year) |
 | Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels |
-| Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2024 | non-constructible land €/m² |
+| Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2025 edition (2024 sales) | non-constructible land €/m² |
 | Building-plot fallback | EPTB (SDES) | national figure (config) | 2023 | constructible €/m² when local comparables are thin |
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
-| Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 | distributional (quintile) analysis |
+| Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 (see §6.8) | distributional (quintile) analysis |
 
 All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`.
 
@@ -70,7 +70,9 @@ degenerates to "unknown".
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
 toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
-1st/99th percentile.
+1st/99th percentile. The five pooled years enter at **nominal** prices — the
+`fit_hedonic(deflator=…)` hook exists but no Notaires-INSEE index is wired in
+yet (see §6, item 10).
 
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
@@ -139,9 +141,12 @@ Ranked by how much they move published (category/quintile) results.
    the starting bill. Resolved only by per-parcel VLC (Fichiers Fonciers).
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
-   value. Mitigated by the [0.15, 0.85] clip, aggregation, and the sensitivity
-   band. Vacant land does **not** use the residual, so the LVT headline (under-used
-   land pays more) is unaffected by building-data quality.
+   value. Mitigated by the [0.15, 0.85] clip and aggregation. The land-share
+   ±10 pt sensitivity band (`estimate.sensitivity_band`) exists and is unit
+   tested, but is **not yet wired into the pipeline outputs** — published runs
+   do not carry it yet; treat any band language elsewhere as a commitment, not
+   a description. Vacant land does **not** use the residual, so the LVT headline
+   (under-used land pays more) is unaffected by building-data quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies a residential median to
    non-residential / never-diagnosed parcels. Era→year uses band midpoints
@@ -151,16 +156,57 @@ Ranked by how much they move published (category/quintile) results.
 4. **Construction costs** are coarse regional pilots; a ±15 % move flows linearly
    into building (hence land) value.
 5. **Land-share clip** can mask genuinely >85 % land shares in dense cores
-   (Montreuil); publish the unclipped distribution alongside.
+   (Montreuil); publish the unclipped distribution alongside (the pre-clip
+   share is retained as `land_share_raw` in the parcel frame). Precedence when
+   the agricultural floor and the clip conflict: the floor (a market
+   observation) wins; such parcels are flagged `built_floored_ag` and their
+   land share may legitimately exceed the bounds.
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
 7. **Non-residential market value** borrows the residential €/m² surface;
    professionnels (2017 VLC revision) need a separate stratum.
-8. **Income (Filosofi)**: 2021 (last vintage), communes ≥5 000 inhabitants only,
-   some IRIS statistically suppressed.
+8. **Income (Filosofi)**: 2021 vintage; INSEE published a « Filosofi 2 » 2023
+   vintage with IRIS indicators in May 2026 (methodological break) — 2021 is
+   retained pending evaluation. Communes ≥5 000 inhabitants only, some IRIS
+   statistically suppressed. Quintiles additionally need ≥5 income-distinct
+   IRIS: a commune with one or two IRIS (e.g. Figeac, though ≥5 000) silently
+   loses its income charts (upstream skips the chart when quantile bins
+   collapse).
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte; Paris/Lyon/Marseille
    arrondissements have no separate TFPB (modelled via autonomous communes, e.g.
    Villeurbanne for inner Lyon).
+10. **Nominal price pooling (2021–2025).** DVF sales enter the hedonic and the
+    terrain-à-bâtir price base at nominal prices; the Notaires-INSEE index
+    moved ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an
+    ~8–10-point swing inside the pooled window, so cells whose sales cluster
+    early get systematically different price levels than cells clustering
+    late (spatially structured error, flagged by the project's founding
+    review). The `deflator` hook in `fit_hedonic` awaits the cited index.
+11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
+    footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
+    multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²
+    estimated on DVF `surface_reelle_bati` (habitable). Both value levels are
+    overstated (order 10–25 % depending on building type) and the residual
+    inherits the bias; the top-down §5 check partially absorbs it (numerator
+    and denominator inflated together), euro levels on charts do not. Flagged
+    by the founding review (PR #1); needs a documented gross→habitable factor.
+12. **TFPB exemptions are not modelled.** Public buildings (mairies, schools,
+    hospitals), religious buildings and permanently exempt farm buildings
+    (CGI art. 1382) are TFPB-exempt in reality, but here they both absorb a
+    share of today's produit (via their floor area) and pay the modelled LVT,
+    deflating everyone else's bill — this touches the published category bars
+    and the baseline every percentage change is computed from. Upstream's
+    `exemption_flag_col` is supported and unused; BD TOPO `usage_1`/`nature`
+    attributes could flag the obvious cases.
+13. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
+    the commune keep their value in the mutation price but are excluded from
+    the floor-area sum, overstating €/m² where annexes are common (rural
+    houses) — a spatially structured upward bias the percentile trim does not
+    remove (see `ingest.fetch_dvf` docstring).
+14. **No raw-data caching.** Every real run re-downloads every source from
+    live endpoints that occasionally move (config.py's own warning); runs are
+    reproducible as commands, not as data. A cached-manifest layer (source,
+    URL, fetch date, hash) is future work.
 
 ## 7. The Fichiers Fonciers access argument
 

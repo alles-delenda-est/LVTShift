@@ -81,6 +81,75 @@ def test_land_constructible_vacant_priced_at_dev_rate():
     assert abs(out["market_value"].iloc[0] - 60000.0) < 1e-6
 
 
+def test_land_floor_wins_over_high_clip():
+    # cheap building on big rural land: the agricultural floor (a market
+    # observation) exceeds the residual AND the 0.85-share clip level. The
+    # floor must win — the clip may not push land back below dirt value.
+    df = _classified_frame([["built", 100000.0, 0.45, 100.0, 40000.0, 35000.0, 80.0]])
+    out = estimate._land_value_classified(df, CFG)
+    assert abs(out["land_value"].iloc[0] - 45000.0) < 1e-6   # 10 ha × 0.45 €/m²
+    assert out["lv_flag"].iloc[0] == "built_floored_ag"
+    assert out["land_value"].iloc[0] >= 0.45 * 100000.0      # never below dirt
+
+
+def test_land_built_no_floor_flagged_explicitly():
+    # land_type 'built' but zero measurable floor area (n_levels=0 or a
+    # sub-threshold intersection): priced as dirt, but the flag must say
+    # what it is — not 'vacant_unknown_ag' (it is neither vacant nor unknown)
+    df = _classified_frame([["built", 1000.0, 0.5, 100.0, 0.0, 0.0, 0.0]])
+    out = estimate._land_value_classified(df, CFG)
+    assert out["lv_flag"].iloc[0] == "built_no_floor"
+    assert abs(out["land_value"].iloc[0] - 500.0) < 1e-6     # ag dirt pricing
+
+
+def test_land_share_raw_retained_for_unclipped_distribution():
+    # the methods docs promise the unclipped land-share distribution can be
+    # published; the pre-clip share must survive next to the clipped one
+    df = _classified_frame([["built", 100.0, 0.5, 100.0, 100000.0, 5000.0, 80.0]])
+    out = estimate._land_value_classified(df, CFG)
+    assert abs(out["land_share"].iloc[0] - 0.85) < 1e-6      # clipped
+    assert abs(out["land_share_raw"].iloc[0] - 0.95) < 1e-6  # pre-clip survives
+
+
+def test_sensitivity_band_central_variant_is_identity():
+    # the +0 % variant must reproduce the model exactly — in particular it
+    # must not invent improvements on vacant land (land_share 1.0 is out of
+    # the re-split scope and stays untouched in every variant)
+    p = pd.DataFrame({
+        "market_value": [60000.0, 200000.0],
+        "land_value": [60000.0, 80000.0],
+        "improvement_value": [0.0, 120000.0],
+        "land_share": [1.0, 0.4],
+    })
+    variants = estimate.sensitivity_band(p, CFG)
+    central = variants["land_share+0%"]
+    assert (central["land_value"] == p["land_value"]).all()
+    assert (central["improvement_value"] == p["improvement_value"]).all()
+    up = variants["land_share+10%"]
+    assert abs(up["land_value"].iloc[1] - 0.5 * 200000.0) < 1e-6   # 0.4 -> 0.5
+    assert abs(up["land_value"].iloc[0] - 60000.0) < 1e-6          # vacant untouched
+
+
+# ------------------------------------------------------------------ #
+# charts_fr euro-isation
+# ------------------------------------------------------------------ #
+
+def test_money_regex_handles_all_upstream_formats():
+    from charts_fr import _to_eur_text
+    nb = " "
+    cases = {
+        "$2,691,246": f"2{nb}691{nb}246{nb}€",        # comma-separated
+        "-$1,234": f"-1{nb}234{nb}€",                 # sign before $
+        "$-568": f"-568{nb}€",                        # sign after $ (legacy path)
+        "$1234": f"1{nb}234{nb}€",                    # no separator (viz.py legacy)
+        "$1,234.56": f"1{nb}234.56{nb}€",             # decimals
+        "$156, +0.3%": f"156{nb}€, +0.3%",            # trailing comma untouched
+        "($)": "(€)",                                 # bare dollar in axis label
+    }
+    for src, expected in cases.items():
+        assert _to_eur_text(src) == expected, (src, _to_eur_text(src))
+
+
 def test_land_agricultural_vacant_priced_cheap():
     df = _classified_frame([["agricultural", 10000.0, 0.45, 120.0, 0.0, 0.0, 0.0]])
     out = estimate._land_value_classified(df, CFG)

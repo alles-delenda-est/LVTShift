@@ -5,9 +5,11 @@ Adaptation française de [LVTShift](https://github.com/gregmiller00/LVTShift)
 vers une taxe sur la valeur du foncier (LVT), **à recettes constantes**,
 à la parcelle, sur **données ouvertes uniquement**.
 
-Zéro fork : le code appelle directement le solveur et l'export standard de
-LVTShift (`model_split_rate_tax`, `save_standard_export`). Les améliorations
-amont profitent automatiquement à la version française.
+Zéro modification de l'amont : le code (dans `lvtshift-fr/`, au sein de ce
+fork) appelle directement le solveur et l'export standard de LVTShift
+(`model_split_rate_tax`, `save_standard_export`) sans toucher aux fichiers
+amont. Les améliorations amont profitent automatiquement à la version
+française.
 
 ## Pourquoi ce dépôt existe
 
@@ -65,7 +67,10 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
-6. **Sensibilité** : tout résultat publié avec bande part-terrain ±10 pts.
+6. **Sensibilité** : engagement de publication — toute publication devra
+   porter la bande part-terrain ±10 pts. État actuel : la fonction existe et
+   est testée (`estimate.sensitivity_band`) mais n'est **pas encore branchée**
+   sur les sorties du pipeline (voir METHODOLOGY §6).
 
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
@@ -144,11 +149,28 @@ export CSV seul : `run(..., make_report=False)`.
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
   sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
-  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
+  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires
+  (fonction existante mais **pas encore branchée** sur les sorties — aucune
+  sortie actuelle ne porte la bande ; voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
-  distribution **non bornée** des parts terrain à côté des résultats bornés,
-  et signaler que les cœurs denses peuvent légitimement dépasser 85 %.
+  distribution **non bornée** des parts terrain (colonne `land_share_raw`,
+  conservée à cet effet) à côté des résultats bornés, et signaler que les
+  cœurs denses peuvent légitimement dépasser 85 %.
+- **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
+  hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
+  (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la
+  LVT simulée, ce qui déforme les barres par catégorie et la base de départ de
+  tous les pourcentages. Le solveur amont accepte un `exemption_flag_col`,
+  pas encore utilisé.
+- **Prix nominaux 2021–2025** : les ventes DVF entrent dans l'hédonique sans
+  déflateur (l'indice Notaires-INSEE a bougé de ~8–10 points dans la fenêtre) ;
+  le crochet `deflator` de `fit_hedonic` attend l'indice cité.
+- **Surfaces brutes × prix habitables** : la surface plancher (emprise ×
+  niveaux, type SHOB) multiplie un coût €/m² SHON et un €/m² hédonique estimé
+  sur la surface réelle bâtie DVF — niveaux de valeur surestimés (~10–25 %
+  selon le type de bâti), le résiduel hérite du biais (signalé par la revue
+  fondatrice, PR #1).
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
