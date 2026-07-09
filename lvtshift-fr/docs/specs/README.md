@@ -11,6 +11,12 @@ maintainer, not committed roadmap. Scope: `lvtshift-fr/` (Patrick's surface).
 | 0003 | [Flag TFPB-exempt stock](0003-flag-tfpb-exempt-stock.md) | P1 (HIGH) | — | Draft |
 | 0004 | [Add CI](0004-add-ci.md) | P1 | — | Draft |
 
+**Design & strategic decisions** (the non-code choices around these specs) live
+in [STRATEGY.md](STRATEGY.md): the Fichiers Fonciers access campaign, upstream
+contribution strategy (U2–U4), the Filosofi 2/2023 vintage decision, the
+SHON→habitable factor, reproducibility (caching + manifest), and publication/
+localisation choices.
+
 **Why these.** 0001–0003 are the review's "cheap, high-value model fixes that
 don't need Fichiers Fonciers access" plus the standing published promise (the
 band). 0004 turns "tests exist" into "tests run". Each closes a live gap between
