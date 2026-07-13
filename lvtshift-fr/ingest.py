@@ -26,11 +26,64 @@ CRS_METRIC = 2154
 CRS_WGS84 = 4326
 
 
-def _get(url: str, timeout: int = 180) -> bytes:
+# ------------------------------------------------------------------ #
+# Raw-data cache + source manifest (reproducibility layer).
+#
+# Every real run used to re-download every source from live endpoints that
+# "occasionally move" (see config.py) — runs were reproducible as commands,
+# not as data. _get now (1) caches each response under data/cache/ keyed by
+# the URL's sha256 (gitignored; delete the folder or set LVTSHIFT_NO_CACHE=1
+# to force refetch), and (2) records a manifest entry (url, when, bytes,
+# sha256, cache hit/miss) so run_commune can write {commune}_sources.json
+# next to each export — making vintage drift visible instead of silent.
+import hashlib
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+CACHE_DIR = Path(__file__).resolve().parent / "data" / "cache"
+
+_MANIFEST: list[dict] = []
+
+
+def reset_manifest() -> None:
+    _MANIFEST.clear()
+
+
+def get_manifest() -> list[dict]:
+    """Snapshot of every fetch since the last reset (order preserved)."""
+    return list(_MANIFEST)
+
+
+def _get(url: str, timeout: int = 180, cache_dir: "Path | None" = None) -> bytes:
+    use_cache = os.environ.get("LVTSHIFT_NO_CACHE", "") != "1"
+    cdir = Path(cache_dir) if cache_dir is not None else CACHE_DIR
+    key = hashlib.sha256(url.encode("utf-8")).hexdigest()[:24]
+    cpath = cdir / key
+
+    if use_cache and cpath.exists():
+        raw = cpath.read_bytes()
+        print(f"  CACHE {url[:114]}{'...' if len(url) > 114 else ''}")
+        _MANIFEST.append({
+            "url": url, "fetched_at": None, "from_cache": True,
+            "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
+        })
+        return raw
+
     print(f"  GET {url[:120]}{'...' if len(url) > 120 else ''}")
     req = urllib.request.Request(url, headers={"User-Agent": "lvtshift-fr/0.1"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+        raw = r.read()
+    if use_cache:
+        cdir.mkdir(parents=True, exist_ok=True)
+        cpath.write_bytes(raw)
+    _MANIFEST.append({
+        "url": url,
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "from_cache": False,
+        "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
+    })
+    return raw
 
 
 # ------------------------------------------------------------------ #

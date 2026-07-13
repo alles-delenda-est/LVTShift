@@ -89,6 +89,17 @@ Only DVF rows coded *terrains à bâtir* are trusted for constructible prices �
 raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
 mutations bundle buildings and several parcels.
 
+**Category split for publication** (`run_commune.split_vacant_category`):
+building-less parcels are no longer published under one "vacant land" bucket.
+Constructible/constructible-deferred parcels become `terrain_constructible`
+(standard category *Vacant Land* — the LVT's actual target), while
+agricultural/natural/unknown parcels become `terrain_agricole_naturel`
+(standard category *Agricultural*). `unknown` (no GPU coverage) is grouped
+with agricole/naturel because that is how it is **priced** (conservative dirt
+value). Before the split, ~42 % of Cahors parcels (A/N, all ≈flat) diluted the
+vacant-land bar and the headline win/lose band; the infographic now shows the
+two classes separately and annotates the flat band with the A/N share.
+
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
 (`estimate.current_tax`) across **built parcels only** by a VLC proxy = floor
 area. TFPB is a built tax; building-less parcels bear €0 (they pay the separate
@@ -203,10 +214,15 @@ Ranked by how much they move published (category/quintile) results.
     the floor-area sum, overstating €/m² where annexes are common (rural
     houses) — a spatially structured upward bias the percentile trim does not
     remove (see `ingest.fetch_dvf` docstring).
-14. **No raw-data caching.** Every real run re-downloads every source from
-    live endpoints that occasionally move (config.py's own warning); runs are
-    reproducible as commands, not as data. A cached-manifest layer (source,
-    URL, fetch date, hash) is future work.
+14. **Raw-data cache + source manifest** *(resolved 2026-07)*: `ingest._get`
+    now caches every response under the gitignored `data/cache/` (bypass with
+    `LVTSHIFT_NO_CACHE=1`; delete the folder to force refetch) and records a
+    manifest entry per fetch (URL, timestamp, bytes, sha256, cache hit).
+    `run_commune` writes `output/{commune}_sources.json` alongside each
+    export, so every published figure is traceable to the exact source
+    snapshots that produced it and vintage drift is visible instead of
+    silent. Residual limitation: the cache pins bytes, not endpoint
+    semantics — a moved endpoint still needs the config URL updated.
 
 ## 7. The Fichiers Fonciers access argument
 
@@ -227,6 +243,11 @@ cd lvtshift-fr
 python test_synthetic.py                 # offline end-to-end
 python run_commune.py <commune>          # live open-data run; CSV + charts
 ```
+
+Raw downloads are cached under `lvtshift-fr/data/cache/` (gitignored;
+`LVTSHIFT_NO_CACHE=1` bypasses) and each run writes
+`output/<commune>_sources.json` — the manifest of exactly which URL/bytes
+produced that export.
 
 Communes: `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`. Flags: `--layers` (REI scope), `--no-dpe` (BD TOPO year

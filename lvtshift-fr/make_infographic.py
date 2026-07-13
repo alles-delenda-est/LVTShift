@@ -29,10 +29,14 @@ RES = ["Single Family Residential", "Condominium", "Large Multi-Family (5+ units
 CAT_FR = {"Single Family Residential": "Maison", "Condominium": "Appartement",
           "Large Multi-Family (5+ units)": "Immeuble collectif",
           "Commercial": "Commerce", "Industrial": "Industrie", "Other": "Autre",
-          "Vacant Land": "Terrain sous-utilisé"}
-# vacant land first: its bar is the new bill on land that paid ~0 before
-CAT_ORDER = ["Terrain sous-utilisé", "Maison", "Appartement",
-             "Immeuble collectif", "Commerce", "Industrie"]
+          # Post-split (run_commune.split_vacant_category): constructible vacant
+          # land is the LVT's actual target; agricultural/natural land is shown
+          # separately (it is ~flat by construction and used to dilute the bar).
+          "Vacant Land": "Terrain constructible sous-utilisé",
+          "Agricultural": "Terrain agricole / naturel"}
+# constructible vacant first: its bar is the new bill on land that paid ~0 before
+CAT_ORDER = ["Terrain constructible sous-utilisé", "Terrain agricole / naturel",
+             "Maison", "Appartement", "Immeuble collectif", "Commerce", "Industrie"]
 QLAB = ["Q1\n(+ pauvre)", "Q2", "Q3", "Q4", "Q5\n(+ aisé)"]
 
 
@@ -52,15 +56,19 @@ def load(commune):
     chg = df["tax_change"]
     p_more = 100 * (chg > 1).mean()
     p_less = 100 * (chg < -1).mean()
+    # Agricultural/natural share of ALL parcels: quantifies how much of the
+    # grey "flat" band below is farmland that is ~flat by construction.
+    p_agnat = 100 * (df["property_category"] == "Agricultural").mean()
     return {
         "key": commune, "name": cfg.name, "dept": DEPT.get(cfg.departement, cfg.departement),
         "n": len(df), "produit": df["new_tax"].sum(),
         "land_mill": df["land_millage"].iloc[0], "imp_mill": df["improvement_millage"].iloc[0],
         "income_med": df["inc"].median(),
-        # NB: p_more/p_less/p_flat are computed over ALL parcels, including
-        # agricultural/natural ones (~42 % of Cahors parcels, all ~flat), so
-        # the "flat" band is structurally inflated in rural communes.
+        # p_more/p_less/p_flat are computed over ALL parcels; p_agnat makes the
+        # agricultural/natural share of the grey "flat" band explicit on-card
+        # (in rural communes it dominates the band by construction).
         "p_more": p_more, "p_less": p_less, "p_flat": 100 - p_more - p_less,
+        "p_agnat": p_agnat,
         "quint": quint, "cats_eur": cats_eur,
     }
 
@@ -123,6 +131,11 @@ def main(communes):
             ax.add_patch(plt.Rectangle((x0, yb), w * frac / 100, hb, transform=ax.transAxes,
                          facecolor=col, edgecolor="none"))
             x0 += w * frac / 100
+        if d.get("p_agnat", 0) >= 5:
+            ax.text(0.06, 0.02,
+                    f"bande neutre : dont {d['p_agnat']:.0f} % de parcelles agricoles/naturelles,"
+                    " quasi neutres par construction",
+                    fontsize=6.2, color="#666", va="bottom", transform=ax.transAxes)
         ax.text(0.06, yb + hb + 0.05, f"{d['p_more']:.0f} % paient PLUS", fontsize=8.8,
                 fontweight="bold", color="#c62828", va="center", transform=ax.transAxes)
         ax.text(0.94, yb + hb + 0.05, f"{d['p_less']:.0f} % moins", fontsize=8.8,

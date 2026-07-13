@@ -78,6 +78,30 @@ def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
+def split_vacant_category(parcels: pd.DataFrame) -> pd.DataFrame:
+    """Split the catch-all 'terrain_nu' category by legal land class.
+
+    Before this split, "Terrain sous-utilisé" lumped constructible vacant land
+    with agricultural/natural land — in Cahors ~42 % of parcels are A/N, so the
+    published category bar and the headline win/lose split were dominated by
+    farmland that is ~flat by construction. After classify_and_price_land has
+    attached `land_type`, building-less parcels are recategorised:
+
+      constructible / constructible_deferred -> terrain_constructible
+      agricultural / natural / unknown       -> terrain_agricole_naturel
+
+    'unknown' (no GPU coverage) is grouped with agricole/naturel because that
+    is how it is PRICED (conservative dirt value) — grouping follows the
+    pricing basis, and the choice is documented in METHODOLOGY §3.4.
+    """
+    out = parcels.copy()
+    vacant = out["category_fr"] == "terrain_nu"
+    con = out["land_type"].isin(["constructible", "constructible_deferred"])
+    out.loc[vacant & con, "category_fr"] = "terrain_constructible"
+    out.loc[vacant & ~con, "category_fr"] = "terrain_agricole_naturel"
+    return out
+
+
 def classify_and_price_land(cfg, parcels, buildings, tab):
     """Add land_type + per-parcel land prices (classify-then-price).
 
@@ -175,6 +199,8 @@ def prepare(cfg, layers, use_dpe=True):
 
     # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
     parcels = classify_and_price_land(cfg, parcels, buildings, tab)
+    # Split the vacant catch-all by legal class (see split_vacant_category)
+    parcels = split_vacant_category(parcels)
 
     # IRIS code per parcel + Filosofi income (drives the distributional charts)
     parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
@@ -211,8 +237,18 @@ def main():
 
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
+    ingest.reset_manifest()
     parcels, buildings, sales, tfpb, iris_income = prepare(
         cfg, tuple(args.layers), use_dpe=not args.no_dpe)
+
+    # Source manifest: which URL/vintage produced this run (reproducibility;
+    # see ingest._get). Written before the solve so a crash still leaves it.
+    import json as _json
+    from pathlib import Path as _Path
+    _Path(args.out_dir).mkdir(exist_ok=True)
+    manifest_path = _Path(args.out_dir) / f"{args.commune}_sources.json"
+    manifest_path.write_text(_json.dumps(ingest.get_manifest(), indent=1))
+    print(f"  source manifest -> {manifest_path} ({len(ingest.get_manifest())} fetches)")
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
