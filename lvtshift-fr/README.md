@@ -97,6 +97,9 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 **C'est l'argument d'accès** : la démo va jusqu'ici sur données ouvertes ;
 l'acte d'engagement transforme chaque ligne du tableau en donnée
 administrative exacte, à coût marginal nul pour la structure partenaire.
+Le dossier de demande est prêt à compléter :
+**`docs/access/fichiers-fonciers-dossier.md`** (porteur et structure à
+désigner ; dépôt au moment de la publication des résultats du pilote).
 
 ## Lancer
 

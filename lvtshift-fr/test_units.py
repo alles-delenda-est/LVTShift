@@ -131,6 +131,80 @@ def test_sensitivity_band_central_variant_is_identity():
 
 
 # ------------------------------------------------------------------ #
+# ingest cache + source manifest (reproducibility layer)
+# ------------------------------------------------------------------ #
+
+def test_get_caches_and_records_manifest(tmp_dir="/tmp/lvtshift-cache-test"):
+    import os, shutil, pathlib
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+    src = pathlib.Path(tmp_dir) / "src.txt"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_bytes(b"hello manifest")
+    url = src.resolve().as_uri()                    # file:// works with urllib
+    cache = pathlib.Path(tmp_dir) / "cache"
+
+    os.environ.pop("LVTSHIFT_NO_CACHE", None)
+    ingest.reset_manifest()
+    first = ingest._get(url, cache_dir=cache)
+    assert first == b"hello manifest"
+    src.unlink()                                    # source gone -> cache must serve
+    second = ingest._get(url, cache_dir=cache)
+    assert second == b"hello manifest", "second read must come from cache"
+
+    m = ingest.get_manifest()
+    assert len(m) == 2
+    assert m[0]["from_cache"] is False and m[0]["fetched_at"]
+    assert m[1]["from_cache"] is True
+    assert m[0]["sha256"] == m[1]["sha256"] and m[0]["bytes"] == 14
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+    ingest.reset_manifest()
+
+
+def test_get_cache_bypass_env():
+    import os, pathlib, shutil
+    tmp = pathlib.Path("/tmp/lvtshift-cache-test2")
+    shutil.rmtree(tmp, ignore_errors=True)
+    src = tmp / "s.txt"; src.parent.mkdir(parents=True); src.write_bytes(b"x")
+    os.environ["LVTSHIFT_NO_CACHE"] = "1"
+    try:
+        ingest.reset_manifest()
+        ingest._get(src.resolve().as_uri(), cache_dir=tmp / "cache")
+        assert not (tmp / "cache").exists(), "no cache dir when bypassed"
+    finally:
+        os.environ.pop("LVTSHIFT_NO_CACHE", None)
+        shutil.rmtree(tmp, ignore_errors=True)
+        ingest.reset_manifest()
+
+
+# ------------------------------------------------------------------ #
+# split_vacant_category: constructible vs agricole/naturel
+# ------------------------------------------------------------------ #
+
+def test_split_vacant_category_by_land_type():
+    import run_commune as rc
+    parcels = pd.DataFrame({
+        "category_fr": ["terrain_nu", "terrain_nu", "terrain_nu",
+                        "terrain_nu", "terrain_nu", "maison"],
+        "land_type": ["constructible", "constructible_deferred", "agricultural",
+                      "natural", "unknown", "built"],
+    })
+    out = rc.split_vacant_category(parcels)
+    assert list(out["category_fr"]) == [
+        "terrain_constructible", "terrain_constructible",
+        "terrain_agricole_naturel", "terrain_agricole_naturel",
+        "terrain_agricole_naturel",   # unknown grouped with its PRICING basis
+        "maison",                     # built parcels untouched
+    ]
+
+
+def test_split_categories_map_to_distinct_standard_categories():
+    import run_pipeline as rp
+    assert rp.CATEGORY_MAP["terrain_constructible"] == "Vacant Land"
+    assert rp.CATEGORY_MAP["terrain_agricole_naturel"] == "Agricultural"
+    assert rp.CATEGORY_MAP["terrain_nu"] == "Vacant Land"   # legacy/synthetic
+
+
+# ------------------------------------------------------------------ #
 # charts_fr euro-isation
 # ------------------------------------------------------------------ #
 

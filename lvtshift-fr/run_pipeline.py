@@ -32,7 +32,9 @@ CATEGORY_MAP = {
     "immeuble_collectif": "Large Multi-Family (5+ units)",
     "commerce": "Commercial",
     "industriel": "Industrial",
-    "terrain_nu": "Vacant Land",
+    "terrain_nu": "Vacant Land",              # legacy/synthetic (pre-split)
+    "terrain_constructible": "Vacant Land",   # under-used constructible land
+    "terrain_agricole_naturel": "Agricultural",
     "dependance": "Other",
 }
 

@@ -99,6 +99,19 @@ constructible — le brut `valeur_fonciere/surface_terrain` est contaminé pour 
 autres natures de culture car les mutations regroupent bâti et plusieurs
 parcelles.
 
+**Scission de catégorie pour la publication**
+(`run_commune.split_vacant_category`) : les parcelles non bâties ne sont plus
+publiées sous un seul « terrain nu ». Les parcelles constructibles (U/AU)
+deviennent `terrain_constructible` (catégorie standard *Vacant Land* — la vraie
+cible de la LVT) ; les parcelles agricoles/naturelles/inconnues deviennent
+`terrain_agricole_naturel` (catégorie standard *Agricultural*). `unknown`
+(pas de couverture GPU) est regroupé avec agricole/naturel car c'est ainsi
+qu'il est **valorisé** (prix de la terre, conservateur). Avant la scission,
+~42 % des parcelles de Cahors (A/N, toutes ≈neutres) diluaient la barre
+« terrain sous-utilisé » et la bande gagnants/perdants ; l'infographie montre
+désormais les deux classes séparément et annote la bande neutre avec la part
+A/N.
+
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
 (`estimate.current_tax`) sur les **parcelles bâties uniquement** au prorata d'un
 proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ; les parcelles
@@ -225,11 +238,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     sont fréquentes (maisons rurales) — un biais haussier spatialement structuré
     que l'écrêtage par centiles ne corrige pas (voir la docstring de
     `ingest.fetch_dvf`).
-14. **Pas de cache des données brutes.** Chaque exécution réelle re-télécharge
-    toutes les sources depuis des endpoints vivants qui bougent parfois
-    (l'avertissement de config.py) ; les exécutions sont reproductibles comme
-    commandes, pas comme données. Une couche cache + manifeste (source, URL,
-    date, empreinte) reste à faire.
+14. **Cache des données brutes + manifeste des sources** *(résolu 2026-07)* :
+    `ingest._get` met désormais en cache chaque réponse sous `data/cache/`
+    (gitignoré ; contourner avec `LVTSHIFT_NO_CACHE=1` ; supprimer le dossier
+    pour forcer le re-téléchargement) et enregistre une entrée de manifeste
+    par téléchargement (URL, horodatage, octets, sha256, cache oui/non).
+    `run_commune` écrit `output/{commune}_sources.json` à côté de chaque
+    export : chaque chiffre publié est traçable aux instantanés de sources
+    exacts qui l'ont produit, et la dérive de millésime devient visible.
+    Limite résiduelle : le cache fige des octets, pas la sémantique d'un
+    endpoint — un endpoint déplacé exige toujours la mise à jour de l'URL.
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 
@@ -251,6 +269,11 @@ cd lvtshift-fr
 python test_synthetic.py                 # bout-en-bout hors-ligne
 python run_commune.py <commune>          # exécution réelle ; CSV + graphiques
 ```
+
+Les téléchargements bruts sont mis en cache sous `lvtshift-fr/data/cache/`
+(gitignoré ; `LVTSHIFT_NO_CACHE=1` pour contourner) et chaque exécution écrit
+`output/<commune>_sources.json` — le manifeste des URL/octets exacts qui ont
+produit cet export.
 
 Communes : `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`. Options : `--layers` (strates REI), `--no-dpe` (année BD
