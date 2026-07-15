@@ -8,19 +8,24 @@ synthesized recommendation for the downstream review + config decision.
 
 - **Opus** → `collectif-opus.md` — recommends **≈ 1 950 €/m²** (range 1 750–2 200).
 - **Sonnet** → `collectif-sonnet.md` — recommends **≈ 2 300 €/m²** (range 2 000–2 600).
-- **Gemini** → *pending* (no Gemini CLI/API in this environment; prompt in
-  `PROMPT-for-gemini.md`, to be run by the maintainer → `collectif-gemini.md`).
-  When it lands, slot it into §2/§3 below.
+- **Gemini** → `collectif-gemini.md` — **no single recommendation** (answered largely
+  off-brief — mostly a generic missing-data-methodology essay), but surfaced one
+  genuinely new, useful table that neither other pass had: the **MOD (direct-management)
+  travaux / foncier / autres decomposition** from Éclairages n°33 — i.e. the exact
+  *hors-foncier* construction series that both other passes flagged as their biggest
+  `[DERIVED]` gap. Its own routes bracket **~1 935–2 375, centring ~2 100** — so it
+  **corroborates** the mix below rather than moving it. See §2 (Div. A refinement) and §4.
 
 All figures are **hors foncier, per m² of the model's `floor_area` (gross, walls
 included), 2025 vintage, for a dense Île-de-France Zone-A-bis core (Montreuil)**.
 
 ---
 
-## 1. Where the two models AGREE (high-confidence, sourced)
+## 1. Where the models AGREE (high-confidence, sourced)
 
-Both anchored on the same authoritative open series and reached the same structural
-picture — this part is solid:
+Opus and Sonnet both anchored on the same authoritative open series and reached the same
+structural picture — and Gemini's on-topic section independently corroborates every
+headline below (2 290→2 550 +11 %; travaux +22 %; A-bis +24 %). This part is solid:
 
 - **Authoritative anchor = social-housing *prix de revient*** (Banque des Territoires
   / CDC *Éclairages* n°33 (Dec 2024) + n°25 / Le Moniteur for the 2020 zone levels).
@@ -55,7 +60,15 @@ modelling choices inside the derivation.
   **understates** 2023 travaux by ~9 %.
 - **Sonnet:** `0.67 × 2 300 (2019) × 1.22 (travaux +22 %) ≈ 1 880 €/m² Su`. Grows the
   2019 travaux *component* by the actual travaux growth — **methodologically correct**.
-- **Verdict: Sonnet.** This alone lifts the social-anchored figure ~9 % above Opus's.
+- **Verdict: Sonnet — refined by Gemini.** Sonnet's *form* is right (grow the travaux
+  component, don't apply a stale share to a moved total). But Gemini's MOD table gives
+  the number *directly* — **national MOD travaux 2023 = 1 790 €/m² Su** (`[UNVERIFIED]`
+  cell; structure verified real) — landing just **below** Sonnet's 1 880. Reason:
+  within a consistent build type (MOD) the travaux *share* is stable ~67–68 %, not risen
+  to ~74 %; the whole-sample "+11 %" total that made the share look like it jumped is
+  **composition-distorted** by the cheaper-VEFA mix shift (MOD alone rose +18 %). So the
+  cleanest hors-foncier construction anchor is the **direct MOD figure ≈ 1 790**, with
+  Sonnet's 1 880 as the upper edge of that step. Immaterial to the final number (~2 100).
 
 ### Divergence B — the "attractive urban zone" trade figure: vintage & indexation (Sonnet likely right on the fact, Opus right on the weight)
 - The Cabinet Franck Verdelet SDP figure ("zones urbaines attractives" **1 900–2 000
@@ -101,6 +114,16 @@ Cross-check via the A-bis-level route (Opus, with the corrected higher travaux s
 A bis 2023 PdR ~3 900 €/m² Su × travaux share ~0.55–0.60 ≈ 2 145–2 340 Su → ×0.90 ≈
 **1 930–2 105 €/m² floor**. The two routes overlap at **~2 000–2 150**.
 
+Third, independent cross-check via **Gemini's direct MOD travaux** (a hors-foncier
+construction figure, not share-derived):
+```
+National MOD travaux 2023 ≈ 1 790 €/m² Su × A-bis premium (+20–35%) ≈ 2 150–2 415 Su
+Su → gross floor_area ×0.90                                          ≈ 1 935–2 175 €/m² floor
+```
+And via Gemini's SDP-gamme route (standard collectif ≈ 1 412 €/m² SDP 2019 × +22 %
+travaux × +2 % to 2025 × A-bis premium) ≈ **2 110–2 375 €/m² SDP ≈ floor**. All three
+routes now overlap tightly at **~2 000–2 150**.
+
 > ### Synthesized recommendation — Montreuil collectif `construction_cost_eur_m2`
 > ### **≈ 2 100 €/m²** (hors foncier, per gross floor_area), range **~1 900–2 400**.
 
@@ -125,27 +148,34 @@ Cerema 2 403 €HT/m² SDP case study (non-IdF) sits at the top of the range and
    (up ~2 065) and Occitanie (up ~1 796)** *individual*-house figures (see
    `construction-cost-calibration-data.md`), not on Montreuil.
 
-## 4. Open gaps (for the Gemini pass and/or a browser-equipped follow-up)
-- **The single highest-value verification:** pull the exact Zone-level PdR + charge-
-  foncière split from the CDC and IdF open-data endpoints (both 403 here, but browser-
-  reachable): replaces the `[DERIVED]` A-bis level and split — the biggest uncertainty
-  in every pass.
-  - CDC: `opendata.caissedesdepots.fr/explore/dataset/constructionrehabilitation_logementsocial_surface_prix/`
-  - IdF: `data.smartidf.services/explore/dataset/financement-et-cout-des-logements-sociaux-construits/`
-- **ARA collectif** (Villeurbanne/Grenoble, Zone A/B1): neither pass sourced it; both
+## 4. Open gaps (for a browser-equipped follow-up)
+- **The single highest-value verification (now concrete):** open the Éclairages n°33
+  full PDF in a browser and read off (a) the **MOD travaux/foncier/autres cells** —
+  confirms Gemini's `[UNVERIFIED]` Table — and (b) any **Zone-A-bis-specific** level.
+  That one check converts the central estimate from "triangulated ~2 100" to "sourced
+  ~2 100". Browser-reachable (403 only to this automation environment):
+  - PDF: `banquedesterritoires.fr/sites/default/files/2025-01/Exe brochure Eclairages 33 A4 2024 vdef.pdf`
+  - USH mirror: `union-habitat.org/.../eclairages_33_a4_2024_vdef_sommaire.pdf`
+  - CDC open data: `opendata.caissedesdepots.fr/explore/dataset/constructionrehabilitation_logementsocial_surface_prix/`
+  - IdF open data: `data.smartidf.services/explore/dataset/financement-et-cout-des-logements-sociaux-construits/`
+- **ARA collectif** (Villeurbanne/Grenoble, Zone A/B1): no pass sourced it; all
   infer a *smaller* collectif uplift than Montreuil. Directionally ~1 700–1 950 floor-area.
-- **Gemini pass:** run `PROMPT-for-gemini.md`; if it surfaces an official private-collectif
-  series or an exact A-bis level, it could tighten §3 materially.
+- **Gemini did not** surface an official *private*-collectif construction series or an
+  exact A-bis level — those remain the only genuinely unsourced links.
 
 ## 5. Scorecard
-| Dimension | Opus | Sonnet |
-|---|---|---|
-| Source authority / anchoring discipline | **stronger** (social anchor, trade as bracket) | leans on trade path for the central number |
-| Travaux-growth arithmetic (Div. A) | understated (~9 % low) | **correct** |
-| A-bis trend application (Div. C) | **correct** (pro-rated) | over-applied (full +24 %) |
-| Surface-basis rigor (Div. D) | **stronger** (explicit chain) | looser, same magnitude |
-| Trade-figure vintage (Div. B) | mis-dated as current | **correct** (2019 → indexes up) |
-| Honesty about the weak link | strong | strong |
-| **Net** | Best *method/discipline* | Best *arithmetic on two sub-steps* |
+| Dimension | Opus | Sonnet | Gemini |
+|---|---|---|---|
+| Answered the actual deliverable | **yes** | **yes** | **no** (off-brief essay) |
+| Source authority / anchoring discipline | **stronger** (social anchor, trade as bracket) | leans on trade path for the central number | anchors on the real report |
+| Travaux-growth arithmetic (Div. A) | understated (~9 % low) | **correct** (form) | **best** (direct MOD figure) |
+| A-bis trend application (Div. C) | **correct** (pro-rated) | over-applied (full +24 %) | n/a |
+| Surface-basis rigor (Div. D) | **stronger** (explicit chain) | looser, same magnitude | **inconsistent** (self-contradicts) |
+| Trade-figure vintage (Div. B) | mis-dated as current | **correct** (2019 → indexes up) | n/a |
+| New sourced data surfaced | zone levels, split | travaux-growth path | **MOD travaux/foncier/autres table** |
+| Honesty about the weak link | strong | strong | n/a (didn't reach a number) |
+| **Net** | Best *method/discipline* | Best *arithmetic on two sub-steps* | One valuable *data table*, no synthesis |
 
-**Best mix = Opus's backbone + Sonnet's travaux correction → ≈ 2 100 €/m² (1 900–2 400).**
+**Best mix = Opus's backbone + Sonnet's travaux correction, with Gemini's direct MOD
+travaux (1 790) as the cleanest hors-foncier anchor → ≈ 2 100 €/m² (1 900–2 400).**
+All three models' routes now overlap at ~2 000–2 150.
