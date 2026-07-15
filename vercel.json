@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd lvtshift-fr/site && npm install",
+  "buildCommand": "cd lvtshift-fr/site && npm run build",
+  "outputDirectory": "lvtshift-fr/site/out"
+}
