@@ -19,6 +19,15 @@ synthesized recommendation for the downstream review + config decision.
 All figures are **hors foncier, per m² of the model's `floor_area` (gross, walls
 included), 2025 vintage, for a dense Île-de-France Zone-A-bis core (Montreuil)**.
 
+> **UPDATE (primary source obtained).** The maintainer supplied the full
+> Éclairages n°33 PDF. Its **Graphique 4** gives the exact hors-foncier MOD
+> construction series — **national MOD travaux 2023 = 1 790 €/m² surface utile**
+> — which **verifies Gemini's table to the euro** and turns the biggest
+> `[DERIVED]` gap into a **sourced** anchor. This tightens the recommendation to
+> **≈ 2 050 €/m² (range ~1 950–2 250)**, toward the lower half of the triangulated
+> ~2 100 below. Full working: **`collectif-eclairages33-verified.md`** (authoritative).
+> The triangulation below is retained as the reasoning trail that led there.
+
 ---
 
 ## 1. Where the models AGREE (high-confidence, sourced)
