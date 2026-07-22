@@ -6,7 +6,7 @@ maintainer, not committed roadmap. Scope: `lvtshift-fr/` (Patrick's surface).
 
 | # | Spec | Priority | Depends on | Status |
 |---|---|---|---|---|
-| 0001 | [Wire the Notaires-INSEE deflator](0001-notaires-insee-deflator.md) | P0 (HIGH, ~1h) | — | Implemented (index levels: maintainer transcription pending) |
+| 0001 | [Wire the Notaires-INSEE deflator](0001-notaires-insee-deflator.md) | P0 (HIGH, ~1h) | — | Implemented (INSEE série 010567058; levels need a live spot-check — build env blocks insee.fr) |
 | 0002 | [Wire the ±10 pt sensitivity band into the pipeline](0002-wire-sensitivity-band.md) | P0 (HIGH) | F9 (on main via #14) | Implemented |
 | 0003 | [Flag TFPB-exempt stock](0003-flag-tfpb-exempt-stock.md) | P1 (HIGH) | — | Implemented |
 | 0004 | [Add CI](0004-add-ci.md) | P1 | — | Implemented |

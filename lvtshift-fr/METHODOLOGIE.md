@@ -80,10 +80,10 @@ rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 
 × surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
 la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées sont
 **déflatées à `reference_year` (2025)** avec l'indice Notaires-INSEE
-(`config.NOTAIRES_INSEE_DEFLATOR`, branché dans `fit_hedonic` et la base
-terrain-à-bâtir), de sorte que la dérive temporelle des prix ne biaise plus les
-valeurs par cellule ; les niveaux d'indice restent une étape de transcription du
-mainteneur (voir §6, point 10, et `docs/specs/0001`).
+(`config.NOTAIRES_INSEE_DEFLATOR`, série INSEE 010567058, branché dans
+`fit_hedonic` et la base terrain-à-bâtir), de sorte que la dérive temporelle des
+prix ne biaise plus les valeurs par cellule ; les niveaux d'indice sont à
+vérifier sur la série avant publication (voir §6, point 10, et `docs/specs/0001`).
 
 **3.4 Valeur du terrain — classer puis valoriser**
 (`estimate.land_value_residual` → `_land_value_classified`). Les parcelles non
@@ -205,15 +205,17 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     l'hédonique et dans la base de prix terrain-à-bâtir **déflatées à
     `reference_year` (2025)** avec l'indice Notaires-INSEE
     (`config.NOTAIRES_INSEE_DEFLATOR`), qui a bougé de ~+7–8 % (2021), ~+5–6 %
-    (2022), ~−2 % (2023), ~−1 % (2024) — un balancement de ~8–10 points dans la
-    fenêtre qui, sinon, donnerait aux cellules dont les ventes se concentrent tôt
-    des niveaux de prix systématiquement différents de celles qui vendent tard
-    (erreur spatialement structurée, signalée par la revue fondatrice). Caveat
-    résiduel : le déflateur corrige la dérive *temporelle* dans le pool, pas les
-    différences transversales de marché local (rôle de l'hédonique) ; et les
-    niveaux d'indice sont provisoires, dérivés des mouvements annuels cités par
-    la revue — à remplacer par la série INSEE exacte avant publication
-    (`docs/specs/0001`).
+    (2022), ~−2 % (2023), ~−4 % (2024) — un balancement dans la fenêtre qui,
+    sinon, donnerait aux cellules dont les ventes se concentrent tôt des niveaux
+    de prix systématiquement différents de celles qui vendent tard (erreur
+    spatialement structurée, signalée par la revue fondatrice). Les facteurs sont
+    les moyennes annuelles de la série INSEE **010567058** (IPLA, France
+    métropolitaine, ensemble, base 100 en moyenne annuelle 2015), chaînées à 2025.
+    Caveats résiduels : le déflateur corrige la dérive *temporelle* dans le pool,
+    pas les différences transversales de marché local (rôle de l'hédonique) ; et
+    les six niveaux ont été transcrits de mémoire de la série 010567058, pas d'un
+    fetch live (l'environnement bloque insee.fr) — **à vérifier sur la série, avec
+    la date d'accès, avant publication** (`docs/specs/0001`).
 11. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
     = emprise × niveaux est une surface brute murs compris (type SHOB), mais elle
     multiplie un coût de construction exprimé en €/m² SHON et un €/m² hédonique

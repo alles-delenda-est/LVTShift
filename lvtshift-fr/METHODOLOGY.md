@@ -71,10 +71,11 @@ degenerates to "unknown".
 toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
 1st/99th percentile. The five pooled years are **deflated to `reference_year`
-(2025)** with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`, wired
-through `fit_hedonic` and the terrain-à-bâtir base) so pooled-window price drift
-no longer biases cell-level values; the index levels remain a maintainer
-transcription step (see §6, item 10, and `docs/specs/0001`).
+(2025)** with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`, INSEE série
+010567058, wired through `fit_hedonic` and the terrain-à-bâtir base) so
+pooled-window price drift no longer biases cell-level values; the index levels
+need a spot-check against the série before publication (see §6, item 10, and
+`docs/specs/0001`).
 
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
@@ -189,11 +190,13 @@ Ranked by how much they move published (category/quintile) results.
     swing inside the pooled window that would otherwise give cells whose sales
     cluster early systematically different price levels than cells clustering
     late (spatially structured error, flagged by the project's founding review).
-    Residual caveat: the deflator corrects *temporal* drift within the pool, not
-    cross-sectional local-market differences (the hedonic's job); and the index
-    levels are provisional, derived from the review's stated annual movements —
-    to be replaced with the exact transcribed INSEE série before publication
-    (`docs/specs/0001`).
+    The factors are the annual averages of INSEE série **010567058** (IPLA,
+    France métropolitaine, ensemble, base 100 en moyenne annuelle 2015), chained
+    to 2025. Residual caveats: the deflator corrects *temporal* drift within the
+    pool, not cross-sectional local-market differences (the hedonic's job); and
+    the six levels were transcribed from knowledge of 010567058, not a live fetch
+    (the build environment blocks insee.fr), so **spot-check them against the
+    série and record the access date before publication** (`docs/specs/0001`).
 11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
     footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
     multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²

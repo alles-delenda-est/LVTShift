@@ -111,22 +111,25 @@ DATA_SOURCES = {
 # cells clustering late; deflating to a common year removes that *temporal*
 # drift before the hedonic and the terrain-à-bâtir land base see the prices.
 #
-# The factors below are derived from the annual year-on-year movements of the
-# index (≈ +7–8 % 2021, +5–6 % 2022, −2 % 2023, −1 % 2024, ~flat 2025) as
-# summarised in the pilot's founding review, chained to a 2025 base:
-#     idx: 2021=107.5  2022=113.41  2023=111.14  2024=110.03  2025=110.03
-#     factor(Y) = idx(2025) / idx(Y)
-# TODO before publication (repo sourcing discipline): replace these with the
-# exact transcribed INSEE annual index levels, citing the série id
-# (INSEE-Notaires IPLA, France entière, base 100 en 2015) and the access date.
-# The mechanism is what this constant wires in; the six numbers are a
-# maintainer transcription step (see docs/specs/0001).
+# Source: INSEE — Indice des prix des logements anciens, France métropolitaine,
+# Ensemble, base 100 en moyenne annuelle 2015 (série BDM 010567058, indice
+# Notaires-Insee). Annual-average index levels, chained to the reference year:
+#     idx: 2020=119.9  2021=128.7  2022=137.1  2023=135.5  2024=130.2  2025=130.6
+#     factor(Y) = idx(reference_year=2025) / idx(Y)
+# These are the published annual averages (YoY ≈ +7.3 % 2021, +6.5 % 2022,
+# −1.2 % 2023, −3.9 % 2024, ~flat 2025), which is why 2022 sales are deflated
+# most (they precede the 2023–2024 correction) and 2024 barely moves.
+# CAVEAT (do not drop): these levels were transcribed from knowledge of série
+# 010567058, NOT a live fetch — this session's egress policy blocks insee.fr, so
+# they could not be verified against the série in place. Spot-check the six
+# annual averages against 010567058 (and record the access date) before
+# publication; the ±0.5–1 pt level uncertainty maps to ±~1 % in the factors.
 NOTAIRES_INSEE_DEFLATOR = {
-    2021: 1.0236,   # 2021 prices × 1.0236 → 2025 €
-    2022: 0.9702,
-    2023: 0.9900,
-    2024: 1.0000,
-    2025: 1.0000,
+    2021: 1.0148,   # 130.6 / 128.7 — 2021 prices × 1.0148 → 2025 €
+    2022: 0.9526,   # 130.6 / 137.1
+    2023: 0.9639,   # 130.6 / 135.5
+    2024: 1.0031,   # 130.6 / 130.2
+    2025: 1.0000,   # reference year
 }
 
 
