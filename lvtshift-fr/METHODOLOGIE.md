@@ -103,11 +103,14 @@ autres natures de culture car les mutations regroupent bâti et plusieurs
 parcelles.
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
-(`estimate.current_tax`) sur les **parcelles bâties uniquement** au prorata d'un
-proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ; les parcelles
-non bâties portent **0 €** (elles relèvent de la TFPNB, hors périmètre). **Aucun
-calage sur la valeur de marché** (la VLC 1970 est régressive vs marché ; un calage
-dégraderait la fidélité à la base actuelle) ; une variante pondérée par catégorie
+(`estimate.current_tax`) sur les **parcelles bâties taxables uniquement** au
+prorata d'un proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ;
+les parcelles non bâties portent **0 €** (elles relèvent de la TFPNB, hors
+périmètre). Les parcelles manifestement exonérées (culte / bâtiments ruraux, §6
+point 12) sont aussi exclues via `exempt_col`, de sorte que le produit n'est
+réparti que sur le bâti réellement taxable. **Aucun calage sur la valeur de
+marché** (la VLC 1970 est régressive vs marché ; un calage dégraderait la
+fidélité à la base actuelle) ; une variante pondérée par catégorie
 n'existe qu'en sensibilité étiquetée.
 
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
@@ -220,15 +223,21 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (numérateur et dénominateur gonflés ensemble), pas les niveaux en euros des
     graphiques. Signalé par la revue fondatrice (PR #1) ; nécessite un facteur
     brut→habitable documenté.
-12. **Exonérations TFPB non modélisées.** Les bâtiments publics (mairies,
-    écoles, hôpitaux), les édifices religieux et les bâtiments ruraux exonérés
-    en permanence (CGI art. 1382) sont exonérés de TFPB en réalité ; ici ils
-    absorbent une part du produit actuel (via leur surface plancher) **et**
-    paient la LVT simulée, ce qui dégonfle la facture de tous les autres — cela
-    touche les barres par catégorie publiées et la base de départ de chaque
-    pourcentage. Le `exemption_flag_col` de l'amont est géré et inutilisé ; les
-    attributs BD TOPO `usage_1`/`nature` permettraient de flagger les cas
-    évidents.
+12. **Exonérations TFPB — cas évidents flaggés, résidu déclaré.** Les parcelles
+    bâties manifestement exonérées — édifices du culte (`usage_1 = Religieux`,
+    art. 1382-4°) et bâtiments ruraux (`usage_1 = Agricole`, art. 1382-6°) — sont
+    flaggées depuis BD TOPO (`run_commune.derive_exemption_flag`,
+    `config.EXEMPT_USAGE_VALUES`) et exclues des **deux** côtés : 0 € dans la
+    répartition du produit (`estimate.current_tax(exempt_col=...)`) **et** 0 € au
+    solve (`model_split_rate_tax(exemption_flag_col=...)`), donc le prélèvement ne
+    pèse que sur le bâti taxable. **Résidu (non modélisé) :** les bâtiments
+    publics (mairies, écoles, hôpitaux) ne sont pas séparables de `usage_1` (ils
+    tombent sous 'Commercial et services' / 'Indifférencié', qui contiennent aussi
+    du taxable), et les exonérations partielles / temporaires (ZFU/ZRR,
+    abattements logement social) sont invisibles en données ouvertes — elles
+    restent dans la base et sont déclarées ici. Là où `usage_1` est nul, aucune
+    parcelle n'est flaggée (fail-open vers taxable — conservateur). Retirer le
+    bâti exonéré déplace les barres `Autre`/`Commerce` : attendu, pas un bug.
 13. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes

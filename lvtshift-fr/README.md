@@ -158,12 +158,12 @@ export CSV seul : `run(..., make_report=False)`.
   distribution **non bornée** des parts terrain (colonne `land_share_raw`,
   conservée à cet effet) à côté des résultats bornés, et signaler que les
   cœurs denses peuvent légitimement dépasser 85 %.
-- **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
-  hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
-  (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la
-  LVT simulée, ce qui déforme les barres par catégorie et la base de départ de
-  tous les pourcentages. Le solveur amont accepte un `exemption_flag_col`,
-  pas encore utilisé.
+- **Exonérations TFPB — cas évidents flaggés** : les édifices du culte
+  (`Religieux`) et les bâtiments ruraux (`Agricole`) sont flaggés depuis BD TOPO
+  (`derive_exemption_flag`) et exclus des deux côtés — 0 € dans la base **et** au
+  solve (`exemption_flag_col`). Résidu déclaré : mairies/écoles/hôpitaux (non
+  séparables de `usage_1`) et exonérations partielles/temporaires restent dans la
+  base (voir METHODOLOGY §6, point 12).
 - **Prix déflatés à 2025 (2021–2025)** : les ventes DVF entrent dans l'hédonique
   et la base terrain-à-bâtir déflatées à `reference_year` avec l'indice
   Notaires-INSEE (`config.NOTAIRES_INSEE_DEFLATOR`, ~8–10 points de balancement

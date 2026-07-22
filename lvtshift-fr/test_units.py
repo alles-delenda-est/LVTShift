@@ -36,6 +36,66 @@ def test_current_tax_is_built_only():
     assert abs(out["current_tax"].iloc[1] - 750.0) < 1e-6
 
 
+def test_current_tax_excludes_exempt():
+    # spec 0003: a large obviously-exempt building bears €0 current tax and the
+    # produit is fully redistributed over the remaining taxable built stock
+    p = pd.DataFrame({
+        "floor_area_m2": [100.0, 300.0, 400.0],
+        "category_fr": ["maison", "appartement", "dependance"],
+        "is_exempt": [False, False, True],       # the biggest one is exempt
+    })
+    out = estimate.current_tax(p, 1000.0, exempt_col="is_exempt")
+    assert out["current_tax"].iloc[2] == 0.0, "exempt parcel bears no FB"
+    assert abs(out["current_tax"].sum() - 1000.0) < 1e-6, "produit conserved"
+    assert abs(out["current_tax"].iloc[0] - 250.0) < 1e-6   # 100/400 over taxable
+    assert abs(out["current_tax"].iloc[1] - 750.0) < 1e-6
+
+
+def test_current_tax_no_exempt_col_is_unchanged():
+    p = pd.DataFrame({"floor_area_m2": [100.0, 300.0],
+                      "category_fr": ["maison", "appartement"]})
+    a = estimate.current_tax(p, 1000.0)
+    b = estimate.current_tax(p, 1000.0, exempt_col="is_exempt")   # column absent
+    assert (a["current_tax"] == b["current_tax"]).all()
+
+
+def test_solve_excludes_exempt_and_stays_neutral():
+    # the flagged parcel's new_tax is 0; revenue neutrality holds over the
+    # taxable set (upstream model_split_rate_tax(exemption_flag_col=...))
+    from lvt.lvt_utils import model_split_rate_tax
+    p = pd.DataFrame({
+        "land_value": [100000.0, 200000.0, 50000.0],
+        "improvement_value": [50000.0, 100000.0, 80000.0],
+        "current_tax": [400.0, 600.0, 0.0],
+        "is_exempt": [False, False, True],
+    })
+    _l, _i, rev, out = model_split_rate_tax(
+        df=p, land_value_col="land_value", improvement_value_col="improvement_value",
+        current_revenue=1000.0, land_improvement_ratio=4.0,
+        exemption_flag_col="is_exempt")
+    assert out["new_tax"].iloc[2] == 0.0
+    assert abs(rev - 1000.0) < 1e-3
+
+
+def test_derive_exemption_flag():
+    import run_commune as rc
+    b = pd.DataFrame([
+        dict(idpar="P1", footprint_m2=100.0, n_levels=1.0, usage="Religieux", n_dwellings=0.0),
+        dict(idpar="P2", footprint_m2=100.0, n_levels=1.0, usage="Résidentiel", n_dwellings=1.0),
+        dict(idpar="P3", footprint_m2=100.0, n_levels=1.0, usage="Agricole", n_dwellings=0.0),
+        dict(idpar="P4", footprint_m2=100.0, n_levels=1.0, usage="Commercial et services", n_dwellings=0.0),
+        # dominant (largest-floor) building decides: exempt chapel < taxable shop
+        dict(idpar="P5", footprint_m2=20.0, n_levels=1.0, usage="Religieux", n_dwellings=0.0),
+        dict(idpar="P5", footprint_m2=300.0, n_levels=1.0, usage="Commercial et services", n_dwellings=0.0),
+    ])
+    f = rc.derive_exemption_flag(b)
+    assert bool(f["P1"]) is True       # culte
+    assert bool(f["P2"]) is False      # résidentiel
+    assert bool(f["P3"]) is True       # agricole
+    assert bool(f["P4"]) is False      # commerce
+    assert bool(f["P5"]) is False      # dominant building is the taxable shop
+
+
 def test_current_tax_category_weights_sensitivity():
     p = pd.DataFrame({
         "floor_area_m2": [100.0, 100.0],

@@ -162,6 +162,21 @@ MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Deni
 FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
     "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
 
+# Obviously-TFPB-exempt building usages (spec 0003). Parcels whose dominant
+# building carries one of these BD TOPO `usage_1` values are excluded from BOTH
+# sides of the ledger: the current-tax (FB) baseline distribution AND the LVT
+# solve (via model_split_rate_tax(exemption_flag_col=...)). Kept deliberately
+# TIGHT — err toward under-flagging, with the residual disclosed in METHODOLOGY
+# §6:
+#   * Religieux — édifices du culte (CGI art. 1382-4°).
+#   * Agricole  — bâtiments ruraux affectés à l'usage agricole (art. 1382-6°).
+# Mairie / école / hôpital are NOT separable from BD TOPO `usage_1` (they fall
+# under 'Commercial et services' / 'Indifférencié', which also hold taxable
+# stock), so matching them would over-flag; they stay in the disclosed residual
+# rather than being caught here. Extend this set only with values that are
+# *obviously* exempt on their own.
+EXEMPT_USAGE_VALUES = {"Religieux", "Agricole"}
+
 # Registry for the CLI / run_commune driver (--commune <key>)
 COMMUNES = {
     "grenoble": GRENOBLE, "annemasse": ANNEMASSE,

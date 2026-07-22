@@ -92,11 +92,13 @@ raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
 mutations bundle buildings and several parcels.
 
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
-(`estimate.current_tax`) across **built parcels only** by a VLC proxy = floor
-area. TFPB is a built tax; building-less parcels bear €0 (they pay the separate
-TFPNB, out of scope). No market-value tilt (the 1970 VLC is regressive vs market,
-so a tilt would worsen baseline fidelity); a category-weighted variant exists as
-a labelled sensitivity only.
+(`estimate.current_tax`) across **taxable built parcels only** by a VLC proxy =
+floor area. TFPB is a built tax; building-less parcels bear €0 (they pay the
+separate TFPNB, out of scope). Obviously-exempt built parcels (culte / bâtiments
+ruraux, §6 item 12) are also excluded via `exempt_col`, so the produit is shared
+only over genuinely-taxable stock. No market-value tilt (the 1970 VLC is
+regressive vs market, so a tilt would worsen baseline fidelity); a
+category-weighted variant exists as a labelled sensitivity only.
 
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
@@ -200,14 +202,21 @@ Ranked by how much they move published (category/quintile) results.
     inherits the bias; the top-down §5 check partially absorbs it (numerator
     and denominator inflated together), euro levels on charts do not. Flagged
     by the founding review (PR #1); needs a documented gross→habitable factor.
-12. **TFPB exemptions are not modelled.** Public buildings (mairies, schools,
-    hospitals), religious buildings and permanently exempt farm buildings
-    (CGI art. 1382) are TFPB-exempt in reality, but here they both absorb a
-    share of today's produit (via their floor area) and pay the modelled LVT,
-    deflating everyone else's bill — this touches the published category bars
-    and the baseline every percentage change is computed from. Upstream's
-    `exemption_flag_col` is supported and unused; BD TOPO `usage_1`/`nature`
-    attributes could flag the obvious cases.
+12. **TFPB exemptions — obvious cases flagged, residual disclosed.** Obviously-
+    exempt built parcels — édifices du culte (`usage_1 = Religieux`, art. 1382-4°)
+    and bâtiments ruraux (`usage_1 = Agricole`, art. 1382-6°) — are flagged from
+    BD TOPO (`run_commune.derive_exemption_flag`, set in `config.EXEMPT_USAGE_VALUES`)
+    and excluded from **both** sides of the ledger: they bear €0 in the baseline
+    produit distribution (`estimate.current_tax(exempt_col=...)`) and pay €0 in
+    the LVT solve (`model_split_rate_tax(exemption_flag_col=...)`), so the levy
+    falls only on genuinely-taxable stock. **Residual (still unmodelled):** public
+    buildings (mairies, écoles, hôpitaux) are not separable from BD TOPO
+    `usage_1` (they sit under 'Commercial et services' / 'Indifférencié', which
+    also hold taxable stock), and partial / time-limited exemptions (ZFU/ZRR,
+    social-housing abatements) are invisible in open data — these remain in the
+    baseline and are disclosed here. Where `usage_1` is null no parcel is flagged
+    (fail-open to taxable — conservative for revenue). Removing exempt stock
+    shifts the `Autre`/`Commerce` category bars: expected, not a bug.
 13. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural

@@ -269,7 +269,8 @@ def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
 def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
                 vlc_proxy_cols=("floor_area_m2",),
                 category_weights: dict | None = None,
-                category_col: str = "category_fr") -> pd.DataFrame:
+                category_col: str = "category_fr",
+                exempt_col: str | None = None) -> pd.DataFrame:
     """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
     THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
@@ -292,6 +293,12 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
       system. ``category_weights`` (e.g. weighting professionnel m² above housing
       m², post-2017 revision) is offered only as a labelled **sensitivity**, off
       by default — never as the published baseline.
+
+    * **``exempt_col`` (spec 0003).** When given, parcels flagged obviously-exempt
+      (culte / bâtiments ruraux — see config.EXEMPT_USAGE_VALUES) get weight 0:
+      they bear no current TFPB (correct — they are exempt in reality), and the
+      produit is shared only over genuinely-taxable built stock. Off by default
+      so the synthetic frame (no flag) is unchanged.
     """
     out = p.copy()
     w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
@@ -299,6 +306,8 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         w = w.where(out["floor_area_m2"].fillna(0) > 0, 0.0)
     if category_weights and category_col in out.columns:   # sensitivity only
         w = w * out[category_col].map(category_weights).fillna(1.0)
+    if exempt_col and exempt_col in out.columns:           # obviously-exempt -> 0
+        w = w.where(~out[exempt_col].fillna(False).astype(bool), 0.0)
     total = w.sum()
     out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out

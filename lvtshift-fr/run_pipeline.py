@@ -102,6 +102,9 @@ def sensitivity_band_table(p: pd.DataFrame, cfg, target_revenue: float) -> pd.Da
     (the F9 fix), so its column equals the headline numbers to the euro.
     """
     variants = estimate.sensitivity_band(p, cfg)
+    # exemptions must be applied identically to the base solve, or the central
+    # (+0 %) variant would not reproduce it (spec 0003 interaction).
+    exempt_col = "is_exempt" if "is_exempt" in p.columns else None
     recs = []
     for vkey, v in variants.items():
         shift = vkey.replace("land_share", "")          # "-10%" | "+0%" | "+10%"
@@ -110,6 +113,7 @@ def sensitivity_band_table(p: pd.DataFrame, cfg, target_revenue: float) -> pd.Da
             improvement_value_col="improvement_value",
             current_revenue=target_revenue,
             land_improvement_ratio=cfg.split_rate_ratio,
+            exemption_flag_col=exempt_col,
         )
         for group, metric, value in _summarise_variant_metrics(solved):
             recs.append({"group": group, "metric": metric,
@@ -167,7 +171,11 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     surface, _trans = estimate.fit_hedonic(dvf, deflator=deflator)
     p = estimate.market_value(p, surface)
     p = estimate.land_value_residual(p, cfg)
-    p = estimate.current_tax(p, commune_tfpb_produit)
+
+    # Obviously-TFPB-exempt parcels (spec 0003), where flagged upstream, are held
+    # out of BOTH the baseline produit distribution and the LVT solve.
+    exempt_col = "is_exempt" if "is_exempt" in p.columns else None
+    p = estimate.current_tax(p, commune_tfpb_produit, exempt_col=exempt_col)
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
@@ -178,6 +186,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
         land_improvement_ratio=cfg.split_rate_ratio,
+        exemption_flag_col=exempt_col,
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
