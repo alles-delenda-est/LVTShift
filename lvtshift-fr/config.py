@@ -101,6 +101,39 @@ DATA_SOURCES = {
 }
 
 # ------------------------------------------------------------------ #
+# Notaires-INSEE price deflator (temporal, within the DVF pool)
+# ------------------------------------------------------------------ #
+# Multiplicative factor bringing a sale of year Y to `reference_year` (2025) €,
+# from the Notaires-INSEE « indice des prix des logements anciens » (France
+# entière, valeurs annuelles moyennes). The pooled DVF window (2021–2025) spans
+# a full cycle — strong 2021–2022 growth then a 2023–2024 correction — so cells
+# whose sales cluster early carry a systematically different price level than
+# cells clustering late; deflating to a common year removes that *temporal*
+# drift before the hedonic and the terrain-à-bâtir land base see the prices.
+#
+# Source: INSEE — Indice des prix des logements anciens, France métropolitaine,
+# Ensemble, base 100 en moyenne annuelle 2015 (série BDM 010567058, indice
+# Notaires-Insee). Annual-average index levels, chained to the reference year:
+#     idx: 2020=119.9  2021=128.7  2022=137.1  2023=135.5  2024=130.2  2025=130.6
+#     factor(Y) = idx(reference_year=2025) / idx(Y)
+# These are the published annual averages (YoY ≈ +7.3 % 2021, +6.5 % 2022,
+# −1.2 % 2023, −3.9 % 2024, ~flat 2025), which is why 2022 sales are deflated
+# most (they precede the 2023–2024 correction) and 2024 barely moves.
+# CAVEAT (do not drop): these levels were transcribed from knowledge of série
+# 010567058, NOT a live fetch — this session's egress policy blocks insee.fr, so
+# they could not be verified against the série in place. Spot-check the six
+# annual averages against 010567058 (and record the access date) before
+# publication; the ±0.5–1 pt level uncertainty maps to ±~1 % in the factors.
+NOTAIRES_INSEE_DEFLATOR = {
+    2021: 1.0148,   # 130.6 / 128.7 — 2021 prices × 1.0148 → 2025 €
+    2022: 0.9526,   # 130.6 / 137.1
+    2023: 0.9639,   # 130.6 / 135.5
+    2024: 1.0031,   # 130.6 / 130.2
+    2025: 1.0000,   # reference year
+}
+
+
+# ------------------------------------------------------------------ #
 # Communes
 # ------------------------------------------------------------------ #
 # construction_cost_eur_m2 is the turnkey replacement cost (gros + second
@@ -131,6 +164,21 @@ MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Deni
     "93048", "Montreuil", "93", construction_cost_eur_m2=2150.0)
 FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
     "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
+
+# Obviously-TFPB-exempt building usages (spec 0003). Parcels whose dominant
+# building carries one of these BD TOPO `usage_1` values are excluded from BOTH
+# sides of the ledger: the current-tax (FB) baseline distribution AND the LVT
+# solve (via model_split_rate_tax(exemption_flag_col=...)). Kept deliberately
+# TIGHT — err toward under-flagging, with the residual disclosed in METHODOLOGY
+# §6:
+#   * Religieux — édifices du culte (CGI art. 1382-4°).
+#   * Agricole  — bâtiments ruraux affectés à l'usage agricole (art. 1382-6°).
+# Mairie / école / hôpital are NOT separable from BD TOPO `usage_1` (they fall
+# under 'Commercial et services' / 'Indifférencié', which also hold taxable
+# stock), so matching them would over-flag; they stay in the disclosed residual
+# rather than being caught here. Extend this set only with values that are
+# *obviously* exempt on their own.
+EXEMPT_USAGE_VALUES = {"Religieux", "Agricole"}
 
 # Registry for the CLI / run_commune driver (--commune <key>)
 COMMUNES = {

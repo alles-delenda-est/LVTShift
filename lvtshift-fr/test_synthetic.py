@@ -83,4 +83,23 @@ assert rev_ok
 vac = out["property_category"] == "Vacant Land"
 assert out.loc[vac, "current_tax"].sum() == 0, "vacant land is not in the FB base"
 assert (out.loc[vac, "new_tax"] > 0).mean() > 0.9, "vacant land should pay LVT"
+
+# ---- sensitivity band (spec 0002): -10 / +0 / +10 land-share variants ----
+band = out.attrs["sensitivity"]
+assert set(band["variant"]) == {"-10%", "+0%", "+10%"}, "three variants exported"
+# land_share_raw survived into the standard export (F5)
+assert "land_share_raw" in out.columns, "unclipped land share must be published"
+# central variant reproduces the base solve per category, to the euro (F9)
+base_med = out.groupby("property_category")["tax_change"].median()
+central = band[(band["metric"] == "median_tax_change_eur")
+               & (band["variant"] == "+0%")]
+for _, r in central.iterrows():
+    cat = r["group"].replace("category:", "")
+    assert abs(r["value"] - base_med[cat]) < 1e-6, (cat, r["value"], base_med[cat])
+# direction check: a building-heavy category's bill falls as land share rises
+condo = (band[(band["group"] == "category:Condominium")
+              & (band["metric"] == "median_tax_change_eur")]
+         .set_index("variant")["value"])
+assert condo["-10%"] > condo["+0%"] > condo["+10%"], "building-heavy bill falls"
+print("SENSITIVITY BAND CHECKS PASSED ✅")
 print("ALL CHECKS PASSED ✅")

@@ -1,0 +1,40 @@
+name: CI
+
+# Runs the three offline test suites on every PR and every push to main:
+#   1. upstream unit tests           (tests/, pytest)
+#   2. FR pilot unit tests           (lvtshift-fr/test_units.py)
+#   3. FR synthetic end-to-end       (lvtshift-fr/test_synthetic.py — real solver)
+# All three are offline by design (no ingest), so CI needs no data.gouv / IGN /
+# INSEE access — keep it that way (do NOT add a live run_commune step). See
+# lvtshift-fr/docs/specs/0004.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: lvtshift-fr/requirements-ci.txt
+
+      - name: Install deps
+        run: pip install -r lvtshift-fr/requirements-ci.txt
+
+      - name: Upstream unit tests
+        run: python -m pytest tests/ -q
+
+      - name: FR pilot unit tests
+        run: python test_units.py
+        working-directory: lvtshift-fr
+
+      - name: FR synthetic end-to-end
+        run: python test_synthetic.py
+        working-directory: lvtshift-fr

@@ -67,11 +67,14 @@ propagates visibly rather than silently.
 2. **Aggregate, never per-parcel, for publication.** Imputation error averages out
    by property category and income quintile (Filosofi IRIS); individual bills do
    not — so they are never published.
-3. **Sensitivity as a first-class output** (the commitment). Every headline
-   result is to carry a land-share ±10pt band. Status: the band function
-   (`estimate.sensitivity_band`) exists and is unit tested, but is not yet
-   wired into the pipeline outputs — published runs do not carry the band
-   yet (METHODOLOGY §6, item 2).
+3. **Sensitivity as a first-class output** (the commitment, now met). Every
+   headline result carries a land-share ±10 pt band. The band function
+   (`estimate.sensitivity_band`) is wired through the pipeline
+   (`run_pipeline.sensitivity_band_table`): each run re-solves the −10 / +0 / +10
+   land-share variants, exports them to `{commune}_sensitivity.csv`, and the
+   infographic draws the band on the category bars, the income-quintile panel and
+   the "X % paient PLUS" headline. The central (+0 %) variant reproduces the base
+   solve to the euro (METHODOLOGY §6, item 2).
 4. **The access argument.** Each open-data compromise maps to a specific Fichiers
    fonciers (CEREMA/DGFiP) variable that would resolve it — making the demo itself
    the case for administrative data access.

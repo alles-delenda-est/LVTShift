@@ -36,6 +36,66 @@ def test_current_tax_is_built_only():
     assert abs(out["current_tax"].iloc[1] - 750.0) < 1e-6
 
 
+def test_current_tax_excludes_exempt():
+    # spec 0003: a large obviously-exempt building bears €0 current tax and the
+    # produit is fully redistributed over the remaining taxable built stock
+    p = pd.DataFrame({
+        "floor_area_m2": [100.0, 300.0, 400.0],
+        "category_fr": ["maison", "appartement", "dependance"],
+        "is_exempt": [False, False, True],       # the biggest one is exempt
+    })
+    out = estimate.current_tax(p, 1000.0, exempt_col="is_exempt")
+    assert out["current_tax"].iloc[2] == 0.0, "exempt parcel bears no FB"
+    assert abs(out["current_tax"].sum() - 1000.0) < 1e-6, "produit conserved"
+    assert abs(out["current_tax"].iloc[0] - 250.0) < 1e-6   # 100/400 over taxable
+    assert abs(out["current_tax"].iloc[1] - 750.0) < 1e-6
+
+
+def test_current_tax_no_exempt_col_is_unchanged():
+    p = pd.DataFrame({"floor_area_m2": [100.0, 300.0],
+                      "category_fr": ["maison", "appartement"]})
+    a = estimate.current_tax(p, 1000.0)
+    b = estimate.current_tax(p, 1000.0, exempt_col="is_exempt")   # column absent
+    assert (a["current_tax"] == b["current_tax"]).all()
+
+
+def test_solve_excludes_exempt_and_stays_neutral():
+    # the flagged parcel's new_tax is 0; revenue neutrality holds over the
+    # taxable set (upstream model_split_rate_tax(exemption_flag_col=...))
+    from lvt.lvt_utils import model_split_rate_tax
+    p = pd.DataFrame({
+        "land_value": [100000.0, 200000.0, 50000.0],
+        "improvement_value": [50000.0, 100000.0, 80000.0],
+        "current_tax": [400.0, 600.0, 0.0],
+        "is_exempt": [False, False, True],
+    })
+    _l, _i, rev, out = model_split_rate_tax(
+        df=p, land_value_col="land_value", improvement_value_col="improvement_value",
+        current_revenue=1000.0, land_improvement_ratio=4.0,
+        exemption_flag_col="is_exempt")
+    assert out["new_tax"].iloc[2] == 0.0
+    assert abs(rev - 1000.0) < 1e-3
+
+
+def test_derive_exemption_flag():
+    import run_commune as rc
+    b = pd.DataFrame([
+        dict(idpar="P1", footprint_m2=100.0, n_levels=1.0, usage="Religieux", n_dwellings=0.0),
+        dict(idpar="P2", footprint_m2=100.0, n_levels=1.0, usage="Résidentiel", n_dwellings=1.0),
+        dict(idpar="P3", footprint_m2=100.0, n_levels=1.0, usage="Agricole", n_dwellings=0.0),
+        dict(idpar="P4", footprint_m2=100.0, n_levels=1.0, usage="Commercial et services", n_dwellings=0.0),
+        # dominant (largest-floor) building decides: exempt chapel < taxable shop
+        dict(idpar="P5", footprint_m2=20.0, n_levels=1.0, usage="Religieux", n_dwellings=0.0),
+        dict(idpar="P5", footprint_m2=300.0, n_levels=1.0, usage="Commercial et services", n_dwellings=0.0),
+    ])
+    f = rc.derive_exemption_flag(b)
+    assert bool(f["P1"]) is True       # culte
+    assert bool(f["P2"]) is False      # résidentiel
+    assert bool(f["P3"]) is True       # agricole
+    assert bool(f["P4"]) is False      # commerce
+    assert bool(f["P5"]) is False      # dominant building is the taxable shop
+
+
 def test_current_tax_category_weights_sensitivity():
     p = pd.DataFrame({
         "floor_area_m2": [100.0, 100.0],
@@ -128,6 +188,63 @@ def test_sensitivity_band_central_variant_is_identity():
     up = variants["land_share+10%"]
     assert abs(up["land_value"].iloc[1] - 0.5 * 200000.0) < 1e-6   # 0.4 -> 0.5
     assert abs(up["land_value"].iloc[0] - 60000.0) < 1e-6          # vacant untouched
+
+
+# ------------------------------------------------------------------ #
+# sensitivity band table (spec 0002)
+# ------------------------------------------------------------------ #
+
+def _band_frame():
+    return pd.DataFrame({
+        "PROPERTY_CATEGORY": ["Condominium", "Single Family Residential",
+                              "Vacant Land", "Condominium"],
+        "market_value": [200000.0, 300000.0, 50000.0, 150000.0],
+        "land_value": [80000.0, 150000.0, 50000.0, 30000.0],
+        "improvement_value": [120000.0, 150000.0, 0.0, 120000.0],
+        "land_share": [0.4, 0.5, 1.0, 0.2],
+        "current_tax": [500.0, 800.0, 0.0, 400.0],
+    })
+
+
+def test_sensitivity_band_table_central_reproduces_base():
+    # the +0 % variant must equal the base solve per category to the euro
+    import run_pipeline as rp
+    from lvt.lvt_utils import model_split_rate_tax
+    p, target = _band_frame(), 1500.0
+    band = rp.sensitivity_band_table(p, CFG, target)
+    _l, _i, _r, base = model_split_rate_tax(
+        df=p.copy(), land_value_col="land_value",
+        improvement_value_col="improvement_value", current_revenue=target,
+        land_improvement_ratio=CFG.split_rate_ratio)
+    base["tax_change"] = base["new_tax"] - base["current_tax"]
+    base_med = base.groupby("PROPERTY_CATEGORY")["tax_change"].median()
+    central = band[(band["metric"] == "median_tax_change_eur")
+                   & (band["variant"] == "+0%")]
+    assert len(central) == base_med.size
+    for _, row in central.iterrows():
+        cat = row["group"].replace("category:", "")
+        assert abs(row["value"] - base_med[cat]) < 1e-6, (cat, row["value"])
+
+
+def test_sensitivity_band_table_revenue_neutral_each_variant():
+    from lvt.lvt_utils import model_split_rate_tax
+    p, target = _band_frame(), 1500.0
+    for v in estimate.sensitivity_band(p, CFG).values():
+        _l, _i, rev, _o = model_split_rate_tax(
+            df=v, land_value_col="land_value",
+            improvement_value_col="improvement_value", current_revenue=target,
+            land_improvement_ratio=CFG.split_rate_ratio)
+        assert abs(rev - target) < 1e-3          # every variant hits the target
+
+
+def test_sensitivity_band_table_shape():
+    import run_pipeline as rp
+    band = rp.sensitivity_band_table(_band_frame(), CFG, 1500.0)
+    assert set(band["variant"]) == {"-10%", "+0%", "+10%"}
+    assert {"group", "metric", "variant", "value"} == set(band.columns)
+    # per-category € and % change + the overall win/lose split are all present
+    assert "median_tax_change_eur" in set(band["metric"])
+    assert {"ALL"} <= set(band["group"])
 
 
 # ------------------------------------------------------------------ #
@@ -230,6 +347,51 @@ def test_tab_comparables_filters_non_building_plots():
     assert len(out) >= 15, "should keep most TAB comparables"
     assert out["eur_m2_land"].max() <= 50.0, "non-building-plot rows must be excluded"
     assert 38.0 <= out["eur_m2_land"].median() <= 42.0
+
+
+# ------------------------------------------------------------------ #
+# Notaires-INSEE deflator (spec 0001)
+# ------------------------------------------------------------------ #
+
+def test_fit_hedonic_applies_deflator():
+    # a single-year, single-cell frame: the implied €/m² must scale by exactly
+    # the deflator factor for that year (2021 sale at 2000 €/m² × 1.10 -> 2200)
+    dvf = pd.DataFrame({
+        "price": [200000.0] * 4, "floor_area_m2": [100.0] * 4,
+        "type_local": ["Maison"] * 4, "year": [2021] * 4, "cell": ["A"] * 4,
+    })
+    base, _ = estimate.fit_hedonic(dvf)                       # no deflator
+    infl, _ = estimate.fit_hedonic(dvf, deflator={2021: 1.10})
+    assert abs(base["eur_m2"].iloc[0] - 2000.0) < 1.0
+    assert abs(infl["eur_m2"].iloc[0] - 2200.0) < 1.0        # 2000 × 1.10
+
+
+def test_fit_hedonic_deflator_none_is_noop():
+    dvf = pd.DataFrame({
+        "price": [200000.0] * 4, "floor_area_m2": [100.0] * 4,
+        "type_local": ["Maison"] * 4, "year": [2021] * 4, "cell": ["A"] * 4,
+    })
+    a, _ = estimate.fit_hedonic(dvf)
+    b, _ = estimate.fit_hedonic(dvf, deflator=None)
+    assert abs(a["eur_m2"].iloc[0] - b["eur_m2"].iloc[0]) < 1e-9
+
+
+def test_tab_comparables_applies_deflator():
+    # TAB €/m²_land must scale by the same factor (deflate before €/m²)
+    rows = [{"id_mutation": "m0", "valeur_fonciere": 40_000.0,
+             "surface_terrain": 1000.0, "nature_culture": "terrains a bâtir",
+             "latitude": 44.4, "longitude": 1.4, "date_mutation": "2021-06-01"}]
+    base = ingest.tab_comparables(CFG, pd.DataFrame(rows))
+    infl = ingest.tab_comparables(CFG, pd.DataFrame(rows), deflator={2021: 1.10})
+    assert abs(base["eur_m2_land"].iloc[0] - 40.0) < 1e-6
+    assert abs(infl["eur_m2_land"].iloc[0] - 44.0) < 1e-6    # 40 × 1.10
+
+
+def test_config_deflator_normalised_to_reference_year():
+    from config import NOTAIRES_INSEE_DEFLATOR as DEF
+    import config
+    assert DEF[config.CAHORS.reference_year] == 1.0           # base year is 1.0
+    assert set(DEF) == {2021, 2022, 2023, 2024, 2025}         # one per pooled year
 
 
 # ------------------------------------------------------------------ #

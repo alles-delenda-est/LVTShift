@@ -1,5 +1,7 @@
 # LVTShift-FR
 
+[![CI](https://github.com/alles-delenda-est/LVTShift/actions/workflows/ci.yml/badge.svg)](https://github.com/alles-delenda-est/LVTShift/actions/workflows/ci.yml)
+
 Adaptation française de [LVTShift](https://github.com/gregmiller00/LVTShift)
 (Center for Land Economics) : simulation d'un transfert de la taxe foncière
 vers une taxe sur la valeur du foncier (LVT), **à recettes constantes**,
@@ -67,10 +69,11 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
-6. **Sensibilité** : engagement de publication — toute publication devra
-   porter la bande part-terrain ±10 pts. État actuel : la fonction existe et
-   est testée (`estimate.sensitivity_band`) mais n'est **pas encore branchée**
-   sur les sorties du pipeline (voir METHODOLOGY §6).
+6. **Sensibilité** : engagement tenu — toute publication porte la bande
+   part-terrain ±10 pts. Chaque run re-résout les variantes −10 / +0 / +10
+   (`run_pipeline.sensitivity_band_table`), les exporte dans
+   `{commune}_sensitivity.csv` et les rend sur les graphiques ; la variante
+   centrale reproduit le solve de base à l'euro (voir METHODOLOGY §6).
 
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
@@ -149,23 +152,25 @@ export CSV seul : `run(..., make_report=False)`.
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
   sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
-  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires
-  (fonction existante mais **pas encore branchée** sur les sorties — aucune
-  sortie actuelle ne porte la bande ; voir METHODOLOGY §6).
+  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires,
+  désormais **branchées** sur les sorties (`{commune}_sensitivity.csv`,
+  variantes −10 / +0 / +10 ; voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
   distribution **non bornée** des parts terrain (colonne `land_share_raw`,
   conservée à cet effet) à côté des résultats bornés, et signaler que les
   cœurs denses peuvent légitimement dépasser 85 %.
-- **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
-  hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
-  (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la
-  LVT simulée, ce qui déforme les barres par catégorie et la base de départ de
-  tous les pourcentages. Le solveur amont accepte un `exemption_flag_col`,
-  pas encore utilisé.
-- **Prix nominaux 2021–2025** : les ventes DVF entrent dans l'hédonique sans
-  déflateur (l'indice Notaires-INSEE a bougé de ~8–10 points dans la fenêtre) ;
-  le crochet `deflator` de `fit_hedonic` attend l'indice cité.
+- **Exonérations TFPB — cas évidents flaggés** : les édifices du culte
+  (`Religieux`) et les bâtiments ruraux (`Agricole`) sont flaggés depuis BD TOPO
+  (`derive_exemption_flag`) et exclus des deux côtés — 0 € dans la base **et** au
+  solve (`exemption_flag_col`). Résidu déclaré : mairies/écoles/hôpitaux (non
+  séparables de `usage_1`) et exonérations partielles/temporaires restent dans la
+  base (voir METHODOLOGY §6, point 12).
+- **Prix déflatés à 2025 (2021–2025)** : les ventes DVF entrent dans l'hédonique
+  et la base terrain-à-bâtir déflatées à `reference_year` avec l'indice
+  Notaires-INSEE (`config.NOTAIRES_INSEE_DEFLATOR`, moyennes annuelles de la série
+  INSEE 010567058) ; niveaux à vérifier sur la série avant publication (fetch
+  live bloqué dans l'environnement de build — `docs/specs/0001`).
 - **Surfaces brutes × prix habitables** : la surface plancher (emprise ×
   niveaux, type SHOB) multiplie un coût €/m² SHON et un €/m² hédonique estimé
   sur la surface réelle bâtie DVF — niveaux de valeur surestimés (~10–25 %

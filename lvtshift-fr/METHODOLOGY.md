@@ -70,9 +70,12 @@ degenerates to "unknown".
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
 toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
-1st/99th percentile. The five pooled years enter at **nominal** prices — the
-`fit_hedonic(deflator=…)` hook exists but no Notaires-INSEE index is wired in
-yet (see §6, item 10).
+1st/99th percentile. The five pooled years are **deflated to `reference_year`
+(2025)** with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`, INSEE série
+010567058, wired through `fit_hedonic` and the terrain-à-bâtir base) so
+pooled-window price drift no longer biases cell-level values; the index levels
+need a spot-check against the série before publication (see §6, item 10, and
+`docs/specs/0001`).
 
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
@@ -90,11 +93,13 @@ raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
 mutations bundle buildings and several parcels.
 
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
-(`estimate.current_tax`) across **built parcels only** by a VLC proxy = floor
-area. TFPB is a built tax; building-less parcels bear €0 (they pay the separate
-TFPNB, out of scope). No market-value tilt (the 1970 VLC is regressive vs market,
-so a tilt would worsen baseline fidelity); a category-weighted variant exists as
-a labelled sensitivity only.
+(`estimate.current_tax`) across **taxable built parcels only** by a VLC proxy =
+floor area. TFPB is a built tax; building-less parcels bear €0 (they pay the
+separate TFPNB, out of scope). Obviously-exempt built parcels (culte / bâtiments
+ruraux, §6 item 12) are also excluded via `exempt_col`, so the produit is shared
+only over genuinely-taxable stock. No market-value tilt (the 1970 VLC is
+regressive vs market, so a tilt would worsen baseline fidelity); a
+category-weighted variant exists as a labelled sensitivity only.
 
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
@@ -142,11 +147,14 @@ Ranked by how much they move published (category/quintile) results.
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
    value. Mitigated by the [0.15, 0.85] clip and aggregation. The land-share
-   ±10 pt sensitivity band (`estimate.sensitivity_band`) exists and is unit
-   tested, but is **not yet wired into the pipeline outputs** — published runs
-   do not carry it yet; treat any band language elsewhere as a commitment, not
-   a description. Vacant land does **not** use the residual, so the LVT headline
-   (under-used land pays more) is unaffected by building-data quality.
+   ±10 pt sensitivity band (`estimate.sensitivity_band`) is **wired into the
+   pipeline outputs**: every run re-solves the −10 / +0 / +10 land-share variants
+   (`run_pipeline.sensitivity_band_table`), writes them to
+   `{commune}_sensitivity.csv`, and renders them on the published charts — so
+   every headline figure carries its band. The central (+0 %) variant reproduces
+   the base solve to the euro. Vacant land does **not** use the residual, so the
+   LVT headline (under-used land pays more) is unaffected by building-data
+   quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies a residential median to
    non-residential / never-diagnosed parcels. Era→year uses band midpoints
@@ -175,13 +183,20 @@ Ranked by how much they move published (category/quintile) results.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte; Paris/Lyon/Marseille
    arrondissements have no separate TFPB (modelled via autonomous communes, e.g.
    Villeurbanne for inner Lyon).
-10. **Nominal price pooling (2021–2025).** DVF sales enter the hedonic and the
-    terrain-à-bâtir price base at nominal prices; the Notaires-INSEE index
-    moved ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an
-    ~8–10-point swing inside the pooled window, so cells whose sales cluster
-    early get systematically different price levels than cells clustering
-    late (spatially structured error, flagged by the project's founding
-    review). The `deflator` hook in `fit_hedonic` awaits the cited index.
+10. **Price pooling deflated to 2025 (2021–2025).** DVF sales enter the hedonic
+    and the terrain-à-bâtir price base **deflated to `reference_year` (2025)**
+    with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`), which moved
+    ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an ~8–10-point
+    swing inside the pooled window that would otherwise give cells whose sales
+    cluster early systematically different price levels than cells clustering
+    late (spatially structured error, flagged by the project's founding review).
+    The factors are the annual averages of INSEE série **010567058** (IPLA,
+    France métropolitaine, ensemble, base 100 en moyenne annuelle 2015), chained
+    to 2025. Residual caveats: the deflator corrects *temporal* drift within the
+    pool, not cross-sectional local-market differences (the hedonic's job); and
+    the six levels were transcribed from knowledge of 010567058, not a live fetch
+    (the build environment blocks insee.fr), so **spot-check them against the
+    série and record the access date before publication** (`docs/specs/0001`).
 11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
     footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
     multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²
@@ -190,14 +205,21 @@ Ranked by how much they move published (category/quintile) results.
     inherits the bias; the top-down §5 check partially absorbs it (numerator
     and denominator inflated together), euro levels on charts do not. Flagged
     by the founding review (PR #1); needs a documented gross→habitable factor.
-12. **TFPB exemptions are not modelled.** Public buildings (mairies, schools,
-    hospitals), religious buildings and permanently exempt farm buildings
-    (CGI art. 1382) are TFPB-exempt in reality, but here they both absorb a
-    share of today's produit (via their floor area) and pay the modelled LVT,
-    deflating everyone else's bill — this touches the published category bars
-    and the baseline every percentage change is computed from. Upstream's
-    `exemption_flag_col` is supported and unused; BD TOPO `usage_1`/`nature`
-    attributes could flag the obvious cases.
+12. **TFPB exemptions — obvious cases flagged, residual disclosed.** Obviously-
+    exempt built parcels — édifices du culte (`usage_1 = Religieux`, art. 1382-4°)
+    and bâtiments ruraux (`usage_1 = Agricole`, art. 1382-6°) — are flagged from
+    BD TOPO (`run_commune.derive_exemption_flag`, set in `config.EXEMPT_USAGE_VALUES`)
+    and excluded from **both** sides of the ledger: they bear €0 in the baseline
+    produit distribution (`estimate.current_tax(exempt_col=...)`) and pay €0 in
+    the LVT solve (`model_split_rate_tax(exemption_flag_col=...)`), so the levy
+    falls only on genuinely-taxable stock. **Residual (still unmodelled):** public
+    buildings (mairies, écoles, hôpitaux) are not separable from BD TOPO
+    `usage_1` (they sit under 'Commercial et services' / 'Indifférencié', which
+    also hold taxable stock), and partial / time-limited exemptions (ZFU/ZRR,
+    social-housing abatements) are invisible in open data — these remain in the
+    baseline and are disclosed here. Where `usage_1` is null no parcel is flagged
+    (fail-open to taxable — conservative for revenue). Removing exempt stock
+    shifts the `Autre`/`Commerce` category bars: expected, not a bug.
 13. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural
@@ -224,9 +246,17 @@ argument for access.**
 ```
 pip install pandas numpy geopandas matplotlib seaborn
 cd lvtshift-fr
+python test_units.py                     # offline unit suite
 python test_synthetic.py                 # offline end-to-end
 python run_commune.py <commune>          # live open-data run; CSV + charts
 ```
+
+All three offline suites — the upstream `tests/` pytest, the FR unit tests
+(`lvtshift-fr/test_units.py`), and the FR synthetic end-to-end
+(`lvtshift-fr/test_synthetic.py`) — run in CI on every PR and push to `main`
+(`.github/workflows/ci.yml`), so a regression shows a red check rather than
+shipping silently. CI is offline by design; live `run_commune` stays manual
+(`docs/specs/0004`).
 
 Communes: `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`. Flags: `--layers` (REI scope), `--no-dpe` (BD TOPO year

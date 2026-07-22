@@ -78,9 +78,12 @@ ne dégénère jamais en « inconnu ».
 DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log €/m²,
 rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 8),
 × surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
-la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées entrent
-en prix **nominaux** — le crochet `fit_hedonic(deflator=…)` existe mais aucun
-indice Notaires-INSEE n'est encore branché (voir §6, point 10).
+la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées sont
+**déflatées à `reference_year` (2025)** avec l'indice Notaires-INSEE
+(`config.NOTAIRES_INSEE_DEFLATOR`, série INSEE 010567058, branché dans
+`fit_hedonic` et la base terrain-à-bâtir), de sorte que la dérive temporelle des
+prix ne biaise plus les valeurs par cellule ; les niveaux d'indice sont à
+vérifier sur la série avant publication (voir §6, point 10, et `docs/specs/0001`).
 
 **3.4 Valeur du terrain — classer puis valoriser**
 (`estimate.land_value_residual` → `_land_value_classified`). Les parcelles non
@@ -100,11 +103,14 @@ autres natures de culture car les mutations regroupent bâti et plusieurs
 parcelles.
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
-(`estimate.current_tax`) sur les **parcelles bâties uniquement** au prorata d'un
-proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ; les parcelles
-non bâties portent **0 €** (elles relèvent de la TFPNB, hors périmètre). **Aucun
-calage sur la valeur de marché** (la VLC 1970 est régressive vs marché ; un calage
-dégraderait la fidélité à la base actuelle) ; une variante pondérée par catégorie
+(`estimate.current_tax`) sur les **parcelles bâties taxables uniquement** au
+prorata d'un proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ;
+les parcelles non bâties portent **0 €** (elles relèvent de la TFPNB, hors
+périmètre). Les parcelles manifestement exonérées (culte / bâtiments ruraux, §6
+point 12) sont aussi exclues via `exempt_col`, de sorte que le produit n'est
+réparti que sur le bâti réellement taxable. **Aucun calage sur la valeur de
+marché** (la VLC 1970 est régressive vs marché ; un calage dégraderait la
+fidélité à la base actuelle) ; une variante pondérée par catégorie
 n'existe qu'en sensibilité étiquetée.
 
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
@@ -156,10 +162,12 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
    Atténué par le bornage [0,15 ; 0,85] et l'agrégation. La bande de sensibilité
-   part-terrain ±10 pts (`estimate.sensitivity_band`) existe et est testée
-   unitairement, mais n'est **pas encore branchée sur les sorties du pipeline** —
-   aucune sortie publiée ne la porte à ce jour ; toute mention de la bande
-   ailleurs est un engagement, pas une description. Le foncier non bâti
+   part-terrain ±10 pts (`estimate.sensitivity_band`) est **branchée sur les
+   sorties du pipeline** : chaque run re-résout les variantes −10 / +0 / +10 de la
+   part terrain (`run_pipeline.sensitivity_band_table`), les exporte dans
+   `{commune}_sensitivity.csv`, et les rend sur les graphiques publiés — donc
+   chaque résultat porte sa bande. La variante centrale (+0 %) reproduit le
+   solve de base à l'euro. Le foncier non bâti
    **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
    indépendant de la qualité des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*
@@ -193,14 +201,21 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte ; les arrondissements
    de Paris/Lyon/Marseille n'ont pas de TFPB propre (modélisés via des communes
    autonomes, p. ex. Villeurbanne pour le cœur lyonnais).
-10. **Pool de prix nominaux (2021–2025).** Les ventes DVF entrent dans
-    l'hédonique et dans la base de prix terrain-à-bâtir en prix nominaux ;
-    l'indice Notaires-INSEE a bougé de ~+7–8 % (2021), ~+5–6 % (2022), ~−2 %
-    (2023), ~−1 % (2024) — un balancement de ~8–10 points dans la fenêtre, donc
-    les cellules dont les ventes se concentrent tôt ont des niveaux de prix
-    systématiquement différents de celles qui vendent tard (erreur spatialement
-    structurée, signalée par la revue fondatrice du projet). Le crochet
-    `deflator` de `fit_hedonic` attend l'indice cité.
+10. **Pool de prix déflaté à 2025 (2021–2025).** Les ventes DVF entrent dans
+    l'hédonique et dans la base de prix terrain-à-bâtir **déflatées à
+    `reference_year` (2025)** avec l'indice Notaires-INSEE
+    (`config.NOTAIRES_INSEE_DEFLATOR`), qui a bougé de ~+7–8 % (2021), ~+5–6 %
+    (2022), ~−2 % (2023), ~−4 % (2024) — un balancement dans la fenêtre qui,
+    sinon, donnerait aux cellules dont les ventes se concentrent tôt des niveaux
+    de prix systématiquement différents de celles qui vendent tard (erreur
+    spatialement structurée, signalée par la revue fondatrice). Les facteurs sont
+    les moyennes annuelles de la série INSEE **010567058** (IPLA, France
+    métropolitaine, ensemble, base 100 en moyenne annuelle 2015), chaînées à 2025.
+    Caveats résiduels : le déflateur corrige la dérive *temporelle* dans le pool,
+    pas les différences transversales de marché local (rôle de l'hédonique) ; et
+    les six niveaux ont été transcrits de mémoire de la série 010567058, pas d'un
+    fetch live (l'environnement bloque insee.fr) — **à vérifier sur la série, avec
+    la date d'accès, avant publication** (`docs/specs/0001`).
 11. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
     = emprise × niveaux est une surface brute murs compris (type SHOB), mais elle
     multiplie un coût de construction exprimé en €/m² SHON et un €/m² hédonique
@@ -210,15 +225,21 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (numérateur et dénominateur gonflés ensemble), pas les niveaux en euros des
     graphiques. Signalé par la revue fondatrice (PR #1) ; nécessite un facteur
     brut→habitable documenté.
-12. **Exonérations TFPB non modélisées.** Les bâtiments publics (mairies,
-    écoles, hôpitaux), les édifices religieux et les bâtiments ruraux exonérés
-    en permanence (CGI art. 1382) sont exonérés de TFPB en réalité ; ici ils
-    absorbent une part du produit actuel (via leur surface plancher) **et**
-    paient la LVT simulée, ce qui dégonfle la facture de tous les autres — cela
-    touche les barres par catégorie publiées et la base de départ de chaque
-    pourcentage. Le `exemption_flag_col` de l'amont est géré et inutilisé ; les
-    attributs BD TOPO `usage_1`/`nature` permettraient de flagger les cas
-    évidents.
+12. **Exonérations TFPB — cas évidents flaggés, résidu déclaré.** Les parcelles
+    bâties manifestement exonérées — édifices du culte (`usage_1 = Religieux`,
+    art. 1382-4°) et bâtiments ruraux (`usage_1 = Agricole`, art. 1382-6°) — sont
+    flaggées depuis BD TOPO (`run_commune.derive_exemption_flag`,
+    `config.EXEMPT_USAGE_VALUES`) et exclues des **deux** côtés : 0 € dans la
+    répartition du produit (`estimate.current_tax(exempt_col=...)`) **et** 0 € au
+    solve (`model_split_rate_tax(exemption_flag_col=...)`), donc le prélèvement ne
+    pèse que sur le bâti taxable. **Résidu (non modélisé) :** les bâtiments
+    publics (mairies, écoles, hôpitaux) ne sont pas séparables de `usage_1` (ils
+    tombent sous 'Commercial et services' / 'Indifférencié', qui contiennent aussi
+    du taxable), et les exonérations partielles / temporaires (ZFU/ZRR,
+    abattements logement social) sont invisibles en données ouvertes — elles
+    restent dans la base et sont déclarées ici. Là où `usage_1` est nul, aucune
+    parcelle n'est flaggée (fail-open vers taxable — conservateur). Retirer le
+    bâti exonéré déplace les barres `Autre`/`Commerce` : attendu, pas un bug.
 13. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes

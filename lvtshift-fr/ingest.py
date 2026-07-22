@@ -304,7 +304,7 @@ def fetch_parcel_zoning(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
+def tab_comparables(cfg, tab: pd.DataFrame, deflator: dict | None = None) -> pd.DataFrame:
     """Clean terrain-à-bâtir €/m² comparables from DVF land sales.
 
     DVF `valeur_fonciere / surface_terrain` is contaminated for most cultures
@@ -312,16 +312,27 @@ def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
     `terrains a bâtir`, aggregate to the mutation, trim outliers, and return one
     cleaned row per sale: idmut, eur_m2_land, lat, lon. The caller assigns grid
     cells and computes cell/commune medians with shrinkage.
+
+    `deflator` (optional): a {year: factor} map (config.NOTAIRES_INSEE_DEFLATOR).
+    When supplied, the mutation's `valeur_fonciere` is brought to the reference
+    year *before* computing €/m², so constructible-land prices share the same
+    real basis as the hedonic (both deflated) — otherwise the land floor and the
+    market surface would sit on different price years. No-op when None (default),
+    or when the frame has no `date_mutation` column (e.g. the unit-test frame).
     """
     t = tab[tab["nature_culture"].astype(str).str.contains("bâtir", na=False)].copy()
     if t.empty:
         return pd.DataFrame(columns=["eur_m2_land", "lat", "lon"])
-    g = (t.groupby("id_mutation")
-          .agg(price=("valeur_fonciere", "first"),
-               surface=("surface_terrain", "sum"),
-               lat=("latitude", "mean"), lon=("longitude", "mean"))
-          .reset_index())
+    use_deflator = bool(deflator) and "date_mutation" in t.columns
+    aggs = dict(price=("valeur_fonciere", "first"),
+                surface=("surface_terrain", "sum"),
+                lat=("latitude", "mean"), lon=("longitude", "mean"))
+    if use_deflator:
+        aggs["year"] = ("date_mutation", lambda s: pd.to_datetime(s.iloc[0]).year)
+    g = t.groupby("id_mutation").agg(**aggs).reset_index()
     g = g[(g["surface"] > 0) & (g["price"] > 0)]
+    if use_deflator:
+        g["price"] = g["price"] * g["year"].map(lambda y: deflator.get(y, 1.0))
     g["eur_m2_land"] = g["price"] / g["surface"]
     lo, hi = g["eur_m2_land"].quantile([0.05, 0.95])
     g = g[(g["eur_m2_land"] >= lo) & (g["eur_m2_land"] <= hi)]

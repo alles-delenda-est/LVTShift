@@ -28,7 +28,8 @@ import pandas as pd
 
 import ingest
 import run_pipeline as rp
-from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
+from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL,
+                    NOTAIRES_INSEE_DEFLATOR, EXEMPT_USAGE_VALUES)
 from ingest import CRS_METRIC, CRS_WGS84
 
 GRID_M = 400  # spatial fixed-effect cell size (metres) for the hedonic
@@ -74,11 +75,24 @@ def derive_parcel_category(buildings: pd.DataFrame) -> pd.Series:
     return pd.Series(cats, name="category_fr")
 
 
+def derive_exemption_flag(buildings: pd.DataFrame) -> pd.Series:
+    """One is_exempt per parcel (spec 0003): True when the dominant (largest-
+    floor) building carries an obviously-TFPB-exempt usage_1 (culte / agricole,
+    config.EXEMPT_USAGE_VALUES). Same dominant-building rule as
+    derive_parcel_category, so category and exemption agree on which building
+    speaks for the parcel. Tight by design — parcels with no exempt dominant
+    building come back False (fail-open to taxable; conservative for revenue)."""
+    b = buildings.copy()
+    b["floor"] = b["footprint_m2"] * b["n_levels"].fillna(1).clip(lower=1)
+    dom = b.sort_values("floor").groupby("idpar").tail(1).set_index("idpar")
+    return dom["usage"].isin(EXEMPT_USAGE_VALUES).rename("is_exempt")
+
+
 def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
-def classify_and_price_land(cfg, parcels, buildings, tab):
+def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     """Add land_type + per-parcel land prices (classify-then-price).
 
     - land_type from GPU zoning (U/AU->constructible, A->agricultural,
@@ -87,6 +101,10 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
       the commune median; EPTB national fallback when comparables are thin),
       discounted for AU 'fermée/stricte' zones.
     - ag_eur_m2: SAFER départemental agricultural/natural €/m².
+
+    `deflator` (optional {year: factor}) is forwarded to tab_comparables so the
+    terrain-à-bâtir land prices are deflated to the reference year on the same
+    basis as the hedonic (spec 0001).
     """
     import geopandas as gpd
     parcels = parcels.copy()
@@ -109,7 +127,7 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     parcels["ag_eur_m2"] = np.where(z.eq("N"), n_rate, a_rate)
 
     # --- constructible €/m² from terrain-à-bâtir comparables ---
-    comps = ingest.tab_comparables(cfg, tab)
+    comps = ingest.tab_comparables(cfg, tab, deflator=deflator)
     commune_med = float(comps["eur_m2_land"].median()) if len(comps) else None
     enough_cells = {}
     comps = comps.dropna(subset=["lon", "lat"]) if len(comps) else comps
@@ -173,8 +191,16 @@ def prepare(cfg, layers, use_dpe=True):
     parcels["type_local"] = np.where(
         parcels["category_fr"] == "maison", "Maison", "Appartement")
 
-    # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
-    parcels = classify_and_price_land(cfg, parcels, buildings, tab)
+    # Obviously-TFPB-exempt flag (spec 0003): excluded from both the baseline
+    # produit distribution and the LVT solve. Building-less parcels -> False.
+    exempt = derive_exemption_flag(buildings)
+    parcels = parcels.merge(exempt, left_on="idpar", right_index=True, how="left")
+    parcels["is_exempt"] = parcels["is_exempt"].fillna(False).astype(bool)
+
+    # Classify-then-price land (GPU zoning + TAB comparables + SAFER).
+    # TAB prices deflated to the reference year on the hedonic's basis (0001).
+    parcels = classify_and_price_land(cfg, parcels, buildings, tab,
+                                      deflator=NOTAIRES_INSEE_DEFLATOR)
 
     # IRIS code per parcel + Filosofi income (drives the distributional charts)
     parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
@@ -191,6 +217,8 @@ def prepare(cfg, layers, use_dpe=True):
     print(f"  [{cfg.name}] {len(parcels)} parcels, {len(sales)} usable DVF "
           f"sales, {parcels['cell'].nunique()} grid cells")
     print("  land_type:", parcels["land_type"].value_counts().to_dict())
+    print(f"  is_exempt: {int(parcels['is_exempt'].sum())} parcels flagged "
+          f"obviously-TFPB-exempt (culte/agricole), held out of baseline + solve")
     return parcels, buildings, sales, tfpb, iris_income
 
 
@@ -215,7 +243,8 @@ def main():
         cfg, tuple(args.layers), use_dpe=not args.no_dpe)
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
-                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
+                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
+                 deflator=NOTAIRES_INSEE_DEFLATOR)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")
@@ -235,6 +264,21 @@ def main():
     lc["levy_pct"] = (100 * lc["levy_eur"] / o["new_tax"].sum()).round(1)
     lc["levy_eur"] = lc["levy_eur"].round(0)
     print("levy borne by land class:\n", lc.sort_values("levy_eur").to_string())
+
+    # ±10 pt land-share sensitivity band (spec 0002): the published headline and
+    # the per-category € change, each with its low/central/high across variants.
+    band = out.attrs.get("sensitivity")
+    if band is not None and len(band):
+        pm = band[(band["group"] == "ALL") & (band["metric"] == "pct_pay_more")]
+        if len(pm):
+            print(f"\n% paient PLUS — band {pm['value'].min():.1f}"
+                  f"–{pm['value'].max():.1f} % (±10 pt land share)")
+        eur = (band[band["metric"] == "median_tax_change_eur"]
+               .assign(category=lambda x: x["group"].str.replace("category:", ""))
+               .pivot(index="category", columns="variant", values="value")
+               .reindex(columns=["-10%", "+0%", "+10%"]).round(0))
+        print("median € tax change by category, land-share band:\n",
+              eur.to_string())
 
 
 if __name__ == "__main__":
