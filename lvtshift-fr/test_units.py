@@ -233,6 +233,51 @@ def test_tab_comparables_filters_non_building_plots():
 
 
 # ------------------------------------------------------------------ #
+# Notaires-INSEE deflator (spec 0001)
+# ------------------------------------------------------------------ #
+
+def test_fit_hedonic_applies_deflator():
+    # a single-year, single-cell frame: the implied €/m² must scale by exactly
+    # the deflator factor for that year (2021 sale at 2000 €/m² × 1.10 -> 2200)
+    dvf = pd.DataFrame({
+        "price": [200000.0] * 4, "floor_area_m2": [100.0] * 4,
+        "type_local": ["Maison"] * 4, "year": [2021] * 4, "cell": ["A"] * 4,
+    })
+    base, _ = estimate.fit_hedonic(dvf)                       # no deflator
+    infl, _ = estimate.fit_hedonic(dvf, deflator={2021: 1.10})
+    assert abs(base["eur_m2"].iloc[0] - 2000.0) < 1.0
+    assert abs(infl["eur_m2"].iloc[0] - 2200.0) < 1.0        # 2000 × 1.10
+
+
+def test_fit_hedonic_deflator_none_is_noop():
+    dvf = pd.DataFrame({
+        "price": [200000.0] * 4, "floor_area_m2": [100.0] * 4,
+        "type_local": ["Maison"] * 4, "year": [2021] * 4, "cell": ["A"] * 4,
+    })
+    a, _ = estimate.fit_hedonic(dvf)
+    b, _ = estimate.fit_hedonic(dvf, deflator=None)
+    assert abs(a["eur_m2"].iloc[0] - b["eur_m2"].iloc[0]) < 1e-9
+
+
+def test_tab_comparables_applies_deflator():
+    # TAB €/m²_land must scale by the same factor (deflate before €/m²)
+    rows = [{"id_mutation": "m0", "valeur_fonciere": 40_000.0,
+             "surface_terrain": 1000.0, "nature_culture": "terrains a bâtir",
+             "latitude": 44.4, "longitude": 1.4, "date_mutation": "2021-06-01"}]
+    base = ingest.tab_comparables(CFG, pd.DataFrame(rows))
+    infl = ingest.tab_comparables(CFG, pd.DataFrame(rows), deflator={2021: 1.10})
+    assert abs(base["eur_m2_land"].iloc[0] - 40.0) < 1e-6
+    assert abs(infl["eur_m2_land"].iloc[0] - 44.0) < 1e-6    # 40 × 1.10
+
+
+def test_config_deflator_normalised_to_reference_year():
+    from config import NOTAIRES_INSEE_DEFLATOR as DEF
+    import config
+    assert DEF[config.CAHORS.reference_year] == 1.0           # base year is 1.0
+    assert set(DEF) == {2021, 2022, 2023, 2024, 2025}         # one per pooled year
+
+
+# ------------------------------------------------------------------ #
 # run_commune classification helpers
 # ------------------------------------------------------------------ #
 

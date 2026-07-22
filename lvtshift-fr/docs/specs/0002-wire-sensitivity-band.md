@@ -88,3 +88,33 @@ headline numbers).
   range, not full error bars, on the public card.
 - Only wire this **after** confirming F9 is on `main` (it is, via PR #14) so the
   central variant is trustworthy.
+
+## 7. Relationship to construction-cost calibration (PR #16)
+
+This spec is **not** superseded by the construction-cost calibration work
+(PR #16, *"Construction-cost calibration: sourced data"*). The two touch the same
+first-order lever — `construction_cost_eur_m2` feeds improvement value, which sets
+the residual land share — so they look like the same job, but they operate at
+different layers:
+
+- **PR #16 sharpens the point estimate.** It re-sources `construction_cost_eur_m2`
+  from the SDES EPTB survey so the *central* land share lands in a better place.
+  It changes no pipeline output plumbing ("data-gathering only: no code changed").
+- **This spec wires the uncertainty reporting.** `sensitivity_band` still has no
+  callers; no output carries the ±10 pt band regardless of how well the central
+  cost is calibrated. The standing published promise ("tout résultat publié porte
+  une bande part-terrain ±10 pts") remains unmet until this spec lands.
+
+PR #16 itself draws the line: it keeps the band as **"a check, not a tie-breaker"**
+and warns that a genuinely land-heavy commune (Montreuil) should be "accepted as
+largely real … not 'fixed' by inflating construction cost." That is only coherent
+if the band continues to exist as an independent honesty device.
+
+If anything, calibration *strengthens* the case for the band: because the sourced
+costs shift land shares by different amounts per commune, publishing the ±band on
+every figure is what lets a reader distinguish a real land-heavy result from a
+cost-assumption artifact. The two are complementary — a shared **input** (the
+construction cost), not a duplicated **deliverable** (calibration sharpens the
+centre; the band reports the spread around it). Implement both; land the band
+either after or alongside the calibrated costs so the published central column
+reflects the sourced values.

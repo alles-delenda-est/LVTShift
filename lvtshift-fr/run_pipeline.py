@@ -76,21 +76,25 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output", make_report: bool = True, cfg=CFG) -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True, cfg=CFG,
+        deflator: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
        split ratio, name used for output paths). Defaults to the module CFG
        so the synthetic test keeps working unchanged.
        make_report: also write the PNG charts (needs matplotlib); set False
-       for a CSV-only run."""
+       for a CSV-only run.
+       deflator: optional {year: factor} price deflator (real runs pass
+       config.NOTAIRES_INSEE_DEFLATOR; the synthetic test leaves it None so
+       its behaviour is unchanged) — see docs/specs/0001."""
 
     imp = estimate.improvement_value(buildings, cfg)
     p = parcels.merge(imp, on="idpar", how="left")
     p[["improvement_value", "floor_area_m2"]] = \
         p[["improvement_value", "floor_area_m2"]].fillna(0)
 
-    surface, _trans = estimate.fit_hedonic(dvf)
+    surface, _trans = estimate.fit_hedonic(dvf, deflator=deflator)
     p = estimate.market_value(p, surface)
     p = estimate.land_value_residual(p, cfg)
     p = estimate.current_tax(p, commune_tfpb_produit)

@@ -163,9 +163,11 @@ export CSV seul : `run(..., make_report=False)`.
   LVT simulée, ce qui déforme les barres par catégorie et la base de départ de
   tous les pourcentages. Le solveur amont accepte un `exemption_flag_col`,
   pas encore utilisé.
-- **Prix nominaux 2021–2025** : les ventes DVF entrent dans l'hédonique sans
-  déflateur (l'indice Notaires-INSEE a bougé de ~8–10 points dans la fenêtre) ;
-  le crochet `deflator` de `fit_hedonic` attend l'indice cité.
+- **Prix déflatés à 2025 (2021–2025)** : les ventes DVF entrent dans l'hédonique
+  et la base terrain-à-bâtir déflatées à `reference_year` avec l'indice
+  Notaires-INSEE (`config.NOTAIRES_INSEE_DEFLATOR`, ~8–10 points de balancement
+  dans la fenêtre) ; les niveaux d'indice restent à transcrire depuis la série
+  INSEE avant publication (`docs/specs/0001`).
 - **Surfaces brutes × prix habitables** : la surface plancher (emprise ×
   niveaux, type SHOB) multiplie un coût €/m² SHON et un €/m² hédonique estimé
   sur la surface réelle bâtie DVF — niveaux de valeur surestimés (~10–25 %

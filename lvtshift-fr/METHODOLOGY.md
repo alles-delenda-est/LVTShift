@@ -70,9 +70,11 @@ degenerates to "unknown".
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
 toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
-1st/99th percentile. The five pooled years enter at **nominal** prices — the
-`fit_hedonic(deflator=…)` hook exists but no Notaires-INSEE index is wired in
-yet (see §6, item 10).
+1st/99th percentile. The five pooled years are **deflated to `reference_year`
+(2025)** with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`, wired
+through `fit_hedonic` and the terrain-à-bâtir base) so pooled-window price drift
+no longer biases cell-level values; the index levels remain a maintainer
+transcription step (see §6, item 10, and `docs/specs/0001`).
 
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
@@ -175,13 +177,18 @@ Ranked by how much they move published (category/quintile) results.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte; Paris/Lyon/Marseille
    arrondissements have no separate TFPB (modelled via autonomous communes, e.g.
    Villeurbanne for inner Lyon).
-10. **Nominal price pooling (2021–2025).** DVF sales enter the hedonic and the
-    terrain-à-bâtir price base at nominal prices; the Notaires-INSEE index
-    moved ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an
-    ~8–10-point swing inside the pooled window, so cells whose sales cluster
-    early get systematically different price levels than cells clustering
-    late (spatially structured error, flagged by the project's founding
-    review). The `deflator` hook in `fit_hedonic` awaits the cited index.
+10. **Price pooling deflated to 2025 (2021–2025).** DVF sales enter the hedonic
+    and the terrain-à-bâtir price base **deflated to `reference_year` (2025)**
+    with the Notaires-INSEE index (`config.NOTAIRES_INSEE_DEFLATOR`), which moved
+    ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an ~8–10-point
+    swing inside the pooled window that would otherwise give cells whose sales
+    cluster early systematically different price levels than cells clustering
+    late (spatially structured error, flagged by the project's founding review).
+    Residual caveat: the deflator corrects *temporal* drift within the pool, not
+    cross-sectional local-market differences (the hedonic's job); and the index
+    levels are provisional, derived from the review's stated annual movements —
+    to be replaced with the exact transcribed INSEE série before publication
+    (`docs/specs/0001`).
 11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
     footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
     multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²

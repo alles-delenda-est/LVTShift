@@ -28,7 +28,8 @@ import pandas as pd
 
 import ingest
 import run_pipeline as rp
-from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
+from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL,
+                    NOTAIRES_INSEE_DEFLATOR)
 from ingest import CRS_METRIC, CRS_WGS84
 
 GRID_M = 400  # spatial fixed-effect cell size (metres) for the hedonic
@@ -78,7 +79,7 @@ def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
-def classify_and_price_land(cfg, parcels, buildings, tab):
+def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     """Add land_type + per-parcel land prices (classify-then-price).
 
     - land_type from GPU zoning (U/AU->constructible, A->agricultural,
@@ -87,6 +88,10 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
       the commune median; EPTB national fallback when comparables are thin),
       discounted for AU 'fermée/stricte' zones.
     - ag_eur_m2: SAFER départemental agricultural/natural €/m².
+
+    `deflator` (optional {year: factor}) is forwarded to tab_comparables so the
+    terrain-à-bâtir land prices are deflated to the reference year on the same
+    basis as the hedonic (spec 0001).
     """
     import geopandas as gpd
     parcels = parcels.copy()
@@ -109,7 +114,7 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     parcels["ag_eur_m2"] = np.where(z.eq("N"), n_rate, a_rate)
 
     # --- constructible €/m² from terrain-à-bâtir comparables ---
-    comps = ingest.tab_comparables(cfg, tab)
+    comps = ingest.tab_comparables(cfg, tab, deflator=deflator)
     commune_med = float(comps["eur_m2_land"].median()) if len(comps) else None
     enough_cells = {}
     comps = comps.dropna(subset=["lon", "lat"]) if len(comps) else comps
@@ -173,8 +178,10 @@ def prepare(cfg, layers, use_dpe=True):
     parcels["type_local"] = np.where(
         parcels["category_fr"] == "maison", "Maison", "Appartement")
 
-    # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
-    parcels = classify_and_price_land(cfg, parcels, buildings, tab)
+    # Classify-then-price land (GPU zoning + TAB comparables + SAFER).
+    # TAB prices deflated to the reference year on the hedonic's basis (0001).
+    parcels = classify_and_price_land(cfg, parcels, buildings, tab,
+                                      deflator=NOTAIRES_INSEE_DEFLATOR)
 
     # IRIS code per parcel + Filosofi income (drives the distributional charts)
     parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
@@ -215,7 +222,8 @@ def main():
         cfg, tuple(args.layers), use_dpe=not args.no_dpe)
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
-                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
+                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
+                 deflator=NOTAIRES_INSEE_DEFLATOR)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")

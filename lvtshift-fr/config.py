@@ -101,6 +101,36 @@ DATA_SOURCES = {
 }
 
 # ------------------------------------------------------------------ #
+# Notaires-INSEE price deflator (temporal, within the DVF pool)
+# ------------------------------------------------------------------ #
+# Multiplicative factor bringing a sale of year Y to `reference_year` (2025) €,
+# from the Notaires-INSEE « indice des prix des logements anciens » (France
+# entière, valeurs annuelles moyennes). The pooled DVF window (2021–2025) spans
+# a full cycle — strong 2021–2022 growth then a 2023–2024 correction — so cells
+# whose sales cluster early carry a systematically different price level than
+# cells clustering late; deflating to a common year removes that *temporal*
+# drift before the hedonic and the terrain-à-bâtir land base see the prices.
+#
+# The factors below are derived from the annual year-on-year movements of the
+# index (≈ +7–8 % 2021, +5–6 % 2022, −2 % 2023, −1 % 2024, ~flat 2025) as
+# summarised in the pilot's founding review, chained to a 2025 base:
+#     idx: 2021=107.5  2022=113.41  2023=111.14  2024=110.03  2025=110.03
+#     factor(Y) = idx(2025) / idx(Y)
+# TODO before publication (repo sourcing discipline): replace these with the
+# exact transcribed INSEE annual index levels, citing the série id
+# (INSEE-Notaires IPLA, France entière, base 100 en 2015) and the access date.
+# The mechanism is what this constant wires in; the six numbers are a
+# maintainer transcription step (see docs/specs/0001).
+NOTAIRES_INSEE_DEFLATOR = {
+    2021: 1.0236,   # 2021 prices × 1.0236 → 2025 €
+    2022: 0.9702,
+    2023: 0.9900,
+    2024: 1.0000,
+    2025: 1.0000,
+}
+
+
+# ------------------------------------------------------------------ #
 # Communes
 # ------------------------------------------------------------------ #
 # construction_cost_eur_m2 is the turnkey replacement cost (gros + second
