@@ -243,9 +243,17 @@ argument for access.**
 ```
 pip install pandas numpy geopandas matplotlib seaborn
 cd lvtshift-fr
+python test_units.py                     # offline unit suite
 python test_synthetic.py                 # offline end-to-end
 python run_commune.py <commune>          # live open-data run; CSV + charts
 ```
+
+All three offline suites — the upstream `tests/` pytest, the FR unit tests
+(`lvtshift-fr/test_units.py`), and the FR synthetic end-to-end
+(`lvtshift-fr/test_synthetic.py`) — run in CI on every PR and push to `main`
+(`.github/workflows/ci.yml`), so a regression shows a red check rather than
+shipping silently. CI is offline by design; live `run_commune` stays manual
+(`docs/specs/0004`).
 
 Communes: `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`. Flags: `--layers` (REI scope), `--no-dpe` (BD TOPO year

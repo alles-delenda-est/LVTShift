@@ -1,5 +1,7 @@
 # LVTShift-FR
 
+[![CI](https://github.com/alles-delenda-est/LVTShift/actions/workflows/ci.yml/badge.svg)](https://github.com/alles-delenda-est/LVTShift/actions/workflows/ci.yml)
+
 Adaptation française de [LVTShift](https://github.com/gregmiller00/LVTShift)
 (Center for Land Economics) : simulation d'un transfert de la taxe foncière
 vers une taxe sur la valeur du foncier (LVT), **à recettes constantes**,

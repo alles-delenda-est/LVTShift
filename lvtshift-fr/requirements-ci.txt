@@ -1,0 +1,11 @@
+# Pinned dependency ranges for CI (offline test suites only — no ingest, so no
+# data.gouv / IGN / INSEE access is needed). Kept as compatible ranges rather
+# than exact pins so the geo stack resolves against available wheels; tighten to
+# exact versions if a transitive break ever needs freezing. See docs/specs/0004.
+pandas>=2.0.0
+numpy>=1.24.0
+geopandas>=0.13.0
+shapely>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+pytest>=7.0.0
