@@ -144,11 +144,14 @@ Ranked by how much they move published (category/quintile) results.
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
    value. Mitigated by the [0.15, 0.85] clip and aggregation. The land-share
-   ±10 pt sensitivity band (`estimate.sensitivity_band`) exists and is unit
-   tested, but is **not yet wired into the pipeline outputs** — published runs
-   do not carry it yet; treat any band language elsewhere as a commitment, not
-   a description. Vacant land does **not** use the residual, so the LVT headline
-   (under-used land pays more) is unaffected by building-data quality.
+   ±10 pt sensitivity band (`estimate.sensitivity_band`) is **wired into the
+   pipeline outputs**: every run re-solves the −10 / +0 / +10 land-share variants
+   (`run_pipeline.sensitivity_band_table`), writes them to
+   `{commune}_sensitivity.csv`, and renders them on the published charts — so
+   every headline figure carries its band. The central (+0 %) variant reproduces
+   the base solve to the euro. Vacant land does **not** use the residual, so the
+   LVT headline (under-used land pays more) is unaffected by building-data
+   quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies a residential median to
    non-residential / never-diagnosed parcels. Era→year uses band midpoints

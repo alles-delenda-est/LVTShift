@@ -244,6 +244,21 @@ def main():
     lc["levy_eur"] = lc["levy_eur"].round(0)
     print("levy borne by land class:\n", lc.sort_values("levy_eur").to_string())
 
+    # ±10 pt land-share sensitivity band (spec 0002): the published headline and
+    # the per-category € change, each with its low/central/high across variants.
+    band = out.attrs.get("sensitivity")
+    if band is not None and len(band):
+        pm = band[(band["group"] == "ALL") & (band["metric"] == "pct_pay_more")]
+        if len(pm):
+            print(f"\n% paient PLUS — band {pm['value'].min():.1f}"
+                  f"–{pm['value'].max():.1f} % (±10 pt land share)")
+        eur = (band[band["metric"] == "median_tax_change_eur"]
+               .assign(category=lambda x: x["group"].str.replace("category:", ""))
+               .pivot(index="category", columns="variant", values="value")
+               .reindex(columns=["-10%", "+0%", "+10%"]).round(0))
+        print("median € tax change by category, land-share band:\n",
+              eur.to_string())
+
 
 if __name__ == "__main__":
     main()

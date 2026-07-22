@@ -62,7 +62,39 @@ def load(commune):
         # the "flat" band is structurally inflated in rural communes.
         "p_more": p_more, "p_less": p_less, "p_flat": 100 - p_more - p_less,
         "quint": quint, "cats_eur": cats_eur,
+        "band": load_band(commune),      # ±10 pt land-share band (spec 0002)
     }
+
+
+def load_band(commune):
+    """±10 pt land-share sensitivity band from output/<commune>_sensitivity.csv.
+
+    Returns {p_more:(lo,hi), cats_eur:{fr_label:(lo,hi)}, quint:{Qn:(lo,hi)}} or
+    None when the band export is absent (older runs) — every band render is then
+    skipped so the infographic still draws.
+    """
+    try:
+        sb = pd.read_csv(f"output/{commune}_sensitivity.csv")
+    except (FileNotFoundError, OSError):
+        return None
+    if sb.empty:
+        return None
+
+    def lohi(group, metric):
+        s = sb[(sb["group"] == group) & (sb["metric"] == metric)]["value"]
+        return (float(s.min()), float(s.max())) if len(s) else None
+
+    cats = {}
+    for g in sb[sb["metric"] == "median_tax_change_eur"]["group"].unique():
+        lh = lohi(g, "median_tax_change_eur")
+        if lh:
+            cats[CAT_FR.get(g.replace("category:", ""), g.replace("category:", ""))] = lh
+    quint = {}
+    for q in ["Q1", "Q2", "Q3", "Q4", "Q5"]:
+        lh = lohi(f"quintile:{q}", "income_quintile_median_pct")
+        if lh:
+            quint[q] = lh
+    return {"p_more": lohi("ALL", "pct_pay_more"), "cats_eur": cats, "quint": quint}
 
 
 def euro(x):
@@ -123,7 +155,11 @@ def main(communes):
             ax.add_patch(plt.Rectangle((x0, yb), w * frac / 100, hb, transform=ax.transAxes,
                          facecolor=col, edgecolor="none"))
             x0 += w * frac / 100
-        ax.text(0.06, yb + hb + 0.05, f"{d['p_more']:.0f} % paient PLUS", fontsize=8.8,
+        more_lbl = f"{d['p_more']:.0f} % paient PLUS"
+        if d.get("band") and d["band"].get("p_more"):
+            lo, hi = d["band"]["p_more"]
+            more_lbl += f"  (bande {lo:.0f}–{hi:.0f})"
+        ax.text(0.06, yb + hb + 0.05, more_lbl, fontsize=8.8,
                 fontweight="bold", color="#c62828", va="center", transform=ax.transAxes)
         ax.text(0.94, yb + hb + 0.05, f"{d['p_less']:.0f} % moins", fontsize=8.8,
                 fontweight="bold", color="#2e7d32", ha="right", va="center",
@@ -135,6 +171,13 @@ def main(communes):
     for d in data:
         if d["quint"] is None:
             continue
+        # subtle ±10 pt land-share band as a shaded range behind each line
+        qb = (d.get("band") or {}).get("quint") or {}
+        if all(q in qb for q in ["Q1", "Q2", "Q3", "Q4", "Q5"]):
+            los = [qb[q][0] for q in ["Q1", "Q2", "Q3", "Q4", "Q5"]]
+            his = [qb[q][1] for q in ["Q1", "Q2", "Q3", "Q4", "Q5"]]
+            axq.fill_between(range(5), los, his, color=COLOR[d["key"]],
+                             alpha=0.12, lw=0)
         axq.plot(range(5), d["quint"].reindex(["Q1", "Q2", "Q3", "Q4", "Q5"]).values,
                  marker="o", lw=2.6, ms=8, color=COLOR[d["key"]], label=d["name"])
     axq.set_xticks(range(5)); axq.set_xticklabels(QLAB, fontsize=9.5)
@@ -161,7 +204,18 @@ def main(communes):
         vals = [med[c] for c in present]
         colors = ["#2e7d32" if v < 0 else "#c62828" for v in vals]
         yy = np.arange(len(present))
-        axe.barh(yy, vals, color=colors, height=0.72)
+        # ±10 pt land-share band as a subtle horizontal whisker on each bar
+        cb = (d.get("band") or {}).get("cats_eur") or {}
+        if any(c in cb for c in present):
+            xerr_lo = [max(0.0, vals[i] - cb[c][0]) if c in cb else 0.0
+                       for i, c in enumerate(present)]
+            xerr_hi = [max(0.0, cb[c][1] - vals[i]) if c in cb else 0.0
+                       for i, c in enumerate(present)]
+            axe.barh(yy, vals, color=colors, height=0.72,
+                     xerr=[xerr_lo, xerr_hi],
+                     error_kw=dict(ecolor="#555", elinewidth=0.7, capsize=1.5))
+        else:
+            axe.barh(yy, vals, color=colors, height=0.72)
         axe.axvline(0, color="#999", lw=0.8)
         axe.set_yticks(yy); axe.set_yticklabels(present, fontsize=7.8)
         axe.invert_yaxis()

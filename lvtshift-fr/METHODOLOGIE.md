@@ -159,10 +159,12 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
    Atténué par le bornage [0,15 ; 0,85] et l'agrégation. La bande de sensibilité
-   part-terrain ±10 pts (`estimate.sensitivity_band`) existe et est testée
-   unitairement, mais n'est **pas encore branchée sur les sorties du pipeline** —
-   aucune sortie publiée ne la porte à ce jour ; toute mention de la bande
-   ailleurs est un engagement, pas une description. Le foncier non bâti
+   part-terrain ±10 pts (`estimate.sensitivity_band`) est **branchée sur les
+   sorties du pipeline** : chaque run re-résout les variantes −10 / +0 / +10 de la
+   part terrain (`run_pipeline.sensitivity_band_table`), les exporte dans
+   `{commune}_sensitivity.csv`, et les rend sur les graphiques publiés — donc
+   chaque résultat porte sa bande. La variante centrale (+0 %) reproduit le
+   solve de base à l'euro. Le foncier non bâti
    **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
    indépendant de la qualité des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*

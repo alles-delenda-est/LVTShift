@@ -131,6 +131,63 @@ def test_sensitivity_band_central_variant_is_identity():
 
 
 # ------------------------------------------------------------------ #
+# sensitivity band table (spec 0002)
+# ------------------------------------------------------------------ #
+
+def _band_frame():
+    return pd.DataFrame({
+        "PROPERTY_CATEGORY": ["Condominium", "Single Family Residential",
+                              "Vacant Land", "Condominium"],
+        "market_value": [200000.0, 300000.0, 50000.0, 150000.0],
+        "land_value": [80000.0, 150000.0, 50000.0, 30000.0],
+        "improvement_value": [120000.0, 150000.0, 0.0, 120000.0],
+        "land_share": [0.4, 0.5, 1.0, 0.2],
+        "current_tax": [500.0, 800.0, 0.0, 400.0],
+    })
+
+
+def test_sensitivity_band_table_central_reproduces_base():
+    # the +0 % variant must equal the base solve per category to the euro
+    import run_pipeline as rp
+    from lvt.lvt_utils import model_split_rate_tax
+    p, target = _band_frame(), 1500.0
+    band = rp.sensitivity_band_table(p, CFG, target)
+    _l, _i, _r, base = model_split_rate_tax(
+        df=p.copy(), land_value_col="land_value",
+        improvement_value_col="improvement_value", current_revenue=target,
+        land_improvement_ratio=CFG.split_rate_ratio)
+    base["tax_change"] = base["new_tax"] - base["current_tax"]
+    base_med = base.groupby("PROPERTY_CATEGORY")["tax_change"].median()
+    central = band[(band["metric"] == "median_tax_change_eur")
+                   & (band["variant"] == "+0%")]
+    assert len(central) == base_med.size
+    for _, row in central.iterrows():
+        cat = row["group"].replace("category:", "")
+        assert abs(row["value"] - base_med[cat]) < 1e-6, (cat, row["value"])
+
+
+def test_sensitivity_band_table_revenue_neutral_each_variant():
+    from lvt.lvt_utils import model_split_rate_tax
+    p, target = _band_frame(), 1500.0
+    for v in estimate.sensitivity_band(p, CFG).values():
+        _l, _i, rev, _o = model_split_rate_tax(
+            df=v, land_value_col="land_value",
+            improvement_value_col="improvement_value", current_revenue=target,
+            land_improvement_ratio=CFG.split_rate_ratio)
+        assert abs(rev - target) < 1e-3          # every variant hits the target
+
+
+def test_sensitivity_band_table_shape():
+    import run_pipeline as rp
+    band = rp.sensitivity_band_table(_band_frame(), CFG, 1500.0)
+    assert set(band["variant"]) == {"-10%", "+0%", "+10%"}
+    assert {"group", "metric", "variant", "value"} == set(band.columns)
+    # per-category € and % change + the overall win/lose split are all present
+    assert "median_tax_change_eur" in set(band["metric"])
+    assert {"ALL"} <= set(band["group"])
+
+
+# ------------------------------------------------------------------ #
 # charts_fr euro-isation
 # ------------------------------------------------------------------ #
 

@@ -47,6 +47,76 @@ FR_RESIDENTIAL_CATEGORIES = [
 ]
 
 
+# ------------------------------------------------------------------ #
+# Sensitivity band (spec 0002): every published figure carries its ±10 pt
+# land-share band. Re-solve the revenue-neutral split on the −10 / +0 / +10
+# land-share variants and summarise the same published aggregates per variant.
+# ------------------------------------------------------------------ #
+SENS_RESIDENTIAL = set(FR_RESIDENTIAL_CATEGORIES)
+
+
+def _summarise_variant_metrics(v: pd.DataFrame) -> list:
+    """(group, metric, value) rows summarising one solved band variant.
+
+    Published aggregates: per-category median € and % tax change, the overall
+    win/lose split, and residential income-quintile median % change — the same
+    numbers the charts and the infographic publish.
+    """
+    v = v.copy()
+    cur = pd.to_numeric(v["current_tax"], errors="coerce").fillna(0.0)
+    new = pd.to_numeric(v["new_tax"], errors="coerce").fillna(0.0)
+    v["tax_change"] = new - cur
+    rows = []
+    for cat, val in v.groupby("PROPERTY_CATEGORY")["tax_change"].median().items():
+        rows.append((f"category:{cat}", "median_tax_change_eur", float(val)))
+    vb = v[cur > 0].copy()
+    if len(vb):
+        vb["pct"] = 100 * vb["tax_change"] / cur[cur > 0]
+        for cat, val in vb.groupby("PROPERTY_CATEGORY")["pct"].median().items():
+            rows.append((f"category:{cat}", "median_tax_change_pct", float(val)))
+    chg = v["tax_change"]
+    rows.append(("ALL", "pct_pay_more", float(100 * (chg > 1).mean())))
+    rows.append(("ALL", "pct_pay_less", float(100 * (chg < -1).mean())))
+    if "median_income" in v.columns:
+        b = v[(cur > 0) & v["PROPERTY_CATEGORY"].isin(SENS_RESIDENTIAL)].copy()
+        b["median_income"] = pd.to_numeric(b["median_income"], errors="coerce")
+        b = b.dropna(subset=["median_income"])
+        if b["median_income"].nunique() >= 5:
+            b["pct"] = 100 * b["tax_change"] / pd.to_numeric(
+                b["current_tax"], errors="coerce")
+            q = pd.qcut(b["median_income"], 5,
+                        labels=["Q1", "Q2", "Q3", "Q4", "Q5"], duplicates="drop")
+            for ql, val in b.groupby(q, observed=True)["pct"].median().items():
+                rows.append((f"quintile:{ql}", "income_quintile_median_pct",
+                             float(val)))
+    return rows
+
+
+def sensitivity_band_table(p: pd.DataFrame, cfg, target_revenue: float) -> pd.DataFrame:
+    """Long-format band table: group × metric × variant (land-share −10/+0/+10).
+
+    For each land-share variant returned by ``estimate.sensitivity_band`` (which
+    re-splits market value at land_share ± shift, leaving out-of-scope parcels
+    untouched), re-solve the revenue-neutral split and summarise the published
+    aggregates. The central (+0 %) variant reproduces the base solve exactly
+    (the F9 fix), so its column equals the headline numbers to the euro.
+    """
+    variants = estimate.sensitivity_band(p, cfg)
+    recs = []
+    for vkey, v in variants.items():
+        shift = vkey.replace("land_share", "")          # "-10%" | "+0%" | "+10%"
+        _lm, _im, _rev, solved = model_split_rate_tax(
+            df=v, land_value_col="land_value",
+            improvement_value_col="improvement_value",
+            current_revenue=target_revenue,
+            land_improvement_ratio=cfg.split_rate_ratio,
+        )
+        for group, metric, value in _summarise_variant_metrics(solved):
+            recs.append({"group": group, "metric": metric,
+                         "variant": shift, "value": value})
+    return pd.DataFrame(recs, columns=["group", "metric", "variant", "value"])
+
+
 def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
     """Render the France-relevant PNG charts from the standard export.
 
@@ -135,6 +205,22 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     )
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
+
+    # land_share_raw: the standard export drops non-core columns, so re-attach
+    # the pre-clip land share (positional align — same rows, same order) and
+    # rewrite, keeping the unclipped distribution promised in METHODOLOGY §6.5.
+    if "land_share_raw" in p.columns:
+        out["land_share_raw"] = pd.to_numeric(
+            p["land_share_raw"], errors="coerce").values
+        out.to_csv(f"{out_dir}/{name}.csv", index=False)
+
+    # ±10 pt land-share sensitivity band (spec 0002): three extra solves,
+    # exported long so every published figure can carry its band.
+    band = sensitivity_band_table(p, cfg, commune_tfpb_produit)
+    band.to_csv(f"{out_dir}/{name}_sensitivity.csv", index=False)
+    out.attrs["sensitivity"] = band
+    print(f"[{cfg.name}] sensitivity band -> {out_dir}/{name}_sensitivity.csv "
+          f"({band['metric'].nunique()} metrics × 3 variants)")
 
     if make_report:
         _write_report(out, out_dir, cfg)
