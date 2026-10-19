@@ -1,16 +1,18 @@
 # Never upload local data on a CLI deploy (`vercel deploy` from this machine).
 # Git-connected builds only see tracked files, but a CLI deploy uploads the
 # working tree — which holds per-parcel model outputs that must never leave it.
-lvtshift-fr/output/
-**/output/
-**/*.csv
-**/*.parquet
-**/*.gpq
-**/*.geojson
-files.zip
-LVTShift/
-.venv/
-**/.venv/
-**/__pycache__/
-.env
-**/.env*
+# Patterns are anchored with a leading "/" so they can never match the site.
+/lvtshift-fr/output/
+/lvtshift-fr/**/output/
+/**/*.csv
+/**/*.parquet
+/**/*.gpq
+/**/*.geojson
+/files.zip
+/LVTShift/
+/.venv/
+/**/__pycache__/
+/.env
+/.env.*
+/lvtshift-fr/.env
+/lvtshift-fr/.env.*
