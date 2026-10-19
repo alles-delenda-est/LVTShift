@@ -17,9 +17,52 @@ import pandas as pd
 # 1. Improvement (building) values
 # ------------------------------------------------------------------ #
 
-def improvement_value(buildings: pd.DataFrame, cfg) -> pd.DataFrame:
+def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
+                       area_col: str = "iris") -> pd.Series:
+    """
+    Per-parcel weight w in [0, 1] of the maintained-stock effective-age rule.
+
+    q = median hedonic €/m² of the parcel's area (IRIS when known, else the
+    whole commune) ÷ cfg.construction_cost_eur_m2; w ramps linearly from 0 at
+    cfg.dep_q_ramp[0] to 1 at cfg.dep_q_ramp[1]. Taking q at area level, not
+    per parcel, keeps a local land-price rise from being read as a newer
+    building, and the ramp avoids a cliff between neighbouring parcels.
+
+    Returns a Series indexed by idpar.
+    """
+    ramp = tuple(cfg.dep_q_ramp)
+    if len(ramp) != 2:
+        raise ValueError(f"dep_q_ramp must be (low, high), got {cfg.dep_q_ramp!r}")
+    lo, hi = float(ramp[0]), float(ramp[1])
+    if not (np.isfinite(lo) and np.isfinite(hi) and lo < hi):
+        raise ValueError(f"dep_q_ramp must be finite and increasing, got {cfg.dep_q_ramp!r}")
+    cost = float(cfg.construction_cost_eur_m2)
+    if not (np.isfinite(cost) and cost > 0):
+        raise ValueError("construction_cost_eur_m2 must be finite and positive")
+    p = market_value(parcels[["idpar", "cell", "type_local"]
+                             + ([area_col] if area_col in parcels.columns else [])]
+                     .assign(floor_area_m2=1.0), surface)
+    commune_median = p["eur_m2"].median()
+    if area_col in p.columns:
+        area_median = p.groupby(area_col, observed=True)["eur_m2"].transform("median")
+        price = area_median.fillna(commune_median)
+    else:
+        price = pd.Series(commune_median, index=p.index)
+    q = price / cost
+    w = ((q - lo) / (hi - lo)).clip(0.0, 1.0).fillna(0.0)
+    out = pd.Series(w.values, index=p["idpar"].values, name="maint_weight")
+    # one weight per parcel even if the surface ever carried duplicate keys
+    return out[~out.index.duplicated()]
+
+
+def improvement_value(buildings: pd.DataFrame, cfg,
+                      maint_weight: pd.Series | None = None) -> pd.DataFrame:
     """
     Depreciated replacement cost per parcel.
+
+    maint_weight: optional per-idpar weight from `maintenance_weight`; when
+    given (and cfg.dep_maintained_age_cap is set) age is replaced by the
+    effective age w·min(age, cap) + (1−w)·age before depreciating.
 
     buildings: one row per building, columns
         idpar          parcel id (BDNB/BD TOPO joined to cadastre)
@@ -48,7 +91,17 @@ def improvement_value(buildings: pd.DataFrame, cfg) -> pd.DataFrame:
     age = age.fillna(age.median())
     quality[missing_age & (quality == "measured")] = "imputed_age"
 
-    dep = (1.0 - (1.0 - cfg.dep_floor) * (age / cfg.dep_years)).clip(lower=cfg.dep_floor)
+    cap = getattr(cfg, "dep_maintained_age_cap", None)
+    if cap is not None and maint_weight is not None:
+        if not (isinstance(cap, (int, np.integer)) and cap >= 1):
+            raise ValueError(f"dep_maintained_age_cap must be an integer >= 1, got {cap!r}")
+        if not maint_weight.index.is_unique:
+            raise ValueError("maint_weight must have one entry per idpar")
+        w = b["idpar"].map(maint_weight).fillna(0.0).astype(float).clip(0.0, 1.0)
+        age = w * age.clip(upper=cap) + (1.0 - w) * age
+
+    dep = (1.0 - (1.0 - cfg.dep_floor) * (age / cfg.dep_years)).clip(
+        lower=cfg.dep_floor, upper=1.0)
     b["imp_value"] = b["floor_area"] * cfg.construction_cost_eur_m2 * dep
     b["imp_quality"] = quality
 

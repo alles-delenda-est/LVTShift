@@ -171,7 +171,12 @@ export default function MethodologiePage() {
             au sol × nombre d&apos;étages × coût de construction au m² ×
             coefficient de dépréciation linéaire calculé à partir de
             l&apos;année de construction (fournie par les diagnostics
-            énergétiques DPE de l&apos;ADEME). On soustrait ensuite cette
+            énergétiques DPE de l&apos;ADEME). Là où les prix du quartier
+            dépassent nettement le coût de reconstruction, le bâti est
+            entretenu et rénové en continu : un immeuble ancien y est
+            valorisé comme s&apos;il avait au plus une trentaine
+            d&apos;années (« âge effectif »), avec une transition progressive
+            selon le niveau de prix de l&apos;IRIS. On soustrait ensuite cette
             valeur bâtie à la valeur de marché estimée par régression
             hédonique sur les ventes DVF des cinq dernières années. Le
             résiduel est la valeur imputée du sol.
@@ -498,22 +503,19 @@ export default function MethodologiePage() {
               fois.
             </p>
             <p className="font-body text-sm text-encre leading-relaxed mt-3">
-              <strong>À Paris, la part foncière affichée (84,9&nbsp;%) est
-              fixée par la borne, pas mesurée.</strong> 95,5&nbsp;% des
-              parcelles bâties parisiennes (59,8&nbsp;% à Lyon) atteignent le
-              plafond de 85&nbsp;%. La cause : notre règle de dépréciation
-              ramène un immeuble d&apos;environ 95 ans, pourtant entretenu en
-              continu, à 25&nbsp;% de son coût de reconstruction — environ
+              <strong>Paris et la borne de 85&nbsp;%.</strong> Une règle de
+              dépréciation purement liée à l&apos;âge ramenait un immeuble
+              parisien d&apos;environ 95 ans, pourtant entretenu en continu, à
+              25&nbsp;% de son coût de reconstruction — environ
               575&nbsp;€/m², face à un prix de vente médian d&apos;environ
-              10&nbsp;860&nbsp;€/m². En valorisant le bâti entretenu comme
-              s&apos;il avait une trentaine d&apos;années, la part foncière
-              parisienne ressort entre 82 et 85&nbsp;% : le niveau est
-              plausible, mais le plafond impose le même partage à toutes les
-              parcelles. Comme toutes les
-              parcelles reçoivent alors le même partage terrain/bâti, le
-              résultat parisien se lit surtout comme le passage d&apos;une
-              taxe assise sur la surface à une taxe assise sur la valeur de
-              marché. Une révision de la règle de dépréciation est en cours.
+              10&nbsp;860&nbsp;€/m². 95,5&nbsp;% des parcelles bâties
+              parisiennes atteignaient alors le plafond de 85&nbsp;% : le
+              partage terrain/bâti était fixé par la borne, pas mesuré. Avec
+              la règle de l&apos;âge effectif décrite plus haut, la part
+              foncière de Paris ressort à 83,9&nbsp;%, et 47,6&nbsp;% des
+              parcelles restent au plafond : aux prix parisiens, le foncier
+              dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
+              chères. Lyon passe à 72,1&nbsp;%, sans parcelle au plafond.
             </p>
           </div>
 

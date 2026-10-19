@@ -49,12 +49,31 @@ the parcel (`estimate.improvement_value`):
 ```
 floor_area   = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
 age          = reference_year − year_built
-depreciation = clip(1 − (1 − dep_floor) × age / dep_years,  min = dep_floor)
+q            = median hedonic €/m² of the parcel's IRIS ÷ construction_cost_eur_m2
+w            = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp)
+eff_age      = w × min(age, 30) + (1 − w) × age             (dep_maintained_age_cap)
+depreciation = clip(1 − (1 − dep_floor) × eff_age / dep_years,  min = dep_floor)
 imp_value    = floor_area × construction_cost_eur_m2 × depreciation
 ```
 
 `year_built` is taken from DPE (§3.2); `construction_cost_eur_m2`, `dep_years`,
-`dep_floor` are per-commune config (§4). Buildings join parcels by **area-weighted
+`dep_floor` are per-commune config (§4).
+
+*Maintained stock (effective age).* Where neighbourhood prices are far above
+rebuild cost, owners keep renovating, so years since construction stop measuring
+wear: a maintained 1880 building is valued as if 30 years old (factor 0.72)
+instead of hitting the 25 % floor. This follows the appraisal concept of
+effective age (Davis, Larson, Oliner & Shui, FHFA WP 19-01) and the evidence that
+well-maintained dwellings show little long-run physical deterioration (Francke &
+van de Minne 2017); INSEE's own stock accounts capitalise renovation the same way
+(70-year life, base 2020). The weight `w` ramps continuously with q, so
+neighbouring parcels never jump between regimes, and q is taken at IRIS level, not
+per parcel, so a local land-price rise is not read as a newer building. In weak
+markets (q ≤ 1.2: Roubaix, Cahors) the rule is inactive and age-based depreciation
+also absorbs economic obsolescence. A uniform cap was tested and rejected: it puts
+half of Roubaix's and a third of Cahors's built parcels on the 15 % lower bound.
+
+Buildings join parcels by **area-weighted
 intersection** (a building straddling a boundary credits each parcel by overlap
 share), not centroid.
 
@@ -119,16 +138,20 @@ are ranked across the whole ring. A member that fails is listed in the payload's
 `coverage`, never imputed. Montreuil and Villeurbanne appear both alone and in
 their ring; the site's panel totals count them once.
 
-**Paris's 84.9 % land share is set by the clip, not measured.** 95.5 % of Paris's
-built parcels (Lyon: 59.8 %) sit at the 0.85 upper bound, because the depreciation
-rule writes a ~95-year-old, continuously maintained building down to its 25 % floor
-(≈ €575/m² against a median DVF price of ≈ €10,860/m²): the unclipped aggregate is
-92.9 %. Valuing maintained buildings as ~30 years old (the effective age the
-literature supports) gives 82–85 % (rebuild cost €2,760–2,300/m²); no write-down
-at all gives 63–79 %, a lower bound. The level is therefore plausible; what is an
-artefact is that every parcel gets the same split. The payload's
-`headline.built_at_cap_pct` records the share of built parcels at the bound, and
-the site labels the land share "plafonnée" when it is ≥ 50 %.
+**Paris's land share and the 85 % cap.** Under the original rule (straight-line
+to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
+≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
+sat at the 0.85 bound (Lyon 59.8 %; 55 communes flagged) and the 84.9 % headline
+was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
+30-year effective age: Paris now comes out at **83.9 %**, with 47.6 % of built
+parcels still at the bound. That residue is genuine, not an artefact: at Paris
+prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
+expensive streets (Neuilly-sur-Seine is the one commune still above half at the
+bound). Lyon falls to 72.1 % with no parcel at the bound; across the panel the
+`land_share_clip` warnings fall from 55 to 1. No write-down at all would give
+63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
+built parcels at the bound, and the site labels the land share "plafonnée" when it
+is ≥ 50 %.
 
 ## 4. Key parameters and assumptions
 
@@ -136,7 +159,10 @@ the site labels the land share "plafonnée" when it is ≥ 50 %.
   needs FFB/BT01 calibration): Paris 2300, IdF inner ring 2150 (Montreuil and
   all of 92/93/94), Lyon, Villeurbanne and the Métropole ring 1950,
   Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650, Figeac 1600.
-- **Depreciation**: straight-line over `dep_years` = 80, floor `dep_floor` = 0.25.
+- **Depreciation**: straight-line over `dep_years` = 80, floor `dep_floor` = 0.25,
+  on the effective age; maintained-stock cap 30 years (`dep_maintained_age_cap`),
+  ramp q ∈ [1.2, 2.5] (`dep_q_ramp`). Both are judgement calls informed by the
+  literature (§3.1); the cap and ramp end-points are not directly estimated.
 - **Land-share bounds**: [0.15, 0.85] — a design constraint, not a measurement.
   Where most parcels hit the upper bound (Paris, Lyon), the cause found so far is
   over-depreciation of old maintained stock, not land genuinely above 85 % (§3.7).
@@ -190,10 +216,12 @@ Ranked by how much they move published (category/quintile) results.
 4. **Construction costs** are coarse regional pilots; a ±15 % move flows linearly
    into building (hence land) value.
 5. **Land-share clip**: when most built parcels sit at a bound, the land share is
-   an assumption, not a result (Paris 95.5 % at the 0.85 bound, Lyon 59.8 %), and
-   the parcel-level variation in building value is erased. In Paris the cause is
-   the depreciation floor writing old maintained buildings down to 25 % (§3.7).
-   The preflight `land_share_clip` check flags it; publish the unclipped figure.
+   an assumption, not a result, and the parcel-level variation in building value is
+   erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
+   Lyon and 53 other communes; it is now Neuilly-sur-Seine only, with Paris at
+   47.6 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
+   cap (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a
+   sensitivity on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
 7. **Non-residential market value** borrows the residential €/m² surface;

@@ -130,6 +130,33 @@ def test_newer_building_depreciates_less():
     assert new["improvement_value"].iloc[0] > old["improvement_value"].iloc[0]
 
 
+def test_maintained_stock_effective_age():
+    # w = 1: a 125-year-old building is valued as if 30 years old;
+    # w = 0.5: halfway between that and its real age; w = 0: unchanged
+    b = pd.DataFrame([_bld(year_built=1900.0)])
+    cap = CFG.dep_maintained_age_cap
+    full = 1 - (1 - CFG.dep_floor) * cap / CFG.dep_years
+    for w, age in ((1.0, cap), (0.5, (cap + 125) / 2), (0.0, 125)):
+        out = estimate.improvement_value(b, CFG, maint_weight=pd.Series({"P": w}))
+        factor = max(CFG.dep_floor, 1 - (1 - CFG.dep_floor) * age / CFG.dep_years)
+        assert abs(out["improvement_value"].iloc[0] - 200 * 1650 * factor) < 1e-3
+    assert full > CFG.dep_floor
+
+
+def test_maintenance_weight_ramps_on_area_price_ratio():
+    lo, hi = CFG.dep_q_ramp
+    cost = CFG.construction_cost_eur_m2
+    surface = pd.DataFrame({"cell": ["a", "b", "c"], "type_local": ["Appartement"] * 3,
+                            "eur_m2": [cost * lo, cost * (lo + hi) / 2, cost * hi * 2]})
+    parcels = pd.DataFrame({"idpar": ["1", "2", "3", "4"], "cell": ["a", "b", "c", "c"],
+                            "type_local": ["Appartement"] * 4,
+                            "iris": ["I1", "I2", "I3", None]})
+    w = estimate.maintenance_weight(parcels, surface, CFG)
+    assert w["1"] == 0.0 and abs(w["2"] - 0.5) < 1e-9 and w["3"] == 1.0
+    # no IRIS -> commune median price (between cells b and c) -> above the ramp
+    assert w["4"] == 1.0
+
+
 # ------------------------------------------------------------------ #
 # DPE construction-period -> year mapping
 # ------------------------------------------------------------------ #
@@ -255,3 +282,20 @@ if __name__ == "__main__":
             print(f"  FAIL  {t.__name__}: {type(exc).__name__}: {exc}")
     print(f"\n{len(tests) - failed}/{len(tests)} passed")
     sys.exit(1 if failed else 0)
+
+
+def test_maintained_rule_rejects_bad_config():
+    import dataclasses
+    import pytest
+    b = pd.DataFrame([_bld(year_built=1900.0)])
+    w = pd.Series({"P": 1.0})
+    with pytest.raises(ValueError):
+        estimate.improvement_value(b, dataclasses.replace(CFG, dep_maintained_age_cap=-50), maint_weight=w)
+    # an out-of-range weight is clamped, never inflates value above new
+    out = estimate.improvement_value(b, CFG, maint_weight=pd.Series({"P": 5.0}))
+    assert out["improvement_value"].iloc[0] <= 200 * 1650 + 1e-6
+    surface = pd.DataFrame({"cell": ["a"], "type_local": ["Appartement"], "eur_m2": [3000.0]})
+    parcels = pd.DataFrame({"idpar": ["P"], "cell": ["a"], "type_local": ["Appartement"]})
+    for ramp in ((2.0, 1.0), (1.0,), (float("nan"), 2.0)):
+        with pytest.raises(ValueError):
+            estimate.maintenance_weight(parcels, surface, dataclasses.replace(CFG, dep_q_ramp=ramp))

@@ -85,12 +85,19 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
        make_report: also write the PNG charts (needs matplotlib); set False
        for a CSV-only run."""
 
-    imp = estimate.improvement_value(buildings, cfg)
+    # hedonic surface first: the maintained-stock depreciation rule needs the
+    # neighbourhood price level before buildings are valued
+    surface, _trans = estimate.fit_hedonic(dvf)
+    maint_w = None
+    if getattr(cfg, "dep_maintained_age_cap", None) is not None:
+        maint_w = estimate.maintenance_weight(parcels, surface, cfg)
+        # never let the rule switch itself off silently (e.g. empty surface)
+        print(f"[{cfg.name}] maintained-stock rule: mean w {maint_w.mean():.2f}, "
+              f"{100 * (maint_w > 0).mean():.0f}% of parcels with w > 0")
+    imp = estimate.improvement_value(buildings, cfg, maint_weight=maint_w)
     p = parcels.merge(imp, on="idpar", how="left")
     p[["improvement_value", "floor_area_m2"]] = \
         p[["improvement_value", "floor_area_m2"]].fillna(0)
-
-    surface, _trans = estimate.fit_hedonic(dvf)
     p = estimate.market_value(p, surface)
     p = estimate.land_value_residual(p, cfg)
     p = estimate.current_tax(p, commune_tfpb_produit)

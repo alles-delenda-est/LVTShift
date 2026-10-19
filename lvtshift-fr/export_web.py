@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Upper land-share clip shared by every commune (config.CommuneConfig default).
 LAND_SHARE_CAP = 0.85
+MIN_BUILT_FOR_CAP_PCT = 30
 
 # Standard-category -> French display label (mirrors run_pipeline.CATEGORY_MAP).
 CATEGORY_LABELS_FR = {
@@ -69,7 +70,8 @@ def built_at_cap_pct(df: pd.DataFrame, cap: float = LAND_SHARE_CAP):
     land = df["taxable_land_value"]
     imp = df["taxable_improvement_value"]
     built = imp > 0
-    if not built.any():
+    # too few built parcels and the % would describe individual parcels
+    if built.sum() < MIN_BUILT_FOR_CAP_PCT:
         return None
     share = land[built] / (land[built] + imp[built])
     return _pct(int((share >= cap - 0.001).sum()), int(built.sum()))
@@ -245,6 +247,12 @@ ALLOWED_TOP_KEYS = {
     "kind", "members", "coverage",
     "by_income_quintile_within", "by_income_quintile_within_coverage_pct",
 }
+HEADLINE_KEYS = {
+    "parcels_modeled", "tax_base_eur", "land_base_eur", "improvement_base_eur",
+    "land_share_pct", "built_at_cap_pct", "neutral_levy_eur", "gross_shifted_eur",
+    "net_shifted_eur", "gross_pct_of_levy", "net_pct_of_levy", "gross_bps_of_base",
+    "currency",
+}
 MEMBER_KEYS = {
     "commune_key", "name", "insee", "parcels_modeled", "neutral_levy_eur",
     "land_share_pct", "gross_pct_of_levy", "share_paying_more_pct",
@@ -258,6 +266,8 @@ def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
     assert not extra, f"unexpected top-level keys (possible per-parcel leak): {extra}"
+    extra_h = set(payload.get("headline") or {}) - HEADLINE_KEYS
+    assert not extra_h, f"unexpected headline keys: {extra_h}"
     assert len(payload.get("by_improvement_ratio") or []) <= 5
     assert len(payload.get("by_category") or []) <= 10
     # territory member rows are per-COMMUNE aggregates (never per-parcel)
