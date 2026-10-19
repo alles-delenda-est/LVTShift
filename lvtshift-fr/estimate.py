@@ -39,13 +39,20 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     cost = float(cfg.construction_cost_eur_m2)
     if not (np.isfinite(cost) and cost > 0):
         raise ValueError("construction_cost_eur_m2 must be finite and positive")
-    p = market_value(parcels[["idpar", "cell", "type_local"]
-                             + ([area_col] if area_col in parcels.columns else [])]
+    extra = [c for c in (area_col, "category_fr") if c in parcels.columns]
+    p = market_value(parcels[["idpar", "cell", "type_local"] + extra]
                      .assign(floor_area_m2=1.0), surface)
-    commune_median = p["eur_m2"].median()
+    # The area price is read from built parcels only: vacant plots carry a
+    # placeholder type_local and would otherwise drag the median towards the
+    # flat price in house-dominated areas. Vacant plots inherit their area's
+    # weight (it is unused for them, having no building to depreciate).
+    built = (p["category_fr"].notna() & (p["category_fr"] != "terrain_nu")) \
+        if "category_fr" in p.columns else pd.Series(True, index=p.index)
+    ref = p[built] if built.any() else p
+    commune_median = ref["eur_m2"].median()
     if area_col in p.columns:
-        area_median = p.groupby(area_col, observed=True)["eur_m2"].transform("median")
-        price = area_median.fillna(commune_median)
+        area_median = ref.groupby(area_col, observed=True)["eur_m2"].median()
+        price = p[area_col].map(area_median).astype(float).fillna(commune_median)
     else:
         price = pd.Series(commune_median, index=p.index)
     q = price / cost

@@ -55,7 +55,8 @@ parcelle (`estimate.improvement_value`) :
 ```
 surface_plancher = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
 âge              = année_référence − année_construction
-q                = prix hédonique médian €/m² de l'IRIS ÷ coût_construction_€m2
+q                = prix hédonique médian €/m² des parcelles bâties de l'IRIS
+                   ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
 w                = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp)
 âge_effectif     = w × min(âge, 30) + (1 − w) × âge            (dep_maintained_age_cap)
 dépréciation     = borne(1 − (1 − dep_floor) × âge_effectif / dep_years,  min = dep_floor)
@@ -75,7 +76,10 @@ entretenu (Francke & van de Minne 2017) ; les comptes de patrimoine de l'INSEE
 capitalisent eux aussi les rénovations (durée de vie 70 ans, base 2020). Le poids
 `w` croît continûment avec q, si bien que deux parcelles voisines ne basculent
 jamais d'un régime à l'autre, et q est calculé à l'IRIS, non à la parcelle, pour
-qu'une hausse locale du foncier ne soit pas lue comme un bâtiment plus récent. Dans
+qu'une hausse locale du foncier ne soit pas lue comme un bâtiment plus récent. La
+médiane de l'IRIS ne retient que les parcelles bâties : les terrains nus portent un
+type de logement par défaut et tireraient un quartier pavillonnaire vers le prix des
+appartements. Dans
 les marchés faibles (q ≤ 1,2 : Roubaix, Cahors), la règle est inactive et la
 dépréciation par l'âge absorbe aussi l'obsolescence économique. Un plafond uniforme
 a été testé et écarté : il place la moitié des parcelles bâties de Roubaix et un
@@ -164,7 +168,7 @@ valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais 
 pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
 reconstruction laisse un foncier supérieur à 85 % dans les rues chères
 (Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
-passe à 72,1 %, sans parcelle à la borne ; sur le panel, les alertes
+passe à 72,0 %, sans parcelle à la borne ; sur le panel, les alertes
 `land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
 (borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
 parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »

@@ -13,9 +13,9 @@ the ring figures are aggregates of those 179 separate runs, not a metropolitan t
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
 | Paris | 78,189 | €1,840.9 M | 83.9 % | 47.6 % | 15.3 % | 54.0 % |
-| Lyon | 34,142 | €362.9 M | 72.1 % | 0.0 % | 14.9 % | 69.6 % |
-| Paris extra-muros (122) | 608,249 | €3,569.3 M | 74.2 % | 1.3 % | 16.8 % | 68.8 % |
-| Lyon extra-muros (57) | 246,426 | €528.2 M | 67.9 % | 0.0 % | 20.1 % | 69.5 % |
+| Lyon | 34,142 | €362.9 M | 72.0 % | 0.0 % | 15.0 % | 69.6 % |
+| Paris extra-muros (122) | 608,249 | €3,569.3 M | 74.1 % | 1.3 % | 16.8 % | 68.9 % |
+| Lyon extra-muros (57) | 246,426 | €528.2 M | 67.4 % | 0.0 % | 20.3 % | 69.6 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -93,12 +93,17 @@ result is unchanged: the full before/after table is in
   continuous ramp and IRIS-level prices (both adopted). It also proposed using the
   DPE energy class as a condition signal (follow-up C9).
   What it changes (before → after):
-  - land share: Paris 84.9 → 83.9 %, Lyon 81.6 → 72.1 %, Montreuil 83.9 → 75.9 %,
-    La Rochelle 83.5 → 74.0 %, Paris ring 80.6 → 74.2 %, Lyon ring 73.2 → 67.9 %;
+  - land share: Paris 84.9 → 83.9 %, Lyon 81.6 → 72.0 %, Montreuil 83.9 → 75.8 %,
+    La Rochelle 83.5 → 74.1 %, Paris ring 80.6 → 74.1 %, Lyon ring 73.2 → 67.4 %;
   - weak markets unchanged (Roubaix, Cahors, Figeac: rule inactive);
   - poorest/richest quintile, median change: Paris −16.7/+10.5 → −18.1/+11.4;
-    Montreuil −10.3/+10.7 → −13.5/+11.8; Grenoble −7.7/+21.7 → −7.7/+17.5.
+    Montreuil −10.3/+10.7 → −13.4/+11.9; Grenoble −7.7/+21.7 → −7.5/+17.8.
     Every direction is preserved.
+  Review fix (external code review): the IRIS price q is now taken over built
+  parcels only, because vacant plots carried a placeholder "flat" type. Paris is
+  unchanged; 15 of 188 communes move by more than 1 point of land share, at most
+  2.5 points (Couzon-au-Mont-d'Or); Annemasse moves most on the site (66.1 → 64.9 %).
+  Eight communes lose their land-share-band warning. Figures above include it.
   Decide: accept the 30-year cap and the 1.2–2.5 ramp, or ask for a sensitivity
   run on them (e.g. cap 20/40) before merging.
 

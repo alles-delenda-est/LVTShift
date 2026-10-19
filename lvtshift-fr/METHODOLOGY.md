@@ -49,7 +49,8 @@ the parcel (`estimate.improvement_value`):
 ```
 floor_area   = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
 age          = reference_year − year_built
-q            = median hedonic €/m² of the parcel's IRIS ÷ construction_cost_eur_m2
+q            = median hedonic €/m² of the built parcels in the parcel's IRIS
+               ÷ construction_cost_eur_m2   (commune median if the IRIS has none)
 w            = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp)
 eff_age      = w × min(age, 30) + (1 − w) × age             (dep_maintained_age_cap)
 depreciation = clip(1 − (1 − dep_floor) × eff_age / dep_years,  min = dep_floor)
@@ -68,7 +69,9 @@ well-maintained dwellings show little long-run physical deterioration (Francke &
 van de Minne 2017); INSEE's own stock accounts capitalise renovation the same way
 (70-year life, base 2020). The weight `w` ramps continuously with q, so
 neighbouring parcels never jump between regimes, and q is taken at IRIS level, not
-per parcel, so a local land-price rise is not read as a newer building. In weak
+per parcel, so a local land-price rise is not read as a newer building. The IRIS
+median uses built parcels only: vacant plots carry a placeholder dwelling type and
+would pull a house-dominated area towards the flat price. In weak
 markets (q ≤ 1.2: Roubaix, Cahors) the rule is inactive and age-based depreciation
 also absorbs economic obsolescence. A uniform cap was tested and rejected: it puts
 half of Roubaix's and a third of Cahors's built parcels on the 15 % lower bound.
@@ -147,7 +150,7 @@ was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
 parcels still at the bound. That residue is genuine, not an artefact: at Paris
 prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
 expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 72.1 % with no parcel at the bound; across the panel the
+bound). Lyon falls to 72.0 % with no parcel at the bound; across the panel the
 `land_share_clip` warnings fall from 55 to 1. No write-down at all would give
 63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
 built parcels at the bound, and the site labels the land share "plafonnée" when it

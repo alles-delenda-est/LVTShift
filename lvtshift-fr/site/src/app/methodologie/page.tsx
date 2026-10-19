@@ -176,7 +176,7 @@ export default function MethodologiePage() {
             entretenu et rénové en continu : un immeuble ancien y est
             valorisé comme s&apos;il avait au plus une trentaine
             d&apos;années (« âge effectif »), avec une transition progressive
-            selon le niveau de prix de l&apos;IRIS. On soustrait ensuite cette
+            selon le niveau de prix des parcelles bâties de l&apos;IRIS. On soustrait ensuite cette
             valeur bâtie à la valeur de marché estimée par régression
             hédonique sur les ventes DVF des cinq dernières années. Le
             résiduel est la valeur imputée du sol.
@@ -515,7 +515,7 @@ export default function MethodologiePage() {
               foncière de Paris ressort à 83,9&nbsp;%, et 47,6&nbsp;% des
               parcelles restent au plafond : aux prix parisiens, le foncier
               dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
-              chères. Lyon passe à 72,1&nbsp;%, sans parcelle au plafond.
+              chères. Lyon passe à 72,0&nbsp;%, sans parcelle au plafond.
             </p>
           </div>
 

@@ -9,40 +9,40 @@
   "headline": {
     "parcels_modeled": 11300,
     "tax_base_eur": 24383732791.207756,
-    "land_base_eur": 16328649079.126955,
-    "improvement_base_eur": 8055083712.080799,
-    "land_share_pct": 67.0,
-    "built_at_cap_pct": 0.3,
+    "land_base_eur": 16201657250.813997,
+    "improvement_base_eur": 8182075540.393757,
+    "land_share_pct": 66.4,
+    "built_at_cap_pct": 0.2,
     "neutral_levy_eur": 47431792.0,
-    "gross_shifted_eur": 10081009.712197307,
-    "net_shifted_eur": 5040504.856098657,
-    "gross_pct_of_levy": 21.3,
-    "net_pct_of_levy": 10.6,
-    "gross_bps_of_base": 4.1,
+    "gross_shifted_eur": 10200721.483666986,
+    "net_shifted_eur": 5100360.741833494,
+    "gross_pct_of_levy": 21.5,
+    "net_pct_of_levy": 10.8,
+    "gross_bps_of_base": 4.2,
     "currency": "EUR"
   },
   "headline_sensitivity": {
     "delta_pt": 10.0,
     "base": {
-      "land_share_pct": 67.0,
-      "gross_pct_of_levy": 21.3,
-      "net_pct_of_levy": 10.6,
-      "median_change_pct_residential": 4.9,
-      "share_paying_more_pct": 66.8
+      "land_share_pct": 66.4,
+      "gross_pct_of_levy": 21.5,
+      "net_pct_of_levy": 10.8,
+      "median_change_pct_residential": 5.2,
+      "share_paying_more_pct": 67.2
     },
     "low": {
-      "land_share_pct": 57.0,
-      "gross_pct_of_levy": 20.3,
-      "net_pct_of_levy": 10.2,
-      "median_change_pct_residential": 4.7,
-      "share_paying_more_pct": 66.8
+      "land_share_pct": 56.4,
+      "gross_pct_of_levy": 20.5,
+      "net_pct_of_levy": 10.3,
+      "median_change_pct_residential": 4.9,
+      "share_paying_more_pct": 67.2
     },
     "high": {
-      "land_share_pct": 77.0,
-      "gross_pct_of_levy": 22.1,
-      "net_pct_of_levy": 11.0,
-      "median_change_pct_residential": 5.0,
-      "share_paying_more_pct": 66.6
+      "land_share_pct": 76.4,
+      "gross_pct_of_levy": 22.3,
+      "net_pct_of_levy": 11.2,
+      "median_change_pct_residential": 5.4,
+      "share_paying_more_pct": 66.7
     }
   },
   "by_category": [
@@ -51,10 +51,10 @@
       "label_fr": "Maison individuelle",
       "parcels": 5243,
       "share_of_parcels_pct": 46.4,
-      "median_change_pct": 11.9,
+      "median_change_pct": 12.2,
       "median_change_eur": 112.0,
-      "count_paying_more": 4558,
-      "share_paying_more_pct": 86.9
+      "count_paying_more": 4609,
+      "share_paying_more_pct": 87.9
     },
     {
       "category": "Vacant Land",
@@ -71,18 +71,18 @@
       "label_fr": "Appartement (copropriété)",
       "parcels": 1791,
       "share_of_parcels_pct": 15.8,
-      "median_change_pct": -20.0,
-      "median_change_eur": -286.0,
-      "count_paying_more": 320,
-      "share_paying_more_pct": 17.9
+      "median_change_pct": -19.6,
+      "median_change_eur": -290.0,
+      "count_paying_more": 319,
+      "share_paying_more_pct": 17.8
     },
     {
       "category": "Large Multi-Family (5+ units)",
       "label_fr": "Immeuble collectif (5+ logements)",
       "parcels": 1141,
       "share_of_parcels_pct": 10.1,
-      "median_change_pct": -20.9,
-      "median_change_eur": -1153.0,
+      "median_change_pct": -20.4,
+      "median_change_eur": -1172.0,
       "count_paying_more": 132,
       "share_paying_more_pct": 11.6
     },
@@ -91,8 +91,8 @@
       "label_fr": "Commerce",
       "parcels": 460,
       "share_of_parcels_pct": 4.1,
-      "median_change_pct": -17.2,
-      "median_change_eur": -336.0,
+      "median_change_pct": -16.8,
+      "median_change_eur": -324.0,
       "count_paying_more": 134,
       "share_paying_more_pct": 29.1
     },
@@ -101,8 +101,8 @@
       "label_fr": "Industriel",
       "parcels": 261,
       "share_of_parcels_pct": 2.3,
-      "median_change_pct": 4.9,
-      "median_change_eur": 204.0,
+      "median_change_pct": 5.4,
+      "median_change_eur": 223.0,
       "count_paying_more": 200,
       "share_paying_more_pct": 76.6
     },
@@ -111,39 +111,39 @@
       "label_fr": "Autre / dépendance",
       "parcels": 252,
       "share_of_parcels_pct": 2.2,
-      "median_change_pct": -17.2,
-      "median_change_eur": -74.0,
-      "count_paying_more": 47,
-      "share_paying_more_pct": 18.7
+      "median_change_pct": -16.9,
+      "median_change_eur": -81.0,
+      "count_paying_more": 45,
+      "share_paying_more_pct": 17.9
     }
   ],
   "by_income_quintile": [
     {
       "quintile": 1,
       "median_income_eur": 18640.0,
-      "median_change_pct": -20.0,
-      "median_change_pct_residential": -20.0,
+      "median_change_pct": -20.1,
+      "median_change_pct_residential": -19.6,
       "parcels": 2124
     },
     {
       "quintile": 2,
       "median_income_eur": 20630.0,
       "median_change_pct": 3.5,
-      "median_change_pct_residential": 4.6,
+      "median_change_pct_residential": 4.8,
       "parcels": 2649
     },
     {
       "quintile": 3,
       "median_income_eur": 21630.0,
-      "median_change_pct": 5.7,
-      "median_change_pct_residential": 5.8,
+      "median_change_pct": 6.3,
+      "median_change_pct_residential": 6.4,
       "parcels": 1884
     },
     {
       "quintile": 4,
       "median_income_eur": 25690.0,
-      "median_change_pct": 17.5,
-      "median_change_pct_residential": 17.5,
+      "median_change_pct": 17.9,
+      "median_change_pct_residential": 17.9,
       "parcels": 2503
     },
     {
@@ -174,26 +174,26 @@
     {
       "bucket": "r10_25",
       "label": "Sous-bâti (10–25 %)",
-      "parcels": 534,
-      "value_eur": 1732842276.123009,
-      "value_pct_of_base": 7.1,
-      "share_of_gross_change_pct": 11.6
+      "parcels": 296,
+      "value_eur": 1261012680.2260296,
+      "value_pct_of_base": 5.2,
+      "share_of_gross_change_pct": 8.8
     },
     {
       "bucket": "r25_50",
       "label": "Sous-bâti (25–50 %)",
-      "parcels": 8475,
-      "value_eur": 21929003110.866524,
-      "value_pct_of_base": 89.9,
-      "share_of_gross_change_pct": 76.1
+      "parcels": 8711,
+      "value_eur": 22383850178.933807,
+      "value_pct_of_base": 91.8,
+      "share_of_gross_change_pct": 78.8
     },
     {
       "bucket": "ge50",
       "label": "Bâti (≥50 %)",
-      "parcels": 139,
-      "value_eur": 487259280.1095975,
-      "value_pct_of_base": 2.0,
-      "share_of_gross_change_pct": 6.3
+      "parcels": 141,
+      "value_eur": 504241807.9392982,
+      "value_pct_of_base": 2.1,
+      "share_of_gross_change_pct": 6.4
     }
   ],
   "provenance": {

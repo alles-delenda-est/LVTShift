@@ -9,13 +9,13 @@
   "headline": {
     "parcels_modeled": 608249,
     "tax_base_eur": 2052308315823.5918,
-    "land_base_eur": 1523746442531.5146,
-    "improvement_base_eur": 528561873292.07715,
-    "land_share_pct": 74.2,
+    "land_base_eur": 1521160591328.697,
+    "improvement_base_eur": 531147724494.8948,
+    "land_share_pct": 74.1,
     "built_at_cap_pct": 1.3,
     "neutral_levy_eur": 3569257605.0,
-    "gross_shifted_eur": 597947909.3340175,
-    "net_shifted_eur": 298973954.66700876,
+    "gross_shifted_eur": 599822679.0169408,
+    "net_shifted_eur": 299911339.5084704,
     "gross_pct_of_levy": 16.8,
     "net_pct_of_levy": 8.4,
     "gross_bps_of_base": 2.9,
@@ -24,24 +24,24 @@
   "headline_sensitivity": {
     "delta_pt": 10.0,
     "base": {
-      "land_share_pct": 74.2,
+      "land_share_pct": 74.1,
       "gross_pct_of_levy": 16.8,
       "net_pct_of_levy": 8.4,
-      "median_change_pct_residential": 6.8,
-      "share_paying_more_pct": 68.8
+      "median_change_pct_residential": 7.0,
+      "share_paying_more_pct": 68.9
     },
     "low": {
-      "land_share_pct": 64.2,
-      "gross_pct_of_levy": 15.9,
+      "land_share_pct": 64.1,
+      "gross_pct_of_levy": 16.0,
       "net_pct_of_levy": 8.0,
-      "median_change_pct_residential": 6.5,
+      "median_change_pct_residential": 6.6,
       "share_paying_more_pct": 68.8
     },
     "high": {
-      "land_share_pct": 84.2,
-      "gross_pct_of_levy": 17.4,
+      "land_share_pct": 84.1,
+      "gross_pct_of_levy": 17.5,
       "net_pct_of_levy": 8.7,
-      "median_change_pct_residential": 7.1,
+      "median_change_pct_residential": 7.2,
       "share_paying_more_pct": 69.0
     }
   },
@@ -51,10 +51,10 @@
       "label_fr": "Maison individuelle",
       "parcels": 326745,
       "share_of_parcels_pct": 53.7,
-      "median_change_pct": 12.4,
-      "median_change_eur": 142.0,
-      "count_paying_more": 266982,
-      "share_paying_more_pct": 81.7
+      "median_change_pct": 12.5,
+      "median_change_eur": 143.0,
+      "count_paying_more": 267824,
+      "share_paying_more_pct": 82.0
     },
     {
       "category": "Vacant Land",
@@ -73,18 +73,18 @@
       "share_of_parcels_pct": 11.2,
       "median_change_pct": -10.3,
       "median_change_eur": -173.0,
-      "count_paying_more": 12941,
-      "share_paying_more_pct": 19.0
+      "count_paying_more": 12829,
+      "share_paying_more_pct": 18.8
     },
     {
       "category": "Large Multi-Family (5+ units)",
       "label_fr": "Immeuble collectif (5+ logements)",
       "parcels": 50803,
       "share_of_parcels_pct": 8.4,
-      "median_change_pct": -6.3,
-      "median_change_eur": -535.0,
-      "count_paying_more": 13858,
-      "share_paying_more_pct": 27.3
+      "median_change_pct": -6.2,
+      "median_change_eur": -537.0,
+      "count_paying_more": 13765,
+      "share_paying_more_pct": 27.1
     },
     {
       "category": "Commercial",
@@ -92,29 +92,29 @@
       "parcels": 30236,
       "share_of_parcels_pct": 5.0,
       "median_change_pct": -7.4,
-      "median_change_eur": -209.0,
-      "count_paying_more": 7838,
-      "share_paying_more_pct": 25.9
+      "median_change_eur": -212.0,
+      "count_paying_more": 7744,
+      "share_paying_more_pct": 25.6
     },
     {
       "category": "Other",
       "label_fr": "Autre / dépendance",
       "parcels": 12612,
       "share_of_parcels_pct": 2.1,
-      "median_change_pct": -10.9,
+      "median_change_pct": -11.0,
       "median_change_eur": -76.0,
-      "count_paying_more": 2371,
-      "share_paying_more_pct": 18.8
+      "count_paying_more": 2344,
+      "share_paying_more_pct": 18.6
     },
     {
       "category": "Industrial",
       "label_fr": "Industriel",
       "parcels": 7287,
       "share_of_parcels_pct": 1.2,
-      "median_change_pct": -4.3,
-      "median_change_eur": -177.0,
-      "count_paying_more": 2208,
-      "share_paying_more_pct": 30.3
+      "median_change_pct": -4.4,
+      "median_change_eur": -175.0,
+      "count_paying_more": 2199,
+      "share_paying_more_pct": 30.2
     }
   ],
   "by_income_quintile": [
@@ -128,29 +128,29 @@
     {
       "quintile": 2,
       "median_income_eur": 21620.0,
-      "median_change_pct": 4.6,
-      "median_change_pct_residential": 6.6,
+      "median_change_pct": 4.8,
+      "median_change_pct_residential": 6.7,
       "parcels": 114392
     },
     {
       "quintile": 3,
       "median_income_eur": 25520.0,
-      "median_change_pct": 5.8,
+      "median_change_pct": 6.1,
       "median_change_pct_residential": 7.3,
       "parcels": 114442
     },
     {
       "quintile": 4,
       "median_income_eur": 29930.0,
-      "median_change_pct": 4.9,
-      "median_change_pct_residential": 6.3,
+      "median_change_pct": 5.2,
+      "median_change_pct_residential": 6.5,
       "parcels": 115174
     },
     {
       "quintile": 5,
       "median_income_eur": 36310.0,
-      "median_change_pct": 12.2,
-      "median_change_pct_residential": 13.8,
+      "median_change_pct": 12.3,
+      "median_change_pct_residential": 13.9,
       "parcels": 113531
     }
   ],
@@ -159,35 +159,35 @@
       "quintile": 1,
       "median_income_eur": 20000.0,
       "median_change_pct": 1.1,
-      "median_change_pct_residential": 3.2,
+      "median_change_pct_residential": 3.3,
       "parcels": 114444
     },
     {
       "quintile": 2,
       "median_income_eur": 22760.0,
-      "median_change_pct": 3.5,
-      "median_change_pct_residential": 5.6,
+      "median_change_pct": 3.4,
+      "median_change_pct_residential": 5.7,
       "parcels": 100799
     },
     {
       "quintile": 3,
       "median_income_eur": 25910.0,
-      "median_change_pct": 7.2,
-      "median_change_pct_residential": 8.4,
+      "median_change_pct": 7.1,
+      "median_change_pct_residential": 8.5,
       "parcels": 96058
     },
     {
       "quintile": 4,
       "median_income_eur": 26600.0,
-      "median_change_pct": 8.4,
-      "median_change_pct_residential": 9.9,
+      "median_change_pct": 8.7,
+      "median_change_pct_residential": 10.1,
       "parcels": 97086
     },
     {
       "quintile": 5,
       "median_income_eur": 30190.0,
       "median_change_pct": 10.6,
-      "median_change_pct_residential": 11.6,
+      "median_change_pct_residential": 11.9,
       "parcels": 73752
     }
   ],
@@ -212,26 +212,26 @@
     {
       "bucket": "r10_25",
       "label": "Sous-bâti (10–25 %)",
-      "parcels": 162315,
-      "value_eur": 924236402505.1975,
-      "value_pct_of_base": 45.0,
-      "share_of_gross_change_pct": 25.1
+      "parcels": 160105,
+      "value_eur": 919291230705.5571,
+      "value_pct_of_base": 44.8,
+      "share_of_gross_change_pct": 24.7
     },
     {
       "bucket": "r25_50",
       "label": "Sous-bâti (25–50 %)",
-      "parcels": 329700,
-      "value_eur": 1050785857220.5703,
-      "value_pct_of_base": 51.2,
-      "share_of_gross_change_pct": 49.3
+      "parcels": 331829,
+      "value_eur": 1054892576469.0339,
+      "value_pct_of_base": 51.4,
+      "share_of_gross_change_pct": 49.6
     },
     {
       "bucket": "ge50",
       "label": "Bâti (≥50 %)",
-      "parcels": 3736,
-      "value_eur": 19705144379.912117,
+      "parcels": 3817,
+      "value_eur": 20543596931.088852,
       "value_pct_of_base": 1.0,
-      "share_of_gross_change_pct": 3.5
+      "share_of_gross_change_pct": 3.7
     }
   ],
   "members": [
@@ -240,20 +240,20 @@
       "name": "Saint-Denis",
       "insee": "93066",
       "parcels_modeled": 13548,
-      "neutral_levy_eur": 131514486.0,
+      "neutral_levy_eur": 131514485.99999999,
       "land_share_pct": 69.1,
-      "gross_pct_of_levy": 19.0,
-      "share_paying_more_pct": 45.8
+      "gross_pct_of_levy": 19.1,
+      "share_paying_more_pct": 44.7
     },
     {
       "commune_key": "montreuil",
       "name": "Montreuil",
       "insee": "93048",
       "parcels_modeled": 14218,
-      "neutral_levy_eur": 101780896.99999999,
-      "land_share_pct": 75.9,
-      "gross_pct_of_levy": 19.0,
-      "share_paying_more_pct": 61.5
+      "neutral_levy_eur": 101780897.0,
+      "land_share_pct": 75.8,
+      "gross_pct_of_levy": 19.1,
+      "share_paying_more_pct": 62.7
     },
     {
       "commune_key": "courbevoie",
@@ -270,7 +270,7 @@
       "name": "Nanterre",
       "insee": "92050",
       "parcels_modeled": 10616,
-      "neutral_levy_eur": 78761344.0,
+      "neutral_levy_eur": 78761343.99999999,
       "land_share_pct": 73.3,
       "gross_pct_of_levy": 14.7,
       "share_paying_more_pct": 66.8
@@ -280,10 +280,10 @@
       "name": "Créteil",
       "insee": "94028",
       "parcels_modeled": 6907,
-      "neutral_levy_eur": 77108288.0,
-      "land_share_pct": 68.6,
+      "neutral_levy_eur": 77108288.00000001,
+      "land_share_pct": 68.4,
       "gross_pct_of_levy": 22.8,
-      "share_paying_more_pct": 79.0
+      "share_paying_more_pct": 78.8
     },
     {
       "commune_key": "ivry-sur-seine",
@@ -291,8 +291,8 @@
       "insee": "94041",
       "parcels_modeled": 4095,
       "neutral_levy_eur": 71900663.0,
-      "land_share_pct": 71.7,
-      "gross_pct_of_levy": 11.4,
+      "land_share_pct": 71.6,
+      "gross_pct_of_levy": 11.5,
       "share_paying_more_pct": 65.8
     },
     {
@@ -331,8 +331,8 @@
       "insee": "93001",
       "parcels_modeled": 5113,
       "neutral_levy_eur": 65678888.00000001,
-      "land_share_pct": 69.1,
-      "gross_pct_of_levy": 13.6,
+      "land_share_pct": 68.9,
+      "gross_pct_of_levy": 13.7,
       "share_paying_more_pct": 66.5
     },
     {
@@ -350,7 +350,7 @@
       "name": "Pantin",
       "insee": "93055",
       "parcels_modeled": 2922,
-      "neutral_levy_eur": 60930640.0,
+      "neutral_levy_eur": 60930640.00000001,
       "land_share_pct": 76.3,
       "gross_pct_of_levy": 16.4,
       "share_paying_more_pct": 56.5
@@ -391,8 +391,8 @@
       "insee": "92063",
       "parcels_modeled": 12476,
       "neutral_levy_eur": 59600666.00000001,
-      "land_share_pct": 77.0,
-      "gross_pct_of_levy": 23.8,
+      "land_share_pct": 76.9,
+      "gross_pct_of_levy": 23.9,
       "share_paying_more_pct": 77.9
     },
     {
@@ -400,10 +400,10 @@
       "name": "Vitry-sur-Seine",
       "insee": "94081",
       "parcels_modeled": 12806,
-      "neutral_levy_eur": 59541927.99999999,
-      "land_share_pct": 69.5,
-      "gross_pct_of_levy": 17.4,
-      "share_paying_more_pct": 78.0
+      "neutral_levy_eur": 59541928.0,
+      "land_share_pct": 68.5,
+      "gross_pct_of_levy": 18.0,
+      "share_paying_more_pct": 78.1
     },
     {
       "commune_key": "clichy",
@@ -430,8 +430,8 @@
       "name": "Fontenay-sous-Bois",
       "insee": "94033",
       "parcels_modeled": 10139,
-      "neutral_levy_eur": 54858206.0,
-      "land_share_pct": 76.1,
+      "neutral_levy_eur": 54858205.99999999,
+      "land_share_pct": 76.3,
       "gross_pct_of_levy": 20.9,
       "share_paying_more_pct": 73.7
     },
@@ -441,9 +441,9 @@
       "insee": "93051",
       "parcels_modeled": 11025,
       "neutral_levy_eur": 50850413.0,
-      "land_share_pct": 65.9,
+      "land_share_pct": 65.8,
       "gross_pct_of_levy": 24.4,
-      "share_paying_more_pct": 80.5
+      "share_paying_more_pct": 79.8
     },
     {
       "commune_key": "colombes",
@@ -451,8 +451,8 @@
       "insee": "92025",
       "parcels_modeled": 13743,
       "neutral_levy_eur": 48996924.0,
-      "land_share_pct": 74.3,
-      "gross_pct_of_levy": 25.1,
+      "land_share_pct": 74.1,
+      "gross_pct_of_levy": 25.2,
       "share_paying_more_pct": 74.2
     },
     {
@@ -460,20 +460,20 @@
       "name": "Antony",
       "insee": "92002",
       "parcels_modeled": 12930,
-      "neutral_levy_eur": 47997327.00000001,
-      "land_share_pct": 74.6,
-      "gross_pct_of_levy": 23.4,
-      "share_paying_more_pct": 53.3
+      "neutral_levy_eur": 47997327.0,
+      "land_share_pct": 74.5,
+      "gross_pct_of_levy": 23.5,
+      "share_paying_more_pct": 53.2
     },
     {
       "commune_key": "gennevilliers",
       "name": "Gennevilliers",
       "insee": "92036",
       "parcels_modeled": 5454,
-      "neutral_levy_eur": 47229689.0,
-      "land_share_pct": 70.9,
+      "neutral_levy_eur": 47229688.99999999,
+      "land_share_pct": 70.8,
       "gross_pct_of_levy": 11.5,
-      "share_paying_more_pct": 66.9
+      "share_paying_more_pct": 67.4
     },
     {
       "commune_key": "aulnay-sous-bois",
@@ -490,10 +490,10 @@
       "name": "Bobigny",
       "insee": "93008",
       "parcels_modeled": 5830,
-      "neutral_levy_eur": 44394880.0,
-      "land_share_pct": 64.1,
+      "neutral_levy_eur": 44394879.99999999,
+      "land_share_pct": 63.9,
       "gross_pct_of_levy": 18.6,
-      "share_paying_more_pct": 50.9
+      "share_paying_more_pct": 52.8
     },
     {
       "commune_key": "villejuif",
@@ -501,8 +501,8 @@
       "insee": "94076",
       "parcels_modeled": 6404,
       "neutral_levy_eur": 42882253.0,
-      "land_share_pct": 71.3,
-      "gross_pct_of_levy": 13.5,
+      "land_share_pct": 71.2,
+      "gross_pct_of_levy": 13.6,
       "share_paying_more_pct": 71.1
     },
     {
@@ -510,10 +510,10 @@
       "name": "Drancy",
       "insee": "93029",
       "parcels_modeled": 13117,
-      "neutral_levy_eur": 42709933.00000001,
-      "land_share_pct": 68.2,
-      "gross_pct_of_levy": 15.9,
-      "share_paying_more_pct": 66.6
+      "neutral_levy_eur": 42709933.0,
+      "land_share_pct": 67.8,
+      "gross_pct_of_levy": 16.0,
+      "share_paying_more_pct": 67.0
     },
     {
       "commune_key": "bagnolet",
@@ -521,19 +521,19 @@
       "insee": "93006",
       "parcels_modeled": 3420,
       "neutral_levy_eur": 41936420.0,
-      "land_share_pct": 73.3,
-      "gross_pct_of_levy": 15.9,
-      "share_paying_more_pct": 81.2
+      "land_share_pct": 73.0,
+      "gross_pct_of_levy": 16.1,
+      "share_paying_more_pct": 81.5
     },
     {
       "commune_key": "champigny-sur-marne",
       "name": "Champigny-sur-Marne",
       "insee": "94017",
       "parcels_modeled": 15492,
-      "neutral_levy_eur": 41547661.0,
-      "land_share_pct": 69.0,
-      "gross_pct_of_levy": 20.9,
-      "share_paying_more_pct": 71.6
+      "neutral_levy_eur": 41547660.99999999,
+      "land_share_pct": 67.7,
+      "gross_pct_of_levy": 21.2,
+      "share_paying_more_pct": 71.3
     },
     {
       "commune_key": "vincennes",
@@ -550,7 +550,7 @@
       "name": "Asnières-sur-Seine",
       "insee": "92004",
       "parcels_modeled": 6329,
-      "neutral_levy_eur": 40796418.99999999,
+      "neutral_levy_eur": 40796419.0,
       "land_share_pct": 76.4,
       "gross_pct_of_levy": 16.6,
       "share_paying_more_pct": 79.9
@@ -571,9 +571,9 @@
       "insee": "93007",
       "parcels_modeled": 9562,
       "neutral_levy_eur": 37718303.0,
-      "land_share_pct": 68.9,
-      "gross_pct_of_levy": 14.3,
-      "share_paying_more_pct": 55.5
+      "land_share_pct": 68.7,
+      "gross_pct_of_levy": 14.4,
+      "share_paying_more_pct": 56.0
     },
     {
       "commune_key": "meudon",
@@ -582,7 +582,7 @@
       "parcels_modeled": 4797,
       "neutral_levy_eur": 36919008.0,
       "land_share_pct": 77.7,
-      "gross_pct_of_levy": 19.7,
+      "gross_pct_of_levy": 19.8,
       "share_paying_more_pct": 72.8
     },
     {
@@ -591,9 +591,9 @@
       "insee": "93064",
       "parcels_modeled": 6477,
       "neutral_levy_eur": 35807190.0,
-      "land_share_pct": 69.4,
-      "gross_pct_of_levy": 22.4,
-      "share_paying_more_pct": 82.4
+      "land_share_pct": 68.3,
+      "gross_pct_of_levy": 22.3,
+      "share_paying_more_pct": 79.4
     },
     {
       "commune_key": "villepinte",
@@ -610,10 +610,10 @@
       "name": "Noisy-le-Sec",
       "insee": "93053",
       "parcels_modeled": 6665,
-      "neutral_levy_eur": 32570204.000000007,
-      "land_share_pct": 67.9,
-      "gross_pct_of_levy": 20.6,
-      "share_paying_more_pct": 73.1
+      "neutral_levy_eur": 32570203.999999996,
+      "land_share_pct": 67.1,
+      "gross_pct_of_levy": 20.8,
+      "share_paying_more_pct": 73.0
     },
     {
       "commune_key": "le-plessis-robinson",
@@ -630,8 +630,8 @@
       "name": "Livry-Gargan",
       "insee": "93046",
       "parcels_modeled": 9466,
-      "neutral_levy_eur": 31873631.0,
-      "land_share_pct": 61.5,
+      "neutral_levy_eur": 31873631.000000004,
+      "land_share_pct": 61.4,
       "gross_pct_of_levy": 17.6,
       "share_paying_more_pct": 76.4
     },
@@ -640,9 +640,9 @@
       "name": "Bagneux",
       "insee": "92007",
       "parcels_modeled": 3977,
-      "neutral_levy_eur": 31607496.0,
-      "land_share_pct": 72.1,
-      "gross_pct_of_levy": 19.3,
+      "neutral_levy_eur": 31607495.999999996,
+      "land_share_pct": 72.0,
+      "gross_pct_of_levy": 19.4,
       "share_paying_more_pct": 75.0
     },
     {
@@ -650,7 +650,7 @@
       "name": "Maisons-Alfort",
       "insee": "94046",
       "parcels_modeled": 5873,
-      "neutral_levy_eur": 31572093.999999993,
+      "neutral_levy_eur": 31572094.000000004,
       "land_share_pct": 73.6,
       "gross_pct_of_levy": 11.1,
       "share_paying_more_pct": 74.2
@@ -660,9 +660,9 @@
       "name": "Alfortville",
       "insee": "94002",
       "parcels_modeled": 4130,
-      "neutral_levy_eur": 31303882.0,
-      "land_share_pct": 71.1,
-      "gross_pct_of_levy": 9.9,
+      "neutral_levy_eur": 31303881.999999993,
+      "land_share_pct": 71.0,
+      "gross_pct_of_levy": 10.0,
       "share_paying_more_pct": 66.6
     },
     {
@@ -670,7 +670,7 @@
       "name": "Clamart",
       "insee": "92023",
       "parcels_modeled": 9963,
-      "neutral_levy_eur": 30750876.999999996,
+      "neutral_levy_eur": 30750877.0,
       "land_share_pct": 76.5,
       "gross_pct_of_levy": 19.0,
       "share_paying_more_pct": 67.1
@@ -680,9 +680,9 @@
       "name": "Épinay-sur-Seine",
       "insee": "93031",
       "parcels_modeled": 5095,
-      "neutral_levy_eur": 30466312.0,
-      "land_share_pct": 65.1,
-      "gross_pct_of_levy": 25.1,
+      "neutral_levy_eur": 30466311.999999996,
+      "land_share_pct": 64.3,
+      "gross_pct_of_levy": 25.4,
       "share_paying_more_pct": 79.4
     },
     {
@@ -700,10 +700,10 @@
       "name": "La Courneuve",
       "insee": "93027",
       "parcels_modeled": 4131,
-      "neutral_levy_eur": 29485764.999999996,
-      "land_share_pct": 66.8,
-      "gross_pct_of_levy": 20.5,
-      "share_paying_more_pct": 73.5
+      "neutral_levy_eur": 29485765.000000007,
+      "land_share_pct": 66.3,
+      "gross_pct_of_levy": 20.6,
+      "share_paying_more_pct": 72.2
     },
     {
       "commune_key": "choisy-le-roi",
@@ -711,9 +711,9 @@
       "insee": "94022",
       "parcels_modeled": 5089,
       "neutral_levy_eur": 28074759.0,
-      "land_share_pct": 67.5,
-      "gross_pct_of_levy": 17.0,
-      "share_paying_more_pct": 72.9
+      "land_share_pct": 67.1,
+      "gross_pct_of_levy": 17.1,
+      "share_paying_more_pct": 73.7
     },
     {
       "commune_key": "bondy",
@@ -721,9 +721,9 @@
       "insee": "93010",
       "parcels_modeled": 7167,
       "neutral_levy_eur": 28067191.0,
-      "land_share_pct": 66.1,
-      "gross_pct_of_levy": 21.2,
-      "share_paying_more_pct": 70.8
+      "land_share_pct": 65.9,
+      "gross_pct_of_levy": 21.1,
+      "share_paying_more_pct": 70.7
     },
     {
       "commune_key": "charenton-le-pont",
@@ -811,27 +811,27 @@
       "insee": "93071",
       "parcels_modeled": 8046,
       "neutral_levy_eur": 23579838.0,
-      "land_share_pct": 64.7,
-      "gross_pct_of_levy": 28.2,
-      "share_paying_more_pct": 79.0
+      "land_share_pct": 64.1,
+      "gross_pct_of_levy": 28.1,
+      "share_paying_more_pct": 78.7
     },
     {
       "commune_key": "chatenay-malabry",
       "name": "Châtenay-Malabry",
       "insee": "92019",
       "parcels_modeled": 3784,
-      "neutral_levy_eur": 23470229.999999996,
-      "land_share_pct": 71.9,
+      "neutral_levy_eur": 23470230.0,
+      "land_share_pct": 71.7,
       "gross_pct_of_levy": 21.3,
-      "share_paying_more_pct": 72.4
+      "share_paying_more_pct": 72.3
     },
     {
       "commune_key": "cachan",
       "name": "Cachan",
       "insee": "94016",
       "parcels_modeled": 3813,
-      "neutral_levy_eur": 23212937.0,
-      "land_share_pct": 71.5,
+      "neutral_levy_eur": 23212937.000000007,
+      "land_share_pct": 71.4,
       "gross_pct_of_levy": 17.5,
       "share_paying_more_pct": 79.9
     },
@@ -850,8 +850,8 @@
       "name": "Thiais",
       "insee": "94073",
       "parcels_modeled": 4288,
-      "neutral_levy_eur": 22679155.999999996,
-      "land_share_pct": 69.1,
+      "neutral_levy_eur": 22679156.000000004,
+      "land_share_pct": 68.8,
       "gross_pct_of_levy": 20.3,
       "share_paying_more_pct": 76.2
     },
@@ -861,19 +861,19 @@
       "insee": "93072",
       "parcels_modeled": 5450,
       "neutral_levy_eur": 21381251.0,
-      "land_share_pct": 68.1,
-      "gross_pct_of_levy": 22.8,
-      "share_paying_more_pct": 73.2
+      "land_share_pct": 67.1,
+      "gross_pct_of_levy": 23.1,
+      "share_paying_more_pct": 72.1
     },
     {
       "commune_key": "gagny",
       "name": "Gagny",
       "insee": "93032",
       "parcels_modeled": 9117,
-      "neutral_levy_eur": 21361606.0,
-      "land_share_pct": 66.8,
-      "gross_pct_of_levy": 17.7,
-      "share_paying_more_pct": 79.8
+      "neutral_levy_eur": 21361605.999999996,
+      "land_share_pct": 66.6,
+      "gross_pct_of_levy": 17.8,
+      "share_paying_more_pct": 81.1
     },
     {
       "commune_key": "arcueil",
@@ -901,9 +901,9 @@
       "insee": "93050",
       "parcels_modeled": 4175,
       "neutral_levy_eur": 20736522.999999996,
-      "land_share_pct": 66.4,
-      "gross_pct_of_levy": 22.4,
-      "share_paying_more_pct": 86.3
+      "land_share_pct": 66.1,
+      "gross_pct_of_levy": 22.5,
+      "share_paying_more_pct": 86.2
     },
     {
       "commune_key": "l-hay-les-roses",
@@ -911,9 +911,9 @@
       "insee": "94038",
       "parcels_modeled": 4664,
       "neutral_levy_eur": 20445985.0,
-      "land_share_pct": 67.8,
+      "land_share_pct": 67.7,
       "gross_pct_of_levy": 22.4,
-      "share_paying_more_pct": 82.8
+      "share_paying_more_pct": 82.5
     },
     {
       "commune_key": "vanves",
@@ -931,9 +931,9 @@
       "insee": "94054",
       "parcels_modeled": 3321,
       "neutral_levy_eur": 19980743.0,
-      "land_share_pct": 68.5,
+      "land_share_pct": 68.2,
       "gross_pct_of_levy": 13.6,
-      "share_paying_more_pct": 81.2
+      "share_paying_more_pct": 82.5
     },
     {
       "commune_key": "sceaux",
@@ -970,9 +970,9 @@
       "name": "Chevilly-Larue",
       "insee": "94021",
       "parcels_modeled": 1984,
-      "neutral_levy_eur": 19270840.0,
-      "land_share_pct": 66.4,
-      "gross_pct_of_levy": 15.1,
+      "neutral_levy_eur": 19270840.000000004,
+      "land_share_pct": 65.9,
+      "gross_pct_of_levy": 15.4,
       "share_paying_more_pct": 77.8
     },
     {
@@ -1001,17 +1001,17 @@
       "insee": "94071",
       "parcels_modeled": 7644,
       "neutral_levy_eur": 17917365.0,
-      "land_share_pct": 69.4,
-      "gross_pct_of_levy": 20.1,
-      "share_paying_more_pct": 67.7
+      "land_share_pct": 68.6,
+      "gross_pct_of_levy": 20.5,
+      "share_paying_more_pct": 70.0
     },
     {
       "commune_key": "villiers-sur-marne",
       "name": "Villiers-sur-Marne",
       "insee": "94079",
       "parcels_modeled": 6340,
-      "neutral_levy_eur": 17879208.999999996,
-      "land_share_pct": 67.1,
+      "neutral_levy_eur": 17879209.0,
+      "land_share_pct": 67.0,
       "gross_pct_of_levy": 17.6,
       "share_paying_more_pct": 74.7
     },
@@ -1021,9 +1021,9 @@
       "insee": "94034",
       "parcels_modeled": 2061,
       "neutral_levy_eur": 17609262.0,
-      "land_share_pct": 65.2,
-      "gross_pct_of_levy": 20.5,
-      "share_paying_more_pct": 80.7
+      "land_share_pct": 64.5,
+      "gross_pct_of_levy": 21.2,
+      "share_paying_more_pct": 80.9
     },
     {
       "commune_key": "villemomble",
@@ -1031,7 +1031,7 @@
       "insee": "93077",
       "parcels_modeled": 6236,
       "neutral_levy_eur": 17358131.000000004,
-      "land_share_pct": 68.3,
+      "land_share_pct": 67.8,
       "gross_pct_of_levy": 16.7,
       "share_paying_more_pct": 66.5
     },
@@ -1041,9 +1041,9 @@
       "insee": "93057",
       "parcels_modeled": 5049,
       "neutral_levy_eur": 16180609.0,
-      "land_share_pct": 67.2,
+      "land_share_pct": 67.1,
       "gross_pct_of_levy": 14.9,
-      "share_paying_more_pct": 70.7
+      "share_paying_more_pct": 72.7
     },
     {
       "commune_key": "joinville-le-pont",
@@ -1060,9 +1060,9 @@
       "name": "Chennevières-sur-Marne",
       "insee": "94019",
       "parcels_modeled": 4430,
-      "neutral_levy_eur": 15966224.0,
-      "land_share_pct": 68.3,
-      "gross_pct_of_levy": 25.6,
+      "neutral_levy_eur": 15966224.000000002,
+      "land_share_pct": 68.0,
+      "gross_pct_of_levy": 25.4,
       "share_paying_more_pct": 87.9
     },
     {
@@ -1070,9 +1070,9 @@
       "name": "Fontenay-aux-Roses",
       "insee": "92032",
       "parcels_modeled": 3050,
-      "neutral_levy_eur": 15705213.0,
-      "land_share_pct": 71.9,
-      "gross_pct_of_levy": 21.8,
+      "neutral_levy_eur": 15705212.999999998,
+      "land_share_pct": 71.2,
+      "gross_pct_of_levy": 22.1,
       "share_paying_more_pct": 76.8
     },
     {
@@ -1080,18 +1080,18 @@
       "name": "Bonneuil-sur-Marne",
       "insee": "94011",
       "parcels_modeled": 2496,
-      "neutral_levy_eur": 15652367.000000002,
-      "land_share_pct": 71.4,
+      "neutral_levy_eur": 15652366.999999998,
+      "land_share_pct": 71.2,
       "gross_pct_of_levy": 27.9,
-      "share_paying_more_pct": 60.3
+      "share_paying_more_pct": 60.2
     },
     {
       "commune_key": "villeneuve-la-garenne",
       "name": "Villeneuve-la-Garenne",
       "insee": "92078",
       "parcels_modeled": 1656,
-      "neutral_levy_eur": 15517453.999999996,
-      "land_share_pct": 66.9,
+      "neutral_levy_eur": 15517454.000000004,
+      "land_share_pct": 66.5,
       "gross_pct_of_levy": 18.4,
       "share_paying_more_pct": 82.4
     },
@@ -1100,9 +1100,9 @@
       "name": "Montfermeil",
       "insee": "93047",
       "parcels_modeled": 8264,
-      "neutral_levy_eur": 14365624.0,
-      "land_share_pct": 67.6,
-      "gross_pct_of_levy": 14.0,
+      "neutral_levy_eur": 14365624.000000004,
+      "land_share_pct": 67.2,
+      "gross_pct_of_levy": 14.1,
       "share_paying_more_pct": 72.0
     },
     {
@@ -1111,7 +1111,7 @@
       "insee": "94015",
       "parcels_modeled": 4743,
       "neutral_levy_eur": 14173991.0,
-      "land_share_pct": 72.9,
+      "land_share_pct": 72.8,
       "gross_pct_of_levy": 25.5,
       "share_paying_more_pct": 79.3
     },
@@ -1120,7 +1120,7 @@
       "name": "Rungis",
       "insee": "94065",
       "parcels_modeled": 1688,
-      "neutral_levy_eur": 14013479.999999996,
+      "neutral_levy_eur": 14013480.0,
       "land_share_pct": 66.3,
       "gross_pct_of_levy": 5.0,
       "share_paying_more_pct": 92.1
@@ -1150,10 +1150,10 @@
       "name": "Neuilly-Plaisance",
       "insee": "93049",
       "parcels_modeled": 5439,
-      "neutral_levy_eur": 13509513.999999998,
-      "land_share_pct": 70.1,
+      "neutral_levy_eur": 13509514.000000002,
+      "land_share_pct": 70.0,
       "gross_pct_of_levy": 15.9,
-      "share_paying_more_pct": 62.4
+      "share_paying_more_pct": 63.2
     },
     {
       "commune_key": "villeneuve-saint-georges",
@@ -1161,19 +1161,19 @@
       "insee": "94078",
       "parcels_modeled": 5730,
       "neutral_levy_eur": 13103080.0,
-      "land_share_pct": 66.8,
-      "gross_pct_of_levy": 14.2,
-      "share_paying_more_pct": 78.0
+      "land_share_pct": 66.2,
+      "gross_pct_of_levy": 14.5,
+      "share_paying_more_pct": 77.9
     },
     {
       "commune_key": "villeneuve-le-roi",
       "name": "Villeneuve-le-Roi",
       "insee": "94077",
       "parcels_modeled": 6133,
-      "neutral_levy_eur": 12701880.0,
-      "land_share_pct": 69.8,
+      "neutral_levy_eur": 12701880.000000002,
+      "land_share_pct": 69.9,
       "gross_pct_of_levy": 14.6,
-      "share_paying_more_pct": 44.3
+      "share_paying_more_pct": 45.4
     },
     {
       "commune_key": "limeil-brevannes",
@@ -1181,9 +1181,9 @@
       "insee": "94044",
       "parcels_modeled": 4654,
       "neutral_levy_eur": 12276206.0,
-      "land_share_pct": 58.7,
+      "land_share_pct": 58.6,
       "gross_pct_of_levy": 13.6,
-      "share_paying_more_pct": 60.8
+      "share_paying_more_pct": 61.0
     },
     {
       "commune_key": "saint-maurice",
@@ -1200,9 +1200,9 @@
       "name": "Le Bourget",
       "insee": "93013",
       "parcels_modeled": 1712,
-      "neutral_levy_eur": 11707241.0,
-      "land_share_pct": 68.6,
-      "gross_pct_of_levy": 11.3,
+      "neutral_levy_eur": 11707241.000000002,
+      "land_share_pct": 68.1,
+      "gross_pct_of_levy": 11.0,
       "share_paying_more_pct": 75.4
     },
     {
@@ -1210,7 +1210,7 @@
       "name": "Chaville",
       "insee": "92022",
       "parcels_modeled": 3141,
-      "neutral_levy_eur": 11681622.999999998,
+      "neutral_levy_eur": 11681623.0,
       "land_share_pct": 76.3,
       "gross_pct_of_levy": 21.9,
       "share_paying_more_pct": 78.5
@@ -1231,7 +1231,7 @@
       "insee": "93062",
       "parcels_modeled": 2931,
       "neutral_levy_eur": 10469345.0,
-      "land_share_pct": 68.7,
+      "land_share_pct": 68.6,
       "gross_pct_of_levy": 12.4,
       "share_paying_more_pct": 78.2
     },
@@ -1240,10 +1240,10 @@
       "name": "Le Plessis-Trévise",
       "insee": "94059",
       "parcels_modeled": 3613,
-      "neutral_levy_eur": 10448157.000000002,
-      "land_share_pct": 63.0,
+      "neutral_levy_eur": 10448157.0,
+      "land_share_pct": 62.9,
       "gross_pct_of_levy": 13.5,
-      "share_paying_more_pct": 71.4
+      "share_paying_more_pct": 71.6
     },
     {
       "commune_key": "boissy-saint-leger",
@@ -1251,19 +1251,19 @@
       "insee": "94004",
       "parcels_modeled": 2917,
       "neutral_levy_eur": 9983752.0,
-      "land_share_pct": 62.5,
+      "land_share_pct": 62.3,
       "gross_pct_of_levy": 22.6,
-      "share_paying_more_pct": 81.9
+      "share_paying_more_pct": 79.7
     },
     {
       "commune_key": "valenton",
       "name": "Valenton",
       "insee": "94074",
       "parcels_modeled": 2870,
-      "neutral_levy_eur": 9064654.0,
-      "land_share_pct": 71.0,
+      "neutral_levy_eur": 9064654.000000002,
+      "land_share_pct": 70.9,
       "gross_pct_of_levy": 22.0,
-      "share_paying_more_pct": 45.7
+      "share_paying_more_pct": 45.5
     },
     {
       "commune_key": "clichy-sous-bois",
@@ -1271,8 +1271,8 @@
       "insee": "93014",
       "parcels_modeled": 2734,
       "neutral_levy_eur": 8731609.0,
-      "land_share_pct": 60.6,
-      "gross_pct_of_levy": 35.7,
+      "land_share_pct": 60.3,
+      "gross_pct_of_levy": 35.9,
       "share_paying_more_pct": 87.5
     },
     {
@@ -1280,10 +1280,10 @@
       "name": "Dugny",
       "insee": "93030",
       "parcels_modeled": 773,
-      "neutral_levy_eur": 8350486.000000001,
-      "land_share_pct": 66.5,
-      "gross_pct_of_levy": 9.0,
-      "share_paying_more_pct": 88.4
+      "neutral_levy_eur": 8350486.000000002,
+      "land_share_pct": 66.2,
+      "gross_pct_of_levy": 9.2,
+      "share_paying_more_pct": 88.5
     },
     {
       "commune_key": "ormesson-sur-marne",
@@ -1291,7 +1291,7 @@
       "insee": "94055",
       "parcels_modeled": 4534,
       "neutral_levy_eur": 8231758.0,
-      "land_share_pct": 70.6,
+      "land_share_pct": 70.5,
       "gross_pct_of_levy": 11.2,
       "share_paying_more_pct": 23.3
     },
@@ -1310,18 +1310,18 @@
       "name": "Villetaneuse",
       "insee": "93079",
       "parcels_modeled": 1855,
-      "neutral_levy_eur": 7522409.999999999,
-      "land_share_pct": 65.7,
-      "gross_pct_of_levy": 14.5,
-      "share_paying_more_pct": 74.2
+      "neutral_levy_eur": 7522410.000000001,
+      "land_share_pct": 64.6,
+      "gross_pct_of_levy": 14.6,
+      "share_paying_more_pct": 83.5
     },
     {
       "commune_key": "villecresnes",
       "name": "Villecresnes",
       "insee": "94075",
       "parcels_modeled": 5923,
-      "neutral_levy_eur": 7192262.000000002,
-      "land_share_pct": 63.2,
+      "neutral_levy_eur": 7192262.000000001,
+      "land_share_pct": 63.3,
       "gross_pct_of_levy": 16.4,
       "share_paying_more_pct": 49.4
     },
@@ -1370,8 +1370,8 @@
       "name": "Vaujours",
       "insee": "93074",
       "parcels_modeled": 2353,
-      "neutral_levy_eur": 3436478.0000000005,
-      "land_share_pct": 58.4,
+      "neutral_levy_eur": 3436477.9999999995,
+      "land_share_pct": 58.3,
       "gross_pct_of_levy": 10.5,
       "share_paying_more_pct": 68.0
     },
@@ -1390,10 +1390,10 @@
       "name": "Marolles-en-Brie",
       "insee": "94048",
       "parcels_modeled": 1828,
-      "neutral_levy_eur": 3267601.0,
-      "land_share_pct": 60.7,
+      "neutral_levy_eur": 3267601.0000000005,
+      "land_share_pct": 60.8,
       "gross_pct_of_levy": 9.7,
-      "share_paying_more_pct": 28.2
+      "share_paying_more_pct": 30.7
     },
     {
       "commune_key": "santeny",
@@ -1410,8 +1410,8 @@
       "name": "Mandres-les-Roses",
       "insee": "94047",
       "parcels_modeled": 2445,
-      "neutral_levy_eur": 2891586.0000000005,
-      "land_share_pct": 69.1,
+      "neutral_levy_eur": 2891586.0,
+      "land_share_pct": 68.9,
       "gross_pct_of_levy": 9.6,
       "share_paying_more_pct": 58.0
     },
@@ -1430,9 +1430,9 @@
       "name": "Coubron",
       "insee": "93015",
       "parcels_modeled": 2571,
-      "neutral_levy_eur": 2639413.0000000005,
-      "land_share_pct": 69.3,
-      "gross_pct_of_levy": 18.2,
+      "neutral_levy_eur": 2639413.0,
+      "land_share_pct": 68.6,
+      "gross_pct_of_levy": 18.3,
       "share_paying_more_pct": 54.8
     },
     {
@@ -1441,8 +1441,8 @@
       "insee": "94056",
       "parcels_modeled": 1597,
       "neutral_levy_eur": 1291669.0,
-      "land_share_pct": 60.1,
-      "gross_pct_of_levy": 12.9,
+      "land_share_pct": 59.9,
+      "gross_pct_of_levy": 12.8,
       "share_paying_more_pct": 67.6
     },
     {
