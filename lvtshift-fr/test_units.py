@@ -223,15 +223,16 @@ def test_market_value_scales_with_floor_area():
 # ------------------------------------------------------------------ #
 
 def test_commune_slate_is_complete():
-    from config import COMMUNES, AG_EUR_M2_BY_DEP
+    from config import COMMUNES, SITE_COMMUNES, AG_EUR_M2_BY_DEP
     expected = {
         "roubaix": ("59512", "59"), "montreuil": ("93048", "93"),
         "villeurbanne": ("69266", "69"), "grenoble": ("38185", "38"),
         "annemasse": ("74012", "74"), "cahors": ("46042", "46"),
         "figeac": ("46102", "46"), "sete": ("34301", "34"),
         "larochelle": ("17300", "17"), "mulhouse": ("68224", "68"),
+        "paris": ("75056", "75"), "lyon": ("69123", "69"),
     }
-    assert set(COMMUNES) == set(expected), "slate must be exactly the 10 pilot communes"
+    assert set(SITE_COMMUNES) == set(expected),         "site slate must be the 10 pilot communes + Paris + Lyon"
     for key, (insee, dep) in expected.items():
         assert COMMUNES[key].insee_code == insee
         assert COMMUNES[key].departement == dep

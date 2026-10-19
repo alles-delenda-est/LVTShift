@@ -470,21 +470,47 @@ export default function MethodologiePage() {
           Limites et réserves honnêtes
         </h3>
         <div className="space-y-7 max-w-3xl">
-          {/* Paris */}
+          {/* Paris & Lyon, and the inner rings */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
-              Paris — absent du panel
+              Paris, Lyon et leurs couronnes — comment ils sont modélisés
             </h4>
+            <p className="font-body text-sm text-encre leading-relaxed mb-3">
+              Paris et Lyon publient leurs données cadastrales, de ventes (DVF),
+              de diagnostics (DPE) et de revenus (IRIS) par arrondissement, mais
+              la taxe foncière est votée et perçue par la commune entière (Paris
+              75056, Lyon 69123 — et, à Lyon, une petite part par la Métropole).
+              Les arrondissements sont donc assemblés en une seule commune et
+              résolus avec un taux unique, comme l&apos;impôt réel : il
+              n&apos;existe pas de produit fiscal par arrondissement.
+            </p>
             <p className="font-body text-sm text-encre leading-relaxed">
-              Paris forme une commune unique dont les données cadastrales et DVF
-              sont disponibles, mais dont la taille rend l&apos;ingestion en
-              données ouvertes infaisable à l&apos;échelle de ce projet pilote.
-              De plus, les arrondissements parisiens n&apos;ont pas de produit
-              de taxe foncière propre — la TFPB est prélevée par la ville et la
-              métropole — ce qui interdit d&apos;isoler une cible de neutralité
-              par arrondissement. Paris est donc absent du panel, non par
-              lacune des données, mais par impossibilité d&apos;ingestion à
-              cette échelle avec les ressources du pilote.
+              Les couronnes — « Paris extra-muros » (les 122 communes des
+              Hauts-de-Seine, de la Seine-Saint-Denis et du Val-de-Marne) et
+              « Lyon extra-muros » (les 57 autres communes de la Métropole de
+              Lyon) — ne sont pas modélisées comme un impôt métropolitain unique.
+              Chaque commune est résolue séparément, à recettes constantes sur son
+              propre produit, puis les résultats sont agrégés ; la bande de
+              sensibilité est elle aussi recalculée commune par commune. Les
+              quintiles de revenu y sont classés à l&apos;échelle de toute la
+              couronne. Montreuil et Villeurbanne figurent à la fois seules et
+              dans leur couronne ; les totaux du panel ne les comptent qu&apos;une
+              fois.
+            </p>
+            <p className="font-body text-sm text-encre leading-relaxed mt-3">
+              <strong>À Paris, la part foncière affichée (84,9&nbsp;%) est
+              fixée par la borne, pas mesurée.</strong> 95,5&nbsp;% des
+              parcelles bâties parisiennes (59,8&nbsp;% à Lyon) atteignent le
+              plafond de 85&nbsp;%. La cause : notre règle de dépréciation
+              ramène un immeuble d&apos;environ 95 ans, pourtant entretenu en
+              continu, à 25&nbsp;% de son coût de reconstruction — environ
+              575&nbsp;€/m², face à un prix de vente médian d&apos;environ
+              10&nbsp;860&nbsp;€/m². Sans cette décote, la part foncière de
+              Paris se situerait plutôt entre 63 et 79&nbsp;%. Comme toutes les
+              parcelles reçoivent alors le même partage terrain/bâti, le
+              résultat parisien se lit surtout comme le passage d&apos;une
+              taxe assise sur la surface à une taxe assise sur la valeur de
+              marché. Une révision de la règle de dépréciation est en cours.
             </p>
           </div>
 
@@ -514,7 +540,7 @@ export default function MethodologiePage() {
             <p className="font-body text-sm text-encre leading-relaxed">
               Les coûts de construction au m² utilisés pour estimer la valeur
               du bâti (de 1&thinsp;600&thinsp;€/m² à Figeac à
-              2&thinsp;150&thinsp;€/m² en Île-de-France) sont des valeurs
+              2&thinsp;300&thinsp;€/m² à Paris) sont des valeurs
               pilotes fondées sur un gradient régional grossier, en attente
               d&apos;un calage sur les indices FFB&nbsp;/&nbsp;BT01. Un écart
               de ±&thinsp;15&nbsp;% sur ce paramètre se propage linéairement

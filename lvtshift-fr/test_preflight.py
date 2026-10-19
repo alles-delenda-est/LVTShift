@@ -60,7 +60,54 @@ def test_diagnose_commune_marks_unmodellable_on_source_fail():
     # Alsace-Moselle -> DVF FAIL in 'source' category -> modellable False
     probe = lambda url, timeout=30: 200
     r = pf.diagnose_commune("mulhouse", _Cfg(insee="68224", name="Mulhouse", dept="68"),
-                            out_dir="/nonexistent", probe=probe)
+                            out_dir="/nonexistent", probe=probe, rei_fetch=None)
     assert r["modellable"] is False
     assert r["verdict"] == pf.FAIL
     assert r["n_fail"] >= 1
+
+
+def test_rei_layers_flags_material_excluded_share():
+    cfg = _Cfg(insee="69029", name="Bron", dept="69")
+    ok = pf.check_rei_layers(cfg, fetch=lambda c: {
+        "2025": {"Commune": 95.0, "GFP": 3.0, "Syndicat": 2.0}})
+    assert ok["severity"] == pf.OK
+    assert ok["detail"]["excluded"] == {"Syndicat": 2}
+    warn = pf.check_rei_layers(cfg, fetch=lambda c: {
+        "2024": {"Commune": 1.0}, "2025": {"Commune": 80.0, "TSE": 20.0}})
+    assert warn["severity"] == pf.WARN and warn["detail"]["year"] == "2025"
+    assert warn["detail"]["excluded_share_pct"] == 20.0
+
+
+def test_rei_layers_missing_is_fail_and_network_is_warn():
+    cfg = _Cfg(insee="75101", name="Paris 1er", dept="75")
+    assert pf.check_rei_layers(cfg, fetch=lambda c: {})["severity"] == pf.FAIL
+
+    def boom(c):
+        raise OSError("offline")
+    assert pf.check_rei_layers(cfg, fetch=boom)["severity"] == pf.WARN
+
+
+def test_dvf_year_requires_every_arrondissement():
+    cfg = _Cfg(dept="75", years=(2024, 2025))
+    cfg.sub_codes = ("75101", "75102")
+    cfg.data_codes = ("75101", "75102")
+    # 2025 missing for one arrondissement only -> that year does not count
+    probe = lambda url, timeout=30: 404 if ("2025" in url and "75102" in url) else 206
+    r = pf.check_dvf(cfg, probe=probe)
+    assert r["severity"] == pf.WARN and r["detail"]["years"] == [2024]
+
+
+def test_land_share_clip_warns_when_split_is_set_by_the_bound(tmp_path):
+    import pandas as pd
+    n = 10
+    pinned = pd.DataFrame({
+        "current_tax": [100.0] * n, "new_tax": [100.0] * n,
+        "taxable_land_value": [85.0] * 8 + [50.0, 0.0],
+        "taxable_improvement_value": [15.0] * 8 + [50.0, 0.0],
+        "median_income": [None] * n,
+    })
+    pinned.to_csv(tmp_path / "test.csv", index=False)
+    checks = {c["check"]: c for c in pf.analyze_run(_Cfg(name="Test"), out_dir=str(tmp_path))}
+    clip = checks["land_share_clip"]
+    assert clip["severity"] == pf.WARN
+    assert clip["detail"]["at_cap_pct"] == round(100 * 8 / 9, 1)  # vacant row excluded

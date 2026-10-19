@@ -24,7 +24,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import export_web as ew
-from config import DATA_SOURCES as SRC
+from config import DATA_SOURCES as SRC, data_codes_of, slug_of
 
 OK, WARN, FAIL = "OK", "WARN", "FAIL"
 
@@ -37,6 +37,9 @@ ALSACE_MOSELLE = {"57", "67", "68"}
 LAND_SHARE_BAND = (40.0, 65.0)
 # Minimum distinct IRIS incomes for a genuine 5-bin income-quintile chart.
 MIN_DISTINCT_INCOMES = 5
+# Share of built parcels pinned at a land-share bound above which the split is
+# considered set by the clip rather than measured.
+CLIP_WARN_PCT = 50.0
 
 
 def _chk(name, category, severity, message, adaptation=None, detail=None) -> dict:
@@ -79,9 +82,12 @@ def check_dvf(cfg, probe=_probe) -> dict:
             detail={"dept": cfg.departement, "years_available": 0,
                     "structural": "alsace_moselle_dvf_exclusion"})
     years = list(cfg.dvf_years)
+    codes = data_codes_of(cfg)
+    # a year counts only if EVERY data code (arrondissement) has its file —
+    # a Paris year missing one arrondissement would bias that arrondissement
     avail = [y for y in years
-             if _available(probe(SRC["dvf"].format(
-                 year=y, dep=cfg.departement, insee=cfg.insee_code)))]
+             if all(_available(probe(SRC["dvf"].format(
+                 year=y, dep=cfg.departement, insee=c))) for c in codes)]
     n = len(avail)
     if n == 0:
         return _chk(
@@ -105,7 +111,20 @@ def check_dvf(cfg, probe=_probe) -> dict:
 def check_cadastre(cfg, probe=_probe) -> list:
     """Cadastre parcelles (required) + batiments (validation only)."""
     out = []
-    p = probe(SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=cfg.insee_code))
+    codes = data_codes_of(cfg)
+    statuses = {c: probe(SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=c))
+                for c in codes}
+    bad = {c: st for c, st in statuses.items() if not _available(st)}
+    p = next(iter(bad.values())) if bad else 200
+    if bad and len(bad) < len(codes):
+        out.append(_chk(
+            "cadastre_parcelles", "source", FAIL,
+            f"Parcellaire manquant pour {len(bad)}/{len(codes)} arrondissements "
+            f"({', '.join(sorted(bad))}).",
+            adaptation="Un arrondissement sans parcelles fausserait la répartition "
+                       "du produit communal : ne pas modéliser en l'état.",
+            detail={"missing_codes": sorted(bad)}))
+        return out
     if _available(p):
         out.append(_chk("cadastre_parcelles", "source", OK, "Parcellaire cadastral disponible."))
     else:
@@ -114,9 +133,11 @@ def check_cadastre(cfg, probe=_probe) -> list:
             f"Parcellaire cadastral introuvable (HTTP {p}).",
             adaptation="Sans parcellaire, aucune modélisation possible.",
             detail={"http": p}))
-    b_url = SRC["cadastre_parcelles"].format(
-        dep=cfg.departement, insee=cfg.insee_code).replace("parcelles", "batiments")
-    b = probe(b_url)
+    b_status = {c: probe(SRC["cadastre_parcelles"].format(
+                    dep=cfg.departement, insee=c).replace("parcelles", "batiments"))
+                for c in codes}
+    b_bad = [st for st in b_status.values() if not _available(st)]
+    b = b_bad[0] if b_bad else 200
     if _available(b):
         out.append(_chk("cadastre_batiments", "source", OK,
                         "Bâti cadastral (DGFiP) disponible pour le contrôle croisé."))
@@ -129,9 +150,72 @@ def check_cadastre(cfg, probe=_probe) -> list:
     return out
 
 
+# Share of the commune's total FB "montant réel" that the modelled layers may
+# leave out (syndicats, TSE, GEMAPI…) before we flag it. Above this, the
+# revenue-neutral envelope materially understates the real foncier-bâti bill.
+REI_EXCLUDED_WARN = 0.05
+
+
+def _rei_fb_by_layer(cfg) -> dict:
+    """{year: {destinataire: montant réel}} for FB, from OFGL REI (live)."""
+    import urllib.parse
+    from ingest import _get
+    where = (f'idcom="{cfg.insee_code}" and dispositif_fiscal="FB" '
+             f'and varlib like "MONTANT"')
+    q = urllib.parse.urlencode({"where": where, "limit": 100,
+                                "select": "annee,destinataire,varlib,valeur"})
+    rows = json.loads(_get(f"{SRC['ofgl_rei']}?{q}")).get("results", [])
+    out = {}
+    for r in rows:
+        if r.get("valeur") is None or "MONTANT R" not in (r.get("varlib") or "").upper():
+            continue
+        out.setdefault(r["annee"], {})
+        out[r["annee"]][r["destinataire"]] = (
+            out[r["annee"]].get(r["destinataire"], 0.0) + float(r["valeur"]))
+    return out
+
+
+def check_rei_layers(cfg, layers=("Commune", "GFP"), fetch=_rei_fb_by_layer) -> dict:
+    """Which FB beneficiary layers exist, and how much the modelled ones omit.
+
+    Answers 'are we holding the whole foncier-bâti bill neutral?' with data
+    rather than assumption (e.g. whether EPTs in the petite couronne levy FB).
+    """
+    try:
+        by_year = fetch(cfg)
+    except Exception as exc:   # network etc.: unknown, not a failure of the commune
+        return _chk("rei_layers", "source", WARN,
+                    f"REI non interrogeable ({type(exc).__name__}).",
+                    detail={"error": type(exc).__name__})   # no local paths in public JSON
+    if not by_year:
+        return _chk("rei_layers", "source", FAIL,
+                    f"Aucun produit FB 'montant réel' au REI pour {cfg.insee_code}.",
+                    adaptation="Sans produit fiscal, pas de cible de neutralité : "
+                               "vérifier le code INSEE fiscal (arrondissements : "
+                               "utiliser le code de la commune).")
+    year = max(by_year)
+    lay = by_year[year]
+    total = sum(lay.values())
+    kept = sum(v for k, v in lay.items() if k in layers)
+    excluded = {k: round(v) for k, v in lay.items() if k not in layers}
+    share = (total - kept) / total if total else 0.0
+    sev = OK if kept and share <= REI_EXCLUDED_WARN else WARN
+    return _chk(
+        "rei_layers", "source", sev,
+        (f"REI FB {year} : couches {sorted(lay)} ; modélisé "
+         f"{'+'.join(layers)} = {kept:,.0f} € ; hors périmètre "
+         f"{share * 100:.1f} % du produit FB total."),
+        adaptation=(None if sev == OK else
+                    "Part non modélisée significative : choix de périmètre à "
+                    "documenter (syndicats/TSE/GEMAPI) ou à élargir."),
+        detail={"year": year, "layers": {k: round(v) for k, v in lay.items()},
+                "modelled_eur": round(kept), "excluded": excluded,
+                "excluded_share_pct": round(share * 100, 2)})
+
+
 def analyze_run(cfg, out_dir: str = "output") -> list:
     """Post-run validations read from the standard export, if it exists."""
-    slug = cfg.name.lower().replace(" ", "")
+    slug = slug_of(cfg)
     path = Path(out_dir) / f"{slug}.csv"
     if not path.exists():
         return [_chk("model_ran", "run", WARN,
@@ -183,12 +267,41 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
                     "Hors bande : cœur très dense ou imputation à confronter au "
                     "méthodo — signalé, jamais une cible à atteindre."),
         detail={"land_share_pct": round(ls, 1) if ls is not None else None}))
+
+    # Is the land/building split measured, or set by the clip? When most built
+    # parcels sit at the upper land-share bound, every parcel has the same
+    # split, so the land tax collapses into a tax proportional to market value:
+    # the result then measures a revaluation, not land-vs-building (Paris).
+    lo_b, hi_b = getattr(cfg, "land_share_bounds", (0.15, 0.85))
+    imp = df["taxable_improvement_value"]
+    tot = df["taxable_land_value"] + imp
+    built = imp > 0
+    share_b = (df.loc[built, "taxable_land_value"] / tot[built])
+    at_cap = float((share_b >= hi_b - 1e-3).mean() * 100) if built.any() else 0.0
+    at_floor = float((share_b <= lo_b + 1e-3).mean() * 100) if built.any() else 0.0
+    bound = max(at_cap, at_floor)
+    checks.append(_chk(
+        "land_share_clip", "validation", OK if bound <= CLIP_WARN_PCT else WARN,
+        (f"Parcelles bâties à la borne de part foncière : {at_cap:.1f} % au plafond "
+         f"({hi_b:.0%}), {at_floor:.1f} % au plancher ({lo_b:.0%})."),
+        adaptation=(None if bound <= CLIP_WARN_PCT else
+                    "La répartition terrain/bâti est fixée par la borne, pas "
+                    "mesurée : l'impôt foncier y devient proportionnel à la valeur "
+                    "vénale (effet de revalorisation). Résultats à présenter comme "
+                    "tels ; lever la borne ou caler coûts/dépréciation."),
+        detail={"at_cap_pct": round(at_cap, 1), "at_floor_pct": round(at_floor, 1)}))
     return checks
 
 
-def diagnose_commune(commune_key: str, cfg, out_dir: str = "output", probe=_probe) -> dict:
-    """Full diagnostic for one commune: source probes + post-run validations."""
-    checks = [check_dvf(cfg, probe)] + check_cadastre(cfg, probe) + analyze_run(cfg, out_dir)
+def diagnose_commune(commune_key: str, cfg, out_dir: str = "output", probe=_probe,
+                     rei_fetch=_rei_fb_by_layer) -> dict:
+    """Full diagnostic for one commune: source probes + post-run validations.
+
+    rei_fetch=None skips the live REI layer check (offline / --no-probe)."""
+    checks = [check_dvf(cfg, probe)] + check_cadastre(cfg, probe)
+    if rei_fetch is not None:
+        checks.append(check_rei_layers(cfg, fetch=rei_fetch))
+    checks += analyze_run(cfg, out_dir)
     n_fail = sum(c["severity"] == FAIL for c in checks)
     n_warn = sum(c["severity"] == WARN for c in checks)
     source_fail = any(c["severity"] == FAIL and c["category"] == "source" for c in checks)
@@ -240,22 +353,41 @@ def _register_markdown(reports: list) -> str:
     return "\n".join(lines)
 
 
-def diagnose_all(out_dir: str = "output", probe=_probe,
+def diagnose_all(out_dir: str = "output", probe=_probe, rei_fetch=_rei_fb_by_layer,
                  md_path: str = "docs/INGESTION_REGISTER.md",
-                 json_path: str = "site/public/data/ingestion_register.json") -> dict:
+                 json_path: str = "site/public/data/ingestion_register.json",
+                 workers: int = 8) -> dict:
     """Diagnose every configured commune and write the register (MD + JSON)."""
-    from config import COMMUNES
-    reports = [diagnose_commune(k, cfg, out_dir, probe) for k, cfg in COMMUNES.items()]
+    from config import COMMUNES, SITE_COMMUNES, TERRITORIES
+    from concurrent.futures import ThreadPoolExecutor
+
+    def run(keys):
+        # probes are I/O-bound HEAD-style requests: a small thread pool keeps
+        # the ~190-commune register to minutes without hammering the servers
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            return list(ex.map(
+                lambda k: diagnose_commune(k, COMMUNES[k], out_dir, probe, rei_fetch), keys))
+
+    reports = run(list(SITE_COMMUNES))
+    members = {t: run([k for k in spec["members"] if k not in SITE_COMMUNES])
+               for t, spec in TERRITORIES.items()}
+    md = _register_markdown(reports)
+    for t, reps in members.items():
+        md += "\n\n" + _register_markdown(reps).replace(
+            "# Registre d'ingestion & validations par commune",
+            f"# Territoire {TERRITORIES[t]['name']} — communes membres", 1)
     Path(md_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(md_path).write_text(_register_markdown(reports), encoding="utf-8")
+    Path(md_path).write_text(md, encoding="utf-8")
     Path(json_path).parent.mkdir(parents=True, exist_ok=True)
     Path(json_path).write_text(
-        json.dumps({"communes": reports}, ensure_ascii=False, indent=2) + "\n",
+        json.dumps({"communes": reports, "territory_members": members},
+                   ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8")
+    everything = reports + [r for reps in members.values() for r in reps]
     return {
-        "communes": len(reports),
-        "not_modellable": [r["commune_key"] for r in reports if not r["modellable"]],
-        "with_warnings": [r["commune_key"] for r in reports if r["n_warn"]],
+        "communes": len(everything),
+        "not_modellable": [r["commune_key"] for r in everything if not r["modellable"]],
+        "with_warnings": [r["commune_key"] for r in everything if r["n_warn"]],
     }
 
 
@@ -268,9 +400,11 @@ if __name__ == "__main__":
                     help="skip live source probes (static rules + post-run checks only)")
     a = ap.parse_args()
     probe_fn = (lambda url, timeout=30: None) if a.no_probe else _probe
+    rei_fn = None if a.no_probe else _rei_fb_by_layer
     if a.commune:
         from config import COMMUNES
-        print(json.dumps(diagnose_commune(a.commune, COMMUNES[a.commune], a.out_dir, probe_fn),
+        print(json.dumps(diagnose_commune(a.commune, COMMUNES[a.commune], a.out_dir,
+                                          probe_fn, rei_fn),
                          ensure_ascii=False, indent=2))
     else:
-        print(diagnose_all(a.out_dir, probe_fn))
+        print(diagnose_all(a.out_dir, probe_fn, rei_fn))

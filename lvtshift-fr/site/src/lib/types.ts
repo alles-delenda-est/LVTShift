@@ -1,6 +1,8 @@
 export interface Headline {
   parcels_modeled: number; tax_base_eur: number; land_base_eur: number;
   improvement_base_eur: number; land_share_pct: number | null; neutral_levy_eur: number;
+  /** % of built parcels whose land share sits at the 85 % clip (absent in older payloads) */
+  built_at_cap_pct?: number | null;
   gross_shifted_eur: number; net_shifted_eur: number; gross_pct_of_levy: number | null;
   net_pct_of_levy: number | null; gross_bps_of_base: number | null; currency: "EUR";
 }
@@ -22,17 +24,37 @@ export interface BucketRow {
   bucket: string; label: string; parcels: number; value_eur: number;
   value_pct_of_base: number | null; share_of_gross_change_pct: number | null;
 }
+/** One member commune of a territory (per-commune aggregates, never per-parcel). */
+export interface MemberRow {
+  commune_key: string; name: string; insee: string; parcels_modeled: number;
+  neutral_levy_eur: number; land_share_pct: number | null;
+  gross_pct_of_levy: number | null; share_paying_more_pct: number | null;
+}
+export interface Coverage {
+  members_total: number; members_modeled: number; members_missing: string[];
+}
+/** A commune, or a territory (inner ring) aggregating per-commune runs: a
+ *  territory has kind "territory", insee null, and carries members + coverage. */
 export interface Commune {
-  commune_key: string; insee: string; name: string; departement: string;
+  commune_key: string; kind?: "commune" | "territory"; insee: string | null;
+  name: string; departement: string;
   reference_year: number | null; model_type: string; headline: Headline;
   headline_sensitivity: Sensitivity; by_category: CategoryRow[];
   by_income_quintile: QuintileRow[] | null; by_improvement_ratio: BucketRow[];
-  provenance: { construction_cost_eur_m2: number; land_share_bounds: number[]; note: string };
+  provenance: { construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string };
+  members?: MemberRow[]; coverage?: Coverage;
+  /** Territory only: quintiles ranked inside each member commune, then pooled. */
+  by_income_quintile_within?: QuintileRow[] | null;
+  by_income_quintile_within_coverage_pct?: number;
   currency: "EUR";
 }
 export interface IndexCommune {
-  commune_key: string; name: string; insee: string; departement: string;
+  commune_key: string; kind?: "commune" | "territory"; name: string;
+  insee: string | null; departement: string;
   parcels_modeled: number; land_share_pct: number | null; gross_pct_of_levy: number | null;
+  /** Communes / parcels this entry adds to the panel totals without double
+   *  counting communes also published on their own (e.g. Montreuil). */
+  n_communes_unique?: number; parcels_unique?: number;
 }
 export interface ValidationCheck {
   benchmark: string; independence: string; status: string; note: string;

@@ -31,6 +31,25 @@ class CommuneConfig:
     land_share_bounds: tuple = (0.15, 0.85)
     # Split-rate ratio for the headline scenario (LVTShift convention)
     split_rate_ratio: float = 4.0
+    # Paris / Lyon / Marseille: the commune levies the taxe foncière under its
+    # own INSEE code (75056, 69123 — the code REI is keyed on), but cadastre,
+    # DVF, DPE and IRIS are published per *arrondissement* (75101…75120,
+    # 69381…69389). `sub_codes` lists those data codes; empty = ordinary
+    # commune whose data and levy share one code.
+    sub_codes: tuple = ()
+    # Output-file/registry key override (ASCII); default derives from name.
+    key: str = ""
+
+    @property
+    def data_codes(self) -> tuple:
+        """INSEE codes under which parcel-level open data are published."""
+        return tuple(self.sub_codes) or (self.insee_code,)
+
+    @property
+    def slug(self) -> str:
+        """Output-file stem (output/<slug>.csv). Legacy panel communes keep
+        their historical name-derived stem; new configs use the ASCII key."""
+        return self.key or self.name.lower().replace(" ", "")
 
 
 # ------------------------------------------------------------------ #
@@ -136,12 +155,87 @@ LA_ROCHELLE = CommuneConfig(        # Atlantique — prosperous tourist port
 MULHOUSE = CommuneConfig(           # Est/Rhin — Alsatian post-industrial, vacant
     "68224", "Mulhouse", "68", construction_cost_eur_m2=1800.0)
 
+# Intra-muros Paris and Lyon: one fiscal commune (REI code) whose parcel data
+# live under the arrondissement codes. Construction costs: see the PARIS_LYON
+# note below — pilot values pending the FFB/BT01 calibration work item.
+PARIS = CommuneConfig(
+    "75056", "Paris", "75", construction_cost_eur_m2=2300.0,
+    sub_codes=tuple(f"751{n:02d}" for n in range(1, 21)), key="paris")
+LYON = CommuneConfig(
+    "69123", "Lyon", "69", construction_cost_eur_m2=1950.0,
+    sub_codes=tuple(f"6938{n}" for n in range(1, 10)), key="lyon")
+
 # Registry for the CLI / run_commune driver (--commune <key>)
 COMMUNES = {
     "grenoble": GRENOBLE, "annemasse": ANNEMASSE,
     "villeurbanne": VILLEURBANNE, "roubaix": ROUBAIX, "cahors": CAHORS,
     "montreuil": MONTREUIL, "figeac": FIGEAC,
     "sete": SETE, "larochelle": LA_ROCHELLE, "mulhouse": MULHOUSE,
+    "paris": PARIS, "lyon": LYON,
+}
+
+
+# ------------------------------------------------------------------ #
+# Extra-muros territories (inner rings), modelled commune by commune
+# ------------------------------------------------------------------ #
+# Each member commune is run on its OWN levy and held revenue-neutral on its
+# own (communes set their own TFPB rate — the legally realistic case); the
+# territory figures are then aggregates of those per-commune runs, never a
+# pooled metropolitan rate. Membership is frozen in territories.py.
+from territories import LYON_EXTRA_MUROS, PARIS_EXTRA_MUROS  # noqa: E402
+
+# Communes published individually on the site (the panel + Paris + Lyon).
+# Territory members are published only inside their territory aggregate —
+# 177 extra picker entries would swamp the explorer and its bundle.
+SITE_COMMUNES = tuple(COMMUNES)
+
+# Pilot construction cost by territory (same gradient as the existing panel:
+# Île-de-France inner ring = Montreuil's 2150, Lyon ring = Villeurbanne's 1950).
+TERRITORY_COST_EUR_M2 = {"paris-extra-muros": 2150.0, "lyon-extra-muros": 1950.0}
+
+
+def commune_key(name: str) -> str:
+    """ASCII registry/site key for a commune name: 'L'Haÿ-les-Roses' -> 'l-hay-les-roses'."""
+    import re
+    import unicodedata
+    s = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+
+
+def _territory_members(rows, territory: str) -> list:
+    """Member keys for a territory, registering a config for each commune.
+
+    Reuses an existing panel config when the INSEE code is already configured
+    (Montreuil, Villeurbanne), so a commune is never modelled twice with
+    different parameters.
+    """
+    by_insee = {c.insee_code: k for k, c in COMMUNES.items()}
+    keys = []
+    for insee, name, dep in rows:
+        if insee in by_insee:
+            keys.append(by_insee[insee])
+            continue
+        key = commune_key(name)
+        if key in COMMUNES:
+            raise ValueError(f"commune key collision: {key} ({insee})")
+        COMMUNES[key] = CommuneConfig(
+            insee, name, dep, key=key,
+            construction_cost_eur_m2=TERRITORY_COST_EUR_M2[territory])
+        keys.append(key)
+    return keys
+
+
+TERRITORIES = {
+    "paris-extra-muros": {
+        "name": "Paris extra-muros (petite couronne)",
+        "departement": "92/93/94",
+        "members": _territory_members(PARIS_EXTRA_MUROS, "paris-extra-muros"),
+    },
+    "lyon-extra-muros": {
+        "name": "Lyon extra-muros (Métropole hors Lyon)",
+        "departement": "69",
+        "members": _territory_members(LYON_EXTRA_MUROS, "lyon-extra-muros"),
+    },
 }
 
 
@@ -169,6 +263,11 @@ AG_EUR_M2_BY_DEP = {           # (agricultural A, natural/forest N)
     "34": (0.80, 0.50),        # Hérault — Méditerranée, vignoble/maraîchage
     "17": (0.75, 0.45),        # Charente-Maritime — Atlantique cropland
     "68": (0.95, 0.55),        # Haut-Rhin — rich Alsatian plain
+    # Petite couronne: almost no A/N zoning survives; the few parcels are
+    # parks/allotments. Priced on the Île-de-France cropland anchor (as 93).
+    "75": (1.00, 0.60),
+    "92": (1.00, 0.60),
+    "94": (1.00, 0.60),
 }
 
 # EPTB (SDES) building-plot €/m² fallback when a commune has too few DVF
@@ -205,3 +304,13 @@ CATEGORY_VLC_WEIGHTS_SENSITIVITY = {
     "maison": 1.0, "appartement": 1.0, "immeuble_collectif": 1.0,
     "commerce": 1.8, "industriel": 1.4, "dependance": 0.5, "terrain_nu": 0.0,
 }
+
+
+def slug_of(cfg) -> str:
+    """Output stem for any config-like object (tests pass lightweight fakes)."""
+    return getattr(cfg, "slug", None) or cfg.name.lower().replace(" ", "")
+
+
+def data_codes_of(cfg) -> tuple:
+    """Data INSEE codes for any config-like object (see CommuneConfig.data_codes)."""
+    return getattr(cfg, "data_codes", None) or (cfg.insee_code,)

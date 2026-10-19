@@ -16,6 +16,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import export_web as ew
+from config import slug_of
 
 INSEE_DOSSIER_URL = "https://www.insee.fr/fr/statistiques/2011101?geo=COM-{insee}"
 CADASTRE_BATIMENTS_URL = (
@@ -57,11 +58,11 @@ def building_agreement_rate(parcels_gdf, buildings_gdf) -> dict:
 
 def _read_geojson_gz(url: str):
     """Fetch a gzipped GeoJSON into a GeoDataFrame, or None on any failure."""
-    import io, gzip, urllib.request
+    import io, gzip
     import geopandas as gpd
+    from ingest import _get   # retries transient failures; honours the download cache
     try:
-        with urllib.request.urlopen(url, timeout=60) as resp:
-            raw = gzip.decompress(resp.read())
+        raw = gzip.decompress(_get(url, timeout=120))
         return gpd.read_file(io.BytesIO(raw))
     except Exception as exc:  # network / parse / empty — degrade
         print(f"  [validate] cadastre fetch failed for {url}: {exc}")
@@ -74,9 +75,18 @@ def fetch_cadastre_agreement(cfg, cache_dir="output/validation_cache"):
     Never raises: a fetch, a missing CRS, or a sjoin failure all degrade to None
     (the validation layer must never crash the caller on a bad external source).
     """
-    p = _read_geojson_gz(CADASTRE_PARCELLES_URL.format(dep=cfg.departement, insee=cfg.insee_code))
-    b = _read_geojson_gz(CADASTRE_BATIMENTS_URL.format(dep=cfg.departement, insee=cfg.insee_code))
-    if p is None or b is None or len(p) == 0:
+    from config import data_codes_of
+    ps, bs = [], []
+    for code in data_codes_of(cfg):   # arrondissements for Paris / Lyon
+        p = _read_geojson_gz(CADASTRE_PARCELLES_URL.format(dep=cfg.departement, insee=code))
+        b = _read_geojson_gz(CADASTRE_BATIMENTS_URL.format(dep=cfg.departement, insee=code))
+        if p is None or b is None:
+            return None   # partial coverage would bias the rate: degrade, don't guess
+        ps.append(p)
+        bs.append(b)
+    p = pd.concat(ps, ignore_index=True)
+    b = pd.concat(bs, ignore_index=True)
+    if len(p) == 0:
         return None
     try:
         return building_agreement_rate(p.to_crs(2154), b.to_crs(2154))
@@ -186,10 +196,13 @@ def validate_commune(commune_key, df, cfg, cache_dir="output/validation_cache",
 
 def validate_all(out_dir="output", cache_dir="output/validation_cache",
                  data_dir="site/public/data") -> dict:
-    from config import COMMUNES
+    from config import COMMUNES, SITE_COMMUNES
     done = []
-    for key, cfg in COMMUNES.items():
-        slug = cfg.name.lower().replace(" ", "")
+    # only communes the site publishes individually (territory members are
+    # covered by the register, not by per-commune validation files)
+    for key in SITE_COMMUNES:
+        cfg = COMMUNES[key]
+        slug = slug_of(cfg)
         if not (Path(out_dir) / f"{slug}.csv").exists():
             continue
         df = ew.load_parcels(key, out_dir)

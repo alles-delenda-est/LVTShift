@@ -109,8 +109,11 @@ python run_commune.py montreuil     # commune réelle, données ouvertes en dire
 
 `run_commune.py` enchaîne l'ingest réel (cadastre Etalab, DVF, bâtiments
 BD TOPO via WFS IGN, cible REI via OFGL) puis appelle le solveur LVTShift.
-Communes pré-configurées : `villeurbanne` (cœur lyonnais), `roubaix`,
-`cahors`, `figeac` (Lot rural), `montreuil`, `grenoble`, `annemasse`.
+Communes pré-configurées : `villeurbanne`, `roubaix`, `cahors`, `figeac`
+(Lot rural), `montreuil`, `grenoble`, `annemasse`, `sete`, `larochelle`,
+`paris` et `lyon` (assemblées depuis leurs arrondissements, taux unique), plus
+les 179 communes des couronnes (`run_territory.py paris-extra-muros` /
+`lyon-extra-muros`, chacune à recettes constantes sur son propre produit).
 `--layers Commune` pour ne neutraliser que la part communale ;
 `--no-report` pour un export CSV seul.
 
@@ -147,8 +150,10 @@ export CSV seul : `run(..., make_report=False)`.
   ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
-  distribution **non bornée** des parts terrain à côté des résultats bornés,
-  et signaler que les cœurs denses peuvent légitimement dépasser 85 %.
+  distribution **non bornée** des parts terrain à côté des résultats bornés.
+  À Paris, 95,5 % des parcelles bâties sont à la borne de 85 % : la part
+  foncière affichée (84,9 %) est fixée par la borne, pas mesurée — la cause est
+  la dépréciation du bâti ancien entretenu, pas un foncier supérieur à 85 %.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la

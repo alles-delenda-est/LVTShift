@@ -8,6 +8,7 @@ solver. Never emits per-parcel rows. See docs/superpowers/specs/
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -16,6 +17,9 @@ import pandas as pd
 
 # Upstream `lvt` lives at the repo root (parent of lvtshift-fr/).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Upper land-share clip shared by every commune (config.CommuneConfig default).
+LAND_SHARE_CAP = 0.85
 
 # Standard-category -> French display label (mirrors run_pipeline.CATEGORY_MAP).
 CATEGORY_LABELS_FR = {
@@ -35,7 +39,8 @@ FR_RESIDENTIAL = {
 
 def _slug(cfg) -> str:
     """Output-file slug for a commune (matches run_pipeline's naming)."""
-    return cfg.name.lower().replace(" ", "")
+    from config import slug_of
+    return slug_of(cfg)
 
 
 def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
@@ -57,6 +62,19 @@ def _pct(num: float, den: float, ndigits: int = 1):
     return round(100.0 * num / den, ndigits) if den else None
 
 
+def built_at_cap_pct(df: pd.DataFrame, cap: float = LAND_SHARE_CAP):
+    """% of built parcels whose land share sits at the upper clip. When most
+    parcels are there, the aggregate land share is set by the bound, not
+    measured, and the site must say so."""
+    land = df["taxable_land_value"]
+    imp = df["taxable_improvement_value"]
+    built = imp > 0
+    if not built.any():
+        return None
+    share = land[built] / (land[built] + imp[built])
+    return _pct(int((share >= cap - 0.001).sum()), int(built.sum()))
+
+
 def build_headline(df: pd.DataFrame) -> dict:
     land = float(df["taxable_land_value"].sum())
     imp = float(df["taxable_improvement_value"].sum())
@@ -70,6 +88,7 @@ def build_headline(df: pd.DataFrame) -> dict:
         "land_base_eur": land,
         "improvement_base_eur": imp,
         "land_share_pct": _pct(land, base),
+        "built_at_cap_pct": built_at_cap_pct(df),
         "neutral_levy_eur": levy,
         "gross_shifted_eur": gross,
         "net_shifted_eur": net,
@@ -152,11 +171,10 @@ def build_by_income_quintile(df: pd.DataFrame):
     return out
 
 
-def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
-                           ratio: float, current_revenue: float) -> dict:
-    """Re-solve the split-rate model with the aggregate land share tilted to
-    `target_share`, holding total base and revenue fixed. Uniform per-parcel
-    scaling preserves the relative structure of land vs improvement values."""
+def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
+                   current_revenue: float) -> np.ndarray:
+    """Per-parcel tax change after re-solving with the aggregate land share of
+    `df` tilted to `target_share` (total base and revenue held fixed)."""
     from lvt.lvt_utils import model_split_rate_tax
     land = df["taxable_land_value"].to_numpy(dtype=float)
     imp = df["taxable_improvement_value"].to_numpy(dtype=float)
@@ -174,7 +192,12 @@ def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
     _lm, _im, _rev, solved = model_split_rate_tax(
         df=tmp, land_value_col="_land", improvement_value_col="_imp",
         current_revenue=current_revenue, land_improvement_ratio=ratio)
-    chg = solved["new_tax"].to_numpy(dtype=float) - current
+    return solved["new_tax"].to_numpy(dtype=float) - current
+
+
+def _sensitivity_summary(df: pd.DataFrame, chg: np.ndarray, target_share: float,
+                         current_revenue: float) -> dict:
+    current = df["current_tax"].to_numpy(dtype=float)
     gross = float(np.abs(chg).sum())
     net = float(chg[chg > 0].sum())
     res_mask = df["property_category"].isin(FR_RESIDENTIAL).to_numpy()
@@ -188,6 +211,15 @@ def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
         "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
         "share_paying_more_pct": _pct(int((chg > 0).sum()), len(chg)),
     }
+
+
+def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
+                           ratio: float, current_revenue: float) -> dict:
+    """Re-solve the split-rate model with the aggregate land share tilted to
+    `target_share`, holding total base and revenue fixed. Uniform per-parcel
+    scaling preserves the relative structure of land vs improvement values."""
+    chg = _tilted_change(df, target_share, ratio, current_revenue)
+    return _sensitivity_summary(df, chg, target_share, current_revenue)
 
 
 def build_headline_sensitivity(df: pd.DataFrame, ratio: float, delta_pt: float = 10.0) -> dict:
@@ -210,7 +242,15 @@ ALLOWED_TOP_KEYS = {
     "commune_key", "insee", "name", "departement", "reference_year",
     "model_type", "headline", "headline_sensitivity", "by_category",
     "by_income_quintile", "by_improvement_ratio", "provenance", "currency",
+    "kind", "members", "coverage",
+    "by_income_quintile_within", "by_income_quintile_within_coverage_pct",
 }
+MEMBER_KEYS = {
+    "commune_key", "name", "insee", "parcels_modeled", "neutral_levy_eur",
+    "land_share_pct", "gross_pct_of_levy", "share_paying_more_pct",
+}
+PARCEL_ID_RE = re.compile(r"\b\d[\dAB]\d{3}[0-9]{3}[0-9A-Z]{2}\d{4}\b")
+IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
 FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$")
 
 
@@ -220,11 +260,19 @@ def assert_aggregate_only(payload: dict) -> None:
     assert not extra, f"unexpected top-level keys (possible per-parcel leak): {extra}"
     assert len(payload.get("by_improvement_ratio") or []) <= 5
     assert len(payload.get("by_category") or []) <= 10
-    if payload.get("by_income_quintile") is not None:
-        assert len(payload["by_income_quintile"]) <= 5
+    # territory member rows are per-COMMUNE aggregates (never per-parcel)
+    for m in payload.get("members") or []:
+        assert set(m) <= MEMBER_KEYS, f"unexpected member keys: {set(m) - MEMBER_KEYS}"
+    for k in ("by_income_quintile", "by_income_quintile_within"):
+        if payload.get(k) is not None:
+            assert len(payload[k]) <= 5
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
+    # value-level guard: no cadastral parcel id (14 chars, e.g. 75101000AB0002)
+    # or 9-digit IRIS code may appear anywhere, whatever the key is called
+    assert not PARCEL_ID_RE.search(blob), "a parcel id leaked into payload"
+    assert not IRIS_CODE_RE.search(blob), "an IRIS code leaked into payload"
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
@@ -233,6 +281,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     df = load_parcels(commune_key, out_dir)
     return {
         "commune_key": commune_key,
+        "kind": "commune",
         "insee": cfg.insee_code,
         "name": cfg.name,
         "departement": cfg.departement,
@@ -253,6 +302,173 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     }
 
 
+def load_territory(territory_key: str, out_dir: str = "output"):
+    """Stack the member communes' standard exports for a territory.
+
+    Returns (frame, members_present, members_missing). Each row keeps its
+    commune key in `_commune` so per-commune re-solves stay possible. A member
+    with no output is reported as missing — never imputed.
+    """
+    from config import TERRITORIES
+    frames, present, missing = [], [], []
+    for key in TERRITORIES[territory_key]["members"]:
+        try:
+            df = load_parcels(key, out_dir)
+        except FileNotFoundError:
+            missing.append(key)
+            continue
+        frames.append(df.assign(_commune=key))
+        present.append(key)
+    if not frames:
+        raise FileNotFoundError(f"no member outputs for territory {territory_key}")
+    return pd.concat(frames, ignore_index=True), present, missing
+
+
+def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
+                                delta_pt: float = 10.0) -> dict:
+    """±10 pt band for a territory, honouring per-commune revenue neutrality.
+
+    Each member commune keeps its own levy, so the tilt is applied and re-solved
+    commune by commune (each tilted by ±delta around its own land share), then
+    the per-parcel changes are pooled for the summary. A single pooled solve
+    would silently model a metropolitan tax instead.
+    """
+    d = delta_pt / 100.0
+    legs = {"base": [], "low": [], "high": []}
+    tilted_land = {"base": 0.0, "low": 0.0, "high": 0.0}
+    kept = []
+    for _key, sub in df.groupby("_commune", sort=False):
+        land = float(sub["taxable_land_value"].sum())
+        base = land + float(sub["taxable_improvement_value"].sum())
+        s = land / base if base else 0.0
+        if not 0.0 < s < 1.0:
+            continue          # degenerate member (all-land / all-building): skipped
+        rev = float(sub["current_tax"].sum())
+        for leg, tgt in (("base", s), ("low", min(0.99, max(0.01, s - d))),
+                         ("high", min(0.99, max(0.01, s + d)))):
+            legs[leg].append(_tilted_change(sub, tgt, ratio, rev))
+            tilted_land[leg] += tgt * base
+        kept.append(sub)
+    if not kept:
+        raise ValueError("no member commune has a non-degenerate land share")
+    pooled = pd.concat(kept, ignore_index=True)
+    rev = float(pooled["current_tax"].sum())
+    total_base = float((pooled["taxable_land_value"]
+                        + pooled["taxable_improvement_value"]).sum())
+    # the territory's actual tilted land share (exact even if a member clamps)
+    targets = {leg: v / total_base for leg, v in tilted_land.items()}
+    return {
+        "delta_pt": delta_pt,
+        **{leg: _sensitivity_summary(pooled, np.concatenate(v), targets[leg], rev)
+           for leg, v in legs.items()},
+    }
+
+
+def _member_row(key: str, sub: pd.DataFrame) -> dict:
+    from config import COMMUNES
+    cfg = COMMUNES[key]
+    h = build_headline(sub)
+    return {
+        "commune_key": key, "name": cfg.name, "insee": cfg.insee_code,
+        "parcels_modeled": h["parcels_modeled"],
+        "neutral_levy_eur": h["neutral_levy_eur"],
+        "land_share_pct": h["land_share_pct"],
+        "gross_pct_of_levy": h["gross_pct_of_levy"],
+        "share_paying_more_pct": _pct(int((sub["tax_change"] > 0).sum()), len(sub)),
+    }
+
+
+def build_by_income_quintile_within(df: pd.DataFrame):
+    """Income quintiles ranked WITHIN each member commune, then pooled.
+
+    The ring-wide ranking (build_by_income_quintile) mixes the reform's effect
+    with differences BETWEEN communes — each keeps its own levy, so a poor
+    commune next to a rich one can make the pooled gradient look regressive
+    when it is progressive inside every commune (Lyon extra-muros does exactly
+    this). This variant isolates the within-jurisdiction incidence. Communes
+    whose IRIS incomes cannot form 5 bins are excluded and the share of parcels
+    covered is reported. Returns (rows, coverage_pct) or (None, coverage_pct).
+    """
+    if "median_income" not in df.columns:
+        return None, 0.0
+    parts = []
+    for _key, sub in df[df["median_income"].notna()].groupby("_commune"):
+        try:
+            q = pd.qcut(sub["median_income"], 5, labels=[1, 2, 3, 4, 5], duplicates="drop")
+        except ValueError:
+            continue
+        if q.nunique() == 5:
+            parts.append(sub.assign(_q=q))
+    coverage = _pct(sum(len(p) for p in parts), len(df)) or 0.0
+    if not parts:
+        return None, coverage
+    d = pd.concat(parts, ignore_index=True)
+    out = []
+    for q in [1, 2, 3, 4, 5]:
+        sub = d[d["_q"] == q]
+        rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
+        sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        out.append({
+            "quintile": q,
+            "median_income_eur": round(float(sub["median_income"].median()), 0),
+            "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
+            "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
+            "parcels": int(len(sub)),
+        })
+    return out, coverage
+
+
+def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:
+    from config import COMMUNES, TERRITORIES, TERRITORY_COST_EUR_M2
+    t = TERRITORIES[territory_key]
+    df, present, missing = load_territory(territory_key, out_dir)
+    ratios = {COMMUNES[k].split_rate_ratio for k in present}
+    if len(ratios) != 1:
+        raise ValueError(f"{territory_key}: members use different split ratios {ratios}")
+    ratio = ratios.pop()
+    members = [_member_row(k, sub) for k, sub in df.groupby("_commune", sort=False)]
+    members.sort(key=lambda m: m["neutral_levy_eur"], reverse=True)
+    within, within_cov = build_by_income_quintile_within(df)
+    return {
+        "commune_key": territory_key,
+        "kind": "territory",
+        "insee": None,
+        "name": t["name"],
+        "departement": t["departement"],
+        "reference_year": COMMUNES[present[0]].reference_year,
+        "model_type": f"split_rate:{ratio}",
+        "headline": build_headline(df),
+        "headline_sensitivity": build_territory_sensitivity(df, ratio),
+        "by_category": build_by_category(df),
+        # metro-wide quintiles: IRIS incomes ranked across the whole ring
+        "by_income_quintile": build_by_income_quintile(df),
+        # same, ranked inside each commune (isolates within-jurisdiction incidence)
+        "by_income_quintile_within": within,
+        "by_income_quintile_within_coverage_pct": within_cov,
+        "by_improvement_ratio": build_buckets(df),
+        "members": members,
+        "coverage": {
+            "members_total": len(t["members"]),
+            "members_modeled": len(present),
+            "members_missing": missing,
+        },
+        "provenance": {
+            "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
+            "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
+            "note": ("Agrégat de communes modélisées chacune à recettes "
+                     "constantes sur son propre produit de TFPB (pas de taux "
+                     "métropolitain unique). Agrégats uniquement."),
+        },
+        "currency": "EUR",
+    }
+
+
+def export_territory(territory_key: str, out_dir: str = "output",
+                     data_dir: str = "site/public/data") -> Path:
+    return _write_commune_json(build_territory_payload(territory_key, out_dir), data_dir)
+
+
 def _write_commune_json(payload: dict, data_dir: str) -> Path:
     """Guard then write one commune payload to <data_dir>/<commune_key>.json."""
     assert_aggregate_only(payload)
@@ -265,8 +481,19 @@ def _write_commune_json(payload: dict, data_dir: str) -> Path:
 def _index_entry(payload: dict) -> dict:
     """Teaser fields for index.json, taken from an already-built payload."""
     h = payload["headline"]
+    # De-duplicated contribution to the site-wide totals: a territory's members
+    # that are also published on their own (Montreuil, Villeurbanne) are
+    # counted once, via their own entry.
+    if payload.get("kind") == "territory":
+        from config import SITE_COMMUNES
+        uniq = [m for m in payload["members"] if m["commune_key"] not in SITE_COMMUNES]
+        n_unique, parcels_unique = len(uniq), sum(m["parcels_modeled"] for m in uniq)
+    else:
+        n_unique, parcels_unique = 1, h["parcels_modeled"]
     return {
+        "n_communes_unique": n_unique, "parcels_unique": parcels_unique,
         "commune_key": payload["commune_key"], "name": payload["name"],
+        "kind": payload.get("kind", "commune"),
         "insee": payload["insee"], "departement": payload["departement"],
         "parcels_modeled": h["parcels_modeled"],
         "land_share_pct": h["land_share_pct"],
@@ -279,13 +506,43 @@ def export_commune(commune_key: str, out_dir: str = "output",
     return _write_commune_json(build_commune_payload(commune_key, out_dir), data_dir)
 
 
-def export_all(out_dir: str = "output", data_dir: str = "site/public/data") -> dict:
-    from config import COMMUNES
+def rebuild_index(data_dir: str = "site/public/data") -> dict:
+    """Rebuild index.json from the payload JSONs already in data_dir.
+
+    Lets new communes/territories be exported one by one without regenerating
+    — and so silently changing — already-published payloads (whose source
+    data may have moved on since they were modelled). Order: site communes,
+    then territories, as configured.
+    """
+    from config import SITE_COMMUNES, TERRITORIES
     index = []
-    for key, cfg in COMMUNES.items():
-        if not (Path(out_dir) / f"{_slug(cfg)}.csv").exists():
+    for key in list(SITE_COMMUNES) + list(TERRITORIES):
+        path = Path(data_dir) / f"{key}.json"
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert_aggregate_only(payload)
+        index.append(_index_entry(payload))
+    (Path(data_dir) / "index.json").write_text(
+        json.dumps({"communes": index, "currency": "EUR"}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8")
+    return {"indexed": [c["commune_key"] for c in index]}
+
+
+def export_all(out_dir: str = "output", data_dir: str = "site/public/data") -> dict:
+    from config import COMMUNES, SITE_COMMUNES, TERRITORIES
+    index = []
+    for key in SITE_COMMUNES:
+        if not (Path(out_dir) / f"{_slug(COMMUNES[key])}.csv").exists():
             continue
         payload = build_commune_payload(key, out_dir)   # load the CSV exactly once
+        _write_commune_json(payload, data_dir)
+        index.append(_index_entry(payload))
+    for key in TERRITORIES:
+        try:
+            payload = build_territory_payload(key, out_dir)
+        except FileNotFoundError:
+            continue
         _write_commune_json(payload, data_dir)
         index.append(_index_entry(payload))
     Path(data_dir).mkdir(parents=True, exist_ok=True)
@@ -301,8 +558,14 @@ if __name__ == "__main__":
     ap.add_argument("commune", nargs="?", help="commune key; omit to export all available")
     ap.add_argument("--out-dir", default="output")
     ap.add_argument("--data-dir", default="site/public/data")
+    ap.add_argument("--index-only", action="store_true",
+                    help="only rebuild index.json from the payloads already in --data-dir")
     a = ap.parse_args()
-    if a.commune:
-        print("wrote", export_commune(a.commune, a.out_dir, a.data_dir))
+    if a.index_only:
+        print(rebuild_index(a.data_dir))
+    elif a.commune:
+        from config import TERRITORIES
+        fn = export_territory if a.commune in TERRITORIES else export_commune
+        print("wrote", fn(a.commune, a.out_dir, a.data_dir))
     else:
         print(export_all(a.out_dir, a.data_dir))

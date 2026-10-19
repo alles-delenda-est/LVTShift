@@ -5,8 +5,12 @@ import { pct } from "@/lib/format";
 export default function Home() {
   const { communes } = loadIndex();
 
-  const totalCommunes = communes.length;
-  const totalParcels = communes.reduce((sum, c) => sum + c.parcels_modeled, 0);
+  // Territories aggregate many communes, two of which (Montreuil,
+  // Villeurbanne) are also published on their own: sum the de-duplicated
+  // counts so no commune or parcel is counted twice.
+  const totalCommunes = communes.reduce((sum, c) => sum + (c.n_communes_unique ?? 1), 0);
+  const totalParcels = communes.reduce(
+    (sum, c) => sum + (c.parcels_unique ?? c.parcels_modeled), 0);
 
   const landShares = communes
     .map((c) => c.land_share_pct)

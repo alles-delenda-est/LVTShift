@@ -10,15 +10,20 @@ function prints the URL it hits so failures are easy to diagnose.
 """
 
 import gzip
+import hashlib
 import io
 import json
+import os
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import pandas as pd
 
-from config import DATA_SOURCES as SRC
+from config import DATA_SOURCES as SRC, data_codes_of
 
 # Projected CRS for all metric work (areas, spatial joins): RGF93 / Lambert-93,
 # the French national grid. DVF/cadastre arrive in WGS84 (EPSG:4326).
@@ -45,11 +50,93 @@ class IngestUnavailable(RuntimeError):
         super().__init__(f"{source} unavailable: {analysis}")
 
 
-def _get(url: str, timeout: int = 180) -> bytes:
+# Optional on-disk download cache (set LVTFR_CACHE_DIR, or run_commune
+# --cache-dir). Keyed by a hash of the URL; holds raw public open-data bytes
+# only. Makes a 180-commune batch resumable and re-runs reproducible. Off by
+# default so a one-off run always sees the live sources.
+CACHE_DIR = os.environ.get("LVTFR_CACHE_DIR") or None
+
+# Transient failures worth retrying (rate limits, gateway hiccups).
+_RETRY_HTTP = {429, 500, 502, 503, 504}
+
+
+def _get(url: str, timeout: int = 180, retries: int = 5) -> bytes:
+    """GET with an optional disk cache and exponential-backoff retries.
+
+    HTTP 404 is never retried (a missing file is a real answer: e.g. a DVF year
+    not yet published). Only successful responses are cached.
+    """
+    cache = None
+    if CACHE_DIR:
+        cache = Path(CACHE_DIR) / hashlib.sha256(url.encode()).hexdigest()
+        if cache.exists():
+            return cache.read_bytes()
     print(f"  GET {url[:120]}{'...' if len(url) > 120 else ''}")
     req = urllib.request.Request(url, headers={"User-Agent": "lvtshift-fr/0.1"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                body = r.read()
+            break
+        except urllib.error.HTTPError as e:
+            if e.code not in _RETRY_HTTP or attempt == retries:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if attempt == retries:
+                raise
+        wait = 2 ** attempt * 5
+        print(f"  [retry {attempt + 1}/{retries} in {wait}s] {url[:80]}")
+        time.sleep(wait)
+    if cache is not None and _cacheable(body):
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        # per-process temp name: parallel batch workers may fetch the same URL
+        tmp = cache.with_suffix(f".{os.getpid()}.part")
+        tmp.write_bytes(body)
+        try:
+            tmp.replace(cache)   # atomic: a crashed run never leaves a torn file
+        except OSError:          # Windows: another worker holds the file open
+            tmp.unlink(missing_ok=True)
+    return body
+
+
+def _cacheable(body: bytes) -> bool:
+    """Only cache a body that is plausibly the real payload.
+
+    A 200 can still carry a WFS ExceptionReport, a maintenance HTML page or a
+    truncated archive; caching one would silently replay it on every later run.
+    Such bodies are returned (the caller fails loudly on them) but never cached.
+    """
+    if not body:
+        return False
+    head = body[:512].lstrip().lower()
+    if head.startswith(b"<") and (b"exception" in body[:4096].lower()
+                                  or head.startswith((b"<!doctype html", b"<html"))):
+        return False
+    try:
+        if body[:2] == b"\x1f\x8b":            # gzip
+            gzip.decompress(body)
+        elif body[:2] == b"PK":
+            with zipfile.ZipFile(io.BytesIO(body)) as z:
+                return z.testzip() is None
+        elif head[:1] in (b"{", b"["):
+            json.loads(body)
+    except Exception:
+        return False
+    return True
+
+
+def _sub_cfg(cfg, code: str):
+    """A shallow copy of cfg pointed at one data code (an arrondissement)."""
+    import copy
+    sub = copy.copy(cfg)
+    sub.insee_code = code
+    sub.sub_codes = ()
+    return sub
+
+
+def _by_code(parcels: pd.DataFrame) -> dict:
+    """Split a parcel frame by the data code its idpar starts with (5 chars)."""
+    return {code: grp for code, grp in parcels.groupby(parcels["idpar"].str[:5])}
 
 
 # ------------------------------------------------------------------ #
@@ -64,12 +151,15 @@ def fetch_dvf(cfg) -> pd.DataFrame:
       - drop price or surface nulls; trim 1st/99th pctile of €/m²
     """
     frames = []
-    for y in cfg.dvf_years:
-        url = SRC["dvf"].format(year=y, dep=cfg.departement, insee=cfg.insee_code)
-        try:
-            frames.append(pd.read_csv(io.BytesIO(_get(url))))
-        except Exception as e:  # year may not exist yet
-            print(f"  [skip {y}] {e}")
+    for code in data_codes_of(cfg):      # arrondissements for Paris / Lyon
+        for y in cfg.dvf_years:
+            url = SRC["dvf"].format(year=y, dep=cfg.departement, insee=code)
+            try:
+                frames.append(pd.read_csv(io.BytesIO(_get(url)), low_memory=False))
+            except urllib.error.HTTPError as e:
+                if e.code != 404:   # only "not published (yet)" may be skipped;
+                    raise           # a 429/5xx must fail loudly, not drop a year
+                print(f"  [skip {code} {y}] {e}")
     if not frames:
         if cfg.departement in ALSACE_MOSELLE_DEPTS:
             raise IngestUnavailable(
@@ -106,15 +196,22 @@ def fetch_dvf(cfg) -> pd.DataFrame:
 # ------------------------------------------------------------------ #
 def fetch_parcels(cfg) -> pd.DataFrame:
     """Etalab cadastre parcel polygons (geojson.gz) -> idpar, area, geometry."""
-    url = SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=cfg.insee_code)
-    raw = gzip.decompress(_get(url))
-    gj = json.loads(raw)
-    rows = [{
-        "idpar": f["properties"]["id"],
-        "parcel_area_m2": f["properties"].get("contenance"),
-        "geometry": f["geometry"],          # keep raw; geopandas later
-    } for f in gj["features"]]
-    return pd.DataFrame(rows)
+    rows = []
+    for code in data_codes_of(cfg):      # arrondissements for Paris / Lyon
+        url = SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=code)
+        gj = json.loads(gzip.decompress(_get(url)))
+        rows += [{
+            "idpar": f["properties"]["id"],
+            "parcel_area_m2": f["properties"].get("contenance"),
+            "geometry": f["geometry"],          # keep raw; geopandas later
+        } for f in gj["features"]]
+    df = pd.DataFrame(rows)
+    # idpar is national-unique; a duplicate would double-count a parcel's tax
+    dup = int(df["idpar"].duplicated().sum())
+    if dup:
+        print(f"  [{cfg.name}] dropping {dup} duplicate parcel ids")
+        df = df.drop_duplicates("idpar")
+    return df
 
 
 # ------------------------------------------------------------------ #
@@ -131,7 +228,8 @@ def parcels_to_gdf(parcels: pd.DataFrame):
     return g.to_crs(CRS_METRIC)
 
 
-def _wfs_features(typename: str, bbox_2154, page: int = 5000) -> list:
+def _wfs_features(typename: str, bbox_2154, page: int = 5000,
+                  paginate: bool = True, _depth: int = 0) -> list:
     """All features of a Géoplateforme WFS layer intersecting a Lambert-93 bbox.
 
     Paginates the WFS (server caps a page at 5000). Geometry is requested
@@ -141,6 +239,25 @@ def _wfs_features(typename: str, bbox_2154, page: int = 5000) -> list:
     minx, miny, maxx, maxy = bbox_2154
     feats, start = [], 0
     while True:
+        if start and not paginate:
+            # Unkeyed layer (zone_urba) with a full first page: STARTINDEX would
+            # fail, and stopping would silently truncate. Split the bbox into
+            # quadrants instead and de-duplicate features seen in several.
+            if maxx - minx < 50 or _depth >= 6:
+                raise RuntimeError(f"{typename}: >{page} features in one tile "
+                                   f"after {_depth} splits; refusing to subdivide further")
+            midx, midy = (minx + maxx) / 2, (miny + maxy) / 2
+            print(f"  [wfs] {typename}: page full, splitting bbox into 4 tiles")
+            seen, out = set(), []
+            for q in [(minx, miny, midx, midy), (midx, miny, maxx, midy),
+                      (minx, midy, midx, maxy), (midx, midy, maxx, maxy)]:
+                for f in _wfs_features(typename, q, page, paginate=False,
+                                       _depth=_depth + 1):
+                    k = json.dumps([f.get("geometry"), f.get("properties")], sort_keys=True)
+                    if k not in seen:
+                        seen.add(k)
+                        out.append(f)
+            return out
         params = {
             "SERVICE": "WFS", "VERSION": "2.0.0", "REQUEST": "GetFeature",
             "TYPENAMES": typename,
@@ -164,6 +281,13 @@ def _wfs_features(typename: str, bbox_2154, page: int = 5000) -> list:
 
 
 def fetch_buildings(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """Per-data-code wrapper: Paris/Lyon are fetched one arrondissement bbox
+    at a time (a whole-city bbox is huge and drags in the neighbours), then
+    concatenated. Ordinary communes go straight through. See _fetch_buildings_one."""
+    return _per_code(_fetch_buildings_one, cfg, parcels)
+
+
+def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     """BD TOPO V3 'batiment' for the commune, joined to cadastre parcels.
 
     Replaces the old BDNB path: the IGN Géoplateforme WFS exposes the same
@@ -220,6 +344,24 @@ def fetch_buildings(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _per_code(fn, cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """Apply a single-bbox fetcher per data code and concatenate the results.
+
+    Each arrondissement's parcels are joined only against features fetched for
+    that arrondissement's bbox, so a building on a boundary is credited to the
+    parcels it actually overlaps — never twice.
+    """
+    codes = data_codes_of(cfg)
+    if len(codes) == 1:
+        return fn(cfg, parcels)
+    groups = _by_code(parcels)
+    missing = set(codes) - set(groups)
+    if missing:
+        print(f"  [{cfg.name}] no parcels for data codes {sorted(missing)}")
+    return pd.concat([fn(_sub_cfg(cfg, c), groups[c]) for c in codes if c in groups],
+                     ignore_index=True)
+
+
 # DPE construction-period band -> representative build year (band midpoint).
 # Standard French eras. "avant 1948" -> 1930: anything ≤1945 is age≥80 and hits
 # the depreciation floor anyway, so the exact value barely matters. The pre-2021
@@ -255,16 +397,23 @@ def fetch_dpe_parcel_year(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     """
     import geopandas as gpd
 
-    q = urllib.parse.urlencode({
-        "size": 10000, "select": "periode_construction,_geopoint",
-        "qs": f'code_insee_ban:"{cfg.insee_code}"',
-    })
-    url = f"{SRC['dpe_lines']}?{q}"
+    # Paris/Lyon: DPEs are geocoded to the arrondissement, but a few hundred
+    # carry the city code — query both; the spatial join keeps only points that
+    # fall in this commune's parcels, so nothing is double-counted.
+    codes = list(data_codes_of(cfg))
+    if cfg.insee_code not in codes:
+        codes.append(cfg.insee_code)
     rows = []
-    while url:
-        d = json.loads(_get(url))
-        rows.extend(d.get("results", []))
-        url = d.get("next")
+    for code in codes:
+        q = urllib.parse.urlencode({
+            "size": 10000, "select": "periode_construction,_geopoint",
+            "qs": f'code_insee_ban:"{code}"',
+        })
+        url = f"{SRC['dpe_lines']}?{q}"
+        while url:
+            d = json.loads(_get(url))
+            rows.extend(d.get("results", []))
+            url = d.get("next")
     empty = pd.DataFrame(columns=["idpar", "year_built_dpe"])
     if not rows:
         print(f"  [{cfg.name}] DPE: no records; depreciation falls back to BD TOPO")
@@ -294,6 +443,13 @@ def fetch_dpe_parcel_year(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
 
 # ------------------------------------------------------------------ #
 def fetch_parcel_zoning(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """Per-data-code wrapper: Paris/Lyon are fetched one arrondissement bbox
+    at a time (a whole-city bbox is huge and drags in the neighbours), then
+    concatenated. Ordinary communes go straight through. See _fetch_parcel_zoning_one."""
+    return _per_code(_fetch_parcel_zoning_one, cfg, parcels)
+
+
+def _fetch_parcel_zoning_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     """GPU (Géoportail de l'Urbanisme) zoning per parcel -> idpar, zone_typ.
 
     Classifies building-less parcels' legal constructibility. Spatial-joins each
@@ -305,7 +461,8 @@ def fetch_parcel_zoning(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     import geopandas as gpd
 
     pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
-    feats = _wfs_features(SRC["gpu_zone_urba_layer"], pg.total_bounds)
+    feats = _wfs_features(SRC["gpu_zone_urba_layer"], pg.total_bounds,
+                          paginate=False)
     if not feats:
         print(f"  [{cfg.name}] no GPU zoning (likely RNU commune); fallback used")
         return pd.DataFrame({"idpar": pg["idpar"], "zone_typ": None,
@@ -407,6 +564,13 @@ def fetch_rei_tfpb_produit(cfg, layers=("Commune", "GFP"),
 
 # ------------------------------------------------------------------ #
 def fetch_parcel_iris(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """Per-data-code wrapper: Paris/Lyon are fetched one arrondissement bbox
+    at a time (a whole-city bbox is huge and drags in the neighbours), then
+    concatenated. Ordinary communes go straight through. See _fetch_parcel_iris_one."""
+    return _per_code(_fetch_parcel_iris_one, cfg, parcels)
+
+
+def _fetch_parcel_iris_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     """IRIS code per parcel -> idpar, iris (9-digit code_iris).
 
     Spatial-joins each parcel to the IGN IRIS contours (dominant overlap area),
@@ -431,6 +595,22 @@ def fetch_parcel_iris(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+_FILOSOFI = None
+
+
+def _filosofi_table() -> pd.DataFrame:
+    """The national Filosofi IRIS table, downloaded once per process."""
+    global _FILOSOFI
+    if _FILOSOFI is None:
+        raw = _get(SRC["filosofi_iris_csv"])
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            name = next(n for n in z.namelist()
+                        if n.upper().endswith(".CSV") and not n.lower().startswith("meta"))
+            with z.open(name) as fh:
+                _FILOSOFI = pd.read_csv(fh, sep=";", dtype={"IRIS": str})
+    return _FILOSOFI
+
+
 def fetch_filosofi_iris(cfg) -> pd.DataFrame:
     """INSEE Filosofi (2021) median disposable income per IRIS -> iris,
     median_income_eur.
@@ -444,14 +624,10 @@ def fetch_filosofi_iris(cfg) -> pd.DataFrame:
     drop out of the income quintiles. Income drives only the distributional
     charts; run_pipeline.run still works with iris_income=None.
     """
-    raw = _get(SRC["filosofi_iris_csv"])
-    with zipfile.ZipFile(io.BytesIO(raw)) as z:
-        name = next(n for n in z.namelist()
-                    if n.upper().endswith(".CSV") and not n.lower().startswith("meta"))
-        with z.open(name) as fh:
-            df = pd.read_csv(fh, sep=";", dtype={"IRIS": str})
+    df = _filosofi_table().copy()
 
-    df = df[df["IRIS"].str.startswith(cfg.insee_code)].copy()
+    # IRIS codes are prefixed by the data code (arrondissement for Paris/Lyon)
+    df = df[df["IRIS"].str.startswith(tuple(data_codes_of(cfg)))].copy()
     df["median_income_eur"] = pd.to_numeric(df["DISP_MED21"], errors="coerce")
     out = (df[["IRIS", "median_income_eur"]]
            .rename(columns={"IRIS": "iris"})

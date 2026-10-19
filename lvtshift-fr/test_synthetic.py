@@ -70,7 +70,11 @@ iris_income = pd.DataFrame({
 # Grenoble TFPB produit, ballpark for the test (real value: read from REI)
 TFPB = 95_000_000.0
 
-out = rp.run(parcels, buildings, dvf, TFPB, iris_income, out_dir="output")
+# Write to a throwaway dir: the synthetic commune is named Grenoble, so writing
+# to output/ would overwrite the REAL output/grenoble.csv with synthetic rows.
+import tempfile  # noqa: E402
+out = rp.run(parcels, buildings, dvf, TFPB, iris_income,
+             out_dir=tempfile.mkdtemp(prefix="lvtfr-synthetic-"), make_report=False)
 
 print("\n--- sanity checks -------------------------------------")
 print(f"rows exported: {len(out)}")

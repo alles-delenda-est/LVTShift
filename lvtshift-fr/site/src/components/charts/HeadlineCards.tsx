@@ -30,6 +30,10 @@ export default function HeadlineCards({
   headline,
   sharePayingMorePct,
 }: HeadlineCardsProps) {
+  // When most built parcels sit at the 85 % clip, the land share is set by the
+  // bound, not measured: label it as such rather than present it as a finding.
+  const capPct = headline.built_at_cap_pct ?? null;
+  const capped = capPct !== null && capPct >= 50;
   const stats: StatDef[] = [
     {
       id: "parcels",
@@ -49,7 +53,9 @@ export default function HeadlineCards({
       id: "land",
       label: "Part foncière estimée",
       value: pct(headline.land_share_pct),
-      note: "de la base taxable",
+      note: capped
+        ? `plafonnée : ${pct(capPct)} des parcelles bâties à la borne de 85 % — chiffre fixé par l'hypothèse, non mesuré`
+        : "de la base taxable",
       accent: false,
     },
     {

@@ -115,8 +115,16 @@ python run_commune.py montreuil
 bâtiments (BD TOPO), l'année de construction (DPE) et le produit réel de taxe
 foncière (REI via OFGL), puis lance le modèle et écrit le CSV + graphiques en
 euros. Communes pré-configurées : `villeurbanne`, `roubaix`, `cahors`, `figeac`,
-`montreuil`, `grenoble`, `annemasse`. Ajoutez `--no-report` pour un export
-tableur seul.
+`montreuil`, `grenoble`, `annemasse`, `sete`, `larochelle`, `paris`, `lyon`, et
+toute commune des deux couronnes par son nom en lettres simples (p. ex.
+`boulogne-billancourt`). Ajoutez `--no-report` pour un export tableur seul, et
+`--cache-dir output/cache` pour conserver les téléchargements et relancer vite.
+
+Pour modéliser une couronne entière (chaque commune garde son propre produit
+fiscal), lancez `python run_territory.py paris-extra-muros` (ou
+`lyon-extra-muros`), puis `python export_web.py paris-extra-muros` pour produire
+sa synthèse pour le site. Le lot peut être interrompu et relancé ; les communes
+déjà faites sont sautées.
 
 > Sous Windows, lancez `$env:PYTHONUTF8 = "1"` une fois dans la même fenêtre
 > PowerShell avant la commande (certains libellés utilisent des caractères que la

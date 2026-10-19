@@ -20,6 +20,7 @@ import SensitivityBand from "@/components/charts/SensitivityBand";
 import WinLoseSplit from "@/components/charts/WinLoseSplit";
 import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
+import TerritoryMembers from "@/components/TerritoryMembers";
 
 export interface CommunePickerProps {
   communes: Commune[];
@@ -76,12 +77,27 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               min-w-[18rem]
             "
           >
-            {communes.map((c) => (
-              <option key={c.commune_key} value={c.commune_key}>
-                {c.name}
-                {c.departement ? ` (${c.departement})` : ""}
-              </option>
-            ))}
+            <optgroup label="Communes">
+              {communes
+                .filter((c) => c.kind !== "territory")
+                .map((c) => (
+                  <option key={c.commune_key} value={c.commune_key}>
+                    {c.name}
+                    {c.departement ? ` (${c.departement})` : ""}
+                  </option>
+                ))}
+            </optgroup>
+            {communes.some((c) => c.kind === "territory") && (
+              <optgroup label="Couronnes (agrégats de communes)">
+                {communes
+                  .filter((c) => c.kind === "territory")
+                  .map((c) => (
+                    <option key={c.commune_key} value={c.commune_key}>
+                      {c.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
           </select>
           {/* Custom dropdown arrow */}
           <span
@@ -115,7 +131,9 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             {communeHeading}
           </h3>
           <p className="text-xs text-gris mt-1 italic font-body">
-            Code INSEE&nbsp;: {commune.insee}
+            {commune.kind === "territory" && commune.coverage
+              ? `Territoire de ${commune.coverage.members_total} communes (${commune.coverage.members_modeled} modélisées)`
+              : <>Code INSEE&nbsp;: {commune.insee ?? "n. d."}</>}
             {commune.departement ? ` · Département : ${commune.departement}` : ""}
           </p>
         </div>
@@ -179,8 +197,51 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             >
               Impact par quintile de revenu
             </h3>
+            {commune.kind === "territory" && (
+              <p className="text-sm text-encre font-body mb-3 max-w-3xl leading-relaxed">
+                Classement des revenus sur l&apos;ensemble de la couronne. Comme
+                chaque commune garde son propre produit fiscal, ce classement
+                mêle l&apos;effet de la réforme et les écarts entre communes
+                riches et pauvres — à lire avec le graphique suivant.
+              </p>
+            )}
             <IncomeQuintileChart quintiles={commune.by_income_quintile} />
           </section>
+
+          {/* 5b. Territory only: quintiles ranked within each commune */}
+          {commune.kind === "territory" && (
+            <section aria-labelledby="section-quintiles-intra">
+              <h3
+                id="section-quintiles-intra"
+                className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
+              >
+                Impact par quintile de revenu — classement au sein de chaque commune
+              </h3>
+              <p className="text-sm text-encre font-body mb-3 max-w-3xl leading-relaxed">
+                Les revenus sont classés à l&apos;intérieur de chaque commune,
+                là où la réforme s&apos;applique réellement, puis regroupés. Les
+                communes trop petites pour former cinq groupes de revenu sont
+                exclues
+                {commune.by_income_quintile_within_coverage_pct != null
+                  ? ` (couverture : ${commune.by_income_quintile_within_coverage_pct.toLocaleString("fr-FR")} % des parcelles).`
+                  : "."}
+              </p>
+              <IncomeQuintileChart quintiles={commune.by_income_quintile_within ?? null} />
+            </section>
+          )}
+
+          {/* 6. Territory only: the per-commune spread behind the aggregate */}
+          {commune.kind === "territory" && commune.members && (
+            <section aria-labelledby="section-membres">
+              <h3
+                id="section-membres"
+                className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
+              >
+                Détail par commune membre
+              </h3>
+              <TerritoryMembers members={commune.members} coverage={commune.coverage} />
+            </section>
+          )}
         </div>
       </div>
     </div>
