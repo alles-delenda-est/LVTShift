@@ -105,6 +105,22 @@ rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 
 × surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
 la mutation, le €/m² écrêté aux 1er/99e centiles.
 
+**Déflateur de prix.** Les cinq années DVF couvrent un cycle (hausse jusqu'en 2022,
+puis correction), d'ampleur très variable selon les lieux : chaque vente est donc
+d'abord ramenée en euros de `reference_year` (2025) : facteur(A) = moyenne annuelle
+2025 de l'indice Notaires-INSEE du territoire ÷ sa moyenne de l'année A
+(`estimate.deflator_factors`, `config.PRICE_INDEX_IDBANKS`, lu en direct sur la BDM
+de l'INSEE). On retient la série la plus locale publiée : appartements à Paris ;
+appartements et maisons séparément pour les Hauts-de-Seine, la Seine-Saint-Denis et
+le Val-de-Marne ; agglomérations de Lyon, Marseille et Lille ; régions
+(Auvergne-Rhône-Alpes, PACA, Nord-Pas-de-Calais) ; Province ailleurs. Quand une
+agglomération ne publie qu'un type de logement, cette série sert aux deux types :
+associer une série locale d'appartements à une série régionale de maisons
+déplacerait les maisons par rapport aux appartements de l'écart ville/région. Les
+prix des terrains à bâtir sont déflatés par la série maisons du territoire. Une
+vente parisienne de 2022 est multipliée par 0,907, une lyonnaise par 0,865, un
+appartement de province par 0,996.
+
 **3.4 Valeur du terrain — classer puis valoriser**
 (`estimate.land_value_residual` → `_land_value_classified`). Les parcelles non
 bâties sont classées par le zonage GPU ; chaque classe est valorisée sur le bon
@@ -164,11 +180,11 @@ continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m
 parcelles bâties étaient à la borne de 0,85 (Lyon 59,8 % ; 55 communes signalées)
 et le chiffre de 84,9 % était fixé par la borne. La règle du bâti entretenu (§3.1)
 valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais à
-**83,9 %**, avec 47,6 % des parcelles bâties encore à la borne. Ce reliquat est réel,
+**83,3 %**, avec 34,8 % des parcelles bâties encore à la borne. Ce reliquat est réel,
 pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
 reconstruction laisse un foncier supérieur à 85 % dans les rues chères
 (Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
-passe à 72,0 %, sans parcelle à la borne ; sur le panel, les alertes
+passe à 70,5 %, sans parcelle à la borne ; sur le panel, les alertes
 `land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
 (borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
 parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »
@@ -246,7 +262,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    borne, la part foncière est une hypothèse, pas un résultat, et la variation du
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
    de Paris (95,5 % à la borne), de Lyon et de 53 autres communes ; c'est désormais
-   le seul cas de Neuilly-sur-Seine, Paris étant à 47,6 % (§3.7). Le contrôle
+   le seul cas de Neuilly-sur-Seine, Paris étant à 34,8 % (§3.7). Le contrôle
    `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).

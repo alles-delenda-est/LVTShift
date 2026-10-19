@@ -55,7 +55,10 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    l'**âge effectif** : là où les prix de l'IRIS dépassent nettement le coût de
    reconstruction, le bâti entretenu compte au plus 30 ans.
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
-   (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable.
+   (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable ;
+   chaque vente est d'abord ramenée en euros 2025 par l'indice Notaires-INSEE
+   le plus local (Paris, départements de petite couronne, agglomérations de
+   Lyon, Marseille, Lille, régions, Province).
 3. **Terrain : classer puis valoriser.** Parcelles bâties → résiduel
    (marché − bâti), plancher à la valeur agricole, part terrain bornée
    [15 %, 85 %] (clips flaggés `lv_flag`). Parcelles non bâties → classées par
@@ -156,7 +159,7 @@ export CSV seul : `run(..., make_report=False)`.
   La dépréciation du bâti ancien entretenu se fait à l'**âge effectif** (au
   plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
   reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
-  à la borne de 85 %. Avec la règle, Paris ressort à 83,9 % (47,6 % à la borne,
+  à la borne de 85 %. Avec la règle, Paris ressort à 83,3 % (34,8 % à la borne,
   un reliquat réel aux prix parisiens) et seule Neuilly-sur-Seine reste signalée.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
