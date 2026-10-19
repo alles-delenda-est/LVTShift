@@ -197,8 +197,38 @@ def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
     return solved["new_tax"].to_numpy(dtype=float) - current
 
 
+BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
+                      "share_paying_more_pct")
+BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential")
+
+
+def _band_groups(df: pd.DataFrame, chg: np.ndarray, within: bool = False) -> dict:
+    """The per-category and per-income-quintile figures of one sensitivity leg.
+
+    Rebuilt with the same functions as the central figures (so quintile cut
+    points and category sets are identical), with the leg's per-parcel change
+    substituted. Only the band-relevant fields are kept, to keep payloads small.
+    """
+    current = df["current_tax"].to_numpy(dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        pct = 100.0 * chg / current
+    d = df.assign(tax_change=chg, tax_change_pct=pct)
+
+    def slim(rows, keys):
+        return None if rows is None else [{k: r[k] for k in keys} for r in rows]
+
+    out = {
+        "by_category": slim(build_by_category(d), BAND_CATEGORY_KEYS),
+        "by_income_quintile": slim(build_by_income_quintile(d), BAND_QUINTILE_KEYS),
+    }
+    if within:
+        rows, _cov = build_by_income_quintile_within(d)
+        out["by_income_quintile_within"] = slim(rows, BAND_QUINTILE_KEYS)
+    return out
+
+
 def _sensitivity_summary(df: pd.DataFrame, chg: np.ndarray, target_share: float,
-                         current_revenue: float) -> dict:
+                         current_revenue: float, within: bool = False) -> dict:
     current = df["current_tax"].to_numpy(dtype=float)
     gross = float(np.abs(chg).sum())
     net = float(chg[chg > 0].sum())
@@ -212,6 +242,7 @@ def _sensitivity_summary(df: pd.DataFrame, chg: np.ndarray, target_share: float,
         "net_pct_of_levy": _pct(net, current_revenue),
         "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
         "share_paying_more_pct": _pct(int((chg > 0).sum()), len(chg)),
+        **_band_groups(df, chg, within=within),
     }
 
 
@@ -253,6 +284,11 @@ HEADLINE_KEYS = {
     "net_shifted_eur", "gross_pct_of_levy", "net_pct_of_levy", "gross_bps_of_base",
     "currency",
 }
+SENSITIVITY_LEG_KEYS = {
+    "land_share_pct", "gross_pct_of_levy", "net_pct_of_levy",
+    "median_change_pct_residential", "share_paying_more_pct",
+    "by_category", "by_income_quintile", "by_income_quintile_within",
+}
 MEMBER_KEYS = {
     "commune_key", "name", "insee", "parcels_modeled", "neutral_levy_eur",
     "land_share_pct", "gross_pct_of_levy", "share_paying_more_pct",
@@ -276,6 +312,17 @@ def assert_aggregate_only(payload: dict) -> None:
     for k in ("by_income_quintile", "by_income_quintile_within"):
         if payload.get(k) is not None:
             assert len(payload[k]) <= 5
+    sens = payload.get("headline_sensitivity") or {}
+    for leg in ("base", "low", "high"):
+        g = sens.get(leg) or {}
+        assert set(g) <= SENSITIVITY_LEG_KEYS,             f"unexpected sensitivity keys: {set(g) - SENSITIVITY_LEG_KEYS}"
+        assert len(g.get("by_category") or []) <= 10
+        for r in g.get("by_category") or []:
+            assert set(r) <= set(BAND_CATEGORY_KEYS)
+        for k in ("by_income_quintile", "by_income_quintile_within"):
+            assert len(g.get(k) or []) <= 5
+            for r in g.get(k) or []:
+                assert set(r) <= set(BAND_QUINTILE_KEYS)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
@@ -369,7 +416,8 @@ def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
     targets = {leg: v / total_base for leg, v in tilted_land.items()}
     return {
         "delta_pt": delta_pt,
-        **{leg: _sensitivity_summary(pooled, np.concatenate(v), targets[leg], rev)
+        **{leg: _sensitivity_summary(pooled, np.concatenate(v), targets[leg], rev,
+                                     within=True)
            for leg, v in legs.items()},
     }
 

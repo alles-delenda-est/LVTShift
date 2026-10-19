@@ -157,3 +157,65 @@ def test_payload_assembles_for_toy(monkeypatch, tmp_path):
     blob = json.dumps(payload, ensure_ascii=False)
     for bad in ("$", "_usd", "minority_pct", "black_pct", "std_geoid"):
         assert bad not in blob
+
+
+def _solved_frame(n=400, seed=7):
+    """A commune-like frame solved centrally with the real upstream solver."""
+    from lvt.lvt_utils import model_split_rate_tax
+    rng = np.random.default_rng(seed)
+    cats = rng.choice(["Single Family Residential", "Condominium", "Commercial",
+                       "Vacant Land"], n, p=[0.4, 0.35, 0.15, 0.1])
+    land = rng.uniform(40_000, 300_000, n)
+    imp = np.where(cats == "Vacant Land", 0.0, rng.uniform(50_000, 400_000, n))
+    cur = np.where(cats == "Vacant Land", 0.0, rng.uniform(500, 3000, n))
+    df = pd.DataFrame({
+        "property_category": cats, "taxable_land_value": land,
+        "taxable_improvement_value": imp, "current_tax": cur,
+        "median_income": rng.choice([15e3, 20e3, 25e3, 30e3, 40e3, 55e3], n),
+    })
+    _lm, _im, _rev, solved = model_split_rate_tax(
+        df=df.copy(), land_value_col="taxable_land_value",
+        improvement_value_col="taxable_improvement_value",
+        current_revenue=float(cur.sum()), land_improvement_ratio=4.0)
+    df["new_tax"] = solved["new_tax"].to_numpy(dtype=float)
+    df["tax_change"] = df["new_tax"] - df["current_tax"]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        df["tax_change_pct"] = 100.0 * df["tax_change"] / df["current_tax"]
+    return df
+
+
+def test_band_base_leg_reproduces_central_groups():
+    df = _solved_frame()
+    s = ew.build_headline_sensitivity(df, ratio=4.0)
+    cat = {r["category"]: r for r in ew.build_by_category(df)}
+    for r in s["base"]["by_category"]:
+        c = cat[r["category"]]
+        assert r["median_change_pct"] == c["median_change_pct"]
+        assert r["share_paying_more_pct"] == c["share_paying_more_pct"]
+        assert abs(r["median_change_eur"] - c["median_change_eur"]) <= 1
+    q = ew.build_by_income_quintile(df)
+    assert [r["median_change_pct_residential"] for r in s["base"]["by_income_quintile"]] \
+        == [r["median_change_pct_residential"] for r in q]
+
+
+def test_band_groups_move_with_land_share():
+    df = _solved_frame()
+    s = ew.build_headline_sensitivity(df, ratio=4.0)
+    vac = {leg: next(r for r in s[leg]["by_category"] if r["category"] == "Vacant Land")
+           for leg in ("low", "base", "high")}
+    # more weight on land -> vacant land's median € change rises monotonically
+    assert vac["low"]["median_change_eur"] <= vac["base"]["median_change_eur"] \
+        <= vac["high"]["median_change_eur"]
+    for leg in ("low", "high"):
+        assert len(s[leg]["by_income_quintile"]) == 5
+        assert set(s[leg]["by_category"][0]) == set(ew.BAND_CATEGORY_KEYS)
+
+
+def test_guard_checks_nested_band_rows():
+    df = _solved_frame()
+    payload = {"commune_key": "x", "headline_sensitivity":
+               ew.build_headline_sensitivity(df, ratio=4.0)}
+    ew.assert_aggregate_only(payload)
+    payload["headline_sensitivity"]["low"]["by_category"][0]["parcel_ids"] = ["x"]
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(payload)

@@ -22,6 +22,18 @@ import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
 import TerritoryMembers from "@/components/TerritoryMembers";
 
+/** Caption under charts that carry the ±10 pt land-share whiskers. */
+function BandNote() {
+  return (
+    <p className="text-xs text-gris font-body italic mt-2 max-w-3xl leading-relaxed">
+      Les traits fins indiquent la fourchette obtenue en faisant varier la part
+      foncière de ±10&nbsp;points (hypothèses basse et haute) : la valeur du sol
+      étant imputée, seule une conclusion qui tient sur toute la fourchette est
+      robuste.
+    </p>
+  );
+}
+
 export interface CommunePickerProps {
   communes: Commune[];
 }
@@ -186,7 +198,14 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             >
               Impact médian par catégorie de bien
             </h3>
-            <CategoryImpactBars byCategory={commune.by_category} />
+            <CategoryImpactBars
+              byCategory={commune.by_category}
+              band={{
+                low: commune.headline_sensitivity.low.by_category,
+                high: commune.headline_sensitivity.high.by_category,
+              }}
+            />
+            <BandNote />
           </section>
 
           {/* 5. Income quintile chart (or explanatory note if unavailable) */}
@@ -205,7 +224,14 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                 riches et pauvres — à lire avec le graphique suivant.
               </p>
             )}
-            <IncomeQuintileChart quintiles={commune.by_income_quintile} />
+            <IncomeQuintileChart
+              quintiles={commune.by_income_quintile}
+              band={{
+                low: commune.headline_sensitivity.low.by_income_quintile,
+                high: commune.headline_sensitivity.high.by_income_quintile,
+              }}
+            />
+            <BandNote />
           </section>
 
           {/* 5b. Territory only: quintiles ranked within each commune */}
@@ -226,7 +252,14 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                   ? ` (couverture : ${commune.by_income_quintile_within_coverage_pct.toLocaleString("fr-FR")} % des parcelles).`
                   : "."}
               </p>
-              <IncomeQuintileChart quintiles={commune.by_income_quintile_within ?? null} />
+              <IncomeQuintileChart
+                quintiles={commune.by_income_quintile_within ?? null}
+                band={{
+                  low: commune.headline_sensitivity.low.by_income_quintile_within,
+                  high: commune.headline_sensitivity.high.by_income_quintile_within,
+                }}
+              />
+              <BandNote />
             </section>
           )}
 

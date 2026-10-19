@@ -141,6 +141,17 @@ are ranked across the whole ring. A member that fails is listed in the payload's
 `coverage`, never imputed. Montreuil and Villeurbanne appear both alone and in
 their ring; the site's panel totals count them once.
 
+**Sensitivity band.** Because land value is imputed, every published figure carries
+a ±10 pt land-share band: the aggregate land share is tilted down and up by 10 points
+(each parcel's land and building values scaled uniformly, total base and levy held
+fixed) and the upstream solver is re-run (`export_web._tilted_change`). The band is
+reported for the headline figures **and** for each property category and income
+quintile (and, on the rings, the within-commune quintiles), using the same quintile
+cut points as the central estimate; the site draws it as whiskers on those charts.
+The central leg reproduces the published figures exactly (tested). A conclusion is
+treated as robust only if it holds across the band; in Paris the quintile gradient
+barely moves (poorest fifth −17.6 to −18.5 %, richest +11.1 to +11.7 %).
+
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
