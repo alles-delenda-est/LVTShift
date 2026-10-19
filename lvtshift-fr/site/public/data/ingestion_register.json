@@ -86,10 +86,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 66.9 % (bande 40–65 %).",
+          "message": "Part foncière 65.8 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 66.9
+            "land_share_pct": 65.8
           }
         },
         {
@@ -191,10 +191,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 64.9 % (bande 40–65 %).",
+          "message": "Part foncière 64.4 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 64.9
+            "land_share_pct": 64.4
           }
         },
         {
@@ -299,10 +299,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 68.0 % (bande 40–65 %).",
+          "message": "Part foncière 67.9 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 68.0
+            "land_share_pct": 67.9
           }
         },
         {
@@ -406,10 +406,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 56.8 % (bande 40–65 %).",
+          "message": "Part foncière 55.5 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 56.8
+            "land_share_pct": 55.5
           }
         },
         {
@@ -511,10 +511,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 53.9 % (bande 40–65 %).",
+          "message": "Part foncière 53.8 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 53.9
+            "land_share_pct": 53.8
           }
         },
         {
@@ -615,10 +615,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 75.8 % (bande 40–65 %).",
+          "message": "Part foncière 75.7 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 75.8
+            "land_share_pct": 75.7
           }
         },
         {
@@ -720,10 +720,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 58.4 % (bande 40–65 %).",
+          "message": "Part foncière 58.1 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 58.4
+            "land_share_pct": 58.1
           }
         },
         {
@@ -930,10 +930,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 74.1 % (bande 40–65 %).",
+          "message": "Part foncière 73.4 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 74.1
+            "land_share_pct": 73.4
           }
         },
         {
@@ -1099,10 +1099,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 83.9 % (bande 40–65 %).",
+          "message": "Part foncière 83.8 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 83.9
+            "land_share_pct": 83.8
           }
         },
         {
@@ -1207,10 +1207,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 72.0 % (bande 40–65 %).",
+          "message": "Part foncière 71.9 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 72.0
+            "land_share_pct": 71.9
           }
         },
         {
@@ -1314,10 +1314,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 74.5 % (bande 40–65 %).",
+            "message": "Part foncière 74.2 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 74.5
+              "land_share_pct": 74.2
             }
           },
           {
@@ -1522,10 +1522,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 72.0 % (bande 40–65 %).",
+            "message": "Part foncière 71.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 72.0
+              "land_share_pct": 71.5
             }
           },
           {
@@ -1626,10 +1626,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 78.4 % (bande 40–65 %).",
+            "message": "Part foncière 78.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 78.4
+              "land_share_pct": 78.5
             }
           },
           {
@@ -1740,10 +1740,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 27.2 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 27.5 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 27.2,
+              "at_cap_pct": 27.5,
               "at_floor_pct": 0.0
             }
           }
@@ -1938,10 +1938,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.7 % (bande 40–65 %).",
+            "message": "Part foncière 71.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.7
+              "land_share_pct": 71.4
             }
           },
           {
@@ -2042,10 +2042,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.9 % (bande 40–65 %).",
+            "message": "Part foncière 76.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.9
+              "land_share_pct": 76.4
             }
           },
           {
@@ -2250,10 +2250,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.5 % (bande 40–65 %).",
+            "message": "Part foncière 76.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.5
+              "land_share_pct": 76.4
             }
           },
           {
@@ -2354,20 +2354,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 80.1 % (bande 40–65 %).",
+            "message": "Part foncière 79.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 80.1
+              "land_share_pct": 79.4
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.3 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.4 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.3,
+              "at_cap_pct": 2.4,
               "at_floor_pct": 0.0
             }
           }
@@ -2458,10 +2458,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 74.1 % (bande 40–65 %).",
+            "message": "Part foncière 73.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 74.1
+              "land_share_pct": 73.9
             }
           },
           {
@@ -2562,10 +2562,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 77.6 % (bande 40–65 %).",
+            "message": "Part foncière 77.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 77.6
+              "land_share_pct": 77.5
             }
           },
           {
@@ -2666,10 +2666,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.2 % (bande 40–65 %).",
+            "message": "Part foncière 71.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.2
+              "land_share_pct": 71.1
             }
           },
           {
@@ -2874,20 +2874,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 78.7 % (bande 40–65 %).",
+            "message": "Part foncière 78.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 78.7
+              "land_share_pct": 78.8
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 6.7 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 6.9 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 6.7,
+              "at_cap_pct": 6.9,
               "at_floor_pct": 0.0
             }
           }
@@ -2978,10 +2978,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.8 % (bande 40–65 %).",
+            "message": "Part foncière 70.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.8
+              "land_share_pct": 70.6
             }
           },
           {
@@ -3082,20 +3082,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 81.1 % (bande 40–65 %).",
+            "message": "Part foncière 80.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 81.1
+              "land_share_pct": 80.8
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 9.7 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 9.8 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 9.7,
+              "at_cap_pct": 9.8,
               "at_floor_pct": 0.0
             }
           }
@@ -3186,20 +3186,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 83.6 % (bande 40–65 %).",
+            "message": "Part foncière 83.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 83.6
+              "land_share_pct": 83.5
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 10.9 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 10.8 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 10.9,
+              "at_cap_pct": 10.8,
               "at_floor_pct": 0.0
             }
           }
@@ -3498,10 +3498,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 77.7 % (bande 40–65 %).",
+            "message": "Part foncière 77.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 77.7
+              "land_share_pct": 77.6
             }
           },
           {
@@ -3615,10 +3615,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 10.6 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 10.7 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 10.6,
+              "at_cap_pct": 10.7,
               "at_floor_pct": 0.0
             }
           }
@@ -3709,10 +3709,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.3 % (bande 40–65 %).",
+            "message": "Part foncière 73.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.3
+              "land_share_pct": 73.0
             }
           },
           {
@@ -3917,10 +3917,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.8 % (bande 40–65 %).",
+            "message": "Part foncière 73.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.8
+              "land_share_pct": 73.6
             }
           },
           {
@@ -4125,10 +4125,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.9 % (bande 40–65 %).",
+            "message": "Part foncière 76.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.9
+              "land_share_pct": 76.7
             }
           },
           {
@@ -4229,20 +4229,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 84.1 % (bande 40–65 %).",
+            "message": "Part foncière 84.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 84.1
+              "land_share_pct": 84.0
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 16.2 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 16.4 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 16.2,
+              "at_cap_pct": 16.4,
               "at_floor_pct": 0.0
             }
           }
@@ -4440,10 +4440,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.8 % (bande 40–65 %).",
+            "message": "Part foncière 76.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.8
+              "land_share_pct": 76.6
             }
           },
           {
@@ -4544,10 +4544,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 80.0 % (bande 40–65 %).",
+            "message": "Part foncière 79.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 80.0
+              "land_share_pct": 79.8
             }
           },
           {
@@ -4648,10 +4648,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 78.4 % (bande 40–65 %).",
+            "message": "Part foncière 78.2 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 78.4
+              "land_share_pct": 78.2
             }
           },
           {
@@ -4752,10 +4752,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 74.1 % (bande 40–65 %).",
+            "message": "Part foncière 74.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 74.1
+              "land_share_pct": 74.5
             }
           },
           {
@@ -4856,10 +4856,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.6 % (bande 40–65 %).",
+            "message": "Part foncière 76.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.6
+              "land_share_pct": 76.4
             }
           },
           {
@@ -5064,10 +5064,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.9 % (bande 40–65 %).",
+            "message": "Part foncière 68.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.9
+              "land_share_pct": 68.7
             }
           },
           {
@@ -5171,10 +5171,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.6 % (bande 40–65 %).",
+            "message": "Part foncière 68.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.6
+              "land_share_pct": 68.4
             }
           },
           {
@@ -5483,10 +5483,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 63.9 % (bande 40–65 %).",
+            "message": "Part foncière 63.7 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 63.9
+              "land_share_pct": 63.7
             }
           },
           {
@@ -5691,10 +5691,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.1 % (bande 40–65 %).",
+            "message": "Part foncière 68.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.1
+              "land_share_pct": 68.0
             }
           },
           {
@@ -5795,10 +5795,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 60.3 % (bande 40–65 %).",
+            "message": "Part foncière 59.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 60.3
+              "land_share_pct": 59.6
             }
           },
           {
@@ -5899,10 +5899,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.6 % (bande 40–65 %).",
+            "message": "Part foncière 67.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.6
+              "land_share_pct": 67.9
             }
           },
           {
@@ -6003,10 +6003,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.3 % (bande 40–65 %).",
+            "message": "Part foncière 66.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.3
+              "land_share_pct": 66.0
             }
           },
           {
@@ -6107,10 +6107,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.8 % (bande 40–65 %).",
+            "message": "Part foncière 67.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.8
+              "land_share_pct": 67.6
             }
           },
           {
@@ -6211,10 +6211,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.2 % (bande 40–65 %).",
+            "message": "Part foncière 66.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.2
+              "land_share_pct": 66.1
             }
           },
           {
@@ -6315,10 +6315,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.3 % (bande 40–65 %).",
+            "message": "Part foncière 63.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.3
+              "land_share_pct": 63.8
             }
           },
           {
@@ -6419,10 +6419,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.6 % (bande 40–65 %).",
+            "message": "Part foncière 66.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.6
+              "land_share_pct": 66.5
             }
           },
           {
@@ -7043,10 +7043,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.0 % (bande 40–65 %).",
+            "message": "Part foncière 69.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.0
+              "land_share_pct": 69.8
             }
           },
           {
@@ -7147,10 +7147,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.1 % (bande 40–65 %).",
+            "message": "Part foncière 65.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.1
+              "land_share_pct": 65.3
             }
           },
           {
@@ -7172,9 +7172,9 @@
         "name": "Noisy-le-Grand",
         "departement": "93",
         "modellable": true,
-        "verdict": "WARN",
+        "verdict": "OK",
         "n_fail": 0,
-        "n_warn": 1,
+        "n_warn": 0,
         "checks": [
           {
             "check": "dvf_coverage",
@@ -7250,11 +7250,11 @@
           {
             "check": "land_share_band",
             "category": "validation",
-            "severity": "WARN",
-            "message": "Part foncière 65.8 % (bande 40–65 %).",
-            "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+            "severity": "OK",
+            "message": "Part foncière 64.9 % (bande 40–65 %).",
+            "adaptation": null,
             "detail": {
-              "land_share_pct": 65.8
+              "land_share_pct": 64.9
             }
           },
           {
@@ -7355,10 +7355,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.1 % (bande 40–65 %).",
+            "message": "Part foncière 67.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.1
+              "land_share_pct": 67.0
             }
           },
           {
@@ -7459,10 +7459,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.3 % (bande 40–65 %).",
+            "message": "Part foncière 76.2 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.3
+              "land_share_pct": 76.2
             }
           },
           {
@@ -7563,10 +7563,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.1 % (bande 40–65 %).",
+            "message": "Part foncière 67.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.1
+              "land_share_pct": 67.0
             }
           },
           {
@@ -7771,10 +7771,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.6 % (bande 40–65 %).",
+            "message": "Part foncière 68.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.6
+              "land_share_pct": 68.7
             }
           },
           {
@@ -7875,10 +7875,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.2 % (bande 40–65 %).",
+            "message": "Part foncière 72.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.2
+              "land_share_pct": 72.7
             }
           },
           {
@@ -8083,10 +8083,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.1 % (bande 40–65 %).",
+            "message": "Part foncière 68.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.1
+              "land_share_pct": 68.6
             }
           },
           {
@@ -8187,10 +8187,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 77.0 % (bande 40–65 %).",
+            "message": "Part foncière 76.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 77.0
+              "land_share_pct": 76.8
             }
           },
           {
@@ -8291,10 +8291,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.1 % (bande 40–65 %).",
+            "message": "Part foncière 63.4 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.1
+              "land_share_pct": 63.4
             }
           },
           {
@@ -8395,10 +8395,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.1 % (bande 40–65 %).",
+            "message": "Part foncière 66.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.1
+              "land_share_pct": 66.1
             }
           },
           {
@@ -8499,10 +8499,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 61.9 % (bande 40–65 %).",
+            "message": "Part foncière 61.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 61.9
+              "land_share_pct": 61.8
             }
           },
           {
@@ -8603,10 +8603,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 58.3 % (bande 40–65 %).",
+            "message": "Part foncière 58.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 58.3
+              "land_share_pct": 58.1
             }
           },
           {
@@ -8811,10 +8811,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 58.6 % (bande 40–65 %).",
+            "message": "Part foncière 58.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 58.6
+              "land_share_pct": 58.3
             }
           },
           {
@@ -8915,10 +8915,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.6 % (bande 40–65 %).",
+            "message": "Part foncière 64.0 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.6
+              "land_share_pct": 64.0
             }
           },
           {
@@ -9123,10 +9123,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.0 % (bande 40–65 %).",
+            "message": "Part foncière 71.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.0
+              "land_share_pct": 71.1
             }
           },
           {
@@ -9227,10 +9227,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.2 % (bande 40–65 %).",
+            "message": "Part foncière 73.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.2
+              "land_share_pct": 73.1
             }
           },
           {
@@ -9334,10 +9334,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 62.3 % (bande 40–65 %).",
+            "message": "Part foncière 62.0 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 62.3
+              "land_share_pct": 62.0
             }
           },
           {
@@ -9441,10 +9441,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.2 % (bande 40–65 %).",
+            "message": "Part foncière 70.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.2
+              "land_share_pct": 70.6
             }
           },
           {
@@ -9545,10 +9545,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 72.8 % (bande 40–65 %).",
+            "message": "Part foncière 71.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 72.8
+              "land_share_pct": 71.9
             }
           },
           {
@@ -9756,10 +9756,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.7 % (bande 40–65 %).",
+            "message": "Part foncière 67.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.7
+              "land_share_pct": 67.6
             }
           },
           {
@@ -9967,10 +9967,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.0 % (bande 40–65 %).",
+            "message": "Part foncière 67.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.0
+              "land_share_pct": 67.6
             }
           },
           {
@@ -10074,10 +10074,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.9 % (bande 40–65 %).",
+            "message": "Part foncière 65.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.9
+              "land_share_pct": 65.7
             }
           },
           {
@@ -10181,10 +10181,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.1 % (bande 40–65 %).",
+            "message": "Part foncière 67.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.1
+              "land_share_pct": 67.0
             }
           },
           {
@@ -10288,10 +10288,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.4 % (bande 40–65 %).",
+            "message": "Part foncière 67.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.4
+              "land_share_pct": 67.7
             }
           },
           {
@@ -10392,10 +10392,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.3 % (bande 40–65 %).",
+            "message": "Part foncière 76.2 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.3
+              "land_share_pct": 76.2
             }
           },
           {
@@ -10499,10 +10499,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.5 % (bande 40–65 %).",
+            "message": "Part foncière 64.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.5
+              "land_share_pct": 64.2
             }
           },
           {
@@ -10814,10 +10814,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.6 % (bande 40–65 %).",
+            "message": "Part foncière 71.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.6
+              "land_share_pct": 71.4
             }
           },
           {
@@ -11129,10 +11129,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 58.6 % (bande 40–65 %).",
+            "message": "Part foncière 58.0 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 58.6
+              "land_share_pct": 58.0
             }
           },
           {
@@ -11343,10 +11343,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.9 % (bande 40–65 %).",
+            "message": "Part foncière 68.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.9
+              "land_share_pct": 68.7
             }
           },
           {
@@ -11450,10 +11450,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 60.8 % (bande 40–65 %).",
+            "message": "Part foncière 60.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 60.8
+              "land_share_pct": 60.6
             }
           },
           {
@@ -11557,10 +11557,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 77.1 % (bande 40–65 %).",
+            "message": "Part foncière 77.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 77.1
+              "land_share_pct": 77.3
             }
           },
           {
@@ -11664,10 +11664,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.7 % (bande 40–65 %).",
+            "message": "Part foncière 64.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.7
+              "land_share_pct": 64.1
             }
           },
           {
@@ -11771,10 +11771,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.2 % (bande 40–65 %).",
+            "message": "Part foncière 68.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.2
+              "land_share_pct": 68.0
             }
           },
           {
@@ -11878,10 +11878,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.5 % (bande 40–65 %).",
+            "message": "Part foncière 70.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.5
+              "land_share_pct": 70.3
             }
           },
           {
@@ -11985,10 +11985,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 59.9 % (bande 40–65 %).",
+            "message": "Part foncière 59.5 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 59.9
+              "land_share_pct": 59.5
             }
           },
           {
@@ -12193,10 +12193,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 62.9 % (bande 40–65 %).",
+            "message": "Part foncière 62.7 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 62.9
+              "land_share_pct": 62.7
             }
           },
           {
@@ -12300,10 +12300,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 61.8 % (bande 40–65 %).",
+            "message": "Part foncière 61.7 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 61.8
+              "land_share_pct": 61.7
             }
           },
           {
@@ -12407,10 +12407,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.3 % (bande 40–65 %).",
+            "message": "Part foncière 66.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.3
+              "land_share_pct": 66.0
             }
           },
           {
@@ -12521,10 +12521,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 18.6 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 18.7 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 18.6,
+              "at_cap_pct": 18.7,
               "at_floor_pct": 0.0
             }
           }
@@ -12615,10 +12615,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 75.6 % (bande 40–65 %).",
+            "message": "Part foncière 75.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 75.6
+              "land_share_pct": 75.7
             }
           },
           {
@@ -12719,10 +12719,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 76.8 % (bande 40–65 %).",
+            "message": "Part foncière 76.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 76.8
+              "land_share_pct": 76.5
             }
           },
           {
@@ -12826,10 +12826,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 57.5 % (bande 40–65 %).",
+            "message": "Part foncière 56.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 57.5
+              "land_share_pct": 56.8
             }
           },
           {
@@ -12933,10 +12933,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.6 % (bande 40–65 %).",
+            "message": "Part foncière 68.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.6
+              "land_share_pct": 68.5
             }
           },
           {
@@ -13147,10 +13147,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.9 % (bande 40–65 %).",
+            "message": "Part foncière 70.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.9
+              "land_share_pct": 70.7
             }
           },
           {
@@ -13254,10 +13254,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 63.3 % (bande 40–65 %).",
+            "message": "Part foncière 62.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 63.3
+              "land_share_pct": 62.8
             }
           },
           {
@@ -13358,10 +13358,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.2 % (bande 40–65 %).",
+            "message": "Part foncière 71.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.2
+              "land_share_pct": 71.0
             }
           },
           {
@@ -13465,10 +13465,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.9 % (bande 40–65 %).",
+            "message": "Part foncière 69.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.9
+              "land_share_pct": 69.7
             }
           },
           {
@@ -13676,10 +13676,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.0 % (bande 40–65 %).",
+            "message": "Part foncière 66.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.0
+              "land_share_pct": 66.9
             }
           },
           {
@@ -13790,10 +13790,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 30.5 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 30.6 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 30.5,
+              "at_cap_pct": 30.6,
               "at_floor_pct": 0.0
             }
           }
@@ -13884,10 +13884,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.5 % (bande 40–65 %).",
+            "message": "Part foncière 68.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.5
+              "land_share_pct": 68.3
             }
           },
           {
@@ -13994,10 +13994,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.9 % (bande 40–65 %).",
+            "message": "Part foncière 68.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.9
+              "land_share_pct": 68.7
             }
           },
           {
@@ -14102,10 +14102,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.8 % (bande 40–65 %).",
+            "message": "Part foncière 64.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.8
+              "land_share_pct": 64.2
             }
           },
           {
@@ -14210,10 +14210,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.3 % (bande 40–65 %).",
+            "message": "Part foncière 70.2 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.3
+              "land_share_pct": 70.2
             }
           },
           {
@@ -14318,10 +14318,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.6 % (bande 40–65 %).",
+            "message": "Part foncière 69.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.6
+              "land_share_pct": 69.3
             }
           },
           {
@@ -14426,10 +14426,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.6 % (bande 40–65 %).",
+            "message": "Part foncière 67.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.6
+              "land_share_pct": 67.8
             }
           },
           {
@@ -14534,10 +14534,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.9 % (bande 40–65 %).",
+            "message": "Part foncière 70.5 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.9
+              "land_share_pct": 70.5
             }
           },
           {
@@ -14750,10 +14750,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 74.6 % (bande 40–65 %).",
+            "message": "Part foncière 73.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 74.6
+              "land_share_pct": 73.4
             }
           },
           {
@@ -14966,10 +14966,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.1 % (bande 40–65 %).",
+            "message": "Part foncière 66.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.1
+              "land_share_pct": 66.9
             }
           },
           {
@@ -15074,10 +15074,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.2 % (bande 40–65 %).",
+            "message": "Part foncière 71.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.2
+              "land_share_pct": 71.3
             }
           },
           {
@@ -15179,10 +15179,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.0 % (bande 40–65 %).",
+            "message": "Part foncière 69.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.0
+              "land_share_pct": 69.7
             }
           },
           {
@@ -15287,10 +15287,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.9 % (bande 40–65 %).",
+            "message": "Part foncière 70.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.9
+              "land_share_pct": 70.4
             }
           },
           {
@@ -15395,10 +15395,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 78.2 % (bande 40–65 %).",
+            "message": "Part foncière 78.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 78.2
+              "land_share_pct": 78.0
             }
           },
           {
@@ -15503,10 +15503,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 70.4 % (bande 40–65 %).",
+            "message": "Part foncière 70.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 70.4
+              "land_share_pct": 70.1
             }
           },
           {
@@ -15719,10 +15719,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.5 % (bande 40–65 %).",
+            "message": "Part foncière 65.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.5
+              "land_share_pct": 65.3
             }
           },
           {
@@ -15827,10 +15827,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 60.7 % (bande 40–65 %).",
+            "message": "Part foncière 59.9 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 60.7
+              "land_share_pct": 59.9
             }
           },
           {
@@ -15854,7 +15854,7 @@
         "modellable": true,
         "verdict": "WARN",
         "n_fail": 0,
-        "n_warn": 2,
+        "n_warn": 3,
         "checks": [
           {
             "check": "dvf_coverage",
@@ -15934,11 +15934,11 @@
           {
             "check": "land_share_band",
             "category": "validation",
-            "severity": "OK",
-            "message": "Part foncière 65.0 % (bande 40–65 %).",
-            "adaptation": null,
+            "severity": "WARN",
+            "message": "Part foncière 65.3 % (bande 40–65 %).",
+            "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.0
+              "land_share_pct": 65.3
             }
           },
           {
@@ -16043,10 +16043,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.0 % (bande 40–65 %).",
+            "message": "Part foncière 70.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.0
+              "land_share_pct": 70.4
             }
           },
           {
@@ -16151,10 +16151,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.4 % (bande 40–65 %).",
+            "message": "Part foncière 65.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.4
+              "land_share_pct": 65.3
             }
           },
           {
@@ -16259,10 +16259,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.9 % (bande 40–65 %).",
+            "message": "Part foncière 64.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.9
+              "land_share_pct": 64.3
             }
           },
           {
@@ -16367,10 +16367,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.8 % (bande 40–65 %).",
+            "message": "Part foncière 65.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.8
+              "land_share_pct": 65.6
             }
           },
           {
@@ -16691,20 +16691,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.8 % (bande 40–65 %).",
+            "message": "Part foncière 68.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.8
+              "land_share_pct": 68.6
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 0.1,
+              "at_cap_pct": 0.0,
               "at_floor_pct": 0.0
             }
           }
@@ -16907,10 +16907,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.9 % (bande 40–65 %).",
+            "message": "Part foncière 66.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.9
+              "land_share_pct": 66.7
             }
           },
           {
@@ -17015,10 +17015,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.4 % (bande 40–65 %).",
+            "message": "Part foncière 69.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.4
+              "land_share_pct": 69.3
             }
           },
           {
@@ -17123,10 +17123,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.4 % (bande 40–65 %).",
+            "message": "Part foncière 73.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.4
+              "land_share_pct": 73.1
             }
           },
           {
@@ -17231,10 +17231,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.6 % (bande 40–65 %).",
+            "message": "Part foncière 73.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.6
+              "land_share_pct": 73.4
             }
           },
           {
@@ -17339,10 +17339,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.9 % (bande 40–65 %).",
+            "message": "Part foncière 64.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.9
+              "land_share_pct": 64.8
             }
           },
           {
@@ -17447,10 +17447,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.1 % (bande 40–65 %).",
+            "message": "Part foncière 68.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.1
+              "land_share_pct": 68.8
             }
           },
           {
@@ -17555,10 +17555,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.8 % (bande 40–65 %).",
+            "message": "Part foncière 67.3 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.8
+              "land_share_pct": 67.3
             }
           },
           {
@@ -17663,10 +17663,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.2 % (bande 40–65 %).",
+            "message": "Part foncière 70.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.2
+              "land_share_pct": 70.8
             }
           },
           {
@@ -17771,10 +17771,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 71.0 % (bande 40–65 %).",
+            "message": "Part foncière 70.8 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 71.0
+              "land_share_pct": 70.8
             }
           },
           {
@@ -17879,10 +17879,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 73.0 % (bande 40–65 %).",
+            "message": "Part foncière 72.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 73.0
+              "land_share_pct": 72.9
             }
           },
           {
@@ -17987,10 +17987,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.0 % (bande 40–65 %).",
+            "message": "Part foncière 68.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.0
+              "land_share_pct": 68.9
             }
           },
           {
@@ -18095,10 +18095,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.9 % (bande 40–65 %).",
+            "message": "Part foncière 68.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.9
+              "land_share_pct": 68.4
             }
           },
           {
@@ -18203,10 +18203,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 62.4 % (bande 40–65 %).",
+            "message": "Part foncière 61.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 62.4
+              "land_share_pct": 61.3
             }
           },
           {
@@ -18230,7 +18230,7 @@
         "modellable": true,
         "verdict": "WARN",
         "n_fail": 0,
-        "n_warn": 2,
+        "n_warn": 1,
         "checks": [
           {
             "check": "dvf_coverage",
@@ -18310,11 +18310,11 @@
           {
             "check": "land_share_band",
             "category": "validation",
-            "severity": "WARN",
-            "message": "Part foncière 65.1 % (bande 40–65 %).",
-            "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
+            "severity": "OK",
+            "message": "Part foncière 64.8 % (bande 40–65 %).",
+            "adaptation": null,
             "detail": {
-              "land_share_pct": 65.1
+              "land_share_pct": 64.8
             }
           },
           {
@@ -18527,10 +18527,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.9 % (bande 40–65 %).",
+            "message": "Part foncière 68.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.9
+              "land_share_pct": 68.7
             }
           },
           {
@@ -18635,10 +18635,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.8 % (bande 40–65 %).",
+            "message": "Part foncière 63.9 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.8
+              "land_share_pct": 63.9
             }
           },
           {
@@ -18743,10 +18743,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.3 % (bande 40–65 %).",
+            "message": "Part foncière 65.9 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.3
+              "land_share_pct": 65.9
             }
           },
           {
@@ -18851,10 +18851,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.0 % (bande 40–65 %).",
+            "message": "Part foncière 65.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.0
+              "land_share_pct": 65.1
             }
           },
           {
@@ -18959,10 +18959,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.2 % (bande 40–65 %).",
+            "message": "Part foncière 66.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.2
+              "land_share_pct": 66.1
             }
           },
           {
@@ -19067,10 +19067,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 68.5 % (bande 40–65 %).",
+            "message": "Part foncière 67.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 68.5
+              "land_share_pct": 67.6
             }
           },
           {
@@ -19175,10 +19175,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.6 % (bande 40–65 %).",
+            "message": "Part foncière 67.0 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.6
+              "land_share_pct": 67.0
             }
           },
           {
@@ -19283,10 +19283,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.7 % (bande 40–65 %).",
+            "message": "Part foncière 66.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.7
+              "land_share_pct": 66.1
             }
           },
           {
@@ -19391,10 +19391,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.5 % (bande 40–65 %).",
+            "message": "Part foncière 66.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.5
+              "land_share_pct": 66.4
             }
           },
           {
@@ -19499,10 +19499,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 66.4 % (bande 40–65 %).",
+            "message": "Part foncière 65.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 66.4
+              "land_share_pct": 65.7
             }
           },
           {
@@ -19607,10 +19607,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 64.7 % (bande 40–65 %).",
+            "message": "Part foncière 63.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 64.7
+              "land_share_pct": 63.8
             }
           },
           {
@@ -19715,10 +19715,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.3 % (bande 40–65 %).",
+            "message": "Part foncière 65.1 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.3
+              "land_share_pct": 65.1
             }
           },
           {
@@ -19823,10 +19823,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 67.8 % (bande 40–65 %).",
+            "message": "Part foncière 67.7 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 67.8
+              "land_share_pct": 67.7
             }
           },
           {
@@ -19931,10 +19931,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.5 % (bande 40–65 %).",
+            "message": "Part foncière 65.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.5
+              "land_share_pct": 65.4
             }
           },
           {

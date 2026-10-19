@@ -108,6 +108,16 @@ def main():
         if m not in todo and m not in results:
             results[m] = {"key": m, "status": "ok", "returncode": 0,
                           "note": "existing output reused"}
+    # Build each département's exempt-property flags once, before the workers
+    # start: otherwise every worker would download and parse the same national
+    # DGFiP files at the same time (≈1 GB of memory each).
+    if todo:
+        import exemptions
+        import ingest
+        ingest.CACHE_DIR = str(cache_dir)
+        for dep in sorted({COMMUNES[k].departement for k in todo}):
+            print(f"preparing exempt-property flags for département {dep}", flush=True)
+            exemptions.flags_for_departement(dep)
     with ThreadPoolExecutor(max_workers=max(1, a.workers)) as pool:
         futs = {pool.submit(_run_one, k, out_dir, cache_dir, log_dir, a.timeout): k
                 for k in todo}

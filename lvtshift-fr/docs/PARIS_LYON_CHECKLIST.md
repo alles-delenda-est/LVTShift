@@ -8,14 +8,14 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, branch `depreciation-old-stock`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule and exempt public property, branch `exempt-public-property`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 78,189 | €1,840.9 M | 83.9 % | 47.6 % | 15.3 % | 54.0 % |
-| Lyon | 34,142 | €362.9 M | 72.0 % | 0.0 % | 15.0 % | 69.6 % |
-| Paris extra-muros (122) | 608,249 | €3,569.3 M | 74.1 % | 1.3 % | 16.8 % | 68.9 % |
-| Lyon extra-muros (57) | 246,426 | €528.2 M | 67.4 % | 0.0 % | 20.3 % | 69.6 % |
+| Paris | 75,104 | €1,840.9 M | 83.8 % | 47.6 % | 14.9 % | 53.3 % |
+| Lyon | 31,025 | €362.9 M | 71.9 % | 0.0 % | 14.6 % | 67.7 % |
+| Paris extra-muros (122) | 566,756 | €3,569.3 M | 74.0 % | 1.3 % | 15.7 % | 68.8 % |
+| Lyon extra-muros (57) | 224,915 | €528.2 M | 67.0 % | 0.0 % | 18.2 % | 70.0 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -27,6 +27,17 @@ fall from 55 communes to 1 (Neuilly-sur-Seine). Paris keeps 47.6 % of parcels at
 the cap, which is genuine at Paris prices. The direction of every distributional
 result is unchanged: the full before/after table is in
 `output/diagnostics/depreciation_before_after.csv`, summarised under A7.
+
+**Exempt public property (spec 0003).** Parcels held entirely by the State, local
+authorities or public hospitals / universities / schools, with no lease, condominium
+or private manager, are now treated as exempt today and under the LVT (DGFiP
+« personnes morales » files, conservative rule). "Parcels" above count taxable
+parcels only (Paris 3,085 exempt, Lyon 3,117, Paris ring 41,493, Lyon ring 21,511,
+mostly roads, parks and other public land). They carried 4.5–9.6 % of the levy the
+baseline spread onto them (Paris 4.9 %, Lyon 4.7 %, Grenoble 8.2 %, Roubaix 9.6 %); that share now
+falls on taxable parcels. Land shares barely move; the income gradient flattens
+somewhat at the bottom (Grenoble poorest quintile −7.5 → −3.7 %, La Rochelle −22.8
+→ −14.7 %) but every direction holds (Paris −18.1/+11.4 → −17.5/+12.1).
 
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
@@ -44,7 +55,7 @@ result is unchanged: the full before/after table is in
   parcels still at the 85 % cap: in the dearest streets land really is above 85 %
   of value. So much of Paris still gets a near-uniform split, and the result reads
   largely as a move from today's floor-area bill to a market-value bill. It is
-  strongly progressive (poorest income quintile −18.1 %, richest +11.4 %). Options:
+  strongly progressive (poorest income quintile −17.5 %, richest +12.1 %). Options:
   (a) publish with a caveat, framed as "where land is ~85 % of value, LVT ≈ a
       modern value tax";
   (b) also raise the cap for Paris (e.g. 0.95), letting the dearest streets

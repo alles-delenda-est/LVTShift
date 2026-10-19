@@ -113,6 +113,12 @@ DATA_SOURCES = {
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
+    # DGFiP « Fichiers des locaux et des parcelles des personnes morales »
+    # (Licence Ouverte 2.0, annual). Catalog of yearly zip attachments; ids change
+    # every vintage, so exemptions._attachments() matches them by pattern.
+    "pm_catalog": ("https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
+                   "fichiers-des-locaux-et-des-parcelles-des-personnes-morales/attachments"),
+
     # Filosofi (INSEE): IRIS-level income. 2021 is the last produced vintage
     # (2022 not published). CSV zip -> BASE_TD_FILO_IRIS_2021_DISP.csv (sep ';'),
     # keyed on IRIS (9-digit code_iris), median = DISP_MED21. Covers communes
@@ -245,6 +251,9 @@ TERRITORIES = {
     },
 }
 
+# Keys of the Métropole de Lyon communes (price-index geography).
+LYON_METROPOLE_KEYS = frozenset(TERRITORIES["lyon-extra-muros"]["members"])
+
 
 # ------------------------------------------------------------------ #
 # Land-valuation benchmarks (classify-then-price; see THEORY.md)
@@ -321,3 +330,10 @@ def slug_of(cfg) -> str:
 def data_codes_of(cfg) -> tuple:
     """Data INSEE codes for any config-like object (see CommuneConfig.data_codes)."""
     return getattr(cfg, "data_codes", None) or (cfg.insee_code,)
+
+
+# INSEE codes of the Métropole de Lyon (Lyon, Villeurbanne and the 57-commune
+# ring): where the Métropole's own property counts as on its territory
+# (exemptions._in_territory).
+LYON_METROPOLE_INSEE = frozenset(
+    {"69123", "69266"} | {COMMUNES[k].insee_code for k in LYON_METROPOLE_KEYS})

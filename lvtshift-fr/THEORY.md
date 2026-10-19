@@ -126,7 +126,7 @@ propagates visibly rather than silently.
   market-conditional: effective age capped at 30 years, phased in continuously
   as the IRIS price/rebuild-cost ratio goes from 1.2 to 2.5 (q at IRIS level so
   land uplift is not read as a newer building). Clip warnings fall from 55 to 1
-  (Neuilly); Paris 83.9 % with 47.6 % still at the cap, which is genuine at
+  (Neuilly); Paris 83.8 % with 47.6 % still at the cap, which is genuine at
   Paris prices. Every distributional direction survived the change, so the
   quintile story is robust to the building-value assumption. Paris still reads
   largely as a revaluation from a floor-area bill to a value bill, and rests on

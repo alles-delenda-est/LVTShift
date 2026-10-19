@@ -39,6 +39,7 @@ française.
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
 | Géométrie IRIS | Contours IRIS (IGN) | WFS `STATISTICALUNITS.IRIS:contours_iris` | courant | rattachement parcelle → IRIS pour le revenu |
 | Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 | analyse distributive (quintiles) |
+| Foncier public exonéré | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | zips annuels via le catalogue data.economie.gouv.fr | situation 2025 | repérer le foncier public manifestement exonéré de TFPB (§3.5) |
 
 Toutes sous Licence Ouverte / Etalab. Les URL exactes sont dans
 `config.DATA_SOURCES`.
@@ -130,6 +131,31 @@ calage sur la valeur de marché** (la VLC 1970 est régressive vs marché ; un c
 dégraderait la fidélité à la base actuelle) ; une variante pondérée par catégorie
 n'existe qu'en sensibilité étiquetée.
 
+**Foncier public exonéré** (`exemptions.py`, spec 0003). L'art. 1382-1° du CGI
+exonère les propriétés de l'État, des régions, des départements, des communes, de
+leurs groupements et des établissements publics scientifiques, d'enseignement et
+d'assistance affectées à un service public et improductives de revenus. Les
+fichiers DGFiP « personnes morales » listent chaque droit détenu par une personne
+morale sur chaque parcelle et chaque local, avec la forme juridique INSEE du
+titulaire (98,4 % de leurs identifiants de parcelle se retrouvent au cadastre). Ils
+ne portent ni code d'exonération ni affectation : la propriété est donc un
+indicateur, et la règle pèche par défaut. Une parcelle n'est exonérée que si
+**tous** les titulaires de droits sur le sol et sur chaque local sont des
+personnes publiques éligibles en pleine propriété, sur leur propre territoire (le
+bien d'une commune ou d'un département ailleurs n'est que partiellement exonéré,
+BOFIP BOI-IF-TFB-10-50-10-10 §90/§250), sans syndic de copropriété, sans bail
+(emphytéose, bail à construction, AOT…), sans démembrement et sans gérant privé ou
+bailleur (les locaux de réseaux type poste ENEDIS sont ignorés). Le foncier public
+**sans** local enregistré n'est exonéré que si le modèle n'y voit pas non plus de
+bâtiment (parcs, bois, cimetières) ; un bâtiment y reste imposable (concession type
+Stade de France) tant qu'il n'est pas corroboré. Les parcelles exonérées ne portent
+aucune part du produit actuel et sortent de l'assiette LVT : le même produit pèse
+sur les parcelles imposables. À Paris, 3 085 parcelles (dont 1 349 bâties) sont
+signalées ; elles portaient 90,5 M€ (4,9 %) du produit que l'état initial leur
+attribuait. Les dénominations ne servent qu'à reconnaître réseaux et bailleurs et
+ne sont jamais stockées ni publiées. `--no-exemptions` reproduit le calcul sans
+signalement.
+
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
 fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
@@ -164,11 +190,11 @@ continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m
 parcelles bâties étaient à la borne de 0,85 (Lyon 59,8 % ; 55 communes signalées)
 et le chiffre de 84,9 % était fixé par la borne. La règle du bâti entretenu (§3.1)
 valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais à
-**83,9 %**, avec 47,6 % des parcelles bâties encore à la borne. Ce reliquat est réel,
+**83,8 %**, avec 47,6 % des parcelles bâties encore à la borne. Ce reliquat est réel,
 pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
 reconstruction laisse un foncier supérieur à 85 % dans les rues chères
 (Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
-passe à 72,0 %, sans parcelle à la borne ; sur le panel, les alertes
+passe à 71,9 %, sans parcelle à la borne ; sur le panel, les alertes
 `land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
 (borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
 parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »
@@ -267,11 +293,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
     terrains à bâtir. `audit_land.py <commune>` chiffre, par libellé de zone, la
     part de l'impôt qu'il porte.
-11. **Les exonérations ne sont pas modélisées.** Le produit REI est net
-    d'exonérations (logement social neuf, art. 1384 A CGI ; abattement QPV ;
-    foncier public), mais l'état initial le répartit sur toutes les parcelles
-    bâties — surestimant la cotisation actuelle des HLM exonérés et la
-    sous-estimant ailleurs (sensible en Seine-Saint-Denis et à Paris).
+11. **Les exonérations ne sont que partiellement modélisées.** Le foncier public
+    manifestement exonéré est repéré (§3.5), mais prudemment : les locaux publics en
+    copropriété ou sous bail, les lieux de culte détenus par des associations, les
+    écoles et hôpitaux privés non lucratifs, l'Assemblée et le Sénat (formes
+    juridiques atypiques), les exonérations partielles hors territoire et les
+    bâtiments publics sans local enregistré restent imposables. Les exonérations
+    temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
+    pas identifiables en données ouvertes : l'état initial surestime encore la
+    cotisation actuelle des HLM exonérés et la sous-estime ailleurs (sensible en
+    Seine-Saint-Denis).
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

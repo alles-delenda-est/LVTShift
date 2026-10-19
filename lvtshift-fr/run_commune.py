@@ -26,6 +26,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
+import exemptions
 import ingest
 import run_pipeline as rp
 from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
@@ -133,7 +134,7 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     return parcels
 
 
-def prepare(cfg, layers, use_dpe=True):
+def prepare(cfg, layers, use_dpe=True, use_exemptions=True):
     """Fetch + shape all inputs for one commune."""
     parcels = ingest.fetch_parcels(cfg)
     sales, tab = ingest.fetch_dvf(cfg)
@@ -176,6 +177,16 @@ def prepare(cfg, layers, use_dpe=True):
     # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
     parcels = classify_and_price_land(cfg, parcels, buildings, tab)
 
+    # Obviously TFPB-exempt public property (DGFiP personnes morales, spec 0003)
+    if use_exemptions:
+        ex = exemptions.exempt_public(cfg, parcels, parcels["land_type"].eq("built"))
+        parcels = parcels.merge(ex, on="idpar", how="left")
+        parcels["is_exempt_public"] = parcels["is_exempt_public"].fillna(False).astype(bool)
+        n_ex = int(parcels["is_exempt_public"].sum())
+        built_ex = int((parcels["is_exempt_public"] & parcels["land_type"].eq("built")).sum())
+        print(f"  [{cfg.name}] exempt public property: {n_ex} parcels "
+              f"({built_ex} built), tiers {parcels['exempt_tier'].value_counts().to_dict()}")
+
     # IRIS code per parcel + Filosofi income (drives the distributional charts)
     parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
                             on="idpar", how="left")
@@ -207,6 +218,8 @@ def main():
     ap.add_argument("--no-dpe", action="store_true",
                     help="don't anchor construction year on DPE (BD TOPO only) "
                          "— for the depreciation side-by-side")
+    ap.add_argument("--no-exemptions", action="store_true",
+                    help="don't flag exempt public property (before/after comparison)")
     ap.add_argument("--cache-dir", default=None,
                     help="cache raw downloads here (resumable batch runs); "
                          "default: env LVTFR_CACHE_DIR, else no cache")
@@ -217,7 +230,8 @@ def main():
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
     parcels, buildings, sales, tfpb, iris_income = prepare(
-        cfg, tuple(args.layers), use_dpe=not args.no_dpe)
+        cfg, tuple(args.layers), use_dpe=not args.no_dpe,
+        use_exemptions=not args.no_exemptions)
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
@@ -258,6 +272,9 @@ def main():
         "improvement_value": o["taxable_improvement_value"].values,
         "current_tax": o["current_tax"].values,
         "new_tax": o["new_tax"].values,
+        "is_exempt_public": p.get("is_exempt_public",
+                                  pd.Series([False] * len(p))).values,
+        "exempt_tier": p.get("exempt_tier", pd.Series([None] * len(p))).values,
     })
     ddir = Path(args.out_dir) / "diagnostics"
     ddir.mkdir(parents=True, exist_ok=True)

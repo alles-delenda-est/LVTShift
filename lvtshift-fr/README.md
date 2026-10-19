@@ -43,6 +43,7 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Année de construction | **DPE logements existants** (ADEME) | période de construction → dépréciation (BD TOPO `date_d_apparition` peu fiable/souvent nulle) |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
+| Foncier public exonéré | fichiers DGFiP des **personnes morales** (locaux et parcelles) | repérer le foncier public manifestement exonéré de TFPB (règle prudente) |
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
 | Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
 | Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
@@ -88,7 +89,7 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 | Année de construction inférée (DPE) | année de construction exacte par local |
 | Pas de typologie de propriétaires | table propriétaires (HLM, SCI, personnes physiques…) |
 | Pas de vacance | indicateur de vacance 5 ans glissants |
-| Exonérations ignorées | champs d'exonération par local |
+| Exonérations approchées par la propriété publique (règle prudente), exonérations temporaires ignorées | champs d'exonération par local |
 | Appariement bâtiment-parcelle approximatif | liens MAJIC natifs |
 
 **C'est l'argument d'accès** : la démo va jusqu'ici sur données ouvertes ;
@@ -156,7 +157,7 @@ export CSV seul : `run(..., make_report=False)`.
   La dépréciation du bâti ancien entretenu se fait à l'**âge effectif** (au
   plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
   reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
-  à la borne de 85 %. Avec la règle, Paris ressort à 83,9 % (47,6 % à la borne,
+  à la borne de 85 %. Avec la règle, Paris ressort à 83,8 % (47,6 % à la borne,
   un reliquat réel aux prix parisiens) et seule Neuilly-sur-Seine reste signalée.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de

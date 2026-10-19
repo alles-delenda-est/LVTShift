@@ -195,6 +195,19 @@ export default function MethodologiePage() {
           </p>
 
           <p>
+            <strong>Le foncier public exonéré</strong> (ministères, hôpitaux
+            publics, écoles, mairies, parcs…) ne paie pas la taxe foncière
+            aujourd&apos;hui et n&apos;en paierait pas davantage dans la
+            simulation. Il est repéré grâce aux fichiers de la DGFiP sur les
+            biens des personnes morales, selon une règle prudente : une
+            parcelle n&apos;est retenue que si tous ses titulaires de droits
+            sont des personnes publiques en pleine propriété, sans bail ni
+            copropriété. À Paris, ces parcelles portaient 4,9&nbsp;% du produit
+            que le modèle leur attribuait auparavant ; ce montant est désormais
+            réparti sur les parcelles réellement imposables.
+          </p>
+
+          <p>
             Cette approche <em>classer-puis-valoriser</em> remplace une
             méthode antérieure qui appliquait une part foncière uniforme à
             toutes les parcelles — source d&apos;artefacts importants dans
@@ -512,10 +525,10 @@ export default function MethodologiePage() {
               parisiennes atteignaient alors le plafond de 85&nbsp;% : le
               partage terrain/bâti était fixé par la borne, pas mesuré. Avec
               la règle de l&apos;âge effectif décrite plus haut, la part
-              foncière de Paris ressort à 83,9&nbsp;%, et 47,6&nbsp;% des
+              foncière de Paris ressort à 83,8&nbsp;%, et 47,6&nbsp;% des
               parcelles restent au plafond : aux prix parisiens, le foncier
               dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
-              chères. Lyon passe à 72,0&nbsp;%, sans parcelle au plafond.
+              chères. Lyon passe à 71,9&nbsp;%, sans parcelle au plafond.
             </p>
           </div>
 

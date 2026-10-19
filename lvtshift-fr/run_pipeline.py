@@ -105,18 +105,25 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
     # ---- LVTShift's real revenue-neutral solver -------------------- #
+    # Exempt public property (exemptions.py) pays neither tax: zero share of
+    # today's FB (current_tax above) and zero taxable value in the solve, so the
+    # levy is held neutral over the taxable base only.
+    exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
+    if exempt_col:
+        p[exempt_col] = p[exempt_col].fillna(False).astype(int)
     land_mill, imp_mill, revenue, p = model_split_rate_tax(
         df=p,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
         land_improvement_ratio=cfg.split_rate_ratio,
+        exemption_flag_col=exempt_col,
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
-    p["taxable_land_value"] = p["land_value"]
-    p["taxable_improvement_value"] = p["improvement_value"]
+    # (taxable_land_value / taxable_improvement_value come from the solver:
+    #  equal to land_value / improvement_value except on exempt parcels, 0)
 
     # demographics: IRIS code stands in for geoid; Filosofi median income;
     # minority/black left null - France produces no ethnic statistics
@@ -135,6 +142,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         output_path=f"{out_dir}/{name}.csv",
         model_type=f"split_rate:{cfg.split_rate_ratio}",
         land_millage=land_mill, improvement_millage=imp_mill,
+        exempt_flag_col=exempt_col,
     )
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
