@@ -121,6 +121,57 @@ def sensitivity_band_table(p: pd.DataFrame, cfg, target_revenue: float) -> pd.Da
     return pd.DataFrame(recs, columns=["group", "metric", "variant", "value"])
 
 
+def land_share_summary(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)) -> pd.DataFrame:
+    """Average land-to-property split, long format (scope × metric × variant).
+
+    Scopes: ``ALL`` (every parcel with a market value), ``built`` (parcels priced
+    by the residual) and one ``arr:<code>`` per commune code in the first five
+    characters of ``idpar`` when the run pools several (Paris/Lyon arrondissements).
+    Metrics:
+
+    * ``weighted_land_share`` — Σ land / Σ market value: the *aggregate* split,
+      the headline figure (big parcels count in proportion to their value).
+    * ``mean_land_share`` / ``median_land_share`` — over parcels, unweighted.
+    * ``pct_clipped_high`` / ``pct_clipped_low`` — share of built parcels pinned
+      to the [lo, hi] bounds, i.e. how much of the average the clip decides.
+
+    The weighted share is reported for each ±10 pt land-share variant
+    (``-10%`` / ``+0%`` / ``+10%``, via ``estimate.sensitivity_band``); the other
+    metrics are variant-independent and carry ``+0%`` only.
+    """
+    mv_all = pd.to_numeric(p["market_value"], errors="coerce").fillna(0.0)
+    has_mv = mv_all > 0
+    built = p["lv_flag"].astype(str).str.startswith("built_") if "lv_flag" in p.columns \
+        else pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0) > 0
+    code = p["idpar"].astype(str).str[:5]
+    scopes = {"ALL": has_mv, "built": has_mv & built}
+    if code.nunique() > 1:
+        for c in sorted(code.unique()):
+            scopes[f"arr:{c}"] = has_mv & (code == c)
+
+    variants = estimate.sensitivity_band(p, cfg, shifts)
+    rows = []
+    for scope, m in scopes.items():
+        if not m.any():
+            continue
+        for vkey, v in variants.items():
+            shift = vkey.replace("land_share", "")
+            land = pd.to_numeric(v.loc[m, "land_value"], errors="coerce").fillna(0.0)
+            rows.append((scope, "weighted_land_share", shift,
+                         float(land.sum() / mv_all[m].sum())))
+        sh = pd.to_numeric(p.loc[m, "land_share"], errors="coerce").dropna()
+        rows.append((scope, "mean_land_share", "+0%", float(sh.mean())))
+        rows.append((scope, "median_land_share", "+0%", float(sh.median())))
+        rows.append((scope, "parcels", "+0%", float(m.sum())))
+        if scope != "ALL" and "lv_flag" in p.columns:
+            f = p.loc[m, "lv_flag"].astype(str)
+            rows.append((scope, "pct_clipped_high", "+0%",
+                         float(100 * (f == "built_clipped_high").mean())))
+            rows.append((scope, "pct_clipped_low", "+0%",
+                         float(100 * (f == "built_clipped_low").mean())))
+    return pd.DataFrame(rows, columns=["scope", "metric", "variant", "value"])
+
+
 def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
     """Render the France-relevant PNG charts from the standard export.
 
@@ -218,10 +269,19 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # land_share_raw: the standard export drops non-core columns, so re-attach
     # the pre-clip land share (positional align — same rows, same order) and
     # rewrite, keeping the unclipped distribution promised in METHODOLOGY §6.5.
+    for extra in ("land_share_raw", "land_share", "land_value", "market_value",
+                  "lv_flag"):
+        if extra in p.columns:
+            out[extra] = (p[extra].values if extra == "lv_flag" else
+                          pd.to_numeric(p[extra], errors="coerce").values)
     if "land_share_raw" in p.columns:
-        out["land_share_raw"] = pd.to_numeric(
-            p["land_share_raw"], errors="coerce").values
         out.to_csv(f"{out_dir}/{name}.csv", index=False)
+
+    # Average land-to-property split (aggregate, per-arrondissement when pooled)
+    if {"land_share", "market_value", "land_value"} <= set(p.columns):
+        ls = land_share_summary(p, cfg)
+        ls.to_csv(f"{out_dir}/{name}_land_share.csv", index=False)
+        out.attrs["land_share"] = ls
 
     # ±10 pt land-share sensitivity band (spec 0002): three extra solves,
     # exported long so every published figure can carry its band.

@@ -50,12 +50,13 @@ def fetch_dvf(cfg) -> pd.DataFrame:
       - drop price or surface nulls; trim 1st/99th pctile of €/m²
     """
     frames = []
-    for y in cfg.dvf_years:
-        url = SRC["dvf"].format(year=y, dep=cfg.departement, insee=cfg.insee_code)
-        try:
-            frames.append(pd.read_csv(io.BytesIO(_get(url))))
-        except Exception as e:  # year may not exist yet
-            print(f"  [skip {y}] {e}")
+    for code in cfg.codes:          # arrondissements for Paris/Lyon, else one commune
+        for y in cfg.dvf_years:
+            url = SRC["dvf"].format(year=y, dep=cfg.departement, insee=code)
+            try:
+                frames.append(pd.read_csv(io.BytesIO(_get(url))))
+            except Exception as e:  # year may not exist yet
+                print(f"  [skip {code} {y}] {e}")
     d = pd.concat(frames, ignore_index=True)
 
     d = d[d["nature_mutation"] == "Vente"].copy()
@@ -81,14 +82,15 @@ def fetch_dvf(cfg) -> pd.DataFrame:
 # ------------------------------------------------------------------ #
 def fetch_parcels(cfg) -> pd.DataFrame:
     """Etalab cadastre parcel polygons (geojson.gz) -> idpar, area, geometry."""
-    url = SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=cfg.insee_code)
-    raw = gzip.decompress(_get(url))
-    gj = json.loads(raw)
-    rows = [{
-        "idpar": f["properties"]["id"],
-        "parcel_area_m2": f["properties"].get("contenance"),
-        "geometry": f["geometry"],          # keep raw; geopandas later
-    } for f in gj["features"]]
+    rows = []
+    for code in cfg.codes:          # one file per arrondissement for Paris/Lyon
+        url = SRC["cadastre_parcelles"].format(dep=cfg.departement, insee=code)
+        gj = json.loads(gzip.decompress(_get(url)))
+        rows.extend({
+            "idpar": f["properties"]["id"],
+            "parcel_area_m2": f["properties"].get("contenance"),
+            "geometry": f["geometry"],          # keep raw; geopandas later
+        } for f in gj["features"])
     return pd.DataFrame(rows)
 
 
@@ -232,7 +234,10 @@ def fetch_dpe_parcel_year(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
 
     q = urllib.parse.urlencode({
         "size": 10000, "select": "periode_construction,_geopoint",
-        "qs": f'code_insee_ban:"{cfg.insee_code}"',
+        # arrondissement codes, plus the city code in case BAN files Paris/Lyon
+        # addresses under it
+        "qs": " OR ".join(f'code_insee_ban:"{c}"' for c in
+                          dict.fromkeys((*cfg.codes, cfg.rei_insee))),
     })
     url = f"{SRC['dpe_lines']}?{q}"
     rows = []
@@ -358,7 +363,7 @@ def fetch_rei_tfpb_produit(cfg, layers=("Commune", "GFP"),
     Uses the latest REI millésime available if `year` (default cfg.reference_year)
     has no data yet — OFGL typically lags the reference year by ~1.
     """
-    where = f'idcom="{cfg.insee_code}" and dispositif_fiscal="FB" and varlib like "MONTANT"'
+    where = f'idcom="{cfg.rei_insee}" and dispositif_fiscal="FB" and varlib like "MONTANT"'
     rows, offset = [], 0
     while True:
         q = urllib.parse.urlencode({
@@ -440,7 +445,7 @@ def fetch_filosofi_iris(cfg) -> pd.DataFrame:
         with z.open(name) as fh:
             df = pd.read_csv(fh, sep=";", dtype={"IRIS": str})
 
-    df = df[df["IRIS"].str.startswith(cfg.insee_code)].copy()
+    df = df[df["IRIS"].str.startswith(tuple(cfg.codes))].copy()
     df["median_income_eur"] = pd.to_numeric(df["DISP_MED21"], errors="coerce")
     out = (df[["IRIS", "median_income_eur"]]
            .rename(columns={"IRIS": "iris"})

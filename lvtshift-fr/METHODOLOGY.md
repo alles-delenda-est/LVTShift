@@ -258,6 +258,20 @@ All three offline suites — the upstream `tests/` pytest, the FR unit tests
 shipping silently. CI is offline by design; live `run_commune` stays manual
 (`docs/specs/0004`).
 
+**Paris and Lyon intra-muros** (`python run_commune.py paris|lyon`). Parcels, DVF,
+DPE and Filosofi are pooled over the arrondissement codes (75101–75120,
+69381–69389; `CommuneConfig.sub_codes`), while the revenue target is read under
+the city code (75056 / 69123; `rei_code`) because OFGL's REI carries no
+per-arrondissement FB produit. Each run also writes `{commune}_land_share.csv`:
+the aggregate land-to-property split (Σ land / Σ market value, with the ±10 pt
+band), the unweighted mean/median, the share of built parcels pinned to the
+[15 %, 85 %] clip, and one row per arrondissement. Caveats: the live fetches for
+these two cities are untested (the build environment blocks the open-data hosts);
+OFGL may report Paris' FB produit under layers other than Commune/GFP (check the
+printed target against the city's REI before trusting levels); and construction
+costs are provisional (Paris reuses the Île-de-France pilot value, Lyon the
+Villeurbanne value — see config.py and PR #16).
+
 Communes: `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`. Flags: `--layers` (REI scope), `--no-dpe` (BD TOPO year
 only, for the depreciation comparison), `--no-report` (CSV only). On Windows set

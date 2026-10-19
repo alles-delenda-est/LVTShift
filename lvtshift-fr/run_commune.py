@@ -265,6 +265,20 @@ def main():
     lc["levy_eur"] = lc["levy_eur"].round(0)
     print("levy borne by land class:\n", lc.sort_values("levy_eur").to_string())
 
+    # Average land-to-property split (aggregate Σland/Σmarket, ±10 pt band)
+    ls = out.attrs.get("land_share")
+    if ls is not None and len(ls):
+        w = (ls[ls["metric"] == "weighted_land_share"]
+             .pivot(index="scope", columns="variant", values="value")
+             .reindex(columns=["-10%", "+0%", "+10%"]))
+        extra = (ls[ls["variant"] == "+0%"]
+                 .pivot(index="scope", columns="metric", values="value"))
+        cols = [c for c in ("mean_land_share", "median_land_share",
+                            "pct_clipped_high", "pct_clipped_low", "parcels")
+                if c in extra.columns]
+        print("\naverage land share (value-weighted, with ±10 pt band):\n",
+              w.join(extra[cols]).round(3).to_string())
+
     # ±10 pt land-share sensitivity band (spec 0002): the published headline and
     # the per-category € change, each with its low/central/high across variants.
     band = out.attrs.get("sensitivity")

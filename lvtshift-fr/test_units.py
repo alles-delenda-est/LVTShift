@@ -248,6 +248,134 @@ def test_sensitivity_band_table_shape():
 
 
 # ------------------------------------------------------------------ #
+# Paris / Lyon intra-muros: arrondissement pooling + land-share summary
+# ------------------------------------------------------------------ #
+
+def test_paris_lyon_config_codes():
+    import config
+    assert len(config.PARIS.codes) == 20
+    assert config.PARIS.codes[0] == "75101" and config.PARIS.codes[-1] == "75120"
+    assert config.LYON.codes == tuple(f"6938{i}" for i in range(1, 10))
+    # revenue target is read at the city code, not an arrondissement
+    assert config.PARIS.rei_insee == "75056" and config.LYON.rei_insee == "69123"
+    # ordinary communes are unchanged
+    assert config.CAHORS.codes == ("46042",) and config.CAHORS.rei_insee == "46042"
+    assert {"paris", "lyon"} <= set(config.COMMUNES)
+
+
+def _fake_get_factory(calls):
+    import gzip, json
+    def fake_get(url, timeout=180):
+        calls.append(url)
+        if "cadastre-" in url:
+            code = url.split("cadastre-")[1].split("-")[0]
+            gj = {"features": [{"properties": {"id": f"{code}000AA0001", "contenance": 100},
+                                "geometry": {"type": "Point", "coordinates": [0, 0]}}]}
+            return gzip.compress(json.dumps(gj).encode())
+        if "geo-dvf" in url:
+            raise OSError("no sales in test")           # exercise the skip path
+        return b"{}"
+    return fake_get
+
+
+def test_fetch_parcels_pools_arrondissements(monkeypatch=None):
+    import config
+    calls = []
+    orig = ingest._get
+    ingest._get = _fake_get_factory(calls)
+    try:
+        out = ingest.fetch_parcels(config.LYON)
+    finally:
+        ingest._get = orig
+    assert len(calls) == 9                                  # one file per arrondissement
+    assert out["idpar"].str[:5].nunique() == 9              # ids carry the arr. code
+    assert set(out["idpar"].str[:5]) == set(config.LYON.codes)
+
+
+def test_fetch_dvf_requests_every_arrondissement_year():
+    import config
+    calls = []
+    orig = ingest._get
+    ingest._get = _fake_get_factory(calls)
+    try:
+        try:
+            ingest.fetch_dvf(config.PARIS)
+        except ValueError:
+            pass                                            # nothing to concat: fine
+    finally:
+        ingest._get = orig
+    assert len(calls) == 20 * len(config.PARIS.dvf_years)
+    assert any("/75/75120.csv" in u for u in calls)
+
+
+def test_rei_read_under_city_code():
+    import config, json
+    seen = []
+    orig = ingest._get
+    def fake(url, timeout=180):
+        seen.append(url)
+        return json.dumps({"results": [{"annee": "2025", "destinataire": "Commune",
+                                        "varlib": "MONTANT RÉEL", "valeur": 1.0}]}).encode()
+    ingest._get = fake
+    try:
+        ingest.fetch_rei_tfpb_produit(config.PARIS, layers=("Commune",))
+    finally:
+        ingest._get = orig
+    assert "75056" in urllib_unquote(seen[0]) and "75101" not in urllib_unquote(seen[0])
+
+
+def urllib_unquote(u):
+    import urllib.parse
+    return urllib.parse.unquote_plus(u)
+
+
+def _ls_frame():
+    # two arrondissements; built parcels (one clipped high) + one vacant parcel
+    return pd.DataFrame({
+        "idpar": ["75101000AA0001", "75101000AA0002", "75102000AA0001", "75102000AA0002"],
+        "floor_area_m2": [100.0, 100.0, 100.0, 0.0],
+        "market_value": [1000.0, 1000.0, 2000.0, 500.0],
+        "land_value": [500.0, 850.0, 1000.0, 500.0],
+        "land_share": [0.5, 0.85, 0.5, 1.0],
+        "lv_flag": ["built_residual", "built_clipped_high", "built_residual",
+                    "vacant_unknown_ag"],
+    })
+
+
+def test_land_share_summary_weighted_and_by_arrondissement():
+    import run_pipeline as rp
+    ls = rp.land_share_summary(_ls_frame(), CFG)
+    def v(scope, metric, variant="+0%"):
+        r = ls[(ls.scope == scope) & (ls.metric == metric) & (ls.variant == variant)]
+        return float(r["value"].iloc[0])
+    # built: (500+850+1000) / (1000+1000+2000) = 0.5875, value-weighted
+    assert abs(v("built", "weighted_land_share") - 2350 / 4000) < 1e-9
+    # ALL includes the vacant parcel at share 1.0
+    assert abs(v("ALL", "weighted_land_share") - 2850 / 4500) < 1e-9
+    assert abs(v("arr:75101", "weighted_land_share") - 1350 / 2000) < 1e-9
+    assert abs(v("arr:75102", "weighted_land_share") - 1500 / 2500) < 1e-9
+    # one of three built parcels is pinned to the ceiling
+    assert abs(v("built", "pct_clipped_high") - 100 / 3) < 1e-9
+    assert v("built", "parcels") == 3.0
+
+
+def test_land_share_summary_band_is_monotonic_and_central_exact():
+    import run_pipeline as rp
+    ls = rp.land_share_summary(_ls_frame(), CFG)
+    w = (ls[(ls.scope == "built") & (ls.metric == "weighted_land_share")]
+         .set_index("variant")["value"])
+    assert w["-10%"] < w["+0%"] < w["+10%"]
+    assert abs(w["+0%"] - 2350 / 4000) < 1e-9               # central = headline
+
+
+def test_land_share_summary_single_commune_has_no_arr_rows():
+    import run_pipeline as rp
+    f = _ls_frame().assign(idpar=lambda d: "46042" + d["idpar"].str[5:])
+    ls = rp.land_share_summary(f, CFG)
+    assert not ls["scope"].str.startswith("arr:").any()
+
+
+# ------------------------------------------------------------------ #
 # charts_fr euro-isation
 # ------------------------------------------------------------------ #
 

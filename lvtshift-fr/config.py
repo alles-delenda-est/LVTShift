@@ -31,6 +31,25 @@ class CommuneConfig:
     land_share_bounds: tuple = (0.15, 0.85)
     # Split-rate ratio for the headline scenario (LVTShift convention)
     split_rate_ratio: float = 4.0
+    # Paris / Lyon / Marseille intra-muros: cadastre, DVF, DPE and Filosofi are
+    # keyed on the arrondissement INSEE codes (75101..75120, 69381..69389), but
+    # the taxe foncière is levied — and OFGL's REI reports it — at the city code
+    # (75056, 69123). `sub_codes` lists the arrondissements to pool; `rei_code`
+    # is the city code used for the revenue target. Both empty for ordinary
+    # communes, which keep `insee_code` for everything.
+    sub_codes: tuple = ()
+    rei_code: str | None = None
+
+    @property
+    def codes(self) -> tuple:
+        """INSEE codes whose parcels/sales are pooled (arrondissements, or the
+        commune itself)."""
+        return tuple(self.sub_codes) or (self.insee_code,)
+
+    @property
+    def rei_insee(self) -> str:
+        """INSEE code the REI foncier-bâti produit is read under."""
+        return self.rei_code or self.insee_code
 
 
 # ------------------------------------------------------------------ #
@@ -180,11 +199,28 @@ FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
 # *obviously* exempt on their own.
 EXEMPT_USAGE_VALUES = {"Religieux", "Agricole"}
 
+# Intra-muros cases (spec: Paris/Lyon land share). Parcels, sales and income are
+# pooled over the arrondissements; the revenue target is the city-level REI line.
+# Construction costs are NOT yet sourced for these two: Paris reuses the
+# Île-de-France pilot value (Montreuil) and Lyon the Villeurbanne value. PR #16's
+# SDES-EPTB figures (IdF ~1 914, AuRA ~2 065 €/m²) differ by ~10 %, and a ±15 %
+# move here flows linearly into improvement value — read the land share with its
+# ±10 pt band, and treat the level as provisional until #16 lands.
+PARIS = CommuneConfig(
+    "75056", "Paris", "75",
+    construction_cost_eur_m2=2150.0,
+    sub_codes=tuple(f"751{i:02d}" for i in range(1, 21)), rei_code="75056")
+LYON = CommuneConfig(
+    "69123", "Lyon", "69",
+    construction_cost_eur_m2=1950.0,
+    sub_codes=tuple(f"6938{i}" for i in range(1, 10)), rei_code="69123")
+
 # Registry for the CLI / run_commune driver (--commune <key>)
 COMMUNES = {
     "grenoble": GRENOBLE, "annemasse": ANNEMASSE,
     "villeurbanne": VILLEURBANNE, "roubaix": ROUBAIX, "cahors": CAHORS,
     "montreuil": MONTREUIL, "figeac": FIGEAC,
+    "paris": PARIS, "lyon": LYON,
 }
 
 
