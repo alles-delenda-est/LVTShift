@@ -123,8 +123,10 @@ their ring; the site's panel totals count them once.
 built parcels (Lyon: 59.8 %) sit at the 0.85 upper bound, because the depreciation
 rule writes a ~95-year-old, continuously maintained building down to its 25 % floor
 (≈ €575/m² against a median DVF price of ≈ €10,860/m²): the unclipped aggregate is
-92.9 %. Valuing buildings without that write-down gives 63–79 % (rebuild cost
-€4,000–2,300/m²), which is the more defensible range. The payload's
+92.9 %. Valuing maintained buildings as ~30 years old (the effective age the
+literature supports) gives 82–85 % (rebuild cost €2,760–2,300/m²); no write-down
+at all gives 63–79 %, a lower bound. The level is therefore plausible; what is an
+artefact is that every parcel gets the same split. The payload's
 `headline.built_at_cap_pct` records the share of built parcels at the bound, and
 the site labels the land share "plafonnée" when it is ≥ 50 %.
 

@@ -20,8 +20,10 @@ the ring figures are aggregates of those 179 separate runs, not a metropolitan t
 ⚠ **The land share is not a finding where most parcels hit the 85 % cap.** Share of
 built parcels at the cap: Paris 95.5 %, Lyon 59.8 %, Paris ring 36.5 %, Lyon ring 5.6 %.
 Before the cap, Paris comes out at 92.9 %, because the depreciation rule writes old,
-maintained buildings down to 25 % of rebuild cost. Valuing them without that
-write-down gives 63–79 %. The site now labels capped land shares "plafonnée"
+maintained buildings down to 25 % of rebuild cost. Valuing maintained buildings
+as ~30 years old (the literature's effective age) gives 82–85 %, and no write-down
+at all gives 63–79 % (a lower bound). So the *level* is roughly right; what the cap
+gets wrong is that every Paris parcel receives the same split. The site now labels capped land shares "plafonnée"
 (`headline.built_at_cap_pct` ≥ 50 %). The fix is C1, now in progress on its own branch.
 
 **Verified.**

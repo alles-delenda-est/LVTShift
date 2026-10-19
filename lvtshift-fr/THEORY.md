@@ -119,10 +119,11 @@ propagates visibly rather than silently.
 - **In Paris the model measures a revaluation, not a land/building split, and
   the 85 % land share is an artefact.** Old stock (median age ~95 years) hits
   the 25 % depreciation floor, so the raw land share is 92.9 % and 95.5 % of
-  built parcels sit at the 85 % clip. Valuing buildings without that write-down
-  gives 63–79 % instead: the cap is hit because the depreciation rule treats a
-  maintained Haussmann building as worn out, not because Paris land is worth
-  more than 85 %. With every parcel at the same split, a land tax is simply a
+  built parcels sit at the 85 % clip. Valuing maintained buildings at a ~30-year
+  effective age gives 82–85 % (no write-down at all: 63–79 %, a lower bound): the
+  level is plausible, but the cap is hit because the depreciation rule treats a
+  maintained Haussmann building as worn out, and it hands every parcel the same
+  split. With every parcel at the same split, a land tax is simply a
   tax proportional to market value: the Paris result (strongly progressive,
   poorest −17 %, richest +11 %; flat sensitivity band) is the move from today's
   floor-area bill to a value bill, and rests on the weakest input, the

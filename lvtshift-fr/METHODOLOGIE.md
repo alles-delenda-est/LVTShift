@@ -137,8 +137,10 @@ panel sur le site ne les comptent qu'une fois.
 des parcelles bâties parisiennes (Lyon : 59,8 %) sont à la borne haute de 0,85, car
 la règle de dépréciation ramène un immeuble d'environ 95 ans, entretenu en continu,
 à son plancher de 25 % (≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m²) : la
-part agrégée non bornée est de 92,9 %. Valoriser le bâti sans cette décote donne
-63–79 % (coût de reconstruction 4 000–2 300 €/m²), fourchette plus défendable. Le
+part agrégée non bornée est de 92,9 %. Valoriser le bâti entretenu comme s'il
+avait ~30 ans (âge effectif, cf. littérature) donne 82–85 % (coût de reconstruction
+2 760–2 300 €/m²) ; sans aucune décote, 63–79 % (borne basse). Le niveau est donc
+plausible ; c'est l'uniformité du partage entre parcelles qui est un artefact. Le
 champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à la
 borne, et le site qualifie la part foncière de « plafonnée » quand elle atteint 50 %.
 

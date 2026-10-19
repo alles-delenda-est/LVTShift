@@ -505,8 +505,11 @@ export default function MethodologiePage() {
               ramène un immeuble d&apos;environ 95 ans, pourtant entretenu en
               continu, à 25&nbsp;% de son coût de reconstruction — environ
               575&nbsp;€/m², face à un prix de vente médian d&apos;environ
-              10&nbsp;860&nbsp;€/m². Sans cette décote, la part foncière de
-              Paris se situerait plutôt entre 63 et 79&nbsp;%. Comme toutes les
+              10&nbsp;860&nbsp;€/m². En valorisant le bâti entretenu comme
+              s&apos;il avait une trentaine d&apos;années, la part foncière
+              parisienne ressort entre 82 et 85&nbsp;% : le niveau est
+              plausible, mais le plafond impose le même partage à toutes les
+              parcelles. Comme toutes les
               parcelles reçoivent alors le même partage terrain/bâti, le
               résultat parisien se lit surtout comme le passage d&apos;une
               taxe assise sur la surface à une taxe assise sur la valeur de
