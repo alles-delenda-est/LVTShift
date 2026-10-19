@@ -313,16 +313,19 @@ def assert_aggregate_only(payload: dict) -> None:
         if payload.get(k) is not None:
             assert len(payload[k]) <= 5
     sens = payload.get("headline_sensitivity") or {}
+    assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
         g = sens.get(leg) or {}
-        assert set(g) <= SENSITIVITY_LEG_KEYS,             f"unexpected sensitivity keys: {set(g) - SENSITIVITY_LEG_KEYS}"
+        assert set(g) <= SENSITIVITY_LEG_KEYS,             f"unexpected sensitivity leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
         assert len(g.get("by_category") or []) <= 10
-        for r in g.get("by_category") or []:
-            assert set(r) <= set(BAND_CATEGORY_KEYS)
+        rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
         for k in ("by_income_quintile", "by_income_quintile_within"):
             assert len(g.get(k) or []) <= 5
-            for r in g.get(k) or []:
-                assert set(r) <= set(BAND_QUINTILE_KEYS)
+            rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
+        for r, keys in rows:
+            assert set(r) <= set(keys), f"unexpected band row keys: {set(r) - set(keys)}"
+            # scalars only: a nested list/dict could smuggle per-parcel values
+            assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()),                 "non-scalar value in a band row"
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"

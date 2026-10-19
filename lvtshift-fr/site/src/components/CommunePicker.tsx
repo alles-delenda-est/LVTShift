@@ -201,8 +201,8 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             <CategoryImpactBars
               byCategory={commune.by_category}
               band={{
-                low: commune.headline_sensitivity.low.by_category,
-                high: commune.headline_sensitivity.high.by_category,
+                low: commune.headline_sensitivity?.low?.by_category,
+                high: commune.headline_sensitivity?.high?.by_category,
               }}
             />
             <BandNote />
@@ -227,8 +227,8 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             <IncomeQuintileChart
               quintiles={commune.by_income_quintile}
               band={{
-                low: commune.headline_sensitivity.low.by_income_quintile,
-                high: commune.headline_sensitivity.high.by_income_quintile,
+                low: commune.headline_sensitivity?.low?.by_income_quintile,
+                high: commune.headline_sensitivity?.high?.by_income_quintile,
               }}
             />
             <BandNote />
@@ -255,8 +255,8 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               <IncomeQuintileChart
                 quintiles={commune.by_income_quintile_within ?? null}
                 band={{
-                  low: commune.headline_sensitivity.low.by_income_quintile_within,
-                  high: commune.headline_sensitivity.high.by_income_quintile_within,
+                  low: commune.headline_sensitivity?.low?.by_income_quintile_within,
+                  high: commune.headline_sensitivity?.high?.by_income_quintile_within,
                 }}
               />
               <BandNote />

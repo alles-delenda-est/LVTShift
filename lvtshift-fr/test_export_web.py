@@ -219,3 +219,11 @@ def test_guard_checks_nested_band_rows():
     payload["headline_sensitivity"]["low"]["by_category"][0]["parcel_ids"] = ["x"]
     with pytest.raises(AssertionError):
         ew.assert_aggregate_only(payload)
+    payload["headline_sensitivity"]["low"]["by_category"][0].pop("parcel_ids")
+    payload["headline_sensitivity"]["low"]["by_category"][0]["category"] = ["a", "b"]
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(payload)
+    payload["headline_sensitivity"]["low"]["by_category"][0]["category"] = "Condominium"
+    payload["headline_sensitivity"]["extra"] = {}
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(payload)
