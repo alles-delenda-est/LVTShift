@@ -22,8 +22,9 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     """
     Per-parcel weight w in [0, 1] of the maintained-stock effective-age rule.
 
-    q = median hedonic €/m² of the parcel's area (IRIS when known, else the
-    whole commune) ÷ cfg.construction_cost_eur_m2; w ramps linearly from 0 at
+    q = median hedonic €/m² (habitable) of the parcel's area (IRIS when
+    known, else the whole commune) ÷ the cost per habitable m²
+    (cfg.construction_cost_eur_m2 ÷ cfg.cost_net_to_gross); w ramps linearly from 0 at
     cfg.dep_q_ramp[0] to 1 at cfg.dep_q_ramp[1]. Taking q at area level, not
     per parcel, keeps a local land-price rise from being read as a newer
     building, and the ramp avoids a cliff between neighbouring parcels.
@@ -40,8 +41,11 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     if not (np.isfinite(cost) and cost > 0):
         raise ValueError("construction_cost_eur_m2 must be finite and positive")
     extra = [c for c in (area_col, "category_fr") if c in parcels.columns]
+    # market value of a floor area of 1 at the cost's ratio = price ×
+    # cost_net_to_gross, so q = price ÷ (cost ÷ cost_net_to_gross)
     p = market_value(parcels[["idpar", "cell", "type_local"] + extra]
-                     .assign(floor_area_m2=1.0), surface)
+                     .assign(floor_area_m2=1.0), surface,
+                     getattr(cfg, "cost_net_to_gross", None))
     # The area price is read from built parcels only: vacant plots carry a
     # placeholder type_local and would otherwise drag the median towards the
     # flat price in house-dominated areas. Vacant plots inherit their area's
@@ -49,9 +53,9 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     built = (p["category_fr"].notna() & (p["category_fr"] != "terrain_nu")) \
         if "category_fr" in p.columns else pd.Series(True, index=p.index)
     ref = p[built] if built.any() else p
-    commune_median = ref["eur_m2"].median()
+    commune_median = ref["market_value"].median()
     if area_col in p.columns:
-        area_median = ref.groupby(area_col, observed=True)["eur_m2"].median()
+        area_median = ref.groupby(area_col, observed=True)["market_value"].median()
         price = p[area_col].map(area_median).astype(float).fillna(commune_median)
     else:
         price = pd.Series(commune_median, index=p.index)
@@ -60,6 +64,29 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     out = pd.Series(w.values, index=p["idpar"].values, name="maint_weight")
     # one weight per parcel even if the surface ever carried duplicate keys
     return out[~out.index.duplicated()]
+
+
+def habitable_basis(p: pd.DataFrame, cfg) -> pd.DataFrame:
+    """
+    Restate improvement_value on habitable area, the basis DVF prices use.
+
+    improvement_value arrives as cost per gross m² × the model's floor area.
+    The model's floor area overstates true gross area (BD TOPO counts
+    non-habitable levels), so it is converted to habitable area with the
+    measured cfg.net_to_gross and priced at the cost per habitable m²
+    (cost ÷ cfg.cost_net_to_gross): improvement × net_to_gross ÷
+    cost_net_to_gross, by type_local (unlisted types use 'Appartement').
+    Adds habitable_area_m2; floor_area_m2 is left as is.
+    """
+    ntg = _check_net_to_gross(cfg.net_to_gross)
+    cntg = _check_net_to_gross(cfg.cost_net_to_gross)
+    t = p["type_local"]
+    r = t.map(ntg).fillna(ntg["Appartement"]).astype(float)
+    rc = t.map(cntg).fillna(cntg["Appartement"]).astype(float)
+    out = p.copy()
+    out["improvement_value"] = out["improvement_value"] * r / rc
+    out["habitable_area_m2"] = out["floor_area_m2"] * r
+    return out
 
 
 def improvement_value(buildings: pd.DataFrame, cfg,
@@ -154,14 +181,45 @@ def fit_hedonic(dvf: pd.DataFrame, deflator: dict | None = None):
     return surface, d
 
 
-def market_value(parcels: pd.DataFrame, surface: pd.DataFrame) -> pd.DataFrame:
-    """Predicted market value = hedonic €/m² (by cell & dominant type) × floor area."""
+def _check_net_to_gross(net_to_gross: dict) -> dict:
+    """Validate a {type_local: ratio} map; every ratio must lie in (0, 1].
+
+    Used for both cfg.net_to_gross and cfg.cost_net_to_gross.
+    """
+    if not net_to_gross or "Appartement" not in net_to_gross:
+        raise ValueError("net_to_gross must give at least an 'Appartement' ratio")
+    out = {}
+    for k, v in net_to_gross.items():
+        v = float(v)
+        if not (np.isfinite(v) and 0 < v <= 1):
+            raise ValueError(f"net_to_gross[{k!r}] must be in (0, 1], got {v!r}")
+        out[k] = v
+    return out
+
+
+def market_value(parcels: pd.DataFrame, surface: pd.DataFrame,
+                 net_to_gross: dict | None = None) -> pd.DataFrame:
+    """
+    Predicted market value = hedonic €/m² × habitable floor area.
+
+    The hedonic surface is priced per m² of DVF `surface_reelle_bati`
+    (habitable area), while floor_area_m2 is BD TOPO footprint × storeys (gross
+    external area, walls, stairwells and corridors included). net_to_gross
+    ({type_local: habitable ÷ gross}) converts the latter to the former; types
+    it does not list use the 'Appartement' ratio (non-residential parcels are
+    priced as flats). None keeps the unconverted gross area (tests, legacy).
+    """
     p = parcels.merge(surface, on=["cell", "type_local"], how="left")
     # fall back to cell-level mean across types, then commune mean
     cell_mean = surface.groupby("cell")["eur_m2"].mean()
     p["eur_m2"] = p["eur_m2"].fillna(p["cell"].map(cell_mean))
     p["eur_m2"] = p["eur_m2"].fillna(surface["eur_m2"].mean())
-    p["market_value"] = p["eur_m2"] * p["floor_area_m2"]
+    if net_to_gross is None:
+        ratio = 1.0
+    else:
+        ntg = _check_net_to_gross(net_to_gross)
+        ratio = p["type_local"].map(ntg).fillna(ntg["Appartement"]).astype(float)
+    p["market_value"] = p["eur_m2"] * ratio * p["floor_area_m2"]
     return p
 
 

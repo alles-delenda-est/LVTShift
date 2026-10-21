@@ -98,7 +98,9 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p = parcels.merge(imp, on="idpar", how="left")
     p[["improvement_value", "floor_area_m2"]] = \
         p[["improvement_value", "floor_area_m2"]].fillna(0)
-    p = estimate.market_value(p, surface)
+    # both sides of the residual on habitable area (METHODOLOGY §3.2)
+    p = estimate.habitable_basis(p, cfg)
+    p = estimate.market_value(p, surface, cfg.net_to_gross)
     p = estimate.land_value_residual(p, cfg)
     p = estimate.current_tax(p, commune_tfpb_produit)
 

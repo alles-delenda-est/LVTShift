@@ -186,7 +186,8 @@ def test_maintained_stock_effective_age():
 
 def test_maintenance_weight_ramps_on_area_price_ratio():
     lo, hi = CFG.dep_q_ramp
-    cost = CFG.construction_cost_eur_m2
+    # q = habitable price ÷ cost per habitable m² (cost ÷ cost_net_to_gross)
+    cost = CFG.construction_cost_eur_m2 / CFG.cost_net_to_gross["Appartement"]
     surface = pd.DataFrame({"cell": ["a", "b", "c"], "type_local": ["Appartement"] * 3,
                             "eur_m2": [cost * lo, cost * (lo + hi) / 2, cost * hi * 2]})
     parcels = pd.DataFrame({"idpar": ["1", "2", "3", "4"], "cell": ["a", "b", "c", "c"],
@@ -286,6 +287,53 @@ def test_market_value_scales_with_floor_area():
     assert abs(out["market_value"].iloc[1] - 200000.0) < 1.0   # doubles with area
 
 
+def test_market_value_converts_gross_to_habitable_area():
+    # DVF prices habitable m²; BD TOPO area is gross -> scale by type's ratio
+    surface = pd.DataFrame({"cell": ["A", "A"], "type_local": ["Maison", "Appartement"],
+                            "eur_m2": [2000.0, 3000.0]})
+    parcels = pd.DataFrame({"cell": ["A", "A", "A"],
+                            "type_local": ["Maison", "Appartement", "Local"],
+                            "floor_area_m2": [100.0, 100.0, 100.0]})
+    ntg = {"Appartement": 0.7, "Maison": 0.8}
+    mv = estimate.market_value(parcels, surface, ntg)["market_value"]
+    assert abs(mv.iloc[0] - 2000 * 0.8 * 100) < 1e-6
+    assert abs(mv.iloc[1] - 3000 * 0.7 * 100) < 1e-6
+    # an unlisted type (cell mean price) takes the flat ratio
+    assert abs(mv.iloc[2] - 2500 * 0.7 * 100) < 1e-6
+    for bad in ({"Maison": 0.8}, {"Appartement": 0.0}, {"Appartement": 1.3},
+                {"Appartement": float("nan")}):
+        _assert_raises(ValueError, estimate.market_value, parcels, surface, bad)
+    # every configured commune carries valid ratio maps
+    from config import COMMUNES
+    for c in COMMUNES.values():
+        estimate._check_net_to_gross(c.net_to_gross)
+        estimate._check_net_to_gross(c.cost_net_to_gross)
+
+
+def test_habitable_basis_makes_land_share_independent_of_measured_ratio():
+    import dataclasses
+    p = pd.DataFrame({"type_local": ["Appartement", "Maison", "Local"],
+                      "floor_area_m2": [1000.0, 150.0, 400.0],
+                      "improvement_value": [1000.0 * 1650, 150.0 * 1650, 400.0 * 1650]})
+    surface = pd.DataFrame({"cell": ["A", "A"], "type_local": ["Appartement", "Maison"],
+                            "eur_m2": [4000.0, 3000.0]})
+    p["cell"] = "A"
+    shares = []
+    for r in (0.5, 0.64, 0.9):
+        cfg = dataclasses.replace(CFG, net_to_gross={"Appartement": r, "Maison": r})
+        h = estimate.habitable_basis(p, cfg)
+        m = estimate.market_value(h, surface, cfg.net_to_gross)
+        shares.append(list(1 - m["improvement_value"] / m["market_value"]))
+        # building value = cost per habitable m² × habitable area
+        c = CFG.cost_net_to_gross
+        assert abs(h["improvement_value"].iloc[0]
+                   - 1650 / c["Appartement"] * r * 1000) < 1e-6
+        assert abs(h["habitable_area_m2"].iloc[1] - r * 150) < 1e-9
+    assert np.allclose(shares[0], shares[1]) and np.allclose(shares[1], shares[2])
+    # flats: 1 − (1650 / 0.74) / 4000
+    assert abs(shares[1][0] - (1 - 1650 / CFG.cost_net_to_gross["Appartement"] / 4000)) < 1e-9
+
+
 # ------------------------------------------------------------------ #
 # commune slate completion
 # ------------------------------------------------------------------ #
@@ -328,7 +376,7 @@ def test_maintenance_weight_ignores_unbuilt_parcels():
     # vacant plots carry a placeholder type_local; they must not set the area price
     cost = CFG.construction_cost_eur_m2
     surface = pd.DataFrame({"cell": ["a", "a"], "type_local": ["Maison", "Appartement"],
-                            "eur_m2": [cost * 3.0, cost * 1.0]})
+                            "eur_m2": [cost * 4.0, cost * 1.0]})
     parcels = pd.DataFrame({
         "idpar": ["H1", "H2", "V1", "V2", "V3"], "cell": ["a"] * 5,
         "type_local": ["Maison", "Maison", "Appartement", "Appartement", "Appartement"],
@@ -336,7 +384,7 @@ def test_maintenance_weight_ignores_unbuilt_parcels():
         "iris": ["I1"] * 5,
     })
     w = estimate.maintenance_weight(parcels, surface, CFG)
-    # houses set the price (q = 3, above the ramp); vacant plots inherit it
+    # houses set the price (q = 4 × 0.82, above the ramp); vacant plots inherit it
     assert (w == 1.0).all(), w.to_dict()
     # an IRIS with no built parcel falls back to the commune's built median
     parcels.loc[parcels["idpar"].isin(["V1", "V2", "V3"]), "iris"] = "I2"

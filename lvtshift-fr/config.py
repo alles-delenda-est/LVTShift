@@ -8,6 +8,21 @@ endpoints occasionally move. Network access required for ingest only.
 from dataclasses import dataclass, field
 
 
+# Habitable area ÷ the model's floor area (BD TOPO footprint × storeys), by DVF
+# type, measured on 35 communes from DPE habitable surfaces matched to BD TOPO
+# buildings by RNB id (area-weighted; flats 0.59-0.68, houses 0.58-0.66). BD
+# TOPO counts attics, raised basements and technical levels as storeys, so
+# this is well below a true habitable ÷ gross ratio.
+NET_TO_GROSS_DEFAULT = {"Appartement": 0.64, "Maison": 0.61}
+# Habitable ÷ true gross area behind the construction costs; dividing a cost by
+# it gives the cost per habitable m². Flats: the cost research converted social
+# housing costs per m² of surface utile with SU ÷ gross = 0.74, and SU (which
+# adds half the annexes) is 1.03-1.05 × habitable area, so 0.74 ÷ 1.04 ≈ 0.71.
+# Houses: habitable ÷ gross external ≈ 0.82 (desk estimate: SDP ÷ gross
+# 0.85-0.90 × habitable ÷ SDP ≈ 0.93-0.95).
+COST_NET_TO_GROSS_DEFAULT = {"Appartement": 0.71, "Maison": 0.82}
+
+
 @dataclass
 class CommuneConfig:
     insee_code: str          # e.g. "38185" Grenoble, "74012" Annemasse
@@ -17,9 +32,19 @@ class CommuneConfig:
     # but deflate to a common year with the INSEE/Notaires index)
     dvf_years: tuple = (2021, 2022, 2023, 2024, 2025)
     reference_year: int = 2025
-    # Construction cost (€/m² SHON, gros oeuvre + second oeuvre, hors foncier).
-    # Calibrate from the Index BT01 / CSTB references for the region.
+    # Construction cost: 2025 € per m² of GROSS floor area (BD TOPO footprint ×
+    # storeys), building only (hors foncier, hors VRD), fees and 20 % VAT
+    # included. See the calibration note above the commune list.
     construction_cost_eur_m2: float = 1900.0
+    # Both sides of the residual are put on habitable area (METHODOLOGY §3.2):
+    # habitable = net_to_gross[type] × the model's floor area; market value =
+    # DVF €/m² (habitable) × habitable area; building value = cost per
+    # habitable m² (construction_cost_eur_m2 ÷ cost_net_to_gross[type]) ×
+    # habitable area. The land share then depends on cost_net_to_gross, not on
+    # the measured net_to_gross, which only sets the euro level.
+    net_to_gross: dict = field(default_factory=lambda: dict(NET_TO_GROSS_DEFAULT))
+    cost_net_to_gross: dict = field(
+        default_factory=lambda: dict(COST_NET_TO_GROSS_DEFAULT))
     # Depreciation: straight-line floor model. A building loses
     # (1 - floor) of replacement value linearly over `dep_years`, never
     # below `dep_floor` (structures retain site-prep / shell value).
@@ -127,13 +152,18 @@ DATA_SOURCES = {
 # ------------------------------------------------------------------ #
 # Communes
 # ------------------------------------------------------------------ #
-# construction_cost_eur_m2 is the turnkey replacement cost (gros + second
-# oeuvre, hors foncier, €/m² of floor area). These are *pilot* values on a
-# coarse regional gradient — Île-de-France > big metros > rural — anchored on
-# FFB / Index BT01 orders of magnitude. They MUST be recalibrated against a
-# regional FFB cost series before publication; a ±15 % move here flows linearly
-# into improvement value, so it is a first-order sensitivity, not a detail.
-# (Reported alongside the land-share band, per the README's Limites connues.)
+# construction_cost_eur_m2 is the turnkey replacement cost of a modern
+# equivalent building: 2025 €, per m² of gross floor area, hors foncier and hors
+# VRD, architects'/engineers' fees and 20 % VAT included, developer margin
+# excluded. Paris, the Paris inner ring (incl. Montreuil), Lyon (incl.
+# Villeurbanne) and the Lyon ring are calibrated on the DHUP/SISAL « Bilan des
+# logements aidés » 2021-22 building-only cost of new social housing, indexed
+# to 2025 with INSEE BT01 and converted to gross area (METHODOLOGY §3.1):
+# central values, plausible ranges Paris 2 350-3 100, inner ring 2 150-2 700,
+# Lyon 1 750-2 300, Lyon ring 1 600-2 100. The other panel communes keep their
+# pilot values on the SDES house-cost survey (EPTB) gradient. A ±15 % move
+# flows linearly into improvement value: a first-order sensitivity, reported
+# alongside the land-share band.
 
 # Pre-existing (Alpes / Haute-Savoie)
 GRENOBLE = CommuneConfig("38185", "Grenoble", "38", construction_cost_eur_m2=1900.0)
@@ -146,13 +176,13 @@ ANNEMASSE = CommuneConfig("74012", "Annemasse", "74", construction_cost_eur_m2=1
 # no per-arrondissement FB produit. Villeurbanne is the dense, fiscally
 # autonomous inner-ring commune of the Lyon core.
 VILLEURBANNE = CommuneConfig(       # dense inner-Lyon-core commune (Rhône)
-    "69266", "Villeurbanne", "69", construction_cost_eur_m2=1950.0)
+    "69266", "Villeurbanne", "69", construction_cost_eur_m2=2000.0)
 ROUBAIX = CommuneConfig(            # post-industrial Nord metro, high vacancy
     "59512", "Roubaix", "59", construction_cost_eur_m2=1750.0)
 CAHORS = CommuneConfig(             # le Lot préfecture, small rural town
     "46042", "Cahors", "46", construction_cost_eur_m2=1650.0)
 MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Denis)
-    "93048", "Montreuil", "93", construction_cost_eur_m2=2150.0)
+    "93048", "Montreuil", "93", construction_cost_eur_m2=2400.0)
 FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
     "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
 SETE = CommuneConfig(               # Méditerranée — port/tourist, second homes
@@ -163,13 +193,13 @@ MULHOUSE = CommuneConfig(           # Est/Rhin — Alsatian post-industrial, vac
     "68224", "Mulhouse", "68", construction_cost_eur_m2=1800.0)
 
 # Intra-muros Paris and Lyon: one fiscal commune (REI code) whose parcel data
-# live under the arrondissement codes. Construction costs: see the PARIS_LYON
-# note below — pilot values pending the FFB/BT01 calibration work item.
+# live under the arrondissement codes. Construction costs: see the
+# calibration note above.
 PARIS = CommuneConfig(
-    "75056", "Paris", "75", construction_cost_eur_m2=2300.0,
+    "75056", "Paris", "75", construction_cost_eur_m2=2650.0,
     sub_codes=tuple(f"751{n:02d}" for n in range(1, 21)), key="paris")
 LYON = CommuneConfig(
-    "69123", "Lyon", "69", construction_cost_eur_m2=1950.0,
+    "69123", "Lyon", "69", construction_cost_eur_m2=2000.0,
     sub_codes=tuple(f"6938{n}" for n in range(1, 10)), key="lyon")
 
 # Registry for the CLI / run_commune driver (--commune <key>)
@@ -196,9 +226,9 @@ from territories import LYON_EXTRA_MUROS, PARIS_EXTRA_MUROS  # noqa: E402
 # 177 extra picker entries would swamp the explorer and its bundle.
 SITE_COMMUNES = tuple(COMMUNES)
 
-# Pilot construction cost by territory (same gradient as the existing panel:
-# Île-de-France inner ring = Montreuil's 2150, Lyon ring = Villeurbanne's 1950).
-TERRITORY_COST_EUR_M2 = {"paris-extra-muros": 2150.0, "lyon-extra-muros": 1950.0}
+# Construction cost by territory (calibration note above; the Paris ring
+# shares Montreuil's value).
+TERRITORY_COST_EUR_M2 = {"paris-extra-muros": 2400.0, "lyon-extra-muros": 1850.0}
 
 
 def commune_key(name: str) -> str:
