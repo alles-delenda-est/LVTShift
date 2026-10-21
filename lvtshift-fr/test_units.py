@@ -394,6 +394,10 @@ def test_deflator_factors_and_application():
     assert price_index_geography(COMMUNES["montreuil"]) == "d93"
     assert price_index_geography(COMMUNES["villeurbanne"]) == "agglo_lyon"
     assert price_index_geography(COMMUNES["saint-priest"]) == "agglo_lyon"
+    # keyed on the INSEE code, so a copy without its registry key still matches
+    import dataclasses
+    assert price_index_geography(
+        dataclasses.replace(COMMUNES["saint-priest"], key="")) == "agglo_lyon"
     assert price_index_geography(COMMUNES["grenoble"]) == "auvergne_rhone_alpes"
     assert price_index_geography(COMMUNES["roubaix"]) == "agglo_lille"
     assert price_index_geography(COMMUNES["cahors"]) == "province"

@@ -252,6 +252,10 @@ TERRITORIES = {
 
 # Keys of the Métropole de Lyon communes (price-index geography).
 LYON_METROPOLE_KEYS = frozenset(TERRITORIES["lyon-extra-muros"]["members"])
+# INSEE codes of the whole Métropole (Lyon, Villeurbanne and the ring): matching
+# on the code, not the registry key, holds for any config of these communes.
+LYON_METROPOLE_INSEE = frozenset(
+    {"69123", "69266"} | {COMMUNES[k].insee_code for k in LYON_METROPOLE_KEYS})
 
 
 # ------------------------------------------------------------------ #
@@ -330,8 +334,7 @@ def price_index_geography(cfg) -> str:
         return "paris"
     if dep in ("92", "93", "94"):
         return "d" + dep
-    if dep == "69" and (cfg.insee_code in ("69123", "69266")
-                        or getattr(cfg, "key", None) in LYON_METROPOLE_KEYS):
+    if cfg.insee_code in LYON_METROPOLE_INSEE:
         return "agglo_lyon"
     if cfg.insee_code == "13055":
         return "agglo_marseille"
