@@ -71,6 +71,18 @@ def test_condominium_lease_private_and_housing_manager_block_the_flag():
     assert _flags(rows) == {}
 
 
+def test_state_property_managed_by_a_public_agency():
+    # domaine national: the State owns, the Centre des monuments nationaux (an
+    # EPA, not itself a qualifying form) manages under droit Z -> still exempt
+    p, q = "92064000AB0001", "92064000AB0002"
+    rows = [_row(p, "NB", "P", "7113"), _row(p, "NB", "Z", "7389", den="CMN"),
+            # a private company managing State land under Z still blocks
+            _row(q, "NB", "P", "7113"), _row(q, "NB", "Z", "5710", den="SAS X")]
+    f = ex.classify(pd.DataFrame(rows))
+    assert dict(zip(f["idpar"], f["tier"])) == {p: "A2"}
+    assert f["owner_type"].tolist() == ["etat"]
+
+
 def test_utility_units_are_ignored():
     p = "75105000AX0010"
     rows = [_row(p, "NB", "P", "7383", den="SORBONNE UNIVERSITE"),

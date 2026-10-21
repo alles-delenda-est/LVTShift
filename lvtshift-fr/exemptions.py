@@ -14,7 +14,7 @@ errs towards under-flagging (see METHODOLOGY §3.5).
 
 A parcel is flagged when every holder of a right on its land and on every
 building unit is a qualifying public body holding full ownership (droit P, or Z
-for State-managed property), on its own territory, with no condominium syndic,
+for State property, whoever the public agency managing it), on its own territory, with no condominium syndic,
 no lease (emphytéose, bail à construction, AOT…), no dismemberment, and no
 private or housing manager. Network-utility units (ENEDIS, GRDF…) are ignored.
 
@@ -91,11 +91,12 @@ KEEP = ["dep", "com", "prefixe", "section", "plan", "code_droit", "siren", "form
         "denomination"]
 
 
-# Fingerprint of the rule: part of the flag-cache file name.
+# Fingerprint of the rule: part of the flag-cache file name. Bump the final
+# integer whenever classify() logic changes without a constant changing.
 RULE_VERSION = hashlib.sha256(repr((
     sorted(PUBLIC_FORMS), UTILITY_RE.pattern, HOUSING_RE.pattern,
     sorted(MANAGER_RIGHTS), sorted(FULL_OWNER_RIGHTS), VILLE_DE_PARIS_SIREN,
-    METROPOLE_LYON_SIREN, sorted(_PLM.items()), 2)).encode()).hexdigest()[:10]
+    METROPOLE_LYON_SIREN, sorted(_PLM.items()), 3)).encode()).hexdigest()[:10]
 
 
 def _dep_number(dep: str) -> int:
@@ -236,7 +237,11 @@ def classify(rows: pd.DataFrame, lyon_metropole: set = frozenset()) -> pd.DataFr
     pub = r["forme"].isin(PUBLIC_FORMS) & _in_territory(r, set(lyon_metropole))
     mgr = r["droit"].isin(MANAGER_RIGHTS)
     owner = ~mgr & ~util
-    bad_owner = owner & ~(pub & r["droit"].isin(FULL_OWNER_RIGHTS))
+    # droit Z is itself State property: the public agency managing it for the
+    # State (e.g. the Centre des monuments nationaux for a domaine national)
+    # does not change the owner, whatever its own legal form
+    z_agency = (r["droit"] == "Z") & r["forme"].fillna("").str.startswith("7")
+    bad_owner = owner & ~(pub & r["droit"].isin(FULL_OWNER_RIGHTS)) & ~z_agency
     bad_mgr = (r["droit"] == "S") | (mgr & ~util & (~r["forme"].isin(PUBLIC_FORMS)
                                                     | den.str.contains(HOUSING_RE)))
     bad = set(r.loc[bad_owner | bad_mgr, "idpar"])
@@ -245,7 +250,9 @@ def classify(rows: pd.DataFrame, lyon_metropole: set = frozenset()) -> pd.DataFr
     if cand.empty:
         return pd.DataFrame(columns=FLAG_COLS)
     with_units = set(r.loc[(r["src"] == "B") & owner, "idpar"])
-    first = cand.drop_duplicates("idpar")
+    # report the owner, not the managing agency, as the parcel's owner type
+    first = (cand.assign(_mgr=cand["droit"] != "P")
+             .sort_values(["idpar", "_mgr"], kind="stable").drop_duplicates("idpar"))
     return pd.DataFrame({
         "idpar": first["idpar"].values,
         "tier": ["A1" if i in with_units else "A2" for i in first["idpar"]],
