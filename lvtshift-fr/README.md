@@ -70,7 +70,8 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
-6. **Sensibilité** : tout résultat publié avec bande part-terrain ±10 pts.
+6. **Sensibilité** : tout résultat publié avec bande part-terrain ±10 pts —
+   chiffres clés, catégories de bien et quintiles de revenu (moustaches sur le site).
 
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.

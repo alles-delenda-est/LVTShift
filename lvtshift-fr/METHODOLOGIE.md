@@ -174,6 +174,19 @@ couronne. Une commune en échec figure dans le champ `coverage`, jamais imputée
 Montreuil et Villeurbanne apparaissent seules et dans leur couronne ; les totaux du
 panel sur le site ne les comptent qu'une fois.
 
+**Bande de sensibilité.** La valeur du sol étant imputée, chaque chiffre publié porte
+une bande de ±10 pt de part foncière : la part foncière agrégée est abaissée puis
+relevée de 10 points (valeurs terrain et bâti de chaque parcelle mises à l'échelle
+uniformément, base totale et produit constants) et le solveur amont est relancé
+(`export_web._tilted_change`). La bande est publiée pour les chiffres clés **et** pour
+chaque catégorie de bien et chaque quintile de revenu (et, sur les couronnes, les
+quintiles classés dans chaque commune), avec les mêmes bornes de quintile que
+l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
+variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
+n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
+par quintile bouge à peine (premier quintile −17,6 à −18,6 %, dernier +11,4 à
++12,3 %).
+
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
 continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m² : 95,5 % des

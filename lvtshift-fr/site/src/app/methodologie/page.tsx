@@ -562,7 +562,9 @@ export default function MethodologiePage() {
               foncier effectivement très tendu. Les deux lectures sont
               plausibles, et il serait trompeur de trancher sans calage. La
               bande de sensibilité ±&thinsp;10 points encadre cette
-              incertitude dans tous les résultats publiés.
+              incertitude dans tous les résultats publiés : chiffres clés,
+              catégories de bien et quintiles de revenu, où elle apparaît en
+              traits fins autour de chaque barre.
             </p>
           </div>
 

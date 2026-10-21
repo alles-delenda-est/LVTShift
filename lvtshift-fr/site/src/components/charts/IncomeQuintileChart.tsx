@@ -16,6 +16,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  ErrorBar,
   XAxis,
   YAxis,
   Tooltip,
@@ -23,15 +24,23 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import type { QuintileRow } from "@/lib/types";
+import type { BandQuintileRow, QuintileRow } from "@/lib/types";
 import { euros, signedPct } from "@/lib/format";
-import { ROUGE, GREEN, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
+import { bandSpan, byKey } from "@/lib/band";
+import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
+
+/** A quintile row with its ±10 pt land-share band attached. */
+interface BandedRow extends QuintileRow {
+  err: [number, number] | null;
+  bandLo: number | null;
+  bandHi: number | null;
+}
 
 /* ── tooltip ──────────────────────────────────────────────────────── */
 
 function QuintileTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
-  const row = payload[0]?.payload as QuintileRow;
+  const row = payload[0]?.payload as BandedRow;
   return (
     <div
       style={{
@@ -53,6 +62,12 @@ function QuintileTooltip({ active, payload, label }: TooltipProps<number, string
         {signedPct(row.median_change_pct_residential)}
       </p>
       <p>Parcelles&nbsp;: {row.parcels.toLocaleString("fr-FR")}</p>
+      {row.bandLo !== null && row.bandHi !== null && (
+        <p style={{ color: GRIS_PALE }}>
+          Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedPct(row.bandLo)}{" "}
+          à {signedPct(row.bandHi)}
+        </p>
+      )}
     </div>
   );
 }
@@ -126,17 +141,37 @@ function NullQuintileNote() {
 
 export interface IncomeQuintileChartProps {
   quintiles: QuintileRow[] | null;
+  /** Low / high legs of the ±10 pt land-share band (optional). */
+  band?: {
+    low?: BandQuintileRow[] | null;
+    high?: BandQuintileRow[] | null;
+  };
 }
 
 export default function IncomeQuintileChart({
   quintiles,
+  band,
 }: IncomeQuintileChartProps) {
   if (!quintiles) return <NullQuintileNote />;
 
+  const low = byKey(band?.low, "quintile");
+  const high = byKey(band?.high, "quintile");
   /* Sort by quintile ascending (should already be, but guard) */
-  const data = [...quintiles].sort((a, b) => a.quintile - b.quintile);
+  const data: BandedRow[] = [...quintiles]
+    .sort((a, b) => a.quintile - b.quintile)
+    .map((r) => {
+      const span = bandSpan(
+        r.median_change_pct_residential,
+        low.get(r.quintile)?.median_change_pct_residential,
+        high.get(r.quintile)?.median_change_pct_residential,
+      );
+      return { ...r, err: span?.err ?? null, bandLo: span?.lo ?? null, bandHi: span?.hi ?? null };
+    });
 
-  const vals = data.map((r) => r.median_change_pct_residential ?? 0);
+  const vals = data.flatMap((r) => {
+    const v = r.median_change_pct_residential ?? 0;
+    return [v, r.bandLo ?? v, r.bandHi ?? v];
+  });
   const absMax = Math.max(...vals.map(Math.abs), 5);
   const domain: [number, number] = [-absMax * 1.35, absMax * 1.35];
 
@@ -193,6 +228,13 @@ export default function IncomeQuintileChart({
                 fill={cellFill(entry.median_change_pct_residential)}
               />
             ))}
+            <ErrorBar
+              dataKey="err"
+              direction="y"
+              width={8}
+              stroke={ENCRE}
+              strokeWidth={1}
+            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
