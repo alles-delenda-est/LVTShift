@@ -54,9 +54,76 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
             f"No model output for {commune_key} at {path}; "
             f"run `python run_commune.py {commune_key}` first.")
     df = pd.read_csv(path)
+    df = _attach_dwellings(df, path, commune_key)
     if "is_fully_exempt" in df.columns:
         df = df[~df["is_fully_exempt"].fillna(False).astype(bool)].copy()
     return df
+
+
+def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.DataFrame:
+    """Add n_dwellings from the run's households sidecar (run_pipeline).
+
+    The sidecar repeats new_tax row by row; any mismatch means it belongs to a
+    different run, which would silently attach dwellings to the wrong parcels,
+    so it fails loudly. A missing sidecar (older run) leaves the household
+    figures unset rather than guessed.
+    """
+    side_path = path.with_name(f"{path.stem}.households.csv")
+    if not side_path.exists():
+        return df
+    side = pd.read_csv(side_path)
+    if len(side) != len(df) or not np.allclose(
+            side["new_tax"].to_numpy(float), df["new_tax"].to_numpy(float),
+            rtol=1e-9, atol=0.01, equal_nan=True):
+        raise ValueError(
+            f"{side_path.name} does not match {path.name}; "
+            f"re-run `python run_commune.py {commune_key}`")
+    return df.assign(n_dwellings=side["n_dwellings"].to_numpy(float))
+
+
+def weighted_median(values, weights):
+    """Median of values with each counted `weights` times (None if no weight)."""
+    v = np.asarray(values, dtype=float)
+    w = np.asarray(weights, dtype=float)
+    ok = np.isfinite(v) & np.isfinite(w) & (w > 0)
+    if not ok.any():
+        return None
+    v, w = v[ok], w[ok]
+    order = np.argsort(v, kind="stable")
+    v, w = v[order], w[order]
+    cum = np.cumsum(w)
+    return float(v[np.searchsorted(cum, cum[-1] / 2.0)])
+
+
+def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
+    """One income group: the parcel medians, plus the group's total change and
+    the typical household's change (residential parcels weighted by dwellings).
+
+    A parcel median counts a 200-flat block once and a house once, so it can
+    show most of a group paying more while the group as a whole pays less.
+    """
+    rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
+    sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+    rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+    total = None
+    if {"current_tax", "tax_change"} <= set(rsub.columns):
+        total = _pct(float(rsub["tax_change"].sum()), float(rsub["current_tax"].sum()))
+    hh_median, dwellings = None, None
+    if "n_dwellings" in rsub.columns:
+        pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan)
+        hh = weighted_median(pct, rsub["n_dwellings"])
+        hh_median = None if hh is None else round(hh, 1)
+        dwellings = int(round(float(rsub["n_dwellings"].sum())))
+    return {
+        "quintile": int(q),
+        "median_income_eur": round(float(sub["median_income"].median()), 0),
+        "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
+        "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
+        "total_change_pct": total,
+        "household_median_change_pct": hh_median,
+        "parcels": int(len(sub)),
+        "dwellings": dwellings,
+    }
 
 
 def _pct(num: float, den: float, ndigits: int = 1):
@@ -156,21 +223,7 @@ def build_by_income_quintile(df: pd.DataFrame):
         return None
     if d["_q"].nunique() < 5:
         return None
-    res = d[d["property_category"].isin(FR_RESIDENTIAL)]
-    out = []
-    for q in [1, 2, 3, 4, 5]:
-        sub = d[d["_q"] == q]
-        rsub = res[res["_q"] == q]
-        sub_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        res_pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        out.append({
-            "quintile": int(q),
-            "median_income_eur": round(float(sub["median_income"].median()), 0),
-            "median_change_pct": round(float(sub_pct.median()), 1) if len(sub_pct) else None,
-            "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
-            "parcels": int(len(sub)),
-        })
-    return out
+    return [_quintile_row(q, d[d["_q"] == q]) for q in [1, 2, 3, 4, 5]]
 
 
 def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
@@ -199,7 +252,11 @@ def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
 
 BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
                       "share_paying_more_pct")
-BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential")
+QUINTILE_KEYS = {"quintile", "median_income_eur", "median_change_pct",
+                 "median_change_pct_residential", "total_change_pct",
+                 "household_median_change_pct", "parcels", "dwellings"}
+BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential",
+                      "total_change_pct", "household_median_change_pct")
 
 
 def _band_groups(df: pd.DataFrame, chg: np.ndarray, within: bool = False) -> dict:
@@ -312,6 +369,8 @@ def assert_aggregate_only(payload: dict) -> None:
     for k in ("by_income_quintile", "by_income_quintile_within"):
         if payload.get(k) is not None:
             assert len(payload[k]) <= 5
+            for r in payload[k]:
+                assert set(r) <= QUINTILE_KEYS, f"unexpected quintile keys: {set(r) - QUINTILE_KEYS}"
     sens = payload.get("headline_sensitivity") or {}
     assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
@@ -464,20 +523,7 @@ def build_by_income_quintile_within(df: pd.DataFrame):
     if not parts:
         return None, coverage
     d = pd.concat(parts, ignore_index=True)
-    out = []
-    for q in [1, 2, 3, 4, 5]:
-        sub = d[d["_q"] == q]
-        rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
-        sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        out.append({
-            "quintile": q,
-            "median_income_eur": round(float(sub["median_income"].median()), 0),
-            "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
-            "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
-            "parcels": int(len(sub)),
-        })
-    return out, coverage
+    return [_quintile_row(q, d[d["_q"] == q]) for q in [1, 2, 3, 4, 5]], coverage
 
 
 def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:

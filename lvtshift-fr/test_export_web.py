@@ -227,3 +227,52 @@ def test_guard_checks_nested_band_rows():
     payload["headline_sensitivity"]["extra"] = {}
     with pytest.raises(AssertionError):
         ew.assert_aggregate_only(payload)
+
+
+def test_weighted_median():
+    assert ew.weighted_median([1.0, 2.0, 3.0], [1, 1, 1]) == 2.0
+    # one heavy value dominates: a 200-flat block outweighs three houses
+    assert ew.weighted_median([5.0, 5.0, 5.0, -10.0], [1, 1, 1, 200]) == -10.0
+    assert ew.weighted_median([np.nan, 4.0], [10, 1]) == 4.0
+    assert ew.weighted_median([1.0], [0]) is None
+
+
+def test_quintile_totals_and_households_tell_the_group_story():
+    # Q1: four houses each +10 %, one 100-flat block −20 % -> the median parcel
+    # pays more, but the group and the typical household pay less
+    houses = dict(property_category="Single Family Residential", current_tax=1000.0,
+                  tax_change=100.0, tax_change_pct=10.0, n_dwellings=1.0)
+    block = dict(property_category="Large Multi-Family (5+ units)", current_tax=20000.0,
+                 tax_change=-4000.0, tax_change_pct=-20.0, n_dwellings=100.0)
+    shop = dict(property_category="Commercial", current_tax=5000.0,
+                tax_change=-2500.0, tax_change_pct=-50.0, n_dwellings=0.0)
+    rows = []
+    for q in range(5):
+        for r in [houses] * 4 + [block, shop]:
+            rows.append({**r, "median_income": 20000.0 + 1000 * q})
+    q1 = ew.build_by_income_quintile(pd.DataFrame(rows))[0]
+    assert q1["median_change_pct_residential"] == 10.0
+    assert q1["total_change_pct"] == round(100 * (400 - 4000) / 24000, 1)  # shop excluded
+    assert q1["household_median_change_pct"] == -20.0
+    assert q1["dwellings"] == 104
+    # older runs without dwelling counts: household figure unset, not guessed
+    q1 = ew.build_by_income_quintile(pd.DataFrame(rows).drop(columns="n_dwellings"))[0]
+    assert q1["household_median_change_pct"] is None and q1["total_change_pct"] is not None
+
+
+def test_households_sidecar_must_match_its_run(tmp_path, monkeypatch):
+    import config
+    df = _toy_df()
+    df.to_csv(tmp_path / "x.csv", index=False)
+
+    class _Cfg:
+        insee_code, name, departement = "00000", "X", "00"
+    monkeypatch.setitem(config.COMMUNES, "x", _Cfg())
+    side = pd.DataFrame({"new_tax": df["new_tax"], "n_dwellings": [1.0, 0.0, 0.0, 12.0],
+                         "dwellings_imputed": False})
+    side.to_csv(tmp_path / "x.households.csv", index=False)
+    out = ew.load_parcels("x", out_dir=str(tmp_path))
+    assert list(out["n_dwellings"]) == [1.0, 0.0, 0.0, 12.0]
+    side.assign(new_tax=side["new_tax"] + 5).to_csv(tmp_path / "x.households.csv", index=False)
+    with pytest.raises(ValueError):
+        ew.load_parcels("x", out_dir=str(tmp_path))

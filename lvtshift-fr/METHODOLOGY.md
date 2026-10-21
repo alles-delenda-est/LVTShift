@@ -150,7 +150,27 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (poorest fifth −17.6 to −18.5 %, richest +11.1 to +11.7 %).
+barely moves (median residential parcel: poorest fifth −17.6 to −18.5 %, richest
++11.1 to +11.7 %).
+
+**Income groups: totals and households, not parcel medians.** Each income
+quintile (parcels ranked by their IRIS's Filosofi median income) carries three
+figures, all on residential parcels: the **group total** (Σ new tax ÷ Σ current
+tax − 1), the **typical household** (the parcel changes' median weighted by
+dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
+**parcel median**. The site draws the total as the bar and the household as a
+marker. The parcel median misleads where poorer areas mix many small houses
+with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
++3.9 % while the group as a whole pays −7.8 % and its typical household −8.5 %,
+because the large blocks, where most of its households live, gain the most.
+Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
+residential parcels without a count are imputed (a house = 1; flats = gross floor
+area ÷ 85 m²), which concerns 5–11 % of residential parcels in Paris, Lyon and
+Villeurbanne. The counts live in a local sidecar to the standard export
+(`<commune>.households.csv`, row-aligned and checked against `new_tax`); only the
+per-quintile totals are published. BD TOPO under-counts dwellings slightly
+(Paris ≈ 1.14 M against ≈ 1.4 M in the census), which affects the weights, not
+the totals.
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to

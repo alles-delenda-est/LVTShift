@@ -168,8 +168,29 @@ quintiles classés dans chaque commune), avec les mêmes bornes de quintile que
 l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
-par quintile bouge à peine (premier quintile −17,6 à −18,5 %, dernier +11,1 à
-+11,7 %).
+par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
+−17,6 à −18,5 %, dernier +11,1 à +11,7 %).
+
+**Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
+quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
+IRIS) porte trois chiffres, tous sur les parcelles résidentielles : le **total du
+groupe** (Σ nouvelles cotisations ÷ Σ cotisations actuelles − 1), le **ménage
+type** (médiane des variations par parcelle pondérée par le nombre de logements :
+un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
+**médiane par parcelle**. Le site trace le total en barre et le ménage type en
+losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
+beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
+parcelle médiane du quintile le plus pauvre paie +3,9 % alors que le groupe paie
+−7,8 % et son ménage type −8,5 %, car les grands immeubles, où vivent la plupart
+de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
+(`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
+parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
+surface de plancher brute ÷ 85 m²), soit 5 à 11 % des parcelles résidentielles à
+Paris, Lyon et Villeurbanne. Les décomptes restent dans un fichier local joint à
+l'export standard (`<commune>.households.csv`, aligné ligne à ligne et contrôlé
+sur `new_tax`) ; seuls les totaux par quintile sont publiés. BD TOPO sous-compte
+légèrement les logements (Paris ≈ 1,14 M contre ≈ 1,4 M au recensement), ce qui
+touche les pondérations, pas les totaux.
 
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
