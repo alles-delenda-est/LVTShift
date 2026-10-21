@@ -54,18 +54,42 @@ géographie administrative).
 parcelle (`estimate.improvement_value`) :
 
 ```
-surface_plancher = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
-âge              = année_référence − année_construction
-q                = prix hédonique médian €/m² des parcelles bâties de l'IRIS
-                   ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
-w                = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp)
-âge_effectif     = w × min(âge, 30) + (1 − w) × âge            (dep_maintained_age_cap)
-dépréciation     = borne(1 − (1 − dep_floor) × âge_effectif / dep_years,  min = dep_floor)
-valeur_bâti      = surface_plancher × coût_construction_€m2 × dépréciation
+surface_plancher  = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
+surface_habitable = net_to_gross[type] × surface_plancher     (appartements 0,64, maisons 0,61)
+coût_hab          = coût_construction_€m2 ÷ cost_net_to_gross[type]   (appartements 0,71, maisons 0,82)
+âge               = année_référence − année_construction
+q                 = prix hédonique médian €/m² des parcelles bâties de l'IRIS
+                    ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
+w                 = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp)
+âge_effectif      = w × min(âge, 30) + (1 − w) × âge            (dep_maintained_age_cap)
+dépréciation      = borne(1 − (1 − dep_floor) × âge_effectif / dep_years,  min = dep_floor)
+valeur_bâti       = surface_habitable × coût_hab × dépréciation
+valeur_marché     = €/m² hédonique × surface_habitable          (§3.3)
 ```
 
 `année_construction` provient du DPE (§3.2) ; `coût_construction_€m2`,
-`dep_years`, `dep_floor` sont en config par commune (§4).
+`dep_years`, `dep_floor` sont en config par commune (§4) ; `type` est le
+`type_local` dominant de la parcelle (les types autres qu'appartement et maison
+prennent les ratios des appartements).
+
+*Base surface habitable.* Les prix DVF sont exprimés par m² de surface habitable
+(`surface_reelle_bati`), alors que `surface_plancher` est l'emprise BD TOPO ×
+niveaux. Mesuré sur 35 communes (surfaces habitables DPE appariées aux bâtiments
+BD TOPO par leur identifiant RNB, pondération par la surface), le rapport surface
+habitable ÷ `surface_plancher` vaut **0,64 pour les appartements (0,59–0,68) et
+0,61 pour les maisons (0,58–0,66)** : BD TOPO compte combles, rez-de-jardin et
+niveaux techniques comme des étages, si bien que `surface_plancher` surestime même
+la vraie surface brute. Les deux termes du résiduel sont donc ramenés à la surface
+habitable (`estimate.habitable_basis`, `market_value`). Les coûts de construction
+sont exprimés par m² de vraie surface brute (§4) et deviennent un coût par m²
+habitable en les divisant par `cost_net_to_gross`, le rapport habitable ÷ brut
+retenu par le calage des coûts : **0,71 pour les appartements** (surface utile ÷
+brut 0,74, ÷ surface utile ÷ habitable ≈ 1,04) et **0,82 pour les maisons**
+(estimation documentaire). Pour une parcelle bâtie, la part foncière vaut alors
+1 − coût_hab × dépréciation ÷ prix au m² : elle dépend de `cost_net_to_gross`, non
+du `net_to_gross` mesuré, qui ne fixe que les niveaux en euros. Sources :
+`docs/research/net-to-gross-measurement.md` et
+`docs/research/construction-costs-2025.md`.
 
 *Bâti entretenu (âge effectif).* Là où les prix du quartier dépassent largement le
 coût de reconstruction, les propriétaires rénovent en continu : l'âge réel ne
@@ -84,7 +108,10 @@ appartements. Dans
 les marchés faibles (q ≤ 1,2 : Roubaix, Cahors), la règle est inactive et la
 dépréciation par l'âge absorbe aussi l'obsolescence économique. Un plafond uniforme
 a été testé et écarté : il place la moitié des parcelles bâties de Roubaix et un
-tiers de celles de Cahors à la borne basse de 15 %.
+tiers de celles de Cahors à la borne basse de 15 %. q garde délibérément la base
+sur laquelle sa rampe a été calée (prix habitable ÷ coût par m² brut) : le
+recalculer par m² habitable recalerait la règle sans le dire. Il baisse
+légèrement avec les coûts recalés (plus élevés).
 
 Les bâtiments sont
 rattachés aux parcelles par **intersection pondérée par la surface** (un bâtiment
@@ -103,7 +130,8 @@ ne dégénère jamais en « inconnu ».
 **3.3 Valeur de marché** — une hédonique log-linéaire volontairement simple sur
 DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log €/m²,
 rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 8),
-× surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
+× surface habitable de la parcelle (`net_to_gross` × surface plancher, §3.1), la
+base sur laquelle les prix DVF sont exprimés. DVF est nettoyé aux mutations `Vente`, agrégé à
 la mutation, le €/m² écrêté aux 1er/99e centiles.
 
 **Déflateur de prix.** Les cinq années DVF couvrent un cycle (hausse jusqu'en 2022,
@@ -211,7 +239,7 @@ l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
 par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−16,7 à −17,7 %, dernier +11,9 à +12,8 %).
+−18,8 à −20,2 %, dernier +12,7 à +13,8 %).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -222,8 +250,8 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +6,4 % alors que le groupe paie
-−7,7 % et son ménage type −10,6 %, car les grands immeubles, où vivent la plupart
+parcelle médiane du quintile le plus pauvre paie +10,7 % alors que le groupe paie
+−7,9 % et son ménage type −11,8 %, car les grands immeubles, où vivent la plupart
 de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
@@ -237,34 +265,55 @@ touche les pondérations, pas les totaux.
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
 continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m² : 95,5 % des
-parcelles bâties étaient à la borne de 0,85 (Lyon 59,8 % ; 55 communes signalées)
-et le chiffre de 84,9 % était fixé par la borne. La règle du bâti entretenu (§3.1)
-valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais à
-**83,3 %**, avec 34,8 % des parcelles bâties encore à la borne. Ce reliquat est réel,
-pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
-reconstruction laisse un foncier supérieur à 85 % dans les rues chères
-(Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
-passe à 70,4 %, sans parcelle à la borne ; sur le panel, les alertes
-`land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
-(borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
-parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »
-quand elle atteint 50 %.
+parcelles bâties étaient à la borne de 0,85 et le chiffre de 84,9 % était fixé par
+la borne. La règle du bâti entretenu (§3.1) valorise ces immeubles à un âge
+effectif de 30 ans, ce qui ramenait Paris à 83,3 % avec 34,8 % des parcelles
+bâties encore à la borne. Avec les deux termes du résiduel en surface habitable et
+les coûts recalés (§3.1, §4), Paris ressort à **74,0 %** avec 0,4 % des parcelles
+bâties à la borne : sa part foncière est désormais mesurée, non fixée par la
+borne. Aucune commune n'a plus de la moitié de ses parcelles bâties au plafond ;
+Neuilly-sur-Seine en a le plus (18,3 %), et le contrôle `land_share_clip` du
+preflight ne signale plus aucune commune. Lyon est à 58,6 %, la couronne
+parisienne à 60,6 % et la couronne lyonnaise à 55,4 %. Sur les 188 communes
+modélisées, 21 dépassent la bande de vraisemblance 40–65 % (138 avant ce
+changement) et 5 sont en dessous. Le champ `headline.built_at_cap_pct` enregistre
+la part des parcelles bâties à la borne, et le site qualifie la part foncière de
+« plafonnée » quand elle atteint 50 %.
 
 ## 4. Paramètres et hypothèses clés
 
-- **Coût de construction €/m²** (clé en main, hors foncier ; gradient régional
-  pilote, à caler sur FFB/indice BT01) : Paris 2300, petite couronne 2150
-  (Montreuil et tout le 92/93/94), Lyon, Villeurbanne et la couronne
-  métropolitaine 1950, Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650,
-  Figeac 1600.
+- **Coût de construction €/m²** (`construction_cost_eur_m2`) : coût de
+  remplacement clé en main d'un bâtiment moderne équivalent, € 2025, par m² de
+  vraie surface brute extérieure, bâtiment seul (hors foncier, hors VRD),
+  honoraires d'architectes et d'ingénieurs et TVA à 20 % inclus, marge de
+  promoteur exclue. Paris, la petite couronne et les territoires lyonnais sont
+  calés sur le coût « bâtiment » des logements sociaux neufs du « Bilan des
+  logements aidés » DHUP/SISAL 2021–22, indexé en 2025 par l'indice BT01 de
+  l'INSEE (`docs/research/construction-costs-2025.md`) : **Paris 2650**
+  (fourchette plausible 2350–3100), **petite couronne 2400** (Montreuil et tout le
+  92/93/94 ; 2150–2700), **Lyon et Villeurbanne 2000** (1750–2300), **couronne
+  métropolitaine 1850** (1600–2100). Les autres communes du panel gardent leurs
+  valeurs pilotes sur le gradient de l'enquête EPTB du SDES : Grenoble/Annemasse
+  1900, Sète/La Rochelle 1850, Roubaix 1750, Cahors 1650, Figeac 1600. (Anciennes
+  valeurs pilotes : Paris 2300, petite couronne 2150, Lyon et les deux
+  territoires lyonnais 1950.)
+- **Ratios de surface** (par `type_local` ; les autres types prennent le ratio
+  des appartements) : `net_to_gross` = habitable ÷ surface plancher du modèle,
+  mesuré : appartements 0,64 (0,59–0,68), maisons 0,61 (0,58–0,66)
+  (`docs/research/net-to-gross-measurement.md`) ; `cost_net_to_gross` =
+  habitable ÷ vraie surface brute sous-jacente aux coûts : appartements 0,71,
+  maisons 0,82 (§3.1).
 - **Dépréciation** : linéaire sur `dep_years` = 80 ans, plancher `dep_floor` = 0,25,
   appliquée à l'âge effectif ; plafond bâti entretenu 30 ans
   (`dep_maintained_age_cap`), rampe q ∈ [1,2 ; 2,5] (`dep_q_ramp`). Ce sont des
   choix raisonnés éclairés par la littérature (§3.1), non des paramètres estimés.
 - **Bornes de part foncière** : [0,15 ; 0,85] — contrainte de conception, pas une
-  mesure. Là où la plupart des parcelles atteignent la borne haute (Paris, Lyon), la
-  cause identifiée est la surdépréciation du bâti ancien entretenu, non un foncier
-  réellement supérieur à 85 % (§3.7).
+  mesure. Là où la plupart des parcelles atteignaient la borne haute (Paris, Lyon),
+  les causes identifiées étaient la surdépréciation du bâti ancien entretenu et
+  l'application de prix DVF par m² habitable à la surface plancher BD TOPO, plus
+  grande, non un foncier réellement supérieur à 85 %. Les deux étant corrigées,
+  aucune commune n'a plus de la moitié de ses parcelles bâties à l'une ou l'autre
+  borne (§3.7).
 - **Ratio split-rate** : 4:1 (terrain:bâti), scénario de référence.
 - **€/m² agricole** (SAFER, par département, agricole / naturel) : défaut
   0,64 / 0,49 ; Lot 0,45 / 0,35 ; Seine-St-Denis 1,00 / 0,60 ; Nord 0,85 / 0,50 ;
@@ -287,12 +336,14 @@ quand elle atteint 50 %.
   chaque exécution réelle (Cahors 22 690 869 € ; Montreuil 101 780 897 €).
 - **Part foncière descendante** — terrain total ÷ valeur immobilière bâtie totale
   doit avoisiner les comptes de patrimoine INSEE (~45–50 % de terrain). Cahors
-  atteint ~53 % après la correction d'année de construction par DPE (contre 85 %
-  dégénéré auparavant — voir §6).
+  atteignait ~53 % après la correction d'année de construction par DPE (contre
+  85 % dégénéré auparavant — voir §6) et se situe à 40,7 % en base surface
+  habitable.
 - **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
   du prélèvement (Cahors 0,3 %) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
-  progressif (quintiles les plus pauvres −10 %, plus aisés +9/+12 %).
+  progressif (totaux de groupe : quintile le plus pauvre −16,1 %, le plus aisé
+  +14,7 %).
 - **Tests** — `test_units.py` (tests unitaires hors-ligne de la logique pure) et
   `test_synthetic.py` (bout-en-bout via le vrai solveur).
 
@@ -316,21 +367,31 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    point médian (atténué pour l'ancien d'avant 1948, qui touche le plancher de
    dépréciation). Nette amélioration sur la base dégénérée antérieure, mais
    généralisation à documenter.
-4. **Coûts de construction** : gradient régional pilote grossier ; un écart de
-   ±15 % se propage linéairement dans la valeur bâti (donc terrain).
+4. **Coûts de construction et base de surface.** Les coûts de Paris, de la petite
+   couronne et des territoires lyonnais sont calés, avec des fourchettes
+   plausibles publiées (§4) ; le logement social est un indicateur du parc privé
+   et sous-estimera le bâti de prestige ou protégé. La principale incertitude
+   restante est `cost_net_to_gross` (habitable ÷ vraie surface brute), le maillon
+   le moins sourcé : ±0,05 déplace la valeur bâti d'environ ±7 %, qui se reporte
+   sur le résiduel foncier. Le `net_to_gross` mesuré ne fixe que les niveaux en
+   euros. Les autres communes du panel gardent des coûts pilotes non calés. Le
+   non-résidentiel prend les ratios des appartements (et leur €/m², point 7). Les
+   erreurs de nombre de niveaux BD TOPO sont la principale source de dispersion de
+   la surface à la parcelle.
 5. **Bornage de part foncière** : quand la plupart des parcelles bâties sont à une
    borne, la part foncière est une hypothèse, pas un résultat, et la variation du
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
-   de Paris (95,5 % à la borne), de Lyon et de 53 autres communes ; c'est désormais
-   le seul cas de Neuilly-sur-Seine, Paris étant à 34,8 % (§3.7). Le contrôle
-   `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
+   de Paris (95,5 % à la borne), de Lyon et de 53 autres communes. Aucune commune
+   n'a désormais plus de la moitié de ses parcelles bâties à une borne ;
+   Neuilly-sur-Seine en a le plus au plafond (18,3 %), Paris 0,4 % (§3.7). Le
+   contrôle `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).
 6. **Nuance de zonage** : tout AU est traité constructible avec une décote
    forfaitaire ; les `AU fermées` mériteraient une décote plus forte et les
    pastilles `Nh/Ah` sont sous-évaluées.
 7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
-   résidentielle ; les locaux professionnels (révision 2017) nécessitent une
+   résidentielle et les ratios de surface des appartements ; les locaux professionnels (révision 2017) nécessitent une
    strate dédiée.
 8. **Revenus (Filosofi)** : 2021 (dernier millésime), communes ≥ 5 000 habitants
    uniquement, certains IRIS sous secret statistique.

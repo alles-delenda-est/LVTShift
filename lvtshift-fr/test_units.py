@@ -186,8 +186,8 @@ def test_maintained_stock_effective_age():
 
 def test_maintenance_weight_ramps_on_area_price_ratio():
     lo, hi = CFG.dep_q_ramp
-    # q = habitable price ÷ cost per habitable m² (cost ÷ cost_net_to_gross)
-    cost = CFG.construction_cost_eur_m2 / CFG.cost_net_to_gross["Appartement"]
+    # q = habitable price ÷ gross cost, the basis dep_q_ramp was calibrated on
+    cost = CFG.construction_cost_eur_m2
     surface = pd.DataFrame({"cell": ["a", "b", "c"], "type_local": ["Appartement"] * 3,
                             "eur_m2": [cost * lo, cost * (lo + hi) / 2, cost * hi * 2]})
     parcels = pd.DataFrame({"idpar": ["1", "2", "3", "4"], "cell": ["a", "b", "c", "c"],
@@ -300,9 +300,24 @@ def test_market_value_converts_gross_to_habitable_area():
     assert abs(mv.iloc[1] - 3000 * 0.7 * 100) < 1e-6
     # an unlisted type (cell mean price) takes the flat ratio
     assert abs(mv.iloc[2] - 2500 * 0.7 * 100) < 1e-6
-    for bad in ({"Maison": 0.8}, {"Appartement": 0.0}, {"Appartement": 1.3},
-                {"Appartement": float("nan")}):
+    for bad in ({"Maison": 0.8}, {"Appartement": 0.7, "Maison": 0.0},
+                {"Appartement": 1.3, "Maison": 0.8}, {"Appartement": float("nan"), "Maison": 0.8},
+                {"Appartement": 0.7, "maison": 0.8},                    # misspelt key
+                {"Appartement": 0.7, "Maison": 0.8, "Local": 0.9},      # unknown key
+                {"Appartement": 1e-9, "Maison": 0.8}):                  # implausible
         _assert_raises(ValueError, estimate.market_value, parcels, surface, bad)
+    for bad in ({"Appartement": True, "Maison": 0.8}, {"Appartement": "0.6", "Maison": 0.8}):
+        _assert_raises(TypeError, estimate.market_value, parcels, surface, bad)
+    # configs validate at construction and freeze their maps
+    import dataclasses
+    _assert_raises(ValueError, dataclasses.replace, CFG,
+                   net_to_gross={"Appartement": 0.64, "maison": 0.61})
+    try:
+        CFG.net_to_gross["Appartement"] = 0.1
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("config ratio maps must be read-only")
     # every configured commune carries valid ratio maps
     from config import COMMUNES
     for c in COMMUNES.values():
@@ -384,7 +399,7 @@ def test_maintenance_weight_ignores_unbuilt_parcels():
         "iris": ["I1"] * 5,
     })
     w = estimate.maintenance_weight(parcels, surface, CFG)
-    # houses set the price (q = 4 × 0.82, above the ramp); vacant plots inherit it
+    # houses set the price (q = 4, above the ramp); vacant plots inherit it
     assert (w == 1.0).all(), w.to_dict()
     # an IRIS with no built parcel falls back to the commune's built median
     parcels.loc[parcels["idpar"].isin(["V1", "V2", "V3"]), "iris"] = "I2"

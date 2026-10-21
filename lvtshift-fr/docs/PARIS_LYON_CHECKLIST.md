@@ -8,14 +8,14 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator and exempt public property, branch `exempt-public-property`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis and calibrated costs, branch `habitable-area-costs`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,091 | €1,840.9 M | 83.3 % | 34.8 % | 15.3 % | 53.3 % |
-| Lyon | 31,023 | €362.9 M | 70.4 % | 0.0 % | 14.3 % | 69.5 % |
-| Paris extra-muros (122) | 566,538 | €3,569.3 M | 72.8 % | 0.8 % | 15.3 % | 68.4 % |
-| Lyon extra-muros (57) | 224,911 | €528.2 M | 65.5 % | 0.0 % | 18.7 % | 69.6 % |
+| Paris | 75,091 | €1,840.9 M | 74.0 % | 0.4 % | 17.4 % | 51.9 % |
+| Lyon | 31,023 | €362.9 M | 58.6 % | 0.0 % | 16.4 % | 69.4 % |
+| Paris extra-muros (122) | 566,538 | €3,569.3 M | 60.6 % | 0.1 % | 19.9 % | 66.8 % |
+| Lyon extra-muros (57) | 224,911 | €528.2 M | 55.4 % | 0.0 % | 24.3 % | 66.1 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -23,9 +23,9 @@ Haussmann stock as worn out, and put 95.5 % of Paris's built parcels (Lyon 59.8 
 55 communes in all) on the 85 % cap, so the land share there was an assumption.
 The maintained-stock rule (C1, see A7) values such buildings at a 30-year
 effective age where neighbourhood prices are well above rebuild cost. Cap warnings
-fall from 55 communes to 1 (Neuilly-sur-Seine). Paris keeps 34.8 % of parcels at
-the cap, which is genuine at Paris prices. The direction of every distributional
-result is unchanged: the full before/after table is in
+fell from 55 communes to 1 (Neuilly-sur-Seine), with Paris still at 34.8 %; the
+habitable-area basis (below) removed the rest. The direction of every
+distributional result is unchanged: the full before/after table is in
 `output/diagnostics/depreciation_before_after.csv`, summarised under A7.
 
 **Price deflator (spec 0001).** Sales from 2021–2025 are now brought to 2025 euros
@@ -49,6 +49,27 @@ Domaine national de Saint-Cloud (State-owned, managed by the Centre des monument
 nationaux) now qualifies: Saint-Cloud's amount shifted falls from 49 % to 22 % of
 its levy and its land share from 84 % to 79 %.
 
+**Habitable-area basis and calibrated costs.** DVF prices are per m² of habitable
+area, but both market value and building value were computed on BD TOPO footprint
+× storeys. Measured on 35 communes (DPE × BD TOPO, matched by RNB id), habitable
+area is 0.64 (flats) and 0.61 (houses) of that floor area: BD TOPO counts attics,
+raised basements and technical levels as storeys. Both sides of the residual are
+now on habitable area, and construction costs are calibrated on the DHUP/SISAL
+social-housing building cost (2025 €, per m² gross, fees and VAT): Paris 2,300 →
+2,650, inner ring 2,150 → 2,400, Lyon and Villeurbanne 1,950 → 2,000, Lyon ring
+1,950 → 1,850 €/m²; other panel communes keep their pilots. The land share now
+depends on the habitable ÷ gross ratio behind the costs (`cost_net_to_gross`,
+flats 0.71, houses 0.82), not on the measured ratio, which only sets euro levels.
+Before → after: Paris land share 83.3 → 74.0 % (parcels at the cap 34.8 → 0.4 %),
+Lyon 70.4 → 58.6 %, Paris ring 72.8 → 60.6 %, Lyon ring 65.5 → 55.4 %; amount
+shifted Paris 15.3 → 17.4 %, Lyon 14.3 → 16.4 %, Paris ring 15.3 → 19.9 %, Lyon
+ring 18.7 → 24.3 %. No commune has more than half its built parcels at the cap
+(Neuilly-sur-Seine has the most, 18.3 %); of the 188 modelled communes 21 are above
+the 40–65 % band (138 before) and 5 below. The income gradient stays progressive
+and is slightly steeper (Paris group totals: poorest fifth −17.6 → −20.0 %, richest
++14.7 → +16.3 %). Evidence: `docs/research/construction-costs-2025.md` and
+`docs/research/net-to-gross-measurement.md`.
+
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
 - Every source present for every commune: cadastre, 5 years of DVF, buildings, zoning, IRIS.
@@ -61,17 +82,15 @@ its levy and its land share from 84 % to 79 %.
 
 ## A. Decisions only you can make (economics / framing)
 
-- [ ] **A1. How to present Paris.** Land share 83.3 %, with 34.8 % of built
-  parcels still at the 85 % cap: in the dearest streets land really is above 85 %
-  of value. So much of Paris still gets a near-uniform split, and the result reads
-  largely as a move from today's floor-area bill to a market-value bill. It is
-  strongly progressive (poorest income quintile −17.3 %, richest +12.4 %). Options:
-  (a) publish with a caveat, framed as "where land is ~85 % of value, LVT ≈ a
-      modern value tax";
-  (b) also raise the cap for Paris (e.g. 0.95), letting the dearest streets
-      differentiate; this is a new design choice to review.
-  *Recommendation: (a).* The site already labels a land share "plafonnée" when
-  half or more of the parcels sit at the cap; Paris is now just below that line.
+- [ ] **A1. How to present Paris.** The cap issue is resolved: land share 74.0 %,
+  with 0.4 % of built parcels at the 85 % cap, so the Paris split is measured
+  parcel by parcel rather than set by the bound, and raising the cap is no longer
+  needed. It is still above the 40–65 % plausibility band (as are 20 other
+  communes, mostly dear communes of the Paris inner ring and the Monts d'Or). The result is strongly
+  progressive (group totals: poorest income quintile −20.0 %, richest +16.3 %).
+  *Recommendation:* publish with the usual ±10 pt band, and note that the main
+  remaining uncertainty is the habitable ÷ gross ratio behind the costs
+  (`cost_net_to_gross`; ±0.05 moves building value about ±7 %).
 - [ ] **A2. Income quintiles for the rings.** Ranked across the whole ring, Lyon
   extra-muros looks *regressive* (poorest +9 %, richest −1 %). Ranked within each
   commune it is *progressive* (+5 % → +12 %): the pooled view mixes in rich-vs-poor
@@ -82,12 +101,12 @@ its levy and its land share from 84 % to 79 %.
   We hold Commune + Métropole neutral, as for the rest of the panel. Leaving the
   syndicate layer out changes **euro** amounts (understated by that %) but not the
   **% changes**. Keep as is (consistent), or include syndicates everywhere (`--layers Commune GFP Syndicat`)?
-- [ ] **A4. Construction-cost basis.** Pilots: Paris 2,300, inner ring 2,150,
-  Lyon and its ring 1,950 €/m². Research suggests 2,600 / 2,300 / 2,100 €/m² of
-  *surface utile*; our floor area (footprint × storeys) is *gross*, which brings
-  them roughly back to our values (÷ 1.1–1.2). Gemini 4 Argon argues for a 0.8
-  gross-to-net factor. Decide the basis as part of the planned FFB/BT01
-  calibration. In old stock, depreciation, not cost, decides the split.
+- [x] **A4. Construction-cost basis.** Decided on branch `habitable-area-costs`:
+  costs per m² of true gross area (2025 €, building only, fees and 20 % VAT,
+  developer margin excluded), calibrated on DHUP/SISAL social-housing costs
+  (Paris 2,650, inner ring 2,400, Lyon and Villeurbanne 2,000, Lyon ring 1,850),
+  converted to a cost per habitable m² with `cost_net_to_gross` (flats 0.71,
+  houses 0.82). See "Habitable-area basis and calibrated costs" above.
 - [ ] **A5. Public open space and industrial land priced as building land.**
   Building-less parcels in urban zones take the residential plot price. The
   aggregate effect is small (Paris 0.9 % of the levy, rings 3.6 % / 6.2 %), but it
@@ -161,9 +180,8 @@ its levy and its land share from 84 % to 79 %.
   (Gemini's suggestion: a 1900 building rated B/C has been renovated, F/G has not).
   Needs the DPE class field verified live and a coverage check, since only
   diagnosed dwellings have one.
-- [ ] **C10.** Floor-area basis (A4): DVF prices are per m² *habitable*, our floor
-  area is gross. For the land *share* this cancels only if the rebuild cost is
-  also per habitable m². The +20 % cost sensitivity brackets it (Paris 81.5 %).
+- [x] **C10.** Floor-area basis (A4): both sides of the residual are now on
+  habitable area. Done on branch `habitable-area-costs`.
 - [ ] **C8.** Marseille (16 arrondissements) can now be added the same way as Paris and Lyon.
 
 ---

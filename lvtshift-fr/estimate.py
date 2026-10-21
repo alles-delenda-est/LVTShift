@@ -23,8 +23,9 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     Per-parcel weight w in [0, 1] of the maintained-stock effective-age rule.
 
     q = median hedonic €/m² (habitable) of the parcel's area (IRIS when
-    known, else the whole commune) ÷ the cost per habitable m²
-    (cfg.construction_cost_eur_m2 ÷ cfg.cost_net_to_gross); w ramps linearly from 0 at
+    known, else the whole commune) ÷ cfg.construction_cost_eur_m2 (per gross
+    m²). The mixed basis is deliberate: dep_q_ramp was calibrated on it, and
+    restating q per habitable m² would silently retune the rule; w ramps linearly from 0 at
     cfg.dep_q_ramp[0] to 1 at cfg.dep_q_ramp[1]. Taking q at area level, not
     per parcel, keeps a local land-price rise from being read as a newer
     building, and the ramp avoids a cliff between neighbouring parcels.
@@ -41,11 +42,8 @@ def maintenance_weight(parcels: pd.DataFrame, surface: pd.DataFrame, cfg,
     if not (np.isfinite(cost) and cost > 0):
         raise ValueError("construction_cost_eur_m2 must be finite and positive")
     extra = [c for c in (area_col, "category_fr") if c in parcels.columns]
-    # market value of a floor area of 1 at the cost's ratio = price ×
-    # cost_net_to_gross, so q = price ÷ (cost ÷ cost_net_to_gross)
     p = market_value(parcels[["idpar", "cell", "type_local"] + extra]
-                     .assign(floor_area_m2=1.0), surface,
-                     getattr(cfg, "cost_net_to_gross", None))
+                     .assign(floor_area_m2=1.0), surface)
     # The area price is read from built parcels only: vacant plots carry a
     # placeholder type_local and would otherwise drag the median towards the
     # flat price in house-dominated areas. Vacant plots inherit their area's
@@ -223,20 +221,13 @@ def fit_hedonic(dvf: pd.DataFrame, deflator: dict | None = None):
     return surface, d
 
 
-def _check_net_to_gross(net_to_gross: dict) -> dict:
-    """Validate a {type_local: ratio} map; every ratio must lie in (0, 1].
+def _check_net_to_gross(net_to_gross) -> dict:
+    """Validate a {type_local: ratio} map (config.check_area_ratios).
 
     Used for both cfg.net_to_gross and cfg.cost_net_to_gross.
     """
-    if not net_to_gross or "Appartement" not in net_to_gross:
-        raise ValueError("net_to_gross must give at least an 'Appartement' ratio")
-    out = {}
-    for k, v in net_to_gross.items():
-        v = float(v)
-        if not (np.isfinite(v) and 0 < v <= 1):
-            raise ValueError(f"net_to_gross[{k!r}] must be in (0, 1], got {v!r}")
-        out[k] = v
-    return out
+    from config import check_area_ratios
+    return dict(check_area_ratios(net_to_gross))
 
 
 def market_value(parcels: pd.DataFrame, surface: pd.DataFrame,

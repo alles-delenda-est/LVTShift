@@ -5,7 +5,10 @@ All URLs documented as of June 2026 — verify before first run, these
 endpoints occasionally move. Network access required for ingest only.
 """
 
+import math
+import numbers
 from dataclasses import dataclass, field
+from types import MappingProxyType
 
 
 # Habitable area ÷ the model's floor area (BD TOPO footprint × storeys), by DVF
@@ -21,6 +24,33 @@ NET_TO_GROSS_DEFAULT = {"Appartement": 0.64, "Maison": 0.61}
 # Houses: habitable ÷ gross external ≈ 0.82 (desk estimate: SDP ÷ gross
 # 0.85-0.90 × habitable ÷ SDP ≈ 0.93-0.95).
 COST_NET_TO_GROSS_DEFAULT = {"Appartement": 0.71, "Maison": 0.82}
+AREA_RATIO_TYPES = frozenset({"Appartement", "Maison"})
+AREA_RATIO_BOUNDS = (0.3, 1.0)        # plausible habitable ÷ gross range
+
+
+def check_area_ratios(ratios, name: str = "net_to_gross") -> MappingProxyType:
+    """Validate a {type_local: habitable ÷ gross} map and return a read-only copy.
+
+    Exactly the DVF types 'Appartement' and 'Maison' (a misspelt key would
+    silently fall back to the flat ratio), each a real number (not a bool or
+    a string) within AREA_RATIO_BOUNDS.
+    """
+    if not hasattr(ratios, "items"):
+        raise TypeError(f"{name} must be a mapping, got {type(ratios).__name__}")
+    keys = set(ratios)
+    if keys != AREA_RATIO_TYPES:
+        raise ValueError(f"{name} must have exactly the keys {sorted(AREA_RATIO_TYPES)}, "
+                         f"got {sorted(map(str, keys))}")
+    lo, hi = AREA_RATIO_BOUNDS
+    out = {}
+    for k, v in ratios.items():
+        if isinstance(v, (bool, str)) or not isinstance(v, numbers.Real):
+            raise TypeError(f"{name}[{k!r}] must be a number, got {v!r}")
+        v = float(v)
+        if not (math.isfinite(v) and lo <= v <= hi):
+            raise ValueError(f"{name}[{k!r}] must be in [{lo}, {hi}], got {v!r}")
+        out[k] = v
+    return MappingProxyType(out)
 
 
 @dataclass
@@ -36,7 +66,7 @@ class CommuneConfig:
     # storeys), building only (hors foncier, hors VRD), fees and 20 % VAT
     # included. See the calibration note above the commune list.
     construction_cost_eur_m2: float = 1900.0
-    # Both sides of the residual are put on habitable area (METHODOLOGY §3.2):
+    # Both sides of the residual are put on habitable area (METHODOLOGY §3.1):
     # habitable = net_to_gross[type] × the model's floor area; market value =
     # DVF €/m² (habitable) × habitable area; building value = cost per
     # habitable m² (construction_cost_eur_m2 ÷ cost_net_to_gross[type]) ×
@@ -71,6 +101,13 @@ class CommuneConfig:
     sub_codes: tuple = ()
     # Output-file/registry key override (ASCII); default derives from name.
     key: str = ""
+
+    def __post_init__(self):
+        # validate once at construction, and freeze the maps so a later edit to
+        # one config can never leak into another that shares them (copy.copy)
+        self.net_to_gross = check_area_ratios(self.net_to_gross, "net_to_gross")
+        self.cost_net_to_gross = check_area_ratios(self.cost_net_to_gross,
+                                                   "cost_net_to_gross")
 
     @property
     def data_codes(self) -> tuple:

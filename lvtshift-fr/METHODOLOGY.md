@@ -48,18 +48,39 @@ square (a transparent hedonic fixed effect, not an admin geography).
 the parcel (`estimate.improvement_value`):
 
 ```
-floor_area   = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
-age          = reference_year − year_built
-q            = median hedonic €/m² of the built parcels in the parcel's IRIS
-               ÷ construction_cost_eur_m2   (commune median if the IRIS has none)
-w            = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp)
-eff_age      = w × min(age, 30) + (1 − w) × age             (dep_maintained_age_cap)
-depreciation = clip(1 − (1 − dep_floor) × eff_age / dep_years,  min = dep_floor)
-imp_value    = floor_area × construction_cost_eur_m2 × depreciation
+floor_area     = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
+habitable_area = net_to_gross[type] × floor_area            (flats 0.64, houses 0.61)
+cost_hab       = construction_cost_eur_m2 ÷ cost_net_to_gross[type]   (flats 0.71, houses 0.82)
+age            = reference_year − year_built
+q              = median hedonic €/m² of the built parcels in the parcel's IRIS
+                 ÷ construction_cost_eur_m2   (commune median if the IRIS has none)
+w              = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp)
+eff_age        = w × min(age, 30) + (1 − w) × age             (dep_maintained_age_cap)
+depreciation   = clip(1 − (1 − dep_floor) × eff_age / dep_years,  min = dep_floor)
+imp_value      = habitable_area × cost_hab × depreciation
+market_value   = hedonic €/m² × habitable_area                (§3.3)
 ```
 
 `year_built` is taken from DPE (§3.2); `construction_cost_eur_m2`, `dep_years`,
-`dep_floor` are per-commune config (§4).
+`dep_floor` are per-commune config (§4); `type` is the parcel's dominant
+`type_local` (types other than flat and house use the flat ratios).
+
+*Habitable-area basis.* DVF prices are per m² of habitable area
+(`surface_reelle_bati`), while `floor_area` is BD TOPO footprint × storeys.
+Measured on 35 communes (DPE habitable surfaces matched to BD TOPO buildings by
+their RNB id, area-weighted), habitable ÷ `floor_area` is **0.64 for flats
+(0.59–0.68) and 0.61 for houses (0.58–0.66)**: BD TOPO counts attics, raised
+basements and technical levels as storeys, so `floor_area` overstates even the
+true gross area. Both sides of the residual are therefore put on habitable area
+(`estimate.habitable_basis`, `market_value`). Construction costs are quoted per
+m² of true gross area (§4) and become a cost per habitable m² by dividing by
+`cost_net_to_gross`, the habitable ÷ true gross ratio the cost calibration
+assumed: **0.71 for flats** (surface utile ÷ gross 0.74, ÷ surface utile ÷
+habitable ≈ 1.04) and **0.82 for houses** (desk estimate). For a built parcel the
+land share is then 1 − cost_hab × depreciation ÷ price per m²: it depends on
+`cost_net_to_gross`, not on the measured `net_to_gross`, which only sets the euro
+levels. Evidence: `docs/research/net-to-gross-measurement.md` and
+`docs/research/construction-costs-2025.md`.
 
 *Maintained stock (effective age).* Where neighbourhood prices are far above
 rebuild cost, owners keep renovating, so years since construction stop measuring
@@ -76,6 +97,9 @@ would pull a house-dominated area towards the flat price. In weak
 markets (q ≤ 1.2: Roubaix, Cahors) the rule is inactive and age-based depreciation
 also absorbs economic obsolescence. A uniform cap was tested and rejected: it puts
 half of Roubaix's and a third of Cahors's built parcels on the 15 % lower bound.
+q deliberately keeps the basis its ramp was calibrated on (habitable price ÷ cost
+per gross m²): restating it per habitable m² would silently retune the rule. It
+falls slightly with the recalibrated (higher) costs.
 
 Buildings join parcels by **area-weighted
 intersection** (a building straddling a boundary credits each parcel by overlap
@@ -91,7 +115,8 @@ degenerates to "unknown".
 
 **3.3 Market value** — a deliberately simple log-linear hedonic on DVF
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
-toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
+toward the commune-type median (pseudo-count k = 8), × the parcel's habitable
+area (`net_to_gross` × floor area, §3.1), the basis DVF prices are quoted on. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
 1st/99th percentile.
 
@@ -188,8 +213,8 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (median residential parcel: poorest fifth −16.7 to −17.7 %, richest
-+11.9 to +12.8 %).
+barely moves (median residential parcel: poorest fifth −18.8 to −20.2 %, richest
++12.7 to +13.8 %).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -199,7 +224,7 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+6.4 % while the group as a whole pays −7.7 % and its typical household −10.6 %,
++10.7 % while the group as a whole pays −7.9 % and its typical household −11.8 %,
 because the large blocks, where most of its households live, gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
 residential parcels without a count are imputed (a house = 1; flats = gross floor
@@ -213,31 +238,50 @@ the totals.
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
-sat at the 0.85 bound (Lyon 59.8 %; 55 communes flagged) and the 84.9 % headline
-was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
-30-year effective age: Paris now comes out at **83.3 %**, with 34.8 % of built
-parcels still at the bound. That residue is genuine, not an artefact: at Paris
-prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
-expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 70.4 % with no parcel at the bound; across the panel the
-`land_share_clip` warnings fall from 55 to 1. No write-down at all would give
-63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
-built parcels at the bound, and the site labels the land share "plafonnée" when it
-is ≥ 50 %.
+sat at the 0.85 bound and the 84.9 % headline was set by the cap. The
+maintained-stock rule (§3.1) values such buildings at a 30-year effective age,
+which brought Paris to 83.3 % with 34.8 % of built parcels still at the bound.
+With both sides of the residual on habitable area and the calibrated costs
+(§3.1, §4), Paris comes out at **74.0 %** with 0.4 % of built
+parcels at the bound: its land share is now measured, not set by the cap. No
+commune has more than half its built parcels at the cap; Neuilly-sur-Seine has
+the most (18.3 %), and the preflight `land_share_clip` check no longer warns
+anywhere. Lyon is at 58.6 %, the Paris ring 60.6 % and the Lyon ring 55.4 %.
+Across the 188 modelled communes, 21 lie above the 40–65 % plausibility band
+(138 before this change) and 5 below. `headline.built_at_cap_pct` records the
+share of built parcels at the bound, and the site labels the land share
+"plafonnée" when it is ≥ 50 %.
 
 ## 4. Key parameters and assumptions
 
-- **Construction cost €/m²** (turnkey, hors foncier; pilot regional gradient,
-  needs FFB/BT01 calibration): Paris 2300, IdF inner ring 2150 (Montreuil and
-  all of 92/93/94), Lyon, Villeurbanne and the Métropole ring 1950,
-  Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650, Figeac 1600.
+- **Construction cost €/m²** (`construction_cost_eur_m2`): turnkey replacement
+  cost of a modern equivalent building, 2025 €, per m² of true gross external
+  area, building only (hors foncier, hors VRD), architects'/engineers' fees and
+  20 % VAT included, developer margin excluded. Paris, the inner ring and the
+  Lyon areas are calibrated on the DHUP/SISAL « Bilan des logements aidés »
+  2021–22 building-only cost of new social housing, indexed to 2025 with INSEE
+  BT01 (`docs/research/construction-costs-2025.md`): **Paris 2650** (plausible
+  range 2350–3100), **inner ring 2400** (Montreuil and all of 92/93/94;
+  2150–2700), **Lyon and Villeurbanne 2000** (1750–2300), **Métropole ring 1850**
+  (1600–2100). The other panel communes keep pilot values on the SDES house-cost
+  (EPTB) gradient: Grenoble/Annemasse 1900, Sète/La Rochelle 1850, Roubaix 1750,
+  Cahors 1650, Figeac 1600. (Earlier pilots: Paris 2300, inner ring 2150, Lyon
+  and both Lyon areas 1950.)
+- **Area ratios** (by `type_local`; other types use the flat ratio):
+  `net_to_gross` = habitable ÷ the model's floor area, measured: flats 0.64
+  (0.59–0.68), houses 0.61 (0.58–0.66)
+  (`docs/research/net-to-gross-measurement.md`); `cost_net_to_gross` = habitable
+  ÷ true gross area behind the costs: flats 0.71, houses 0.82 (§3.1).
 - **Depreciation**: straight-line over `dep_years` = 80, floor `dep_floor` = 0.25,
   on the effective age; maintained-stock cap 30 years (`dep_maintained_age_cap`),
   ramp q ∈ [1.2, 2.5] (`dep_q_ramp`). Both are judgement calls informed by the
   literature (§3.1); the cap and ramp end-points are not directly estimated.
 - **Land-share bounds**: [0.15, 0.85] — a design constraint, not a measurement.
-  Where most parcels hit the upper bound (Paris, Lyon), the cause found so far is
-  over-depreciation of old maintained stock, not land genuinely above 85 % (§3.7).
+  Where most parcels used to hit the upper bound (Paris, Lyon), the causes found
+  were over-depreciation of old maintained stock and pricing habitable-area DVF
+  prices on the larger BD TOPO floor area, not land genuinely above 85 %. With
+  both corrected, no commune has more than half its built parcels at either
+  bound (§3.7).
 - **Split-rate ratio**: 4:1 (land:improvement), headline scenario.
 - **Agricultural €/m²** (SAFER, by département, agricultural / natural): default
   0.64 / 0.49; Lot 0.45 / 0.35; Seine-St-Denis 1.00 / 0.60; Nord 0.85 / 0.50;
@@ -257,12 +301,13 @@ is ≥ 50 %.
 - **Revenue neutrality** — exact by construction; verified to the euro on every
   real run (Cahors €22,690,869; Montreuil €101,780,897).
 - **Top-down land share** — total land ÷ total built real-estate value should sit
-  near INSEE comptes de patrimoine (~45–50 % land). Cahors lands at ~53 % after
-  the DPE construction-year fix (it was a degenerate 85 % before — see §6).
+  near INSEE comptes de patrimoine (~45–50 % land). Cahors came to ~53 % after
+  the DPE construction-year fix (it was a degenerate 85 % before — see §6) and
+  is at 40.7 % on the habitable-area basis.
 - **Sign checks** — agricultural/natural land bears a negligible share of the
   levy (Cahors 0.3 %); under-used constructible land pays *more* (the LVT
-  incentive); the Montreuil income gradient is progressive (poorest quintiles
-  −10 %, richer +9/+12 %).
+  incentive); the Montreuil income gradient is progressive (group totals:
+  poorest fifth −16.1 %, richest +14.7 %).
 - **Tests** — `test_units.py` (offline unit tests of the pure logic) and
   `test_synthetic.py` (end-to-end through the real solver).
 
@@ -285,19 +330,28 @@ Ranked by how much they move published (category/quintile) results.
    (mitigated for pre-1948 stock, which hits the depreciation floor regardless).
    A clear improvement over the prior degenerate baseline, but a documented
    generalisation.
-4. **Construction costs** are coarse regional pilots; a ±15 % move flows linearly
-   into building (hence land) value.
+4. **Construction costs and the area basis.** Costs for Paris, the inner ring and
+   the Lyon areas are calibrated, with published plausible ranges (§4); social
+   housing is a proxy for the private stock and will understate prime or
+   listed buildings. The main remaining uncertainty is `cost_net_to_gross`
+   (habitable ÷ true gross area), the least-sourced link: ±0.05 moves building
+   value by about ±7 %, and that flows into the land residual. The measured
+   `net_to_gross` sets euro levels only. The other panel communes keep
+   uncalibrated pilot costs. Non-residential parcels take the flat ratios (and
+   the flat €/m², item 7). BD TOPO storey miscounts are the main source of
+   parcel-level scatter in floor area.
 5. **Land-share clip**: when most built parcels sit at a bound, the land share is
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
-   Lyon and 53 other communes; it is now Neuilly-sur-Seine only, with Paris at
-   34.8 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
-   cap (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a
-   sensitivity on them is open (THEORY.md).
+   Lyon and 53 other communes. No commune now has more than half its built parcels
+   at a bound; Neuilly-sur-Seine has the most at the cap (18.3 %), Paris 0.4 %
+   (§3.7). The preflight `land_share_clip` check flags it. The effective-age cap
+   (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a sensitivity
+   on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
-7. **Non-residential market value** borrows the residential €/m² surface;
-   professionnels (2017 VLC revision) need a separate stratum.
+7. **Non-residential market value** borrows the residential €/m² surface and the
+   flat area ratios; professionnels (2017 VLC revision) need a separate stratum.
 8. **Income (Filosofi)**: 2021 (last vintage), communes ≥5 000 inhabitants only,
    some IRIS statistically suppressed.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are
