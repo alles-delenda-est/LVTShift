@@ -185,9 +185,18 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
     """Sidecar to the standard export (whose 16 columns are fixed upstream):
     same rows in the same order, with new_tax repeated so a reader can check
     the alignment. Local only — output/ is git-ignored and never published."""
+    import hashlib
+    import json
     side = dwellings_per_parcel(p, buildings)
     side.insert(0, "new_tax", p["new_tax"].values)
     side.to_csv(Path(out_dir) / f"{name}.households.csv", index=False)
+    # tie the sidecar to the exact export it belongs to (new_tax alone repeats
+    # across parcels, so it cannot prove the rows line up)
+    export = Path(out_dir) / f"{name}.csv"
+    meta = {"export_sha256": hashlib.sha256(export.read_bytes()).hexdigest(),
+            "rows": int(len(side))}
+    (Path(out_dir) / f"{name}.households.meta.json").write_text(
+        json.dumps(meta) + "\n", encoding="utf-8")
     print(f"[{name}] dwellings: {side['n_dwellings'].sum():,.0f} "
           f"({100 * side['dwellings_imputed'].mean():.1f}% of parcels imputed)")
 

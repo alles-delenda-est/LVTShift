@@ -238,23 +238,23 @@ def test_weighted_median():
 
 
 def test_quintile_totals_and_households_tell_the_group_story():
-    # Q1: four houses each +10 %, one 100-flat block −20 % -> the median parcel
-    # pays more, but the group and the typical household pay less
+    # each group: twelve houses at +10 %, three 10-flat blocks at −20 % -> the
+    # median parcel pays more, but the group and the typical household pay less
     houses = dict(property_category="Single Family Residential", current_tax=1000.0,
                   tax_change=100.0, tax_change_pct=10.0, n_dwellings=1.0)
     block = dict(property_category="Large Multi-Family (5+ units)", current_tax=20000.0,
-                 tax_change=-4000.0, tax_change_pct=-20.0, n_dwellings=100.0)
+                 tax_change=-4000.0, tax_change_pct=-20.0, n_dwellings=10.0)
     shop = dict(property_category="Commercial", current_tax=5000.0,
                 tax_change=-2500.0, tax_change_pct=-50.0, n_dwellings=0.0)
     rows = []
     for q in range(5):
-        for r in [houses] * 4 + [block, shop]:
+        for r in [houses] * 12 + [block] * 3 + [shop]:
             rows.append({**r, "median_income": 20000.0 + 1000 * q})
     q1 = ew.build_by_income_quintile(pd.DataFrame(rows))[0]
     assert q1["median_change_pct_residential"] == 10.0
-    assert q1["total_change_pct"] == round(100 * (400 - 4000) / 24000, 1)  # shop excluded
+    assert q1["total_change_pct"] == round(100 * (1200 - 12000) / 72000, 1)  # shop excluded
     assert q1["household_median_change_pct"] == -20.0
-    assert q1["dwellings"] == 104
+    assert q1["dwellings"] == 42
     # older runs without dwelling counts: household figure unset, not guessed
     q1 = ew.build_by_income_quintile(pd.DataFrame(rows).drop(columns="n_dwellings"))[0]
     assert q1["household_median_change_pct"] is None and q1["total_change_pct"] is not None
@@ -271,8 +271,47 @@ def test_households_sidecar_must_match_its_run(tmp_path, monkeypatch):
     side = pd.DataFrame({"new_tax": df["new_tax"], "n_dwellings": [1.0, 0.0, 0.0, 12.0],
                          "dwellings_imputed": False})
     side.to_csv(tmp_path / "x.households.csv", index=False)
+    import hashlib
+    sha = hashlib.sha256((tmp_path / "x.csv").read_bytes()).hexdigest()
+    (tmp_path / "x.households.meta.json").write_text(json.dumps({"export_sha256": sha}))
     out = ew.load_parcels("x", out_dir=str(tmp_path))
     assert list(out["n_dwellings"]) == [1.0, 0.0, 0.0, 12.0]
     side.assign(new_tax=side["new_tax"] + 5).to_csv(tmp_path / "x.households.csv", index=False)
     with pytest.raises(ValueError):
         ew.load_parcels("x", out_dir=str(tmp_path))
+    # a re-run export no longer matches the recorded hash
+    side.to_csv(tmp_path / "x.households.csv", index=False)
+    df.assign(new_tax=df["new_tax"] + 0).to_csv(tmp_path / "x.csv", index=False, float_format="%.3f")
+    with pytest.raises(ValueError):
+        ew.load_parcels("x", out_dir=str(tmp_path))
+
+
+def test_quintile_group_figures_withheld_for_small_or_dominated_groups():
+    def rows(n_houses, block_flats, nan_count=False):
+        out = []
+        for q in range(5):
+            for i in range(n_houses):
+                out.append(dict(property_category="Single Family Residential",
+                                current_tax=1000.0, tax_change=50.0, tax_change_pct=5.0,
+                                n_dwellings=np.nan if (nan_count and i == 0) else 1.0,
+                                median_income=20000.0 + q))
+            out.append(dict(property_category="Large Multi-Family (5+ units)",
+                            current_tax=9000.0, tax_change=-900.0, tax_change_pct=-10.0,
+                            n_dwellings=block_flats, median_income=20000.0 + q))
+        return pd.DataFrame(out)
+    ok = ew.build_by_income_quintile(rows(20, 10.0))[0]
+    assert ok["household_median_change_pct"] == 5.0 and ok["total_change_pct"] is not None
+    small = ew.build_by_income_quintile(rows(5, 10.0))[0]           # 6 parcels
+    assert small["total_change_pct"] is None and small["dwellings"] is None
+    dominated = ew.build_by_income_quintile(rows(20, 50.0))[0]       # block = 50/70
+    assert dominated["household_median_change_pct"] is None
+    assert dominated["dwellings"] is None and dominated["total_change_pct"] is None
+    partial = ew.build_by_income_quintile(rows(20, 10.0, nan_count=True))[0]
+    assert partial["household_median_change_pct"] is None
+    assert partial["total_change_pct"] is not None
+
+
+def test_guard_rejects_nested_values_in_quintile_rows():
+    payload = {"by_income_quintile": [{"quintile": 1, "dwellings": [1, 2, 3]}]}
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(payload)

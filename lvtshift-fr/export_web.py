@@ -71,6 +71,13 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
     side_path = path.with_name(f"{path.stem}.households.csv")
     if not side_path.exists():
         return df
+    import hashlib
+    meta_path = path.with_name(f"{path.stem}.households.meta.json")
+    meta = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
+    if meta.get("export_sha256") != hashlib.sha256(path.read_bytes()).hexdigest():
+        raise ValueError(
+            f"{side_path.name} was not written with this {path.name}; "
+            f"re-run `python run_commune.py {commune_key}`")
     side = pd.read_csv(side_path)
     if len(side) != len(df) or not np.allclose(
             side["new_tax"].to_numpy(float), df["new_tax"].to_numpy(float),
@@ -82,7 +89,11 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
 
 
 def weighted_median(values, weights):
-    """Median of values with each counted `weights` times (None if no weight)."""
+    """Median of values with each counted `weights` times (None if no weight).
+
+    Non-finite values and non-positive weights are ignored; an exact 50/50
+    split returns the lower value.
+    """
     v = np.asarray(values, dtype=float)
     w = np.asarray(weights, dtype=float)
     ok = np.isfinite(v) & np.isfinite(w) & (w > 0)
@@ -93,6 +104,13 @@ def weighted_median(values, weights):
     v, w = v[order], w[order]
     cum = np.cumsum(w)
     return float(v[np.searchsorted(cum, cum[-1] / 2.0)])
+
+
+# Disclosure control for the per-quintile group figures: a group must hold at
+# least this many residential parcels, and no parcel more than this share of
+# its dwellings, or its total and household figures are left unpublished.
+MIN_GROUP_PARCELS = 11
+MAX_DWELLING_SHARE = 0.5
 
 
 def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
@@ -106,14 +124,24 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
     rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
     total = None
-    if {"current_tax", "tax_change"} <= set(rsub.columns):
-        total = _pct(float(rsub["tax_change"].sum()), float(rsub["current_tax"].sum()))
+    if {"current_tax", "tax_change"} <= set(rsub.columns) and len(rsub) >= MIN_GROUP_PARCELS:
+        chg = rsub["tax_change"].sum(min_count=1)
+        cur = rsub["current_tax"].sum(min_count=1)
+        if np.isfinite(chg) and np.isfinite(cur) and rsub["tax_change"].notna().all():
+            total = _pct(float(chg), float(cur))
     hh_median, dwellings = None, None
-    if "n_dwellings" in rsub.columns:
+    n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
+    # every residential parcel must carry a count (a member commune without a
+    # sidecar would otherwise drop out of the weights but not of the total)
+    if n is not None and len(rsub) >= MIN_GROUP_PARCELS and n.notna().all() and n.sum() > 0:
         pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan)
-        hh = weighted_median(pct, rsub["n_dwellings"])
+        hh = weighted_median(pct, n)
         hh_median = None if hh is None else round(hh, 1)
-        dwellings = int(round(float(rsub["n_dwellings"].sum())))
+        dwellings = int(round(float(n.sum())))
+        # one building dominating the group would make its figures that
+        # building's own: publish nothing household-level then
+        if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
+            hh_median, dwellings, total = None, None, None
     return {
         "quintile": int(q),
         "median_income_eur": round(float(sub["median_income"].median()), 0),
@@ -371,6 +399,8 @@ def assert_aggregate_only(payload: dict) -> None:
             assert len(payload[k]) <= 5
             for r in payload[k]:
                 assert set(r) <= QUINTILE_KEYS, f"unexpected quintile keys: {set(r) - QUINTILE_KEYS}"
+                assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()), \
+                    "non-scalar value in a quintile row"
     sens = payload.get("headline_sensitivity") or {}
     assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
@@ -581,7 +611,8 @@ def _write_commune_json(payload: dict, data_dir: str) -> Path:
     assert_aggregate_only(payload)
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     path = Path(data_dir) / f"{payload['commune_key']}.json"
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8")
     return path
 
 
