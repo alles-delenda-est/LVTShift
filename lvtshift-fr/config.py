@@ -113,6 +113,16 @@ DATA_SOURCES = {
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
+    # DGFiP « Fichiers des locaux et des parcelles des personnes morales »
+    # (Licence Ouverte 2.0, annual). Catalog of yearly zip attachments; ids change
+    # every vintage, so exemptions._attachments() matches them by pattern.
+    "pm_catalog": ("https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
+                   "fichiers-des-locaux-et-des-parcelles-des-personnes-morales/attachments"),
+    # Notaires-INSEE « indice des prix des logements anciens » (IPLA), quarterly,
+    # base 100 = 2015, série brute, via the INSEE BDM SDMX API (no key). One
+    # series per idbank; see PRICE_INDEX_IDBANKS for the geography mapping.
+    "insee_bdm_series": "https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/{idbank}?startPeriod={start}",
+
     # Filosofi (INSEE): IRIS-level income. 2021 is the last produced vintage
     # (2022 not published). CSV zip -> BASE_TD_FILO_IRIS_2021_DISP.csv (sep ';'),
     # keyed on IRIS (9-digit code_iris), median = DISP_MED21. Covers communes
@@ -245,6 +255,9 @@ TERRITORIES = {
     },
 }
 
+# Keys of the Métropole de Lyon communes (price-index geography).
+LYON_METROPOLE_KEYS = frozenset(TERRITORIES["lyon-extra-muros"]["members"])
+
 
 # ------------------------------------------------------------------ #
 # Land-valuation benchmarks (classify-then-price; see THEORY.md)
@@ -282,6 +295,64 @@ AG_EUR_M2_BY_DEP = {           # (agricultural A, natural/forest N)
 # (2023); kept as a single conservative national anchor (the commune DVF median
 # is always preferred when available).
 EPTB_EUR_M2_FALLBACK = 99.0
+
+# Price deflator (spec 0001). DVF sales are pooled over `dvf_years`; prices rose
+# to 2022 and then corrected, by very different amounts by place (Paris flats
+# −10 % 2022→2025, Lyon −13.5 %, Marseille +0 %, France −4 %). Each sale is
+# brought to `reference_year` euros with factor(Y) = avg(index, ref) / avg(index,
+# Y), using the most local Notaires-INSEE series INSEE publishes, by dwelling
+# type. Values are fetched live (ingest.fetch_price_index_annual); series
+# verified 2026-10-19 against the BDM dataflow IPLA-IPLNA-2015 (raw series).
+# Agglomeration series (A_69123 « Agglomération de Lyon », A_13055 Marseille,
+# Lille houses) cover the urban area, not only the central commune.
+PRICE_INDEX_IDBANKS = {
+    # geography: (Appartement idbank, Maison idbank). A type-specific pair is
+    # used only when both series exist for the same geography.
+    "paris": ("010567012", "010567012"),          # Paris: flats only (no houses series)
+    "d92": ("010567032", "010567036"),             # Hauts-de-Seine
+    "d93": ("010567038", "010567042"),             # Seine-Saint-Denis
+    "d94": ("010567044", "010567048"),             # Val-de-Marne
+    # Agglomerations publish one dwelling type only; it is used for both types.
+    # Mixing a local flats series with a regional houses series would move
+    # houses against flats by the city-vs-region gap (Lyon: −13.5 % vs −4 %
+    # 2022→2025), although within a region the two types moved alike.
+    "agglo_lyon": ("010567010", "010567010"),      # Agglomération de Lyon, flats
+    "agglo_marseille": ("010567006", "010567006"),  # Agglomération de Marseille, flats
+    "agglo_lille": ("010567008", "010567008"),     # Agglomération de Lille, houses
+    "auvergne_rhone_alpes": ("010567128", "010567132"),
+    "paca": ("010567110", "010567114"),
+    "nord_pas_de_calais": ("010567098", "010567102"),
+    "province": ("010567062", "010567074"),        # default outside Île-de-France
+}
+_ARA_DEPS = {"01", "03", "07", "15", "26", "38", "42", "43", "63", "69", "73", "74"}
+_PACA_DEPS = {"04", "05", "06", "13", "83", "84"}
+
+
+def price_index_geography(cfg) -> str:
+    """Key into PRICE_INDEX_IDBANKS for a commune (most local series first)."""
+    dep = cfg.departement
+    if dep == "75":
+        return "paris"
+    if dep in ("92", "93", "94"):
+        return "d" + dep
+    if cfg.insee_code in LYON_METROPOLE_INSEE:
+        return "agglo_lyon"
+    if cfg.insee_code == "13055":
+        return "agglo_marseille"
+    if cfg.insee_code in LILLE_AGGLO_INSEE:
+        return "agglo_lille"
+    if dep in _ARA_DEPS:
+        return "auvergne_rhone_alpes"
+    if dep in _PACA_DEPS:
+        return "paca"
+    if dep in ("59", "62"):
+        return "nord_pas_de_calais"
+    return "province"
+
+
+# Communes of the Lille agglomeration among those modelled (Roubaix).
+LILLE_AGGLO_INSEE = {"59350", "59512", "59599"}   # Lille, Roubaix, Tourcoing
+
 
 # Land-model parameters.
 LAND_MODEL = {
@@ -321,3 +392,10 @@ def slug_of(cfg) -> str:
 def data_codes_of(cfg) -> tuple:
     """Data INSEE codes for any config-like object (see CommuneConfig.data_codes)."""
     return getattr(cfg, "data_codes", None) or (cfg.insee_code,)
+
+
+# INSEE codes of the Métropole de Lyon (Lyon, Villeurbanne and the 57-commune
+# ring): where the Métropole's own property counts as on its territory
+# (exemptions._in_territory).
+LYON_METROPOLE_INSEE = frozenset(
+    {"69123", "69266"} | {COMMUNES[k].insee_code for k in LYON_METROPOLE_KEYS})

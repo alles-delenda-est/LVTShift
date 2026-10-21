@@ -77,18 +77,21 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output", make_report: bool = True, cfg=CFG) -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True, cfg=CFG,
+        deflator: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
        split ratio, name used for output paths). Defaults to the module CFG
        so the synthetic test keeps working unchanged.
        make_report: also write the PNG charts (needs matplotlib); set False
-       for a CSV-only run."""
+       for a CSV-only run.
+       deflator: optional {type_local: {year: factor}} (estimate.deflator_factors)
+       bringing DVF prices to cfg.reference_year euros before the hedonic fit."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
-    surface, _trans = estimate.fit_hedonic(dvf)
+    surface, _trans = estimate.fit_hedonic(dvf, deflator=deflator)
     maint_w = None
     if getattr(cfg, "dep_maintained_age_cap", None) is not None:
         maint_w = estimate.maintenance_weight(parcels, surface, cfg)
@@ -106,18 +109,25 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
     # ---- LVTShift's real revenue-neutral solver -------------------- #
+    # Exempt public property (exemptions.py) pays neither tax: zero share of
+    # today's FB (current_tax above) and zero taxable value in the solve, so the
+    # levy is held neutral over the taxable base only.
+    exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
+    if exempt_col:
+        p[exempt_col] = p[exempt_col].fillna(False).astype(int)
     land_mill, imp_mill, revenue, p = model_split_rate_tax(
         df=p,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
         land_improvement_ratio=cfg.split_rate_ratio,
+        exemption_flag_col=exempt_col,
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
-    p["taxable_land_value"] = p["land_value"]
-    p["taxable_improvement_value"] = p["improvement_value"]
+    # (taxable_land_value / taxable_improvement_value come from the solver:
+    #  equal to land_value / improvement_value except on exempt parcels, 0)
 
     # demographics: IRIS code stands in for geoid; Filosofi median income;
     # minority/black left null - France produces no ethnic statistics
@@ -136,6 +146,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         output_path=f"{out_dir}/{name}.csv",
         model_type=f"split_rate:{cfg.split_rate_ratio}",
         land_millage=land_mill, improvement_millage=imp_mill,
+        exempt_flag_col=exempt_col,
     )
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")

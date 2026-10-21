@@ -62,7 +62,11 @@ export interface Commune {
   reference_year: number | null; model_type: string; headline: Headline;
   headline_sensitivity: Sensitivity; by_category: CategoryRow[];
   by_income_quintile: QuintileRow[] | null; by_improvement_ratio: BucketRow[];
-  provenance: { construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string };
+  provenance: {
+    construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string;
+    /** parcels treated as exempt public property (count only; absent in older payloads) */
+    exempt_public_parcels?: number;
+  };
   members?: MemberRow[]; coverage?: Coverage;
   /** Territory only: quintiles ranked inside each member commune, then pooled. */
   by_income_quintile_within?: QuintileRow[] | null;

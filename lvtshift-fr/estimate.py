@@ -125,6 +125,48 @@ def improvement_value(buildings: pd.DataFrame, cfg,
 # 2. Hedonic market value surface from DVF
 # ------------------------------------------------------------------ #
 
+def deflator_factors(cfg, fetch=None) -> dict:
+    """{type_local: {year: factor}} bringing each DVF year to reference-year €.
+
+    factor(Y) = annual mean of the area's Notaires-INSEE index in
+    cfg.reference_year ÷ its annual mean in Y (config.PRICE_INDEX_IDBANKS).
+    Fails loudly if the reference year or any DVF year is missing: deflating
+    some years and not others would bias the pooled prices.
+    """
+    from config import PRICE_INDEX_IDBANKS, price_index_geography
+    if fetch is None:
+        from ingest import fetch_price_index_annual as fetch
+    ref = int(cfg.reference_year)
+    apt, house = PRICE_INDEX_IDBANKS[price_index_geography(cfg)]
+    out, fetched = {}, {}
+    for typ, idbank in (("Appartement", apt), ("Maison", house)):
+        if idbank not in fetched:          # one series often serves both types
+            fetched[idbank] = fetch(idbank, start=min(cfg.dvf_years))
+        avg = fetched[idbank]
+        need = sorted({ref, *cfg.dvf_years})
+        missing = [y for y in need if y not in avg]
+        if missing:
+            raise ValueError(f"price index {idbank} lacks full years {missing}")
+        out[typ] = {int(y): avg[ref] / avg[y] for y in cfg.dvf_years}
+        bad = {y: f for y, f in out[typ].items() if not 0.5 < f < 2.0}
+        if bad:      # a few years of house prices never halve or double
+            raise ValueError(f"implausible deflator factors from {idbank}: {bad}")
+    return out
+
+
+def _deflator_column(d: pd.DataFrame, deflator: dict) -> pd.Series:
+    """Per-sale factor: by type_local and year when the deflator is nested
+    ({type: {year: f}}), by year alone for a flat {year: f}; 1.0 if unknown."""
+    nested = all(isinstance(v, dict) for v in deflator.values())
+    if not nested:
+        return d["year"].map(deflator).fillna(1.0)
+    f = pd.Series(1.0, index=d.index)
+    for typ, by_year in deflator.items():
+        m = d["type_local"] == typ
+        f[m] = d.loc[m, "year"].map(by_year).fillna(1.0)
+    return f
+
+
 def fit_hedonic(dvf: pd.DataFrame, deflator: dict | None = None):
     """
     Log-linear hedonic on DVF mutations -> predicted €/m² of floor area
@@ -141,7 +183,7 @@ def fit_hedonic(dvf: pd.DataFrame, deflator: dict | None = None):
     d = dvf.dropna(subset=["price", "floor_area_m2", "cell"]).copy()
     d = d[(d.floor_area_m2 > 9) & (d.price > 1_000)]
     if deflator:
-        d["price"] = d.apply(lambda r: r["price"] * deflator.get(r["year"], 1.0), axis=1)
+        d["price"] = d["price"] * _deflator_column(d, deflator)
     d["log_ppm2"] = np.log(d.price / d.floor_area_m2)
 
     # cell x type median with shrinkage toward commune-wide type median
@@ -302,7 +344,8 @@ def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
 def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
                 vlc_proxy_cols=("floor_area_m2",),
                 category_weights: dict | None = None,
-                category_col: str = "category_fr") -> pd.DataFrame:
+                category_col: str = "category_fr",
+                exempt_col: str | None = "is_exempt_public") -> pd.DataFrame:
     """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
     THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
@@ -330,6 +373,8 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
     w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
     if "floor_area_m2" in out.columns:        # enforce built-only
         w = w.where(out["floor_area_m2"].fillna(0) > 0, 0.0)
+    if exempt_col and exempt_col in out.columns:   # exempt today: bears no FB
+        w = w.where(~out[exempt_col].fillna(False).astype(bool), 0.0)
     if category_weights and category_col in out.columns:   # sensitivity only
         w = w * out[category_col].map(category_weights).fillna(1.0)
     total = w.sum()

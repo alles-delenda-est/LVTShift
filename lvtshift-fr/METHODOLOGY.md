@@ -35,6 +35,7 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
 | Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 | distributional (quintile) analysis |
+| Exempt public property | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | yearly zips via the data.economie.gouv.fr catalog | situation 2025 | flag obviously TFPB-exempt public property (§3.5) |
 
 All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`.
 
@@ -94,6 +95,20 @@ toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF i
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
 1st/99th percentile.
 
+**Price deflator.** The five DVF years span a cycle (prices up to 2022, then a
+correction), and by very different amounts by place, so each sale is first brought
+to `reference_year` (2025) euros: factor(Y) = annual mean of the area's
+Notaires-INSEE index in 2025 ÷ its mean in Y (`estimate.deflator_factors`,
+`config.PRICE_INDEX_IDBANKS`, fetched live from the INSEE BDM). The most local
+series INSEE publishes is used: Paris flats; flats and houses separately for
+Hauts-de-Seine, Seine-Saint-Denis and Val-de-Marne; the Lyon, Marseille and Lille
+agglomerations; regions (Auvergne-Rhône-Alpes, PACA, Nord-Pas-de-Calais); Province
+elsewhere. Where an agglomeration publishes one dwelling type only, that series is
+used for both types: pairing a local flats series with a regional houses series
+would move houses against flats by the city-vs-region gap. Terrain-à-bâtir prices
+are deflated with the area's house series. A 2022 Paris sale is scaled by 0.907,
+a Lyon one by 0.865, a provincial flat by 0.996.
+
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
 each class is priced against the right benchmark:
@@ -115,6 +130,29 @@ area. TFPB is a built tax; building-less parcels bear €0 (they pay the separat
 TFPNB, out of scope). No market-value tilt (the 1970 VLC is regressive vs market,
 so a tilt would worsen baseline fidelity); a category-weighted variant exists as
 a labelled sensitivity only.
+
+**Exempt public property** (`exemptions.py`, spec 0003). CGI art. 1382-1° exempts
+the property of the State, regions, départements, communes, their groupings and
+public scientific / teaching / assistance bodies when it serves a public purpose
+and yields no income. The DGFiP « personnes morales » files list every right a
+legal person holds on each parcel and building unit, with the holder's INSEE legal
+form (98.4 % of their parcel ids match the cadastre). They carry no exemption code
+and no use, so ownership is a proxy and the rule errs towards under-flagging: a
+parcel is exempt only when **every** holder of a right on its land and on every
+building unit is a qualifying public body with full ownership, on its own territory
+(a commune's or département's property elsewhere is only partly exempt, BOFIP
+BOI-IF-TFB-10-50-10-10 §90/§250), with no condominium syndic, no lease (emphytéose,
+bail à construction, AOT…), no dismemberment and no private or housing manager
+(units of network operators such as ENEDIS substations, held in full ownership,
+are ignored). Public land with **no**
+building unit recorded is exempt only where the model also sees no building
+(parks, woods, cemeteries); a building there (a concession such as the Stade de
+France) stays taxable until corroborated. Exempt parcels bear no share of today's
+produit and are left out of the LVT base, so the same levy falls on the taxable
+parcels. In Paris this flags 3,098 parcels (1,362 built) carrying €91.6 M (5.0 %) of
+the produit the baseline used to spread onto them. Owner names are read only to
+recognise utilities and housing managers and are never stored or published.
+`--no-exemptions` reproduces the unflagged run.
 
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
@@ -150,8 +188,8 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (median residential parcel: poorest fifth −17.6 to −18.5 %, richest
-+11.1 to +11.7 %).
+barely moves (median residential parcel: poorest fifth −16.7 to −17.7 %, richest
++11.9 to +12.8 %).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -161,7 +199,7 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+3.9 % while the group as a whole pays −7.8 % and its typical household −8.5 %,
++6.4 % while the group as a whole pays −7.7 % and its typical household −10.6 %,
 because the large blocks, where most of its households live, gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
 residential parcels without a count are imputed (a house = 1; flats = gross floor
@@ -177,11 +215,11 @@ to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
 sat at the 0.85 bound (Lyon 59.8 %; 55 communes flagged) and the 84.9 % headline
 was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
-30-year effective age: Paris now comes out at **83.9 %**, with 47.6 % of built
+30-year effective age: Paris now comes out at **83.3 %**, with 34.8 % of built
 parcels still at the bound. That residue is genuine, not an artefact: at Paris
 prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
 expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 72.0 % with no parcel at the bound; across the panel the
+bound). Lyon falls to 70.4 % with no parcel at the bound; across the panel the
 `land_share_clip` warnings fall from 55 to 1. No write-down at all would give
 63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
 built parcels at the bound, and the site labels the land share "plafonnée" when it
@@ -253,7 +291,7 @@ Ranked by how much they move published (category/quintile) results.
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
    Lyon and 53 other communes; it is now Neuilly-sur-Seine only, with Paris at
-   47.6 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
+   34.8 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
    cap (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a
    sensitivity on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
@@ -270,10 +308,15 @@ Ranked by how much they move published (category/quintile) results.
     PLU-H *USP* public-service land) and vacant *industrial-zone* land (*UEi*)
     take the residential terrain-à-bâtir €/m². `audit_land.py <commune>`
     quantifies the levy this land carries per zoning label.
-11. **Exemptions are not modelled.** The REI produit is net of exemptions (new
-    social housing under CGI art. 1384 A, the QPV abatement, public land), but
-    the baseline spreads it over every built parcel — overstating today's bill
-    on exempt HLM and understating it elsewhere (material in 93 and Paris).
+11. **Exemptions are only partly modelled.** Obviously exempt public property is
+    flagged (§3.5), but deliberately conservatively: public units inside
+    condominiums or under leases, worship buildings owned by associations,
+    private non-profit schools and hospitals, the Assemblée and Sénat (unusual
+    legal forms), out-of-territory partial exemptions and public buildings with
+    no unit recorded stay taxable. Temporary exemptions (new social housing under
+    CGI art. 1384 A, the QPV abatement) are not identifiable from open data, so
+    the baseline still overstates today's bill on exempt HLM and understates it
+    elsewhere (material in 93).
 
 ## 7. The Fichiers Fonciers access argument
 
