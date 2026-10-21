@@ -87,9 +87,13 @@ jobs:
           cache: npm
           cache-dependency-path: lvtshift-fr/site/package-lock.json
 
-      - name: Install and build the site
+      # next build stopped running ESLint in Next 16, so lint is its own step
+      - name: Install, test, lint, build and type-check the site
         if: steps.site.outputs.present == 'true'
         working-directory: lvtshift-fr/site
         run: |
           npm ci
+          npm test
+          npm run lint
           npm run build
+          npm run typecheck
