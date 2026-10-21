@@ -6,9 +6,25 @@ export interface Headline {
   gross_shifted_eur: number; net_shifted_eur: number; gross_pct_of_levy: number | null;
   net_pct_of_levy: number | null; gross_bps_of_base: number | null; currency: "EUR";
 }
+/** One category's figures in a sensitivity leg (subset of CategoryRow). */
+export interface BandCategoryRow {
+  category: string; median_change_pct: number | null; median_change_eur: number;
+  share_paying_more_pct: number | null;
+}
+/** One income quintile's figures in a sensitivity leg (subset of QuintileRow). */
+export interface BandQuintileRow {
+  quintile: number; median_change_pct: number | null;
+  median_change_pct_residential: number | null;
+  /** Absent in older payloads. */
+  total_change_pct?: number | null; household_median_change_pct?: number | null;
+}
 export interface SensitivityLeg {
   land_share_pct: number; gross_pct_of_levy: number | null; net_pct_of_levy: number | null;
   median_change_pct_residential: number | null; share_paying_more_pct: number | null;
+  /** Per-group figures under this leg (absent in older payloads). */
+  by_category?: BandCategoryRow[] | null;
+  by_income_quintile?: BandQuintileRow[] | null;
+  by_income_quintile_within?: BandQuintileRow[] | null;
 }
 export interface Sensitivity { delta_pt: number; base: SensitivityLeg; low: SensitivityLeg; high: SensitivityLeg; }
 export interface CategoryRow {
@@ -19,6 +35,11 @@ export interface CategoryRow {
 export interface QuintileRow {
   quintile: number; median_income_eur: number; median_change_pct: number | null;
   median_change_pct_residential: number | null; parcels: number;
+  /** Group total change on residential parcels (absent in older payloads). */
+  total_change_pct?: number | null;
+  /** Typical household's change: parcel change weighted by dwellings. */
+  household_median_change_pct?: number | null;
+  dwellings?: number | null;
 }
 export interface BucketRow {
   bucket: string; label: string; parcels: number; value_eur: number;
@@ -41,7 +62,11 @@ export interface Commune {
   reference_year: number | null; model_type: string; headline: Headline;
   headline_sensitivity: Sensitivity; by_category: CategoryRow[];
   by_income_quintile: QuintileRow[] | null; by_improvement_ratio: BucketRow[];
-  provenance: { construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string };
+  provenance: {
+    construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string;
+    /** parcels treated as exempt public property (count only; absent in older payloads) */
+    exempt_public_parcels?: number;
+  };
   members?: MemberRow[]; coverage?: Coverage;
   /** Territory only: quintiles ranked inside each member commune, then pooled. */
   by_income_quintile_within?: QuintileRow[] | null;

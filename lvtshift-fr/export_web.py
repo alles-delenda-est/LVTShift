@@ -54,9 +54,109 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
             f"No model output for {commune_key} at {path}; "
             f"run `python run_commune.py {commune_key}` first.")
     df = pd.read_csv(path)
+    df = _attach_dwellings(df, path, commune_key)
+    n_exempt = 0
     if "is_fully_exempt" in df.columns:
-        df = df[~df["is_fully_exempt"].fillna(False).astype(bool)].copy()
+        exempt = df["is_fully_exempt"].fillna(False).astype(bool)
+        n_exempt = int(exempt.sum())
+        df = df[~exempt].copy()
+    # count only (never which parcels): disclosed in the payload provenance
+    df.attrs["exempt_parcels"] = n_exempt
     return df
+
+
+def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.DataFrame:
+    """Add n_dwellings from the run's households sidecar (run_pipeline).
+
+    The sidecar repeats new_tax row by row; any mismatch means it belongs to a
+    different run, which would silently attach dwellings to the wrong parcels,
+    so it fails loudly. A missing sidecar (older run) leaves the household
+    figures unset rather than guessed.
+    """
+    side_path = path.with_name(f"{path.stem}.households.csv")
+    if not side_path.exists():
+        return df
+    import hashlib
+    meta_path = path.with_name(f"{path.stem}.households.meta.json")
+    meta = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
+    if meta.get("export_sha256") != hashlib.sha256(path.read_bytes()).hexdigest():
+        raise ValueError(
+            f"{side_path.name} was not written with this {path.name}; "
+            f"re-run `python run_commune.py {commune_key}`")
+    side = pd.read_csv(side_path)
+    if len(side) != len(df) or not np.allclose(
+            side["new_tax"].to_numpy(float), df["new_tax"].to_numpy(float),
+            rtol=1e-9, atol=0.01, equal_nan=True):
+        raise ValueError(
+            f"{side_path.name} does not match {path.name}; "
+            f"re-run `python run_commune.py {commune_key}`")
+    return df.assign(n_dwellings=side["n_dwellings"].to_numpy(float))
+
+
+def weighted_median(values, weights):
+    """Median of values with each counted `weights` times (None if no weight).
+
+    Non-finite values and non-positive weights are ignored; an exact 50/50
+    split returns the lower value.
+    """
+    v = np.asarray(values, dtype=float)
+    w = np.asarray(weights, dtype=float)
+    ok = np.isfinite(v) & np.isfinite(w) & (w > 0)
+    if not ok.any():
+        return None
+    v, w = v[ok], w[ok]
+    order = np.argsort(v, kind="stable")
+    v, w = v[order], w[order]
+    cum = np.cumsum(w)
+    return float(v[np.searchsorted(cum, cum[-1] / 2.0)])
+
+
+# Disclosure control for the per-quintile group figures: a group must hold at
+# least this many residential parcels, and no parcel more than this share of
+# its dwellings, or its total and household figures are left unpublished.
+MIN_GROUP_PARCELS = 11
+MAX_DWELLING_SHARE = 0.5
+
+
+def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
+    """One income group: the parcel medians, plus the group's total change and
+    the typical household's change (residential parcels weighted by dwellings).
+
+    A parcel median counts a 200-flat block once and a house once, so it can
+    show most of a group paying more while the group as a whole pays less.
+    """
+    rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
+    sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+    rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+    total = None
+    if {"current_tax", "tax_change"} <= set(rsub.columns) and len(rsub) >= MIN_GROUP_PARCELS:
+        chg = rsub["tax_change"].sum(min_count=1)
+        cur = rsub["current_tax"].sum(min_count=1)
+        if np.isfinite(chg) and np.isfinite(cur) and rsub["tax_change"].notna().all():
+            total = _pct(float(chg), float(cur))
+    hh_median, dwellings = None, None
+    n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
+    # every residential parcel must carry a count (a member commune without a
+    # sidecar would otherwise drop out of the weights but not of the total)
+    if n is not None and len(rsub) >= MIN_GROUP_PARCELS and n.notna().all() and n.sum() > 0:
+        pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan)
+        hh = weighted_median(pct, n)
+        hh_median = None if hh is None else round(hh, 1)
+        dwellings = int(round(float(n.sum())))
+        # one building dominating the group would make its figures that
+        # building's own: publish nothing household-level then
+        if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
+            hh_median, dwellings, total = None, None, None
+    return {
+        "quintile": int(q),
+        "median_income_eur": round(float(sub["median_income"].median()), 0),
+        "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
+        "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
+        "total_change_pct": total,
+        "household_median_change_pct": hh_median,
+        "parcels": int(len(sub)),
+        "dwellings": dwellings,
+    }
 
 
 def _pct(num: float, den: float, ndigits: int = 1):
@@ -156,21 +256,7 @@ def build_by_income_quintile(df: pd.DataFrame):
         return None
     if d["_q"].nunique() < 5:
         return None
-    res = d[d["property_category"].isin(FR_RESIDENTIAL)]
-    out = []
-    for q in [1, 2, 3, 4, 5]:
-        sub = d[d["_q"] == q]
-        rsub = res[res["_q"] == q]
-        sub_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        res_pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        out.append({
-            "quintile": int(q),
-            "median_income_eur": round(float(sub["median_income"].median()), 0),
-            "median_change_pct": round(float(sub_pct.median()), 1) if len(sub_pct) else None,
-            "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
-            "parcels": int(len(sub)),
-        })
-    return out
+    return [_quintile_row(q, d[d["_q"] == q]) for q in [1, 2, 3, 4, 5]]
 
 
 def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
@@ -197,8 +283,42 @@ def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
     return solved["new_tax"].to_numpy(dtype=float) - current
 
 
+BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
+                      "share_paying_more_pct")
+QUINTILE_KEYS = {"quintile", "median_income_eur", "median_change_pct",
+                 "median_change_pct_residential", "total_change_pct",
+                 "household_median_change_pct", "parcels", "dwellings"}
+BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential",
+                      "total_change_pct", "household_median_change_pct")
+
+
+def _band_groups(df: pd.DataFrame, chg: np.ndarray, within: bool = False) -> dict:
+    """The per-category and per-income-quintile figures of one sensitivity leg.
+
+    Rebuilt with the same functions as the central figures (so quintile cut
+    points and category sets are identical), with the leg's per-parcel change
+    substituted. Only the band-relevant fields are kept, to keep payloads small.
+    """
+    current = df["current_tax"].to_numpy(dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        pct = 100.0 * chg / current
+    d = df.assign(tax_change=chg, tax_change_pct=pct)
+
+    def slim(rows, keys):
+        return None if rows is None else [{k: r[k] for k in keys} for r in rows]
+
+    out = {
+        "by_category": slim(build_by_category(d), BAND_CATEGORY_KEYS),
+        "by_income_quintile": slim(build_by_income_quintile(d), BAND_QUINTILE_KEYS),
+    }
+    if within:
+        rows, _cov = build_by_income_quintile_within(d)
+        out["by_income_quintile_within"] = slim(rows, BAND_QUINTILE_KEYS)
+    return out
+
+
 def _sensitivity_summary(df: pd.DataFrame, chg: np.ndarray, target_share: float,
-                         current_revenue: float) -> dict:
+                         current_revenue: float, within: bool = False) -> dict:
     current = df["current_tax"].to_numpy(dtype=float)
     gross = float(np.abs(chg).sum())
     net = float(chg[chg > 0].sum())
@@ -212,6 +332,7 @@ def _sensitivity_summary(df: pd.DataFrame, chg: np.ndarray, target_share: float,
         "net_pct_of_levy": _pct(net, current_revenue),
         "median_change_pct_residential": round(float(res_pct.median()), 1) if len(res_pct) else None,
         "share_paying_more_pct": _pct(int((chg > 0).sum()), len(chg)),
+        **_band_groups(df, chg, within=within),
     }
 
 
@@ -253,6 +374,11 @@ HEADLINE_KEYS = {
     "net_shifted_eur", "gross_pct_of_levy", "net_pct_of_levy", "gross_bps_of_base",
     "currency",
 }
+SENSITIVITY_LEG_KEYS = {
+    "land_share_pct", "gross_pct_of_levy", "net_pct_of_levy",
+    "median_change_pct_residential", "share_paying_more_pct",
+    "by_category", "by_income_quintile", "by_income_quintile_within",
+}
 MEMBER_KEYS = {
     "commune_key", "name", "insee", "parcels_modeled", "neutral_levy_eur",
     "land_share_pct", "gross_pct_of_levy", "share_paying_more_pct",
@@ -276,6 +402,24 @@ def assert_aggregate_only(payload: dict) -> None:
     for k in ("by_income_quintile", "by_income_quintile_within"):
         if payload.get(k) is not None:
             assert len(payload[k]) <= 5
+            for r in payload[k]:
+                assert set(r) <= QUINTILE_KEYS, f"unexpected quintile keys: {set(r) - QUINTILE_KEYS}"
+                assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()), \
+                    "non-scalar value in a quintile row"
+    sens = payload.get("headline_sensitivity") or {}
+    assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
+    for leg in ("base", "low", "high"):
+        g = sens.get(leg) or {}
+        assert set(g) <= SENSITIVITY_LEG_KEYS,             f"unexpected sensitivity leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
+        assert len(g.get("by_category") or []) <= 10
+        rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
+        for k in ("by_income_quintile", "by_income_quintile_within"):
+            assert len(g.get(k) or []) <= 5
+            rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
+        for r, keys in rows:
+            assert set(r) <= set(keys), f"unexpected band row keys: {set(r) - set(keys)}"
+            # scalars only: a nested list/dict could smuggle per-parcel values
+            assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()),                 "non-scalar value in a band row"
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
@@ -305,6 +449,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "provenance": {
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "land_share_bounds": list(cfg.land_share_bounds),
+            "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
                      "catégorie/quintile, jamais à la parcelle."),
         },
@@ -320,7 +465,7 @@ def load_territory(territory_key: str, out_dir: str = "output"):
     with no output is reported as missing — never imputed.
     """
     from config import TERRITORIES
-    frames, present, missing = [], [], []
+    frames, present, missing, n_exempt = [], [], [], 0
     for key in TERRITORIES[territory_key]["members"]:
         try:
             df = load_parcels(key, out_dir)
@@ -329,9 +474,12 @@ def load_territory(territory_key: str, out_dir: str = "output"):
             continue
         frames.append(df.assign(_commune=key))
         present.append(key)
+        n_exempt += df.attrs.get("exempt_parcels", 0)
     if not frames:
         raise FileNotFoundError(f"no member outputs for territory {territory_key}")
-    return pd.concat(frames, ignore_index=True), present, missing
+    out = pd.concat(frames, ignore_index=True)
+    out.attrs["exempt_parcels"] = n_exempt
+    return out, present, missing
 
 
 def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
@@ -369,7 +517,8 @@ def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
     targets = {leg: v / total_base for leg, v in tilted_land.items()}
     return {
         "delta_pt": delta_pt,
-        **{leg: _sensitivity_summary(pooled, np.concatenate(v), targets[leg], rev)
+        **{leg: _sensitivity_summary(pooled, np.concatenate(v), targets[leg], rev,
+                                     within=True)
            for leg, v in legs.items()},
     }
 
@@ -413,20 +562,7 @@ def build_by_income_quintile_within(df: pd.DataFrame):
     if not parts:
         return None, coverage
     d = pd.concat(parts, ignore_index=True)
-    out = []
-    for q in [1, 2, 3, 4, 5]:
-        sub = d[d["_q"] == q]
-        rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
-        sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-        out.append({
-            "quintile": q,
-            "median_income_eur": round(float(sub["median_income"].median()), 0),
-            "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
-            "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
-            "parcels": int(len(sub)),
-        })
-    return out, coverage
+    return [_quintile_row(q, d[d["_q"] == q]) for q in [1, 2, 3, 4, 5]], coverage
 
 
 def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:
@@ -465,6 +601,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         },
         "provenance": {
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
+            "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "
                      "constantes sur son propre produit de TFPB (pas de taux "
@@ -484,7 +621,8 @@ def _write_commune_json(payload: dict, data_dir: str) -> Path:
     assert_aggregate_only(payload)
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     path = Path(data_dir) / f"{payload['commune_key']}.json"
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8")
     return path
 
 

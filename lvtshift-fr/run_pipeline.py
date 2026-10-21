@@ -13,6 +13,7 @@ files, so improvements pulled from upstream flow through automatically.
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 # Repository root (parent of lvtshift-fr/) holds the upstream `lvt` package.
@@ -76,18 +77,21 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output", make_report: bool = True, cfg=CFG) -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True, cfg=CFG,
+        deflator: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
        split ratio, name used for output paths). Defaults to the module CFG
        so the synthetic test keeps working unchanged.
        make_report: also write the PNG charts (needs matplotlib); set False
-       for a CSV-only run."""
+       for a CSV-only run.
+       deflator: optional {type_local: {year: factor}} (estimate.deflator_factors)
+       bringing DVF prices to cfg.reference_year euros before the hedonic fit."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
-    surface, _trans = estimate.fit_hedonic(dvf)
+    surface, _trans = estimate.fit_hedonic(dvf, deflator=deflator)
     maint_w = None
     if getattr(cfg, "dep_maintained_age_cap", None) is not None:
         maint_w = estimate.maintenance_weight(parcels, surface, cfg)
@@ -107,18 +111,25 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
     # ---- LVTShift's real revenue-neutral solver -------------------- #
+    # Exempt public property (exemptions.py) pays neither tax: zero share of
+    # today's FB (current_tax above) and zero taxable value in the solve, so the
+    # levy is held neutral over the taxable base only.
+    exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
+    if exempt_col:
+        p[exempt_col] = p[exempt_col].fillna(False).astype(int)
     land_mill, imp_mill, revenue, p = model_split_rate_tax(
         df=p,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
         land_improvement_ratio=cfg.split_rate_ratio,
+        exemption_flag_col=exempt_col,
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
-    p["taxable_land_value"] = p["land_value"]
-    p["taxable_improvement_value"] = p["improvement_value"]
+    # (taxable_land_value / taxable_improvement_value come from the solver:
+    #  equal to land_value / improvement_value except on exempt parcels, 0)
 
     # demographics: IRIS code stands in for geoid; Filosofi median income;
     # minority/black left null - France produces no ethnic statistics
@@ -137,13 +148,70 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         output_path=f"{out_dir}/{name}.csv",
         model_type=f"split_rate:{cfg.split_rate_ratio}",
         land_millage=land_mill, improvement_millage=imp_mill,
+        exempt_flag_col=exempt_col,
     )
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 
+    _write_households(p, buildings, out_dir, name)
     if make_report:
         _write_report(out, out_dir, cfg)
     return out
+
+
+# Gross floor area per dwelling used when BD TOPO gives a residential parcel no
+# dwelling count: a ~63 m² habitable flat at the ~0.74 habitable/gross ratio.
+GROSS_M2_PER_DWELLING = 85.0
+RESIDENTIAL_CATEGORIES_FR = ("maison", "appartement", "immeuble_collectif")
+
+
+def dwellings_per_parcel(p: pd.DataFrame, buildings: pd.DataFrame) -> pd.DataFrame:
+    """
+    Dwellings per parcel, so income-group figures can count households, not
+    plots (a 200-flat block is one parcel but 200 homes).
+
+    BD TOPO nombre_de_logements, already area-shared across parcels in ingest.
+    Residential parcels without a count get 1 (houses) or gross floor area ÷
+    GROSS_M2_PER_DWELLING (flats), at least 1, and are flagged imputed;
+    non-residential parcels get 0.
+
+    Returns a frame aligned with p: n_dwellings, dwellings_imputed.
+    """
+    if "n_dwellings" in buildings.columns:
+        counts = (pd.to_numeric(buildings["n_dwellings"], errors="coerce")
+                  .groupby(buildings["idpar"]).sum(min_count=1))
+    else:                                   # no counts at all: impute every one
+        counts = pd.Series(dtype=float)
+    n = p["idpar"].map(counts).astype(float)
+    res = p["category_fr"].isin(RESIDENTIAL_CATEGORIES_FR)
+    missing = res & ~(n > 0)
+    flats = (pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
+             / GROSS_M2_PER_DWELLING).round().clip(lower=1.0)
+    n = n.where(~missing, np.where(p["category_fr"] == "maison", 1.0, flats))
+    n = n.where(res, 0.0).fillna(0.0)
+    return pd.DataFrame({"n_dwellings": n.round(2).values,
+                         "dwellings_imputed": missing.values})
+
+
+def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
+                      name: str) -> None:
+    """Sidecar to the standard export (whose 16 columns are fixed upstream):
+    same rows in the same order, with new_tax repeated so a reader can check
+    the alignment. Local only — output/ is git-ignored and never published."""
+    import hashlib
+    import json
+    side = dwellings_per_parcel(p, buildings)
+    side.insert(0, "new_tax", p["new_tax"].values)
+    side.to_csv(Path(out_dir) / f"{name}.households.csv", index=False)
+    # tie the sidecar to the exact export it belongs to (new_tax alone repeats
+    # across parcels, so it cannot prove the rows line up)
+    export = Path(out_dir) / f"{name}.csv"
+    meta = {"export_sha256": hashlib.sha256(export.read_bytes()).hexdigest(),
+            "rows": int(len(side))}
+    (Path(out_dir) / f"{name}.households.meta.json").write_text(
+        json.dumps(meta) + "\n", encoding="utf-8")
+    print(f"[{name}] dwellings: {side['n_dwellings'].sum():,.0f} "
+          f"({100 * side['dwellings_imputed'].mean():.1f}% of parcels imputed)")
 
 
 if __name__ == "__main__":

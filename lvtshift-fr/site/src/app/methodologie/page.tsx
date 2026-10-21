@@ -195,6 +195,19 @@ export default function MethodologiePage() {
           </p>
 
           <p>
+            <strong>Le foncier public exonéré</strong> (ministères, hôpitaux
+            publics, écoles, mairies, parcs…) ne paie pas la taxe foncière
+            aujourd&apos;hui et n&apos;en paierait pas davantage dans la
+            simulation. Il est repéré grâce aux fichiers de la DGFiP sur les
+            biens des personnes morales, selon une règle prudente : une
+            parcelle n&apos;est retenue que si tous ses titulaires de droits
+            sont des personnes publiques en pleine propriété, sans bail ni
+            copropriété. À Paris, ces parcelles portaient 4,9&nbsp;% du produit
+            que le modèle leur attribuait auparavant ; ce montant est désormais
+            réparti sur les parcelles réellement imposables.
+          </p>
+
+          <p>
             Cette approche <em>classer-puis-valoriser</em> remplace une
             méthode antérieure qui appliquait une part foncière uniforme à
             toutes les parcelles — source d&apos;artefacts importants dans
@@ -512,10 +525,35 @@ export default function MethodologiePage() {
               parisiennes atteignaient alors le plafond de 85&nbsp;% : le
               partage terrain/bâti était fixé par la borne, pas mesuré. Avec
               la règle de l&apos;âge effectif décrite plus haut, la part
-              foncière de Paris ressort à 83,9&nbsp;%, et 47,6&nbsp;% des
+              foncière de Paris ressort à 83,3&nbsp;%, et 34,8&nbsp;% des
               parcelles restent au plafond : aux prix parisiens, le foncier
               dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
-              chères. Lyon passe à 72,0&nbsp;%, sans parcelle au plafond.
+              chères. Lyon passe à 70,4&nbsp;%, sans parcelle au plafond.
+              Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              l&apos;indice Notaires-INSEE le plus local (appartements
+              parisiens, départements de petite couronne, agglomération
+              lyonnaise…), ce qui retire le pic de 2021–2022.
+            </p>
+          </div>
+
+          {/* Income groups */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Groupes de revenu — totaux et ménages, pas parcelles
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Pour chaque quintile de revenu, la barre donne la variation de
+              l&apos;impôt payé par l&apos;ensemble des logements du groupe, et
+              le losange celle du ménage type : chaque parcelle y compte autant
+              de fois qu&apos;elle a de logements. Une simple médiane par
+              parcelle compterait un immeuble de 200 logements une seule fois,
+              comme une maison. À Villeurbanne, elle montrerait le quintile le
+              plus pauvre en hausse (+6,4&nbsp;%), alors que ce groupe paie
+              7,7&nbsp;% de moins au total et que son ménage type paie
+              10,6&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              ses ménages, sont les plus gagnants. Le nombre de logements vient
+              de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
+              parcelles résidentielles qui n&apos;en ont pas.
             </p>
           </div>
 
@@ -558,7 +596,9 @@ export default function MethodologiePage() {
               foncier effectivement très tendu. Les deux lectures sont
               plausibles, et il serait trompeur de trancher sans calage. La
               bande de sensibilité ±&thinsp;10 points encadre cette
-              incertitude dans tous les résultats publiés.
+              incertitude dans tous les résultats publiés : chiffres clés,
+              catégories de bien et quintiles de revenu, où elle apparaît en
+              traits fins autour de chaque barre.
             </p>
           </div>
 
