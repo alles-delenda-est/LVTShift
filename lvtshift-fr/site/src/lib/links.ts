@@ -1,17 +1,32 @@
 /**
- * Decide whether an MDX link points inside this site.
+ * Classify the hrefs written in MDX content.
  *
- * Only root-relative paths ("/resultats", "/methodologie#x") are internal.
- * A protocol-relative URL ("//evil.example") also starts with "/" but the
- * browser resolves it against another host, so it must be treated as
- * external (opened in a new tab with rel="noopener noreferrer"). A
- * backslash after the leading slash ("/\evil.example") is normalised to "//"
- * by browsers, so it is excluded for the same reason.
+ * Internal: root-relative paths ("/resultats", "/methodologie#x"). Anything
+ * the browser could resolve against another host is not internal: "//host",
+ * "/\host", and also "/<tab>/host", because browsers strip tabs and newlines
+ * from URLs before resolving them. So a path must start with a single "/" not
+ * followed by "/" or "\", and contain no whitespace, control character or
+ * backslash anywhere.
  *
- * @param href - The raw href written in the MDX source.
- * @returns True when the link targets a path on this site.
+ * External links are only rendered as links for http(s) and mailto; other
+ * schemes (javascript:, data:, vbscript:…) are rendered as plain text.
  */
+
+const CONTROL_OR_SPACE_OR_BACKSLASH = /[\u0000- \u007f\\]/;
+
+/** True when the link targets a path on this site. */
 export function isInternalHref(href: string | undefined | null): boolean {
   if (!href) return false;
-  return href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\");
+  return /^\/(?![/\\])/.test(href) && !CONTROL_OR_SPACE_OR_BACKSLASH.test(href);
+}
+
+/** True for a same-page anchor ("#section"). */
+export function isAnchorHref(href: string | undefined | null): boolean {
+  return !!href && /^#[\w-]+$/.test(href);
+}
+
+/** True for an external link we are willing to render: http(s) or mailto. */
+export function isSafeExternalHref(href: string | undefined | null): boolean {
+  if (!href || CONTROL_OR_SPACE_OR_BACKSLASH.test(href)) return false;
+  return /^(https?:\/\/|mailto:)/i.test(href);
 }
