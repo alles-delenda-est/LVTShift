@@ -14,6 +14,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -486,7 +487,8 @@ def _fetch_parcel_zoning_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
+def tab_comparables(cfg, tab: pd.DataFrame,
+                    deflator: dict | None = None) -> pd.DataFrame:
     """Clean terrain-à-bâtir €/m² comparables from DVF land sales.
 
     DVF `valeur_fonciere / surface_terrain` is contaminated for most cultures
@@ -498,6 +500,13 @@ def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
     t = tab[tab["nature_culture"].astype(str).str.contains("bâtir", na=False)].copy()
     if t.empty:
         return pd.DataFrame(columns=["eur_m2_land", "lat", "lon"])
+    if deflator and "date_mutation" in t.columns:
+        # building-plot prices follow the house market: deflate with the
+        # area's house index (see estimate.deflator_factors)
+        year = pd.to_datetime(t["date_mutation"], errors="coerce").dt.year
+        nested = all(isinstance(v, dict) for v in deflator.values())
+        f = year.map(deflator.get("Maison", {}) if nested else deflator).fillna(1.0)
+        t["valeur_fonciere"] = pd.to_numeric(t["valeur_fonciere"], errors="coerce") * f
     g = (t.groupby("id_mutation")
           .agg(price=("valeur_fonciere", "first"),
                surface=("surface_terrain", "sum"),
@@ -510,6 +519,78 @@ def tab_comparables(cfg, tab: pd.DataFrame) -> pd.DataFrame:
     print(f"  [{cfg.name}] {len(g)} clean terrain-à-bâtir comparables "
           f"(median €{g['eur_m2_land'].median():,.0f}/m²)")
     return g[["eur_m2_land", "lat", "lon"]]
+
+
+# ------------------------------------------------------------------ #
+# Linear-time tag scan ([^<>]* cannot run past the next tag), then one bounded
+# attribute lookup per tag: a hostile body cannot trigger quadratic backtracking.
+_SDMX_TAG = re.compile(r"<(Series|Obs)\b([^<>]*)>")
+_SDMX_ATTR = {k: re.compile(rf'\b{k}="([^"<>]*)"') for k in
+              ("IDBANK", "FREQ", "TIME_PERIOD", "OBS_VALUE")}
+_MAX_SDMX_BYTES = 5_000_000
+
+
+def _sdmx_attr(attrs: str, key: str):
+    m = _SDMX_ATTR[key].search(attrs)
+    return m.group(1) if m else None
+
+
+def _parse_quarterly_sdmx(body: str, idbank: str) -> dict:
+    """{year: {quarter: value}} from an INSEE BDM SDMX response for `idbank`.
+
+    Strict: the response must describe exactly that quarterly series, every
+    value must be a positive number, and no quarter may appear twice.
+    """
+    quarters, seen = {}, set()
+    for tag, attrs in _SDMX_TAG.findall(body):
+        if tag == "Series":
+            seen.add((_sdmx_attr(attrs, "IDBANK"), _sdmx_attr(attrs, "FREQ")))
+            continue
+        tp, val = _sdmx_attr(attrs, "TIME_PERIOD"), _sdmx_attr(attrs, "OBS_VALUE")
+        m = re.fullmatch(r"([0-9]{4})-Q([1-4])", tp or "")
+        if not m or val is None:
+            continue
+        v = float(val)                       # garbage raises ValueError
+        if not v > 0:
+            raise ValueError(f"{idbank}: non-positive index value {val!r} at {tp}")
+        y, q = int(m.group(1)), int(m.group(2))
+        if q in quarters.setdefault(y, {}):
+            raise ValueError(f"{idbank}: quarter {tp} appears twice")
+        quarters[y][q] = v
+    if seen != {(idbank, "T")}:
+        raise ValueError(f"INSEE BDM response is not quarterly series {idbank}: {seen}")
+    if not quarters:
+        raise ValueError(f"INSEE BDM returned no observations for {idbank}")
+    return quarters
+
+
+def fetch_price_index_annual(idbank: str, start: int = 2019) -> dict:
+    """Annual averages {year: value} of one quarterly INSEE BDM series.
+
+    Only years with all four quarters are returned, so a partly published
+    year can never pose as a full one. Raises on an error message, a wrong
+    series or implausible values; a response that fails to parse is evicted
+    from the download cache so the next run fetches it afresh.
+    """
+    if not re.fullmatch(r"[0-9]{9}", str(idbank)):
+        raise ValueError(f"not an INSEE idbank: {idbank!r}")
+    url = SRC["insee_bdm_series"].format(idbank=idbank, start=int(start))
+    raw = _get(url)
+    try:
+        if len(raw) > _MAX_SDMX_BYTES:
+            raise ValueError(f"INSEE BDM response for {idbank} is implausibly large")
+        quarters = _parse_quarterly_sdmx(raw.decode("utf-8", errors="replace"), idbank)
+    except ValueError:
+        _evict_cache(url)
+        raise
+    return {y: sum(qs.values()) / 4.0 for y, qs in sorted(quarters.items())
+            if len(qs) == 4}
+
+
+def _evict_cache(url: str) -> None:
+    """Drop a cached body that turned out to be unusable."""
+    if CACHE_DIR:
+        (Path(CACHE_DIR) / hashlib.sha256(url.encode()).hexdigest()).unlink(missing_ok=True)
 
 
 # ------------------------------------------------------------------ #

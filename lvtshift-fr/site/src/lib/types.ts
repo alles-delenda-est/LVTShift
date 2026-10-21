@@ -6,9 +6,23 @@ export interface Headline {
   gross_shifted_eur: number; net_shifted_eur: number; gross_pct_of_levy: number | null;
   net_pct_of_levy: number | null; gross_bps_of_base: number | null; currency: "EUR";
 }
+/** One category's figures in a sensitivity leg (subset of CategoryRow). */
+export interface BandCategoryRow {
+  category: string; median_change_pct: number | null; median_change_eur: number;
+  share_paying_more_pct: number | null;
+}
+/** One income quintile's figures in a sensitivity leg (subset of QuintileRow). */
+export interface BandQuintileRow {
+  quintile: number; median_change_pct: number | null;
+  median_change_pct_residential: number | null;
+}
 export interface SensitivityLeg {
   land_share_pct: number; gross_pct_of_levy: number | null; net_pct_of_levy: number | null;
   median_change_pct_residential: number | null; share_paying_more_pct: number | null;
+  /** Per-group figures under this leg (absent in older payloads). */
+  by_category?: BandCategoryRow[] | null;
+  by_income_quintile?: BandQuintileRow[] | null;
+  by_income_quintile_within?: BandQuintileRow[] | null;
 }
 export interface Sensitivity { delta_pt: number; base: SensitivityLeg; low: SensitivityLeg; high: SensitivityLeg; }
 export interface CategoryRow {

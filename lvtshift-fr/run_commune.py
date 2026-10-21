@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 import exemptions
+import estimate
 import ingest
 import run_pipeline as rp
 from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
@@ -79,7 +80,7 @@ def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
-def classify_and_price_land(cfg, parcels, buildings, tab):
+def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     """Add land_type + per-parcel land prices (classify-then-price).
 
     - land_type from GPU zoning (U/AU->constructible, A->agricultural,
@@ -110,7 +111,7 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     parcels["ag_eur_m2"] = np.where(z.eq("N"), n_rate, a_rate)
 
     # --- constructible €/m² from terrain-à-bâtir comparables ---
-    comps = ingest.tab_comparables(cfg, tab)
+    comps = ingest.tab_comparables(cfg, tab, deflator=deflator)
     commune_med = float(comps["eur_m2_land"].median()) if len(comps) else None
     enough_cells = {}
     comps = comps.dropna(subset=["lon", "lat"]) if len(comps) else comps
@@ -134,8 +135,9 @@ def classify_and_price_land(cfg, parcels, buildings, tab):
     return parcels
 
 
-def prepare(cfg, layers, use_dpe=True, use_exemptions=True):
-    """Fetch + shape all inputs for one commune."""
+def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
+    """Fetch + shape all inputs for one commune. `deflator` (see
+    estimate.deflator_factors) brings terrain-à-bâtir prices to reference-year €."""
     parcels = ingest.fetch_parcels(cfg)
     sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
@@ -175,7 +177,7 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True):
         parcels["category_fr"] == "maison", "Maison", "Appartement")
 
     # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
-    parcels = classify_and_price_land(cfg, parcels, buildings, tab)
+    parcels = classify_and_price_land(cfg, parcels, buildings, tab, deflator=deflator)
 
     # Obviously TFPB-exempt public property (DGFiP personnes morales, spec 0003)
     if use_exemptions:
@@ -220,6 +222,9 @@ def main():
                          "— for the depreciation side-by-side")
     ap.add_argument("--no-exemptions", action="store_true",
                     help="don't flag exempt public property (before/after comparison)")
+    ap.add_argument("--no-deflator", action="store_true",
+                    help="don't deflate DVF prices to the reference year "
+                         "(for the before/after comparison)")
     ap.add_argument("--cache-dir", default=None,
                     help="cache raw downloads here (resumable batch runs); "
                          "default: env LVTFR_CACHE_DIR, else no cache")
@@ -229,12 +234,18 @@ def main():
 
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
+    deflator = None if args.no_deflator else estimate.deflator_factors(cfg)
+    if deflator:
+        for typ, f in deflator.items():
+            print(f"  [{cfg.name}] price deflator {typ}: "
+                  + ", ".join(f"{y} ×{v:.3f}" for y, v in sorted(f.items())))
     parcels, buildings, sales, tfpb, iris_income = prepare(
         cfg, tuple(args.layers), use_dpe=not args.no_dpe,
-        use_exemptions=not args.no_exemptions)
+        use_exemptions=not args.no_exemptions, deflator=deflator)
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
-                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg)
+                 out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
+                 deflator=deflator)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")

@@ -95,6 +95,20 @@ toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF i
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
 1st/99th percentile.
 
+**Price deflator.** The five DVF years span a cycle (prices up to 2022, then a
+correction), and by very different amounts by place, so each sale is first brought
+to `reference_year` (2025) euros: factor(Y) = annual mean of the area's
+Notaires-INSEE index in 2025 ÷ its mean in Y (`estimate.deflator_factors`,
+`config.PRICE_INDEX_IDBANKS`, fetched live from the INSEE BDM). The most local
+series INSEE publishes is used: Paris flats; flats and houses separately for
+Hauts-de-Seine, Seine-Saint-Denis and Val-de-Marne; the Lyon, Marseille and Lille
+agglomerations; regions (Auvergne-Rhône-Alpes, PACA, Nord-Pas-de-Calais); Province
+elsewhere. Where an agglomeration publishes one dwelling type only, that series is
+used for both types: pairing a local flats series with a regional houses series
+would move houses against flats by the city-vs-region gap. Terrain-à-bâtir prices
+are deflated with the area's house series. A 2022 Paris sale is scaled by 0.907,
+a Lyon one by 0.865, a provincial flat by 0.996.
+
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
 each class is priced against the right benchmark:
@@ -135,7 +149,7 @@ building unit recorded is exempt only where the model also sees no building
 (parks, woods, cemeteries); a building there (a concession such as the Stade de
 France) stays taxable until corroborated. Exempt parcels bear no share of today's
 produit and are left out of the LVT base, so the same levy falls on the taxable
-parcels. In Paris this flags 3,085 parcels (1,349 built) carrying €90.5 M (4.9 %) of
+parcels. In Paris this flags 3,098 parcels (1,362 built) carrying €91.6 M (5.0 %) of
 the produit the baseline used to spread onto them. Owner names are read only to
 recognise utilities and housing managers and are never stored or published.
 `--no-exemptions` reproduces the unflagged run.
@@ -165,16 +179,27 @@ are ranked across the whole ring. A member that fails is listed in the payload's
 `coverage`, never imputed. Montreuil and Villeurbanne appear both alone and in
 their ring; the site's panel totals count them once.
 
+**Sensitivity band.** Because land value is imputed, every published figure carries
+a ±10 pt land-share band: the aggregate land share is tilted down and up by 10 points
+(each parcel's land and building values scaled uniformly, total base and levy held
+fixed) and the upstream solver is re-run (`export_web._tilted_change`). The band is
+reported for the headline figures **and** for each property category and income
+quintile (and, on the rings, the within-commune quintiles), using the same quintile
+cut points as the central estimate; the site draws it as whiskers on those charts.
+The central leg reproduces the published figures exactly (tested). A conclusion is
+treated as robust only if it holds across the band; in Paris the quintile gradient
+barely moves (poorest fifth −17.6 to −18.6 %, richest +11.4 to +12.3 %).
+
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
 sat at the 0.85 bound (Lyon 59.8 %; 55 communes flagged) and the 84.9 % headline
 was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
-30-year effective age: Paris now comes out at **83.8 %**, with 47.6 % of built
+30-year effective age: Paris now comes out at **83.3 %**, with 34.8 % of built
 parcels still at the bound. That residue is genuine, not an artefact: at Paris
 prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
 expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 71.9 % with no parcel at the bound; across the panel the
+bound). Lyon falls to 70.4 % with no parcel at the bound; across the panel the
 `land_share_clip` warnings fall from 55 to 1. No write-down at all would give
 63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
 built parcels at the bound, and the site labels the land share "plafonnée" when it
@@ -246,7 +271,7 @@ Ranked by how much they move published (category/quintile) results.
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
    Lyon and 53 other communes; it is now Neuilly-sur-Seine only, with Paris at
-   47.6 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
+   34.8 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
    cap (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a
    sensitivity on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU

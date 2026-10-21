@@ -76,18 +76,21 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
 
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
-        out_dir: str = "output", make_report: bool = True, cfg=CFG) -> pd.DataFrame:
+        out_dir: str = "output", make_report: bool = True, cfg=CFG,
+        deflator: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
        split ratio, name used for output paths). Defaults to the module CFG
        so the synthetic test keeps working unchanged.
        make_report: also write the PNG charts (needs matplotlib); set False
-       for a CSV-only run."""
+       for a CSV-only run.
+       deflator: optional {type_local: {year: factor}} (estimate.deflator_factors)
+       bringing DVF prices to cfg.reference_year euros before the hedonic fit."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
-    surface, _trans = estimate.fit_hedonic(dvf)
+    surface, _trans = estimate.fit_hedonic(dvf, deflator=deflator)
     maint_w = None
     if getattr(cfg, "dep_maintained_age_cap", None) is not None:
         maint_w = estimate.maintenance_weight(parcels, surface, cfg)

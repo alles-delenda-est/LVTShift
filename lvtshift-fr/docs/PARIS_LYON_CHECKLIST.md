@@ -8,14 +8,14 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule and exempt public property, branch `exempt-public-property`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator and exempt public property, branch `exempt-public-property`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,104 | €1,840.9 M | 83.8 % | 47.6 % | 14.9 % | 53.3 % |
-| Lyon | 31,025 | €362.9 M | 71.9 % | 0.0 % | 14.6 % | 67.7 % |
-| Paris extra-muros (122) | 566,756 | €3,569.3 M | 74.0 % | 1.3 % | 15.7 % | 68.8 % |
-| Lyon extra-muros (57) | 224,915 | €528.2 M | 67.0 % | 0.0 % | 18.2 % | 70.0 % |
+| Paris | 75,091 | €1,840.9 M | 83.3 % | 34.8 % | 15.3 % | 53.3 % |
+| Lyon | 31,023 | €362.9 M | 70.4 % | 0.0 % | 14.3 % | 69.5 % |
+| Paris extra-muros (122) | 566,538 | €3,569.3 M | 72.8 % | 0.8 % | 15.3 % | 68.4 % |
+| Lyon extra-muros (57) | 224,911 | €528.2 M | 65.5 % | 0.0 % | 18.7 % | 69.6 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -23,21 +23,31 @@ Haussmann stock as worn out, and put 95.5 % of Paris's built parcels (Lyon 59.8 
 55 communes in all) on the 85 % cap, so the land share there was an assumption.
 The maintained-stock rule (C1, see A7) values such buildings at a 30-year
 effective age where neighbourhood prices are well above rebuild cost. Cap warnings
-fall from 55 communes to 1 (Neuilly-sur-Seine). Paris keeps 47.6 % of parcels at
+fall from 55 communes to 1 (Neuilly-sur-Seine). Paris keeps 34.8 % of parcels at
 the cap, which is genuine at Paris prices. The direction of every distributional
 result is unchanged: the full before/after table is in
 `output/diagnostics/depreciation_before_after.csv`, summarised under A7.
 
+**Price deflator (spec 0001).** Sales from 2021–2025 are now brought to 2025 euros
+with the most local Notaires-INSEE index (Paris flats; 92/93/94 by type; Lyon,
+Marseille, Lille agglomerations; regions; Province). It takes the 2021–22 peak out
+of Paris and Lyon prices: Paris land share 83.9 → 83.3 %, parcels at the cap
+47.6 → 34.8 %; Lyon 72.0 → 70.5 %; Paris ring 74.1 → 73.0 %; Lyon ring 67.4 →
+65.9 %. Provincial and weak markets barely move. Every distributional direction
+holds (Paris quintiles −18.1/+11.4 → −18.2/+11.9).
 **Exempt public property (spec 0003).** Parcels held entirely by the State, local
 authorities or public hospitals / universities / schools, with no lease, condominium
 or private manager, are now treated as exempt today and under the LVT (DGFiP
 « personnes morales » files, conservative rule). "Parcels" above count taxable
-parcels only (Paris 3,085 exempt, Lyon 3,117, Paris ring 41,493, Lyon ring 21,511,
-mostly roads, parks and other public land). They carried 4.5–9.6 % of the levy the
-baseline spread onto them (Paris 4.9 %, Lyon 4.7 %, Grenoble 8.2 %, Roubaix 9.6 %); that share now
+parcels only (Paris 3,098 exempt, Lyon 3,119, Paris ring 41,711, Lyon ring 21,515,
+mostly roads, parks and other public land). They carried 3.1–9.6 % of the levy the
+baseline spread onto them (Paris 5.0 %, Lyon 4.7 %, Grenoble 8.2 %, Roubaix 9.6 %); that share now
 falls on taxable parcels. Land shares barely move; the income gradient flattens
-somewhat at the bottom (Grenoble poorest quintile −7.5 → −3.7 %, La Rochelle −22.8
-→ −14.7 %) but every direction holds (Paris −18.1/+11.4 → −17.5/+12.1).
+somewhat at the bottom (median residential parcel of the poorest quintile: Grenoble
+0.0 → +4.0 %, La Rochelle −23.6 → −16.8 %); Paris −18.1/+11.9 → −17.3/+12.4. The
+Domaine national de Saint-Cloud (State-owned, managed by the Centre des monuments
+nationaux) now qualifies: Saint-Cloud's amount shifted falls from 49 % to 22 % of
+its levy and its land share from 84 % to 79 %.
 
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
@@ -51,11 +61,11 @@ somewhat at the bottom (Grenoble poorest quintile −7.5 → −3.7 %, La Rochel
 
 ## A. Decisions only you can make (economics / framing)
 
-- [ ] **A1. How to present Paris.** Land share 83.9 %, with 47.6 % of built
+- [ ] **A1. How to present Paris.** Land share 83.3 %, with 34.8 % of built
   parcels still at the 85 % cap: in the dearest streets land really is above 85 %
   of value. So much of Paris still gets a near-uniform split, and the result reads
   largely as a move from today's floor-area bill to a market-value bill. It is
-  strongly progressive (poorest income quintile −17.5 %, richest +12.1 %). Options:
+  strongly progressive (poorest income quintile −17.3 %, richest +12.4 %). Options:
   (a) publish with a caveat, framed as "where land is ~85 % of value, LVT ≈ a
       modern value tax";
   (b) also raise the cap for Paris (e.g. 0.95), letting the dearest streets
@@ -82,7 +92,8 @@ somewhat at the bottom (Grenoble poorest quintile −7.5 → −3.7 %, La Rochel
   Building-less parcels in urban zones take the residential plot price. The
   aggregate effect is small (Paris 0.9 % of the levy, rings 3.6 % / 6.2 %), but it
   concentrates in a few communes:
-  - **Saint-Cloud 24 %** — *UL* zone, very likely the state-owned Domaine national;
+  - **Saint-Cloud 24 %** — *UL* zone, the state-owned Domaine national (now exempt
+    under spec 0003: State property managed by the Centre des monuments nationaux);
   - **Feyzin 19 %** — chemical-valley industrial land;
   - Paris: *UV* parks and cemeteries 0.35 %, *UGSU* rail yards 0.20 %;
   - Lyon: Port Édouard Herriot (*UEp*).
