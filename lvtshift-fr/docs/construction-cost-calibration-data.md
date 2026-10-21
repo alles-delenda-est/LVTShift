@@ -1,5 +1,7 @@
 # Construction-cost calibration data (`construction_cost_eur_m2`)
 
+> **Read the erratum at the end first** (October 2026): the IdF EPTB figure is 1 863 €/m², not 1 914, and EPTB is per m² of surface de plancher, not habitable area.
+
 **Purpose.** Sourced, open-data French construction-cost figures (€/m², turnkey,
 *hors foncier*) to recalibrate the model's `construction_cost_eur_m2` parameter,
 which sits directly under the land residual (`land = market − floor_area ×
@@ -50,7 +52,7 @@ the collectif question and the habitable-vs-floor-area question.
 | Region (covers pilot dépts) | Construction €/m² (habitable) | Avg cost / surface | Source |
 |---|---|---|---|
 | **National (métropole)** | **1 927 €/m²** | surface 118 m² | [S1] |
-| **Île-de-France** (75/77/78/91/92/93/94/95 → Montreuil 93) | **1 914 €/m²** | cost ≈ 252 222 € | [S2] |
+| **Île-de-France** (75/77/78/91/92/93/94/95 → Montreuil 93) | **1 863 €/m²** *(erratum: 1 914 was the national figure)* | 266 356 € / 143 m² | [S2] |
 | **Auvergne-Rhône-Alpes** (01/03/07/15/26/38/42/43/63/69/73/74 → Villeurbanne 69, Grenoble 38, Annemasse 74) | **2 063–2 066 €/m²** | cost 252 110 € / 122 m²; "3rd most expensive region" | [S3] |
 | **Occitanie** (…/46/… → Cahors 46, Figeac 46) | **1 796 €/m²** | — | [S1][S4] |
 | **Hauts-de-France** (59/62/… → Roubaix 59) | **1 795 €/m²** | surface 126 m² | [S1][S5] |
@@ -275,3 +277,59 @@ Roubaix/HdF ≈ 1 795; Cahors/Figeac/Occitanie ≈ 1 796), **after** the review 
 (a) whether to apply a sourced **collectif uplift** for dense cores (§5.1, needs one
 more sourcing pass), and (b) the **habitable→floor-area** haircut (§5.2). BT01 says no
 material time-indexation is needed for 2025 (< ~1.5 %).
+
+---
+
+## Erratum and decisions recorded (October 2026)
+
+**Erratum, verified live on 2026-10-19 against the SDES/DREAL EPTB 2024 pages.**
+- The Île-de-France EPTB 2024 house cost is **1 863 €/m²** (266 356 € / 143 m²;
+  "5e rang des régions les moins chères"), not 1 914: **1 914 €/m² is the
+  national figure** (SDES release of 27/11/2025, 118 m²). The 252 222 € quoted
+  for IdF is the house price only in projects *with* a land purchase (chapter 4).
+- EPTB costs are per m² of **surface de plancher**, not habitable area (EPTB
+  methodology: « exprimée en surface de plancher »). The "habitable → floor
+  area" haircut proposed in §5.2 therefore does not apply as written.
+- EPTB covers **individual houses only**. The Untec per-height-band tables cited
+  in the sub-reports come from a members-only référentiel, not an open series,
+  and should not be quoted as sourced.
+- Why EPTB ranks IdF below ARA: IdF house permits are concentrated in outer-ring
+  greenfield estates by volume builders, while ARA's include mountain sites
+  (slopes, snow loads, seismic zones). For dense collectif cores, the social
+  housing cost series rank IdF highest.
+
+**Decision 1: construction costs.** The pilot values are **not** replaced by raw
+EPTB figures. Paris, the Paris inner ring (incl. Montreuil), Lyon (incl.
+Villeurbanne) and the Lyon ring are recalibrated on the DHUP/SISAL *Bilan des
+logements aidés* 2021-22 **building-only** cost of new social housing (per m² of
+surface utile, hors foncier and VRD), indexed to 2025 with INSEE BT01 and
+converted to gross area, plus fees and 20 % VAT:
+
+| Area | 2025 €/m² gross | Range |
+|---|---|---|
+| Paris | 2 650 | 2 350-3 100 |
+| Paris inner ring (incl. Montreuil) | 2 400 | 2 150-2 700 |
+| Lyon (incl. Villeurbanne) | 2 000 | 1 750-2 300 |
+| Lyon ring | 1 850 | 1 600-2 100 |
+
+The other panel communes keep their pilot values. A later review suggested
+keeping the old 1 650-2 300 values on the grounds that they already matched
+EPTB per gross m²; that was not adopted, because it rested on the 1 914 error
+above and on treating the model's floor area as true gross area (next point).
+
+**Decision 2: one cost per commune, both sides on habitable area.** Measuring
+habitable area ÷ the model's floor area (BD TOPO footprint × storeys) on 35
+communes (DPE habitable surfaces matched to BD TOPO buildings by RNB id) gives
+**0.64 for flats and 0.61 for houses**: BD TOPO counts attics, raised basements
+and technical levels as storeys, so the model's area overstates even true gross
+area. The model now puts both sides of the residual on habitable area: market
+value = DVF €/m² × habitable area, building value = cost per habitable m² ×
+habitable area, with cost per habitable m² = commune cost ÷ habitable-to-gross
+(flats 0.71, houses 0.82). There is still one cost scalar per commune and no
+other per-category multiplier.
+
+**Decision 3: non-residential multipliers deferred.** There is no open French
+cost series for industrial or retail buildings, and BD TOPO's usage tags mix
+warehouses with laboratories and Haussmann shopfronts. Non-residential parcels
+are still priced like flats. This is a known bias, bounded by the ±10 pt
+land-share sensitivity band published with every result.
