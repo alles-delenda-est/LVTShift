@@ -162,17 +162,21 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
     # Construction year: BD TOPO's date_d_apparition is unreliable/often null,
     # so anchor depreciation on the DPE construction era per parcel where present
     # (fallback: BD TOPO year, then median-age imputation in improvement_value).
+    # DPE diagnoses dwellings, so its years date housing only; other building
+    # types keep their BD TOPO year or are taken at mid-life (improvement_value).
     if use_dpe:
         dpe_year, dpe_median = ingest.fetch_dpe_parcel_year(cfg, parcels)
+        housing = estimate.building_type(buildings).eq("residential")
         if len(dpe_year):
             buildings = buildings.merge(dpe_year, on="idpar", how="left")
-            buildings["year_built"] = buildings["year_built_dpe"].fillna(
-                buildings["year_built"])
+            buildings["year_built"] = buildings["year_built_dpe"].where(
+                housing, np.nan).fillna(buildings["year_built"])
             buildings = buildings.drop(columns=["year_built_dpe"])
         # data-driven fallback for parcels with no DPE and no BD TOPO year,
         # so depreciation never degenerates to the all-NaN -> zero-building case
         if dpe_median is not None:
-            buildings["year_built"] = buildings["year_built"].fillna(dpe_median)
+            buildings["year_built"] = buildings["year_built"].mask(
+                housing & buildings["year_built"].isna(), dpe_median)
 
     # Parcels: official area (fallback to geometry), centroid -> grid cell
     pg = ingest.parcels_to_gdf(parcels)

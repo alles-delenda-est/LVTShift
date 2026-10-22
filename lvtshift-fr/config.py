@@ -24,6 +24,14 @@ NET_TO_GROSS_DEFAULT = {"Appartement": 0.64, "Maison": 0.61}
 # Houses: habitable ÷ gross external ≈ 0.82 (desk estimate: SDP ÷ gross
 # 0.85-0.90 × habitable ÷ SDP ≈ 0.93-0.95).
 COST_NET_TO_GROSS_DEFAULT = {"Appartement": 0.71, "Maison": 0.82}
+# Activity (business-zone) land as a share of the local terrain-à-bâtir price:
+# open DVF 2023-24 activity-land sales vs residential land, 93: 381/658 = 0.58,
+# 94: 282/771 = 0.37, Métropole de Lyon 0.29-0.40 (n ≈ 20-80, judgement).
+# A share of the local price keeps the location gradient that a flat
+# departmental price would lose (Rungis vs Santeny).
+ACTIVITY_LAND_RATIO_DEFAULT = 0.45
+ACTIVITY_LAND_RATIO_LYON = 0.35
+
 COST_MAX_EUR_M2 = 20_000.0            # catches unit typos (e.g. € per ft², k€)
 AREA_RATIO_TYPES = frozenset({"Appartement", "Maison"})
 AREA_RATIO_BOUNDS = (0.3, 1.0)        # plausible habitable ÷ gross range
@@ -67,6 +75,9 @@ class CommuneConfig:
     # storeys), building only (hors foncier, hors VRD), fees and 20 % VAT
     # included. See the calibration note above the commune list.
     construction_cost_eur_m2: float = 1900.0
+    # Business (activity) land as a share of the local terrain-à-bâtir price,
+    # for sheds valued by depreciated replacement cost (BUILDING_TYPES).
+    activity_land_ratio: float = ACTIVITY_LAND_RATIO_DEFAULT
     # Optional cost for houses (type_local 'Maison'), on the same basis as
     # construction_cost_eur_m2 (per true-gross m², turnkey, fees and VAT in).
     # construction_cost_eur_m2 is calibrated on collective housing; houses are
@@ -116,6 +127,11 @@ class CommuneConfig:
         self.net_to_gross = check_area_ratios(self.net_to_gross, "net_to_gross")
         self.cost_net_to_gross = check_area_ratios(self.cost_net_to_gross,
                                                    "cost_net_to_gross")
+        r = self.activity_land_ratio
+        if isinstance(r, (bool, str)) or not isinstance(r, numbers.Real) \
+                or not (math.isfinite(r) and 0 < r <= 1):
+            raise ValueError(f"activity_land_ratio must be in (0, 1], got {r!r}")
+        self.activity_land_ratio = float(r)
         for name in ("construction_cost_eur_m2", "house_cost_eur_m2"):
             v = getattr(self, name)
             if v is None and name == "house_cost_eur_m2":
@@ -250,7 +266,7 @@ ANNEMASSE = CommuneConfig("74012", "Annemasse", "74", construction_cost_eur_m2=1
 # autonomous inner-ring commune of the Lyon core.
 VILLEURBANNE = CommuneConfig(       # dense inner-Lyon-core commune (Rhône)
     "69266", "Villeurbanne", "69", construction_cost_eur_m2=2000.0,
-    house_cost_eur_m2=2400.0)
+    house_cost_eur_m2=2400.0, activity_land_ratio=ACTIVITY_LAND_RATIO_LYON)
 ROUBAIX = CommuneConfig(            # post-industrial Nord metro, high vacancy
     "59512", "Roubaix", "59", construction_cost_eur_m2=1750.0)
 CAHORS = CommuneConfig(             # le Lot préfecture, small rural town
@@ -275,6 +291,7 @@ PARIS = CommuneConfig(
     sub_codes=tuple(f"751{n:02d}" for n in range(1, 21)), key="paris")
 LYON = CommuneConfig(
     "69123", "Lyon", "69", construction_cost_eur_m2=2000.0, house_cost_eur_m2=2400.0,
+    activity_land_ratio=ACTIVITY_LAND_RATIO_LYON,
     sub_codes=tuple(f"6938{n}" for n in range(1, 10)), key="lyon")
 
 # Registry for the CLI / run_commune driver (--commune <key>)
@@ -307,6 +324,8 @@ TERRITORY_COST_EUR_M2 = {"paris-extra-muros": 2400.0, "lyon-extra-muros": 1850.0
 # House cost by territory (docs/research/house-costs-2025.md): EPTB 2024 per m²
 # SDP, indexed, finishing/fees/plot uplifts, ÷ 0.90 habitable/SDP, × 0.82.
 TERRITORY_HOUSE_COST_EUR_M2 = {"paris-extra-muros": 2100.0, "lyon-extra-muros": 2250.0}
+TERRITORY_ACTIVITY_LAND_RATIO = {"paris-extra-muros": ACTIVITY_LAND_RATIO_DEFAULT,
+                                 "lyon-extra-muros": ACTIVITY_LAND_RATIO_LYON}
 
 
 def commune_key(name: str) -> str:
@@ -336,7 +355,8 @@ def _territory_members(rows, territory: str) -> list:
         COMMUNES[key] = CommuneConfig(
             insee, name, dep, key=key,
             construction_cost_eur_m2=TERRITORY_COST_EUR_M2[territory],
-            house_cost_eur_m2=TERRITORY_HOUSE_COST_EUR_M2[territory])
+            house_cost_eur_m2=TERRITORY_HOUSE_COST_EUR_M2[territory],
+            activity_land_ratio=TERRITORY_ACTIVITY_LAND_RATIO[territory])
         keys.append(key)
     return keys
 
@@ -454,6 +474,26 @@ LILLE_AGGLO_INSEE = {"59350", "59512", "59599"}   # Lille, Roubaix, Tourcoing
 
 
 # Land-model parameters.
+# Non-residential buildings (docs/research/nonres-valuation-2025.md §2-§5).
+# Cost per gross m² as a ratio to the commune's collective-housing cost
+# (construction_cost_eur_m2): business types are HT (firms recover VAT),
+# annexes TTC; ratios from the inner-ring anchored figures (shed 600 / 2 400…),
+# stable across the four calibrated areas within ±0.02. ±25 % uncertainty.
+# Economic life (years) and residual floor replace the housing 80 y / 25 %.
+# "residential" covers housing and anything unclassified (cfg values apply).
+BUILDING_TYPES = {
+    #               cost ratio, life, floor, valuation, land
+    "residential": (1.000, None, None, "residual", None),
+    "office":      (0.825, 60, 0.20, "residual", None),
+    "religious":   (1.000, None, None, "residual", None),
+    "shed":        (0.250, 40, 0.15, "drc", "activity"),
+    "workshop":    (0.354, 40, 0.15, "drc", "activity"),
+    "retail_box":  (0.467, 40, 0.15, "drc", "activity"),
+    "agri_shed":   (0.073, 30, 0.10, "drc", "activity"),
+    "greenhouse":  (0.081, 25, 0.10, "drc", "activity"),
+    "sports":      (1.033, 50, 0.20, "drc", "residential"),
+    "annex":       (0.227, 50, 0.20, "drc", "residential"),
+}
 LAND_MODEL = {
     # AU (à urbaniser) discount vs fully-serviced U / AUc land. AU "fermée/
     # stricte" is development-deferred; pricing it at full U value overstates it

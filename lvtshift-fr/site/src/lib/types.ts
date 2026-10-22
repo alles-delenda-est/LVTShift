@@ -66,6 +66,8 @@ export interface Commune {
     construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string;
     /** cost applied to houses, same basis (absent in older payloads; null = commune cost) */
     house_cost_eur_m2?: number | null;
+    /** business land as a share of the local building-plot price (absent in older payloads) */
+    activity_land_ratio?: number | null;
     /** parcels treated as exempt public property (count only; absent in older payloads) */
     exempt_public_parcels?: number;
   };
