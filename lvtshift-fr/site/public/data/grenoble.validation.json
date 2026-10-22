@@ -29,10 +29,10 @@
       "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",
       "independence": "data-quality",
       "cadastre_built_share_pct": 88.4,
-      "model_built_share_pct": 82.8,
+      "model_built_share_pct": 82.7,
       "n_parcels_cadastre": 12895,
       "n_buildings_cadastre": 19578,
-      "gap_pt": 5.6,
+      "gap_pt": 5.7,
       "status": "ok",
       "note": "Accord entre deux cartes du bâti d'agences différentes ; contrôle qualité de l'entrée 'bâti', pas de la valorisation."
     }

@@ -205,7 +205,16 @@ export default function MethodologiePage() {
             sont des personnes publiques en pleine propriété, sans bail ni
             copropriété. À Paris, ces parcelles portaient 4,9&nbsp;% du produit
             que le modèle leur attribuait auparavant ; ce montant est désormais
-            réparti sur les parcelles réellement imposables.
+            réparti sur les parcelles réellement imposables.{" "}
+            <strong>Les bâtiments agricoles</strong> (serres, granges, silos,
+            étables) sont eux aussi exonérés de taxe foncière bâtie, à raison
+            de leur usage et non de leur propriétaire&nbsp;: le modèle les
+            repère par l&apos;usage « Agricole » de la BD TOPO ou, pour les
+            hangars sans usage renseigné, par leur situation en zone agricole
+            ou naturelle du PLU, et une parcelle qui ne porte que de tels
+            bâtiments est traitée comme une terre agricole non bâtie (Périgny,
+            commune des serres, passe ainsi de 41,8&nbsp;% à 47,9&nbsp;% de
+            part foncière).
           </p>
 
           <p>

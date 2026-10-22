@@ -105,7 +105,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (4 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 46.2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 46.3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 1.4 % au plancher (15%).
 
 ### Sète (34301, dépt 34) — OK
@@ -129,7 +129,7 @@
 - **[OK] model_ran** (run) — Exécuté : 29,209 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 bins produits (29 revenus IRIS distincts).
-- **[WARN] land_share_band** (validation) — Part foncière 66.1 % (bande 40–65 %).  
+- **[WARN] land_share_band** (validation) — Part foncière 66.2 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
@@ -814,7 +814,7 @@
 - **[OK] model_ran** (run) — Exécuté : 5,830 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 bins produits (16 revenus IRIS distincts).
-- **[OK] land_share_band** (validation) — Part foncière 48.0 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 48.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.4 % au plancher (15%).
 
 ### Bondy (93010, dépt 93) — OK
@@ -877,7 +877,7 @@
 - **[OK] model_ran** (run) — Exécuté : 4,131 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 bins produits (12 revenus IRIS distincts).
-- **[OK] land_share_band** (validation) — Part foncière 53.0 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 52.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 1.1 % au plancher (15%).
 
 ### Drancy (93029, dépt 93) — OK
@@ -1173,7 +1173,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 bins produits (13 revenus IRIS distincts).
 - **[OK] land_share_band** (validation) — Part foncière 47.6 % (bande 40–65 %).
-- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 1.4 % au plancher (15%).
+- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 1.4 % au plancher (15%).
 
 ### Vaujours (93074, dépt 93) — WARN
 
@@ -1411,7 +1411,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (9 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 50.3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 50.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.5 % au plancher (15%).
 
 ### Gentilly (94037, dépt 94) — WARN
@@ -1514,8 +1514,8 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 60.0 % (bande 40–65 %).
-- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.2 % au plafond (85%), 0.1 % au plancher (15%).
+- **[OK] land_share_band** (validation) — Part foncière 62.1 % (bande 40–65 %).
+- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.7 % au plafond (85%), 0.1 % au plancher (15%).
 
 ### Marolles-en-Brie (94048, dépt 94) — WARN
 
@@ -1527,7 +1527,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (2 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 45.8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 45.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.1 % au plancher (15%).
 
 ### Nogent-sur-Marne (94052, dépt 94) — OK
@@ -1591,7 +1591,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 41.8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 47.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 1.2 % au plancher (15%).
 
 ### Le Perreux-sur-Marne (94058, dépt 94) — OK
@@ -1642,7 +1642,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (2 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 46.1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 46.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Saint-Mandé (94067, dépt 94) — WARN
@@ -1693,7 +1693,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 40.4 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 40.8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.5 % au plancher (15%).
 
 ### Sucy-en-Brie (94071, dépt 94) — OK
@@ -1743,7 +1743,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (4 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 51.2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 51.5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.1 % au plancher (15%).
 
 ### Villejuif (94076, dépt 94) — OK
@@ -1755,7 +1755,7 @@
 - **[OK] model_ran** (run) — Exécuté : 6,404 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 bins produits (21 revenus IRIS distincts).
-- **[OK] land_share_band** (validation) — Part foncière 59.8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Villeneuve-le-Roi (94077, dépt 94) — OK
@@ -1899,7 +1899,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 56.1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 56.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.1 % au plancher (15%).
 
 ### Bron (69029, dépt 69) — OK
@@ -1925,7 +1925,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 56.4 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 56.5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Caluire-et-Cuire (69034, dépt 69) — OK
@@ -1979,7 +1979,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59.8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Collonges-au-Mont-d'Or (69063, dépt 69) — WARN
@@ -2036,7 +2036,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 58.8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 58.9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Dardilly (69072, dépt 69) — WARN
@@ -2049,7 +2049,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (3 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 56.7 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 56.8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Écully (69081, dépt 69) — WARN
@@ -2077,7 +2077,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[WARN] land_share_band** (validation) — Part foncière 71.9 % (bande 40–65 %).  
+- **[WARN] land_share_band** (validation) — Part foncière 72.0 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
@@ -2148,8 +2148,8 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (3 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 51.1 % (bande 40–65 %).
-- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 1.2 % au plancher (15%).
+- **[OK] land_share_band** (validation) — Part foncière 51.2 % (bande 40–65 %).
+- **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 1.2 % au plancher (15%).
 
 ### Irigny (69100, dépt 69) — WARN
 
@@ -2162,7 +2162,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (3 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59.0 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59.1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Limonest (69116, dépt 69) — WARN
@@ -2176,7 +2176,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 50.9 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 51.0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Lissieu (69117, dépt 69) — WARN
@@ -2190,7 +2190,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 48.9 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 49.0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.1 % au plancher (15%).
 
 ### Marcy-l'Étoile (69127, dépt 69) — WARN
@@ -2230,7 +2230,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (3 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 53.1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 53.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Oullins-Pierre-Bénite (69149, dépt 69) — WARN
@@ -2271,7 +2271,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 54.2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 54.4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.2 % au plancher (15%).
 
 ### Rochetaillée-sur-Saône (69168, dépt 69) — WARN
@@ -2367,7 +2367,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 58.6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 58.7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Saint-Germain-au-Mont-d'Or (69207, dépt 69) — WARN
@@ -2517,7 +2517,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (3 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 56.0 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 56.1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.6 % au plancher (15%).
 
 ### Genay (69278, dépt 69) — WARN
@@ -2544,7 +2544,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (2 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 55.5 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 55.6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Meyzieu (69282, dépt 69) — WARN
@@ -2585,7 +2585,7 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 52.1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 52.2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.1 % au plafond (85%), 0.0 % au plancher (15%).
 
 ### Rillieux-la-Pape (69286, dépt 69) — WARN
@@ -2653,5 +2653,5 @@
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0.00 %.
 - **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (0 valeurs distinctes).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 51.7 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 52.3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0.0 % au plafond (85%), 0.0 % au plancher (15%).
