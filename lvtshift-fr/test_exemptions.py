@@ -221,3 +221,24 @@ def test_export_counts_exempt_parcels_without_listing_them(tmp_path, monkeypatch
                   "is_fully_exempt": [True, False, False]}).to_csv(tmp_path / "zz.csv", index=False)
     df = ew.load_parcels("zz", out_dir=str(tmp_path))
     assert len(df) == 2 and df.attrs["exempt_parcels"] == 1
+
+
+def test_rural_buildings_need_agricultural_use_and_a_rural_signal():
+    b = pd.DataFrame({
+        "idpar": ["U1", "U2", "A1", "N1", "U3", "A2", "X"],
+        "usage": ["Agricole", "Agricole", "Agricole", "Agricole", "Commercial et services",
+                  "Résidentiel", "Agricole"],
+        "nature": ["Serre", "Indifférenciée", "Indifférenciée", "Silo", "Serre",
+                   "Indifférenciée", None],
+    })
+    zoning = pd.DataFrame({"idpar": ["U1", "U2", "A1", "N1", "U3", "A2", "A2"],
+                           "zone_typ": ["U", "U", "A", "N", "U", "A", "A"]})
+    got = ex.rural_buildings(b, zoning)
+    # greenhouse anywhere, any farm building in A/N; not an urban farm shed
+    # (possibly a converted workshop), not a garden centre, not a farmhouse,
+    # not an unzoned shed with no greenhouse/silo signal
+    assert list(got) == [True, False, True, True, False, False, False]
+    assert got.dtype == bool
+    # older frames without `nature` rely on zoning alone
+    assert list(ex.rural_buildings(b.drop(columns="nature"), zoning)) == \
+        [False, False, True, True, False, False, False]

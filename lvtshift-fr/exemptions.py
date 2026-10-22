@@ -300,3 +300,29 @@ def exempt_public(cfg, parcels: pd.DataFrame, has_building: pd.Series,
     out["is_exempt_public"] = exempt.fillna(False).astype(bool)
     out["exempt_tier"] = out["tier"].where(out["is_exempt_public"])
     return out[["idpar", "is_exempt_public", "exempt_tier"]]
+
+
+# CGI art. 1382 6° exempts from TFPB the buildings permanently and exclusively
+# used for agriculture (granges, étables, serres affectées à une exploitation
+# rurale…); the land under them pays the TFPNB, outside the modelled levy.
+# Use, not ownership, is the test, so the open-data proxy is the BD TOPO usage:
+# 'Agricole', and either a greenhouse/silo or a farmland/natural PLU zone (an
+# 'Agricole' shed in an urban zone may be a converted workshop and stays
+# taxable). Garden-centre greenhouses carry a commercial usage: taxable.
+RURAL_NATURES = frozenset({"Serre", "Silo"})
+RURAL_ZONES = frozenset({"A", "N"})
+
+
+def rural_buildings(buildings: pd.DataFrame, zoning: pd.DataFrame) -> pd.Series:
+    """Boolean mask over `buildings` of TFPB-exempt rural buildings.
+
+    buildings: idpar, usage (BD TOPO usage_1), nature.
+    zoning: idpar, zone_typ (fetch_parcel_zoning); parcels absent or unzoned
+    rely on the nature test alone.
+    """
+    zone = buildings["idpar"].map(
+        zoning.drop_duplicates("idpar").set_index("idpar")["zone_typ"])
+    nature = (buildings["nature"] if "nature" in buildings.columns
+              else pd.Series(None, index=buildings.index))
+    agri = buildings["usage"].eq("Agricole")
+    return (agri & (nature.isin(RURAL_NATURES) | zone.isin(RURAL_ZONES))).fillna(False)

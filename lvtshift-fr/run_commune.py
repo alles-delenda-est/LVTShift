@@ -94,8 +94,9 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     parcels = parcels.copy()
 
     # --- zoning -> land_type ---
-    zoning = ingest.fetch_parcel_zoning(cfg, parcels)
-    parcels = parcels.merge(zoning, on="idpar", how="left")
+    if "zone_typ" not in parcels.columns:      # prepare() normally fetched it
+        zoning = ingest.fetch_parcel_zoning(cfg, parcels)
+        parcels = parcels.merge(zoning, on="idpar", how="left")
     z = parcels["zone_typ"].astype("object")
     has_bld = parcels["idpar"].isin(buildings["idpar"])
     constructible = z.isin(["U", "AUc", "AU", "AUs"])
@@ -142,6 +143,21 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
     sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
     tfpb = ingest.fetch_rei_tfpb_produit(cfg, layers=layers)
+
+    # Zoning first: the rural-building exemption needs it, and so does the
+    # classification of building-less land below.
+    parcels = parcels.merge(ingest.fetch_parcel_zoning(cfg, parcels),
+                            on="idpar", how="left")
+    # Rural buildings (CGI 1382 6°) are outside TFPB: drop them, so a parcel
+    # holding only greenhouses or barns is farmland like any other.
+    if use_exemptions and len(buildings):
+        rural = exemptions.rural_buildings(buildings, parcels[["idpar", "zone_typ"]])
+        if rural.any():
+            fl = buildings["footprint_m2"]
+            print(f"  [{cfg.name}] rural buildings exempt (CGI 1382 6°): "
+                  f"{int(rural.sum())} pieces, {fl[rural].sum():,.0f} m² footprint "
+                  f"({100 * fl[rural].sum() / fl.sum():.1f}% of all)")
+        buildings = buildings[~rural].reset_index(drop=True)
 
     # Construction year: BD TOPO's date_d_apparition is unreliable/often null,
     # so anchor depreciation on the DPE construction era per parcel where present
