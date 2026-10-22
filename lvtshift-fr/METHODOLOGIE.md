@@ -33,7 +33,7 @@ française.
 | Transactions | DVF géolocalisé (Etalab) | CSV par commune | 5 ans glissants | valeur de marché hédonique ; comparables terrains à bâtir |
 | Bâtiments | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, emprise communale | courant | emprise, niveaux, hauteur, logements, usage, flag d'appariement FF |
 | Année de construction | DPE logements existants (ADEME) | API data-fair par `code_insee_ban` | depuis 07/2021 | dépréciation (tranche → année) |
-| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties |
+| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties ; critère A/N des bâtiments agricoles exonérés (§3.5) |
 | Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | 2024 | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
@@ -54,7 +54,7 @@ géographie administrative).
 parcelle (`estimate.improvement_value`) :
 
 ```
-surface_plancher  = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
+surface_plancher  = emprise_m2 × niveaux       (niveaux imputés selon le type si absent)
 surface_habitable = net_to_gross[type] × surface_plancher     (appartements 0,64, maisons 0,61)
 coût[type]        = house_cost_eur_m2 pour les maisons s'il est fixé, sinon coût_construction_€m2
 coût_hab          = coût[type] ÷ cost_net_to_gross[type]          (appartements 0,71, maisons 0,82)
@@ -92,6 +92,27 @@ brut 0,74, ÷ surface utile ÷ habitable ≈ 1,04) et **0,82 pour les maisons**
 du `net_to_gross` mesuré, qui ne fixe que les niveaux en euros. Sources :
 `docs/research/net-to-gross-measurement.md` et
 `docs/research/construction-costs-2025.md`.
+
+*Nombre de niveaux manquant.* Le champ `nombre_d_etages` de la BD TOPO vient des
+fichiers fonciers et n'est jamais rempli pour les annexes, les constructions
+légères ni les bâtiments qui n'ont pas pu y être appariés ; un nombre nul est lui
+aussi traité comme manquant. Diviser la hauteur par 3 m, comme le faisait d'abord
+le modèle, fait d'un entrepôt de plain-pied de 14 m un bâtiment de 5 niveaux : le
+parc des expositions de Villepinte (165 000 m² d'emprise) devenait 828 000 m² de
+plancher. Dans six communes test (Villepinte, Vaujours, Santeny, Périgny, Rungis,
+Corbas), le nombre manque sur 42 à 56 % des hangars, 90 % de la surface des
+hangars dont le nombre est connu est de plain-pied, et l'ancienne règle gonflait
+leur surface plancher de 2,0 à 2,7 fois. `estimate.impute_levels` impute
+désormais selon le type : **1 niveau quelle que soit la hauteur** pour les natures
+de type hangar (« Industriel, agricole ou commercial », Serre, Silo), les
+constructions légères (`construction_legere`) et les usages Annexe, Agricole,
+Industriel, Sportif et Religieux ; **les autres bâtiments « Commercial et
+services »** 1 niveau sous 7 m, sinon hauteur ÷ 3,5 m ; **le logement** hauteur
+÷ 3 m comme avant (2,65 m par niveau mesurés). Les nombres connus sont conservés.
+La surface plancher répartit aussi la TFPB actuelle (§3.5) : la correction abaisse
+la valeur bâtie du non-résidentiel et retire aux entrepôts une partie de la taxe
+d'aujourd'hui. Sources : `docs/research/nonres-valuation-2025.md` §1 et
+`docs/research/nonres_probes/`.
 
 *Bâti entretenu (âge effectif).* Là où les prix du quartier dépassent largement le
 coût de reconstruction, les propriétaires rénovent en continu : l'âge réel ne
@@ -197,11 +218,42 @@ bailleur (les locaux de réseaux type poste ENEDIS sont ignorés). Le foncier pu
 bâtiment (parcs, bois, cimetières) ; un bâtiment y reste imposable (concession type
 Stade de France) tant qu'il n'est pas corroboré. Les parcelles exonérées ne portent
 aucune part du produit actuel et sortent de l'assiette LVT : le même produit pèse
-sur les parcelles imposables. À Paris, 3 098 parcelles (dont 1 362 bâties) sont
+sur les parcelles imposables. À Paris, 3 099 parcelles (dont 1 362 bâties) sont
 signalées ; elles portaient 91,6 M€ (5,0 %) du produit que l'état initial leur
 attribuait. Les dénominations ne servent qu'à reconnaître réseaux et bailleurs et
-ne sont jamais stockées ni publiées. `--no-exemptions` reproduit le calcul sans
-signalement.
+ne sont jamais stockées ni publiées.
+
+**Bâtiments ruraux exonérés** (`exemptions.rural_buildings`). L'art. 1382 6° du
+CGI exonère de TFPB les bâtiments affectés de manière permanente et exclusive à un
+usage agricole (serres, granges, silos, étables) ; le sol qui les porte acquitte
+la TFPNB, hors du produit modélisé. Le critère légal est l'usage, non la propriété
+(`docs/research/nonres-valuation-2025.md` §7, consulté via doctrine.fr ;
+Légifrance et le BOFiP n'ont pu être interrogés en direct). Les données ouvertes
+ne voient pas l'usage : le modèle prend un indicateur BD TOPO. Un bâtiment est
+rural si
+- son usage est « Agricole » **et** sa nature est Serre ou Silo, ou sa parcelle
+  est en zone A ou N du PLU ; ou
+- c'est un hangar (« Industriel, agricole ou commercial ») sans usage renseigné
+  ou « Indifférencié », en zone A ou N : la BD TOPO laisse souvent vide l'usage
+  des hangars agricoles.
+
+Un hangar « Agricole » en zone urbaine reste imposable (ce peut être un atelier
+reconverti), de même que les serres de jardinerie (usage commercial). Le zonage
+est désormais chargé une seule fois, avant le filtrage des bâtiments. Les
+bâtiments ruraux sont retirés avant la valorisation et avant la répartition de la
+TFPB actuelle. Sur une parcelle mixte (ferme et serres), la ferme reste. Une
+parcelle qui ne porte que des bâtiments ruraux devient du foncier non bâti, évalué
+comme toute terre agricole (€/m² SAFER agricole / naturel, ou sa classe de zone,
+§3.4) : elle ne paie pas de TFPB aujourd'hui et, sous la LVT, seulement sur la
+valeur de son sol, comme les autres terrains non bâtis. 156 communes modélisées
+comptent au moins un bâtiment rural. En commune urbaine, la règle des zones N
+saisit aussi des dépendances de parcs (Vitry-sur-Seine 1,2 % de l'emprise bâtie,
+Villeurbanne 0,1 %), pour l'essentiel publiques et déjà largement exonérées.
+L'indicateur ne vérifie pas l'usage agricole réel ; les codes d'exonération des
+fichiers fonciers le permettraient.
+
+`--no-exemptions` désactive à la fois l'exonération du foncier public et celle
+des bâtiments ruraux, et reproduit le calcul sans signalement.
 
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
 fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
@@ -277,10 +329,10 @@ bâties à la borne (0,4 % avant que les maisons aient leur propre coût, plus
 bas) : sa part foncière est mesurée, non fixée par la borne. Aucune commune n'a
 plus de la moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le
 plus (25,0 %), et le contrôle `land_share_clip` du preflight ne signale aucune
-commune. Lyon est à 57,8 %, la couronne parisienne à 61,7 % et la couronne
-lyonnaise à 52,6 %. Sur les 188 communes modélisées, 24 dépassent la bande de
-vraisemblance 40–65 % (138 avant la base surface habitable) et 4 sont en dessous
-(Vaujours 35,7 %, Santeny 36,2 %, Limeil-Brévannes 37,4 %, Villepinte 39,4 %).
+commune. Lyon est à 57,8 %, la couronne parisienne à 62,2 % et la couronne
+lyonnaise à 53,0 %. Sur les 188 communes modélisées, 26 dépassent la bande de
+vraisemblance 40–65 % (138 avant la base surface habitable) et 2 sont en dessous
+(Limeil-Brévannes 38,0 %, Vaujours 39,0 %).
 Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
 la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
@@ -300,6 +352,36 @@ relève qu'en partie les communes basses en lisière de la couronne parisienne (
 37,4 → 39,4 %, Périgny 38,2 → 40,3 %) : les maisons n'y font que 18 à 36 % de la
 valeur bâtie, dominée par des parcelles industrielles et commerciales valorisées
 au coût du logement et au prix des appartements (§6, point 7).
+
+*Nombre de niveaux.* La règle par type (§3.1) laisse Paris (74,2 %) et Lyon
+(57,8 %) inchangés et relève les couronnes (couronne parisienne 61,7 → 62,2 %,
+couronne lyonnaise 52,6 → 53,0 %), surtout les communes d'entrepôts et de
+commerce de la grande périphérie (Santeny 36,2 → 40,4 %, Vaujours 35,7 → 39,0 %,
+Villepinte 39,4 → 42,8 %, Tremblay-en-France 44,0 → 47,6 %, Périgny 40,3 →
+41,8 %, Limeil-Brévannes 37,4 → 38,0 %). Les communes sous la bande passent de 4
+à 2 ; celles au-dessus de 24 à 26 (Clamart et Collonges-au-Mont-d'Or franchissent
+65 % de quelques dixièmes). La taxe actuelle étant elle aussi répartie à la
+surface plancher, les entrepôts en portent moins, et le montant déplacé augmente
+dans les couronnes (couronne parisienne 20,6 → 21,7 % du produit, couronne
+lyonnaise 23,9 → 26,4 %). Le gradient de revenu garde son sens (totaux par groupe
+à Paris : cinquième le plus modeste −19,8 → −20,0 %, le plus aisé
++16,2 → +16,1 %).
+
+*Bâtiments ruraux.* L'exonération des bâtiments agricoles (§3.5) ne compte que là
+où ils sont nombreux. Périgny, la commune des serres, bouge le plus (41,8 →
+47,9 %) : près de la moitié de son emprise bâtie était faite de serres et de
+bâtiments agricoles. Mandres-les-Roses 60,0 → 62,1 %, Solaize 51,7 → 52,3 %,
+Santeny 40,4 → 40,8 % ; toutes les autres communes bougent de moins d'un
+demi-point. Les parts foncières de Paris (74,2 %), Lyon (57,8 %), de la couronne
+parisienne (62,2 %) et de la couronne lyonnaise (53,0 %) sont inchangées. La part
+des parcelles qui paient plus dans la couronne parisienne passe de 67,6 à
+67,4 % ; dans la couronne lyonnaise, le montant déplacé passe de 26,4 à 26,6 % du
+produit et la part qui paie plus de 60,7 à 60,8 %. Les effectifs hors bande ne
+changent pas : 2 communes sous 40 % (Limeil-Brévannes, Vaujours), 26 au-dessus
+de 65 %. Quelques parcelles publiques dont les seuls bâtiments étaient ruraux
+deviennent non bâties et rejoignent le foncier public exonéré (couronne
+parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 →
+21 585).
 
 ## 4. Paramètres et hypothèses clés
 
@@ -424,7 +506,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    euros. Les autres communes du panel gardent des coûts pilotes non calés. Le
    non-résidentiel prend les ratios des appartements (et leur €/m², point 7). Les
    erreurs de nombre de niveaux BD TOPO sont la principale source de dispersion de
-   la surface à la parcelle.
+   la surface à la parcelle ; quand le nombre manque, il est imputé selon le type
+   de bâtiment (§3.1), un choix raisonné testé sur six communes, et la hauteur de
+   3,5 m par niveau des bâtiments commerciaux élevés n'a pas de source primaire.
 5. **Bornage de part foncière** : quand la plupart des parcelles bâties sont à une
    borne, la part foncière est une hypothèse, pas un résultat, et la variation du
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
@@ -440,11 +524,15 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
    résidentielle et les ratios de surface des appartements, et sa valeur bâtie le
    coût du logement ; les locaux professionnels (révision 2017) nécessitent une
-   strate dédiée. C'est désormais le principal levier pour les communes sous la
-   bande de vraisemblance : les parcelles industrielles et commerciales y dominent
-   la valeur bâtie (Santeny 51 % industriel, Vaujours 56 % industriel, Villepinte
-   45 % commercial — le parc des expositions — et Périgny 50 % « autre »), ce qui
-   explique que le coût des maisons ne les ait relevées qu'en partie (§3.7).
+   strate dédiée. Les bâtiments ruraux exonérés au titre de l'art. 1382 6° du CGI
+   sont désormais exclus (§3.5), via un indicateur d'usage et de zonage. La règle des niveaux (§3.1) a supprimé l'erreur la plus
+   lourde, des hangars comptés sur plusieurs niveaux, et la part industrielle ou
+   commerciale de la valeur bâtie des communes basses a reculé (Santeny industriel
+   51 → 33 %, Vaujours industriel 56 → 30 %, Villepinte commercial — le parc des
+   expositions — 45 → 21 %, Périgny « autre » 50 → 44 %). Les prix et coûts du
+   non-résidentiel restent le prochain levier pour les communes en bord de bande ;
+   les deux encore en dessous (Limeil-Brévannes, Vaujours) ont aussi beaucoup
+   d'immeubles et de maisons dans leur valeur bâtie (§3.7).
 8. **Revenus (Filosofi)** : 2021 (dernier millésime), communes ≥ 5 000 habitants
    uniquement, certains IRIS sous secret statistique.
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont
@@ -461,8 +549,11 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     copropriété ou sous bail, les lieux de culte détenus par des associations, les
     écoles et hôpitaux privés non lucratifs, l'Assemblée et le Sénat (formes
     juridiques atypiques), les exonérations partielles hors territoire et les
-    bâtiments publics sans local enregistré restent imposables. Les exonérations
-    temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
+    bâtiments publics sans local enregistré restent imposables. Les bâtiments
+    agricoles (art. 1382 6° CGI) sont repérés par l'usage BD TOPO et le zonage
+    PLU, non par leur usage réel : un hangar agricole non renseigné en zone urbaine
+    reste imposé, et des dépendances de parcs en zone N sont exonérées (§3.5). Les
+    exonérations temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
     pas identifiables en données ouvertes : l'état initial surestime encore la
     cotisation actuelle des HLM exonérés et la sous-estime ailleurs (sensible en
     Seine-Saint-Denis).
