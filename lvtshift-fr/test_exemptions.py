@@ -242,3 +242,10 @@ def test_rural_buildings_need_agricultural_use_and_a_rural_signal():
     # older frames without `nature` rely on zoning alone
     assert list(ex.rural_buildings(b.drop(columns="nature"), zoning)) == \
         [False, False, True, True, False, False, False]
+    # an unlabelled shed is a farm building in A/N, not in an urban zone
+    iac = "Industriel, agricole ou commercial"
+    s = pd.DataFrame({"idpar": ["A1", "U1", "A1", "A1"],
+                      "usage": [None, "Indifférencié", "Industriel", None],
+                      "nature": [iac, iac, iac, "Indifférenciée"]})
+    assert list(ex.rural_buildings(s, zoning)) == [True, False, False, False]
+    assert not ex.rural_buildings(s.drop(columns="usage"), zoning).iloc[1]

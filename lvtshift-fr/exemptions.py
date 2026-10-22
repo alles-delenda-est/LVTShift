@@ -309,8 +309,13 @@ def exempt_public(cfg, parcels: pd.DataFrame, has_building: pd.Series,
 # 'Agricole', and either a greenhouse/silo or a farmland/natural PLU zone (an
 # 'Agricole' shed in an urban zone may be a converted workshop and stays
 # taxable). Garden-centre greenhouses carry a commercial usage: taxable.
+# A shed-type building ('Industriel, agricole ou commercial') with no usage
+# recorded, in a farmland/natural zone, is a farm building too: BD TOPO often
+# leaves the usage of farm sheds unfilled.
 RURAL_NATURES = frozenset({"Serre", "Silo"})
 RURAL_ZONES = frozenset({"A", "N"})
+UNLABELLED_USAGES = frozenset({"Indifférencié"})
+SHED_NATURE = "Industriel, agricole ou commercial"
 
 
 def rural_buildings(buildings: pd.DataFrame, zoning: pd.DataFrame) -> pd.Series:
@@ -324,5 +329,10 @@ def rural_buildings(buildings: pd.DataFrame, zoning: pd.DataFrame) -> pd.Series:
         zoning.drop_duplicates("idpar").set_index("idpar")["zone_typ"])
     nature = (buildings["nature"] if "nature" in buildings.columns
               else pd.Series(None, index=buildings.index))
-    agri = buildings["usage"].eq("Agricole")
-    return (agri & (nature.isin(RURAL_NATURES) | zone.isin(RURAL_ZONES))).fillna(False)
+    usage = (buildings["usage"] if "usage" in buildings.columns
+             else pd.Series(None, index=buildings.index))
+    rural_zone = zone.isin(RURAL_ZONES)
+    agri = usage.eq("Agricole") & (nature.isin(RURAL_NATURES) | rural_zone)
+    unlabelled_shed = ((usage.isna() | usage.isin(UNLABELLED_USAGES))
+                       & nature.eq(SHED_NATURE) & rural_zone)
+    return (agri | unlabelled_shed).fillna(False).astype(bool)
