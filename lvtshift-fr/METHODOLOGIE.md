@@ -54,7 +54,7 @@ géographie administrative).
 parcelle (`estimate.improvement_value`) :
 
 ```
-surface_plancher  = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
+surface_plancher  = emprise_m2 × niveaux       (niveaux imputés selon le type si absent)
 surface_habitable = net_to_gross[type] × surface_plancher     (appartements 0,64, maisons 0,61)
 coût[type]        = house_cost_eur_m2 pour les maisons s'il est fixé, sinon coût_construction_€m2
 coût_hab          = coût[type] ÷ cost_net_to_gross[type]          (appartements 0,71, maisons 0,82)
@@ -92,6 +92,27 @@ brut 0,74, ÷ surface utile ÷ habitable ≈ 1,04) et **0,82 pour les maisons**
 du `net_to_gross` mesuré, qui ne fixe que les niveaux en euros. Sources :
 `docs/research/net-to-gross-measurement.md` et
 `docs/research/construction-costs-2025.md`.
+
+*Nombre de niveaux manquant.* Le champ `nombre_d_etages` de la BD TOPO vient des
+fichiers fonciers et n'est jamais rempli pour les annexes, les constructions
+légères ni les bâtiments qui n'ont pas pu y être appariés ; un nombre nul est lui
+aussi traité comme manquant. Diviser la hauteur par 3 m, comme le faisait d'abord
+le modèle, fait d'un entrepôt de plain-pied de 14 m un bâtiment de 5 niveaux : le
+parc des expositions de Villepinte (165 000 m² d'emprise) devenait 828 000 m² de
+plancher. Dans six communes test (Villepinte, Vaujours, Santeny, Périgny, Rungis,
+Corbas), le nombre manque sur 42 à 56 % des hangars, 90 % de la surface des
+hangars dont le nombre est connu est de plain-pied, et l'ancienne règle gonflait
+leur surface plancher de 2,0 à 2,7 fois. `estimate.impute_levels` impute
+désormais selon le type : **1 niveau quelle que soit la hauteur** pour les natures
+de type hangar (« Industriel, agricole ou commercial », Serre, Silo), les
+constructions légères (`construction_legere`) et les usages Annexe, Agricole,
+Industriel, Sportif et Religieux ; **les autres bâtiments « Commercial et
+services »** 1 niveau sous 7 m, sinon hauteur ÷ 3,5 m ; **le logement** hauteur
+÷ 3 m comme avant (2,65 m par niveau mesurés). Les nombres connus sont conservés.
+La surface plancher répartit aussi la TFPB actuelle (§3.5) : la correction abaisse
+la valeur bâtie du non-résidentiel et retire aux entrepôts une partie de la taxe
+d'aujourd'hui. Sources : `docs/research/nonres-valuation-2025.md` §1 et
+`docs/research/nonres_probes/`.
 
 *Bâti entretenu (âge effectif).* Là où les prix du quartier dépassent largement le
 coût de reconstruction, les propriétaires rénovent en continu : l'âge réel ne
@@ -277,10 +298,10 @@ bâties à la borne (0,4 % avant que les maisons aient leur propre coût, plus
 bas) : sa part foncière est mesurée, non fixée par la borne. Aucune commune n'a
 plus de la moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le
 plus (25,0 %), et le contrôle `land_share_clip` du preflight ne signale aucune
-commune. Lyon est à 57,8 %, la couronne parisienne à 61,7 % et la couronne
-lyonnaise à 52,6 %. Sur les 188 communes modélisées, 24 dépassent la bande de
-vraisemblance 40–65 % (138 avant la base surface habitable) et 4 sont en dessous
-(Vaujours 35,7 %, Santeny 36,2 %, Limeil-Brévannes 37,4 %, Villepinte 39,4 %).
+commune. Lyon est à 57,8 %, la couronne parisienne à 62,2 % et la couronne
+lyonnaise à 53,0 %. Sur les 188 communes modélisées, 26 dépassent la bande de
+vraisemblance 40–65 % (138 avant la base surface habitable) et 2 sont en dessous
+(Limeil-Brévannes 38,0 %, Vaujours 39,0 %).
 Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
 la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
@@ -300,6 +321,20 @@ relève qu'en partie les communes basses en lisière de la couronne parisienne (
 37,4 → 39,4 %, Périgny 38,2 → 40,3 %) : les maisons n'y font que 18 à 36 % de la
 valeur bâtie, dominée par des parcelles industrielles et commerciales valorisées
 au coût du logement et au prix des appartements (§6, point 7).
+
+*Nombre de niveaux.* La règle par type (§3.1) laisse Paris (74,2 %) et Lyon
+(57,8 %) inchangés et relève les couronnes (couronne parisienne 61,7 → 62,2 %,
+couronne lyonnaise 52,6 → 53,0 %), surtout les communes d'entrepôts et de
+commerce de la grande périphérie (Santeny 36,2 → 40,4 %, Vaujours 35,7 → 39,0 %,
+Villepinte 39,4 → 42,8 %, Tremblay-en-France 44,0 → 47,6 %, Périgny 40,3 →
+41,8 %, Limeil-Brévannes 37,4 → 38,0 %). Les communes sous la bande passent de 4
+à 2 ; celles au-dessus de 24 à 26 (Clamart et Collonges-au-Mont-d'Or franchissent
+65 % de quelques dixièmes). La taxe actuelle étant elle aussi répartie à la
+surface plancher, les entrepôts en portent moins, et le montant déplacé augmente
+dans les couronnes (couronne parisienne 20,6 → 21,7 % du produit, couronne
+lyonnaise 23,9 → 26,4 %). Le gradient de revenu garde son sens (totaux par groupe
+à Paris : cinquième le plus modeste −19,8 → −20,0 %, le plus aisé
++16,2 → +16,1 %).
 
 ## 4. Paramètres et hypothèses clés
 
@@ -424,7 +459,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    euros. Les autres communes du panel gardent des coûts pilotes non calés. Le
    non-résidentiel prend les ratios des appartements (et leur €/m², point 7). Les
    erreurs de nombre de niveaux BD TOPO sont la principale source de dispersion de
-   la surface à la parcelle.
+   la surface à la parcelle ; quand le nombre manque, il est imputé selon le type
+   de bâtiment (§3.1), un choix raisonné testé sur six communes, et la hauteur de
+   3,5 m par niveau des bâtiments commerciaux élevés n'a pas de source primaire.
 5. **Bornage de part foncière** : quand la plupart des parcelles bâties sont à une
    borne, la part foncière est une hypothèse, pas un résultat, et la variation du
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
@@ -440,11 +477,15 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
    résidentielle et les ratios de surface des appartements, et sa valeur bâtie le
    coût du logement ; les locaux professionnels (révision 2017) nécessitent une
-   strate dédiée. C'est désormais le principal levier pour les communes sous la
-   bande de vraisemblance : les parcelles industrielles et commerciales y dominent
-   la valeur bâtie (Santeny 51 % industriel, Vaujours 56 % industriel, Villepinte
-   45 % commercial — le parc des expositions — et Périgny 50 % « autre »), ce qui
-   explique que le coût des maisons ne les ait relevées qu'en partie (§3.7).
+   strate dédiée. Les bâtiments ruraux exonérés au titre de l'art. 1382 6° du CGI
+   restent imposés. La règle des niveaux (§3.1) a supprimé l'erreur la plus
+   lourde, des hangars comptés sur plusieurs niveaux, et la part industrielle ou
+   commerciale de la valeur bâtie des communes basses a reculé (Santeny industriel
+   51 → 33 %, Vaujours industriel 56 → 30 %, Villepinte commercial — le parc des
+   expositions — 45 → 21 %, Périgny « autre » 50 → 44 %). Les prix et coûts du
+   non-résidentiel restent le prochain levier pour les communes en bord de bande ;
+   les deux encore en dessous (Limeil-Brévannes, Vaujours) ont aussi beaucoup
+   d'immeubles et de maisons dans leur valeur bâtie (§3.7).
 8. **Revenus (Filosofi)** : 2021 (dernier millésime), communes ≥ 5 000 habitants
    uniquement, certains IRIS sous secret statistique.
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont

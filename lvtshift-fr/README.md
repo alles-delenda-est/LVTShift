@@ -181,10 +181,14 @@ export CSV seul : `run(..., make_report=False)`.
   surface brute sous-jacent aux coûts (0,71 / 0,82) : ±0,05 déplace la valeur
   bâti d'environ ±7 %. Le coût des maisons est plus incertain autour de Lyon,
   où les maisons neuves de l'échantillon EPTB sont probablement plus sur
-  mesure que le parc. Le non-résidentiel est valorisé comme des appartements ; le corriger est désormais le
-  principal levier pour les communes dont la part terrain sort sous 40 %
-  (Santeny, Vaujours, Villepinte), où l'industrie et le commerce dominent la
-  valeur bâtie.
+  mesure que le parc. Quand la BD TOPO ne donne pas le nombre d'étages, il
+  est imputé selon le type de bâtiment (1 niveau pour les hangars, annexes et
+  constructions légères ; hauteur ÷ 3,5 m pour les autres bâtiments
+  commerciaux de 7 m et plus ; hauteur ÷ 3 m pour le logement) : l'ancienne
+  règle unique hauteur ÷ 3 m gonflait 2 à 2,7 fois la surface des entrepôts.
+  Le non-résidentiel reste valorisé au prix et au coût des appartements ; le
+  corriger est le prochain levier pour les communes dont la part terrain sort
+  sous 40 % (Limeil-Brévannes, Vaujours) ou en est proche.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
