@@ -27,7 +27,7 @@ const DATA_SOURCES: {
   {
     name: "BD TOPO V3",
     source: "IGN",
-    role: "Emprise, niveaux, hauteur, nombre de logements et usage des bâtiments ; appariement avec les Fichiers Fonciers",
+    role: "Emprise, niveaux, hauteur, nombre de logements, usage et nature des bâtiments (typage des locaux d'activité) ; appariement avec les Fichiers Fonciers",
     licence: "Licence Ouverte / Etalab",
   },
   {
@@ -237,6 +237,96 @@ export default function SourcesPage() {
           <code className="font-mono bg-lisere px-1">config.py</code> et
           modifiables par commune.
         </p>
+
+        <div className="mt-8 max-w-3xl">
+          <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-2">
+            Valorisation des locaux d&apos;activité
+          </h4>
+          <p className="font-body text-sm text-gris leading-relaxed mb-3">
+            Les types de bâtiments, leurs coûts de construction et le prix du
+            foncier d&apos;activité reposent sur les sources suivantes,
+            consultées en octobre 2026. Les ratios qui en sont tirés sont des
+            paramètres de configuration, documentés dans la note de recherche{" "}
+            <code className="text-xs font-mono bg-lisere px-1">
+              docs/research/nonres-valuation-2025.md
+            </code>
+            .
+          </p>
+          <ul className="font-body text-sm text-encre leading-relaxed space-y-2 list-disc pl-5">
+            <li>
+              <strong>IGN, <em>BD TOPO v3.5 — Descriptif de contenu</em></strong>{" "}
+              (juillet 2026) : définitions des natures et usages des bâtiments
+              et du nombre d&apos;étages.{" "}
+              <a
+                href="https://data.geopf.fr/annexes/ressources/documentation/DC_BDTOPO_3-5.pdf"
+                className="underline text-marine break-all"
+              >
+                data.geopf.fr
+              </a>
+            </li>
+            <li>
+              <strong>Etalab, DVF géolocalisé 2023–2024</strong>{" "}
+              (départements 93, 94 et 69) : ventes de terrains nus, classées
+              en foncier d&apos;activité ou résidentiel par le{" "}
+              <strong>MOS 2021 de l&apos;Institut Paris Région</strong> en
+              Île-de-France et par les{" "}
+              <strong>zones d&apos;activités de la Métropole de Lyon</strong>{" "}
+              ; elles fondent le ratio du foncier d&apos;activité (0,45 et
+              0,35).{" "}
+              <a
+                href="https://files.data.gouv.fr/geo-dvf/latest/csv/"
+                className="underline text-marine break-all"
+              >
+                files.data.gouv.fr
+              </a>
+              {" · "}
+              <a
+                href="https://data.iledefrance.fr/explore/dataset/mos-occupation-du-sol-2025-and-2021-en-79-postes-de-la-region-ile-de-france/"
+                className="underline text-marine break-all"
+              >
+                data.iledefrance.fr
+              </a>
+              {" · "}
+              <a
+                href="https://data.grandlyon.com/geoserver/metropole-de-lyon/ows"
+                className="underline text-marine break-all"
+              >
+                data.grandlyon.com
+              </a>
+            </li>
+            <li>
+              <strong>
+                RICS, <em>Depreciated replacement cost method of valuation for
+                financial reporting</em>
+              </strong>{" "}
+              (Royaume-Uni, 1<sup>re</sup> édition, avril 2026) : méthode du
+              coût de remplacement déprécié (« sol + construction ») pour les
+              biens qui se vendent rarement, valorisation du terrain à son
+              usage dominant, TVA comptée seulement si elle est
+              irrécupérable.{" "}
+              <a
+                href="https://www.rics.org/content/dam/ricsglobal/documents/standards/drc_method_of_valuation_for_financial_reporting_1st_edition_rics.pdf"
+                className="underline text-marine break-all"
+              >
+                rics.org
+              </a>
+            </li>
+            <li>
+              <strong>Quostra, guide des coûts de construction au m² en France</strong>{" "}
+              (€ de janvier 2026, hors taxes) : coûts des entrepôts, ateliers,
+              grandes surfaces, bureaux, équipements sportifs et logements
+              collectifs sur une même base, ramenés en ratio du coût du
+              logement. Guide commercial unique : les ratios sont à
+              ±&thinsp;25&nbsp;%.{" "}
+              <a
+                href="https://quostra.com/fr-fr/blog/cout-construction-m2-france/"
+                className="underline text-marine break-all"
+              >
+                quostra.com
+              </a>
+            </li>
+          </ul>
+        </div>
       </section>
     </div>
   );

@@ -51,21 +51,71 @@ the parcel (`estimate.improvement_value`):
 floor_area     = footprint_m2 × storeys          (storeys imputed by building type if missing)
 habitable_area = net_to_gross[type] × floor_area            (flats 0.64, houses 0.61)
 cost[type]     = house_cost_eur_m2 for houses where set, else construction_cost_eur_m2
+                 × cost_ratio[building type]             (1 for housing; table below)
 cost_hab       = cost[type] ÷ cost_net_to_gross[type]             (flats 0.71, houses 0.82)
 age            = reference_year − year_built
 q              = median hedonic €/m² of the built parcels in the parcel's IRIS
                  ÷ construction_cost_eur_m2   (commune median if the IRIS has none)
-w              = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp)
+w              = clip((q − 1.2) / (2.5 − 1.2), 0, 1)          (dep_q_ramp; housing only)
 eff_age        = w × min(age, 30) + (1 − w) × age             (dep_maintained_age_cap)
-depreciation   = clip(1 − (1 − dep_floor) × eff_age / dep_years,  min = dep_floor)
+depreciation   = clip(1 − (1 − floor[bt]) × eff_age / life[bt],  min = floor[bt])
 imp_value      = habitable_area × cost_hab × depreciation
 market_value   = hedonic €/m² × habitable_area                (§3.3)
 ```
 
-`year_built` is taken from DPE (§3.2); `construction_cost_eur_m2`,
+`year_built` is taken from DPE for housing (§3.2); `construction_cost_eur_m2`,
 `house_cost_eur_m2`, `dep_years`, `dep_floor` are per-commune config (§4); `type`
 is the parcel's dominant `type_local` (types other than flat and house use the
-flat ratios and the commune cost).
+flat area ratios); `bt` is each building's type (below), whose life and floor
+are `dep_years` and `dep_floor` for housing. Parcels valued by depreciated
+replacement cost (DRC: sheds and the like, §3.4) never meet a DVF price, so their
+building value stays on the model's floor area at the cost per gross m²: there
+is no habitable-area conversion for them.
+
+*Non-residential building types* (`estimate.building_type`,
+`config.BUILDING_TYPES`). Each BD TOPO building is typed from its usage and
+nature. Each type's cost is a ratio to the commune's collective-housing cost
+(`construction_cost_eur_m2`), and each type has its own economic life and
+depreciation floor:
+
+| Type | BD TOPO rule | Cost ratio | €/m², Paris inner ring | Life | Floor | Valuation |
+|---|---|---|---|---|---|---|
+| Shed (logistics, industrial) | nature « Industriel, agricole ou commercial » (IAC), unless a row below applies | 0.250 | 600 | 40 y | 15 % | DRC, business land |
+| Workshop | usage Industriel, other natures | 0.354 | 850 | 40 y | 15 % | DRC, business land |
+| Retail box | IAC × « Commercial et services » | 0.467 | 1 120 | 40 y | 15 % | DRC, business land |
+| Office | other natures × « Commercial et services » | 0.825 | 1 980 | 60 y | 20 % | residual |
+| Farm shed | usage Agricole (when not exempt, §3.5) | 0.073 | 175 | 30 y | 10 % | DRC, business land |
+| Greenhouse | nature Serre (when not exempt) | 0.081 | 195 | 25 y | 10 % | DRC, business land |
+| Sports hall | usage Sportif | 1.033 | 2 480 | 50 y | 20 % | DRC, building land |
+| Annex (garage, store) | usage Annexe | 0.227 | 545 | 50 y | 20 % | DRC, building land |
+| Religious | usage Religieux | 1 | 2 400 | 80 y | 25 % | residual |
+| Housing | everything else | 1 | 2 400 | 80 y | 25 % | residual |
+
+The ratios come from one commercial cost guide that covers every type on a
+single basis (Quostra, January 2026 €, cross-checked against logistics,
+farm-building, greenhouse and garage figures). Each type's guide cost, run
+through geographic coefficients, fees and the BT01 index, is divided by the same
+guide's social-housing line run through the same chain. The type thus keeps the
+guide's proportion to housing but inherits the model's lower, official-data
+housing level (`docs/research/construction-costs-2025.md`); the unanchored guide
+figures are 15–30 % higher. **Business types exclude VAT**, because firms recover
+it: RICS's DRC guidance allows for VAT "only where this is an irrecoverable
+cost". Sports halls are effectively VAT-free too, since communes recover it
+through the FCTVA. **Annexes include VAT**, like the house they serve. Because
+the anchor is one guide scaled to our housing level, treat the ratios as ±25 %.
+Lives and floors are judgement, bracketed by fiscal *durées d'usage* (20–50
+years), component lives (structure 50–80 years) and greenhouse glazing (20–30
+years). The floors sit below housing's 25 % because sheds suffer functional
+obsolescence (clear height, floor loading, dock ratio) that maintenance cannot
+cure. Evidence: `docs/research/nonres-valuation-2025.md` §2–3 and
+`docs/research/nonres_costs_calc.py`.
+
+*Ages of non-residential buildings.* DPE diagnoses dwellings, so DPE years and
+the DPE commune median now date housing only. A non-residential building keeps
+its own BD TOPO year if it has one; otherwise it is taken at **mid-life**
+(depreciation factor (1 + floor) ÷ 2, e.g. 0.575 for a shed), not at the
+dwellings' median age. The maintained-stock rule below is a housing-market rule
+and leaves non-residential buildings on their age.
 
 *Habitable-area basis.* DVF prices are per m² of habitable area
 (`surface_reelle_bati`), while `floor_area` is BD TOPO footprint × storeys.
@@ -132,7 +182,8 @@ of Cahors). We instead use the DPE `periode_construction` era band, mapped to a
 midpoint year (`avant 1948`→1930, `1948-1974`→1961, … `après 2021`→2022),
 spatially joined to parcels (per-parcel median). Parcels with no DPE point take
 the **commune dwelling-weighted median era** as a fallback, so age never
-degenerates to "unknown".
+degenerates to "unknown". Both apply to housing only; non-residential buildings
+without a year of their own are taken at mid-life (§3.1).
 
 **3.3 Market value** — a deliberately simple log-linear hedonic on DVF
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
@@ -162,6 +213,7 @@ each class is priced against the right benchmark:
 | Parcel | Land value |
 |---|---|
 | **Built** | `market − building` (residual), floored at the agricultural €/m², land share clipped to [0.15, 0.85] (every clip flagged in `lv_flag`) |
+| **Built, largest building shed-type** (DRC) | terrain-à-bâtir €/m² × `activity_land_ratio` (business types) or × 1 (sports halls, annexes) × parcel area, floored at the agricultural €/m²; outside urban zoning only a yard of 3 × floor area takes that price. Market value = land + depreciated building; no residential price, no clip (`lv_flag` `built_drc`) |
 | **Constructible vacant** (zone U/AUc) | DVF terrain-à-bâtir €/m² × area (cell median where ≥8 sales, else commune median, else EPTB national fallback) |
 | **Constructible deferred** (AU/AUs) | as above × `au_strict_factor` (development deferred) |
 | **Agricultural / natural** (zone A/N) | SAFER départemental €/m² × area |
@@ -169,6 +221,40 @@ each class is priced against the right benchmark:
 Only DVF rows coded *terrains à bâtir* are trusted for constructible prices —
 raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
 mutations bundle buildings and several parcels.
+
+**Depreciated replacement cost for shed-type parcels.** Warehouses, workshops,
+retail boxes, farm sheds, greenhouses, sports halls and garage plots rarely sell
+on their own, and the residential €/m² that the residual uses says nothing
+about them. Parcels whose **largest building** (by floor area) is of one of
+these types are therefore valued by depreciated replacement cost (DRC, the
+French *méthode sol + construction*), the standard method for property with no
+active market (RICS, *Depreciated replacement cost method of valuation for
+financial reporting*, 2026, §3.1–3.2, fetched). The building is its
+depreciated cost (§3.1). The land is priced at the parcel's local
+terrain-à-bâtir €/m² (the same cell or commune price as constructible vacant
+land) times `activity_land_ratio` for business types: **0.45** by default and
+around Paris, **0.35** for Lyon, Villeurbanne and the Lyon ring. The ratios come
+from open DVF land-only sales in 2023–24, classified by land use (MOS 2021 in
+Île-de-France, the Métropole's business-zone polygons around Lyon): activity
+land against residential land is 381 vs 658 €/m² in Seine-Saint-Denis (0.58,
+n = 23), 282 vs 771 in Val-de-Marne (0.37, n = 20) and 0.29–0.40 in the
+Métropole de Lyon (n = 80). RICS likewise prices DRC land at its prevailing,
+not alternative, use (§7.12–7.14). Sports halls and annexes keep the full
+building-land price (× 1.0): a garage plot sits among houses. Market value is
+land + building, with no residential price and no land-share clip. The ratio
+is published in each payload's provenance (`activity_land_ratio`).
+
+*Yards outside urban zoning.* A shed on a farm-sized parcel in an A or N zone,
+or on unzoned land, would otherwise price the whole field as building land: the
+security review found a 10 ha farmland parcel valued at €16 M. There, only a
+yard of **3 × floor area** (`DRC_CURTILAGE_FACTOR`; logistics plots run about
+2–2.5 × the footprint, judgement) takes the building-land price, and the rest
+is priced as farmland (SAFER €/m²).
+
+*Offices* stay on the residual against the residential price surface, at their
+own cost (0.825 × the housing cost): offices and shops do sell, and a
+business-premises price surface from DVF is the better target (§6, item 7).
+Religious buildings stay on the residual at the housing cost.
 
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
 (`estimate.current_tax`) across **built parcels only** by a VLC proxy = floor
@@ -262,8 +348,8 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (median residential parcel: poorest fifth −18.6 to −20.3 %, richest
-+12.5 to +13.6 %).
+barely moves (median residential parcel: poorest fifth −19.3 to −21.5 %, richest
++11.6 to +11.9 %).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -290,17 +376,25 @@ to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 sat at the 0.85 bound and the 84.9 % headline was set by the cap. The
 maintained-stock rule (§3.1) values such buildings at a 30-year effective age,
 which brought Paris to 83.3 % with 34.8 % of built parcels still at the bound.
-With both sides of the residual on habitable area and the calibrated costs
-(§3.1, §4), Paris comes out at **74.2 %** with 3.2 % of built parcels at the
-bound (0.4 % before houses got their own, lower cost): its land share is
+With both sides of the residual on habitable area, the calibrated costs and the
+per-type non-residential valuation (§3.1, §3.4, §4), Paris comes out at
+**75.8 %** with 5.6 % of built parcels at the bound: its land share is
 measured, not set by the cap. No commune has more than half its built parcels at
-the cap; Neuilly-sur-Seine has the most (25.0 %), and the preflight
-`land_share_clip` check warns nowhere. Lyon is at 57.8 %, the Paris ring 62.2 %
-and the Lyon ring 53.0 %. Across the 188 modelled communes, 26 lie above the
-40–65 % plausibility band (138 before the habitable-area basis) and 2 below
-(Limeil-Brévannes 38.0 %, Vaujours 39.0 %).
+the cap; Neuilly-sur-Seine has the most (25.3 %), and the preflight
+`land_share_clip` check warns nowhere. Lyon is at 60.0 %, the Paris ring 65.3 %
+and the Lyon ring 55.4 %. Across the 188 modelled communes, 48 lie above 65 %
+and 1 below 40 % (Cahors 38.6 %).
 `headline.built_at_cap_pct` records the share of built parcels at the bound,
 and the site labels the land share "plafonnée" when it is ≥ 50 %.
+
+*The 40–65 % reference range.* It is a metro-wide benchmark (INSEE's comptes
+de patrimoine put land at about 45–50 % of built real estate nationally), not a
+test each commune must pass. Communes contiguous to Paris (itself 76 %)
+naturally sit at 65–75 %, and land is 65–75 % of value in prime office
+districts (Gemini review). Most of the 48 communes above 65 % are inner-ring
+communes next to Paris (Puteaux 71.0 %, Saint-Cloud 76.8 %, Clichy 74.8 %,
+Courbevoie, Nanterre, Montreuil, Pantin…); the register's WARN outside the
+range is a prompt to look, not a failure.
 
 *House costs.* The house cost moves land shares the way its sign predicts:
 up around Paris, where houses are now cheaper to rebuild than flats (Paris
@@ -342,6 +436,40 @@ more from 60.7 to 60.8 %. The band counts are unchanged: 2 communes below 40 %
 (Limeil-Brévannes, Vaujours), 26 above 65 %. A few public parcels whose only
 buildings were rural now count as unbuilt and join the exempt public land (Paris
 ring 41,711 → 41,807 exempt parcels, Lyon ring 21,515 → 21,585).
+
+*Non-residential valuation.* Per-type costs, lives and floors (§3.1) and DRC
+valuation of shed-type parcels (§3.4) raise land shares everywhere, most of all
+in the warehouse communes:
+
+| Land share (land ÷ total), % | Before | After |
+|---|---|---|
+| Paris | 74.2 | 75.8 (5.6 % of built parcels at the cap) |
+| Lyon | 57.8 | 60.0 |
+| Paris ring | 62.2 | 65.3 |
+| Lyon ring | 53.0 | 55.4 |
+| Santeny | 40.8 | 52.1 |
+| Vaujours | 39.0 | 49.8 |
+| Tremblay-en-France | 47.6 | 58.3 |
+| Villepinte | 42.8 | 49.5 |
+| Périgny | 47.9 | 50.1 |
+| Limeil-Brévannes | 38.0 | 41.7 |
+
+Communes below 40 % fall from 2 to 1 (Cahors, 41.2 → 38.6 %, not yet
+investigated); those above 65 % rise from 26 to 48, mostly inner-ring communes
+next to Paris (see the reference range above). Gemini (gemini-4-argon) judges
+these levels plausible. In the Lyon ring industrial land value falls from €8.6bn
+to €3.8bn and industrial buildings from €8.5bn to €2.6bn. Category totals
+there: industrial bills −3.5 → −55 %, commercial −7 → −17 %, houses −1 → +6 %;
+the amount shifted rises from 26.6 to 38.3 % of the levy, and the poorest
+fifth's total change from −13.5 to −3.7 %. In the Paris ring industrial bills
+fall 31 %; "other" (garage and sports plots) rises 67 %, but that category is
+only 1.4 % of today's tax. The Paris income gradient is little changed (group
+totals −20.1 … +14.9 %; Lyon −18.7 … +13.6 %). **The industrial cut, and the
+households' smaller gains around Lyon, are exaggerated by today's-tax
+baseline** (§6, item 1): it still shares the TFPB produit by floor area with no
+category weights, which overstates what warehouses and factories pay today.
+These distributional figures should not be published until the baseline
+carries category weights, the next proposed step.
 
 ## 4. Key parameters and assumptions
 
@@ -387,6 +515,17 @@ ring 41,711 → 41,807 exempt parcels, Lyon ring 21,515 → 21,585).
   on the effective age; maintained-stock cap 30 years (`dep_maintained_age_cap`),
   ramp q ∈ [1.2, 2.5] (`dep_q_ramp`). Both are judgement calls informed by the
   literature (§3.1); the cap and ramp end-points are not directly estimated.
+- **Non-residential building types** (`config.BUILDING_TYPES`, §3.1): cost ratio
+  to the commune cost, life and floor per type: shed 0.25, workshop 0.354 and
+  retail box 0.467 (40 years, 15 %); office 0.825 (60 years, 20 %); farm shed
+  0.073 (30 years, 10 %); greenhouse 0.081 (25 years, 10 %); sports hall 1.033
+  and annex 0.227 (50 years, 20 %). Business types exclude VAT, annexes include
+  it. Ratios ±25 %; lives and floors are judgement.
+- **Business-land ratio** (`activity_land_ratio`, §3.4): business land for DRC
+  parcels as a share of the local terrain-à-bâtir €/m²: 0.45 by default and
+  around Paris, 0.35 for Lyon, Villeurbanne and the Lyon ring (open DVF, n ≈
+  20–80). **Yard factor** (`DRC_CURTILAGE_FACTOR`): 3 × floor area outside
+  urban zoning.
 - **Land-share bounds**: [0.15, 0.85] — a design constraint, not a measurement.
   Where most parcels used to hit the upper bound (Paris, Lyon), the causes found
   were over-depreciation of old maintained stock and pricing habitable-area DVF
@@ -414,11 +553,12 @@ ring 41,711 → 41,807 exempt parcels, Lyon ring 21,515 → 21,585).
 - **Top-down land share** — total land ÷ total built real-estate value should sit
   near INSEE comptes de patrimoine (~45–50 % land). Cahors came to ~53 % after
   the DPE construction-year fix (it was a degenerate 85 % before — see §6) and
-  is at 40.7 % on the habitable-area basis.
+  is at 38.6 % with the per-type non-residential valuation. The 40–65 % range
+  is a metro-wide reference, not a per-commune test (§3.7).
 - **Sign checks** — agricultural/natural land bears a negligible share of the
   levy (Cahors 0.3 %); under-used constructible land pays *more* (the LVT
   incentive); the Montreuil income gradient is progressive (group totals:
-  poorest fifth −15.8 %, richest +14.9 %).
+  poorest fifth −15.4 %, richest +13.6 %).
 - **Tests** — `test_units.py` (offline unit tests of the pure logic) and
   `test_synthetic.py` (end-to-end through the real solver).
 
@@ -426,18 +566,32 @@ ring 41,711 → 41,807 exempt parcels, Lyon ring 21,515 → 21,585).
 
 Ranked by how much they move published (category/quintile) results.
 
-1. **Current-tax baseline (load-bearing).** The VLC proxy is floor area only; it
-   ignores cadastral category and weighted-surface coefficients. Distorts how
-   *today's* bill is split between built properties, so read the **change**, not
-   the starting bill. Resolved only by per-parcel VLC (Fichiers Fonciers).
+1. **Current-tax baseline (load-bearing; blocks publication of the
+   non-residential results).** The VLC proxy is floor area only; it ignores
+   cadastral category and weighted-surface coefficients. Distorts how *today's*
+   bill is split between built properties, so read the **change**, not the
+   starting bill. Since non-residential buildings are now valued at their own
+   (much lower) cost and land price (§3.1, §3.4), the error no longer cancels:
+   sharing the produit by floor area with no category weights **overstates what
+   warehouses and factories pay today**. Industrial rental values under the
+   comptable method (CGI art. 1499) were halved in 2021, and the 2017 RVLLP
+   tariffs for warehouses and retail boxes are low per m². The industrial cut
+   (Lyon ring −55 %, Paris ring −31 %) and the households' smaller gains around
+   Lyon are therefore exaggerated. The recommendation, which the Gemini review
+   shares, is not to publish this step's distributional figures until the
+   baseline carries category weights (the next proposed step; DGFiP REI
+   produits by category if available). Only per-parcel VLC (Fichiers Fonciers)
+   would resolve it fully.
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
    value. Mitigated by the [0.15, 0.85] clip, aggregation, and the sensitivity
    band. Vacant land does **not** use the residual, so the LVT headline (under-used
    land pays more) is unaffected by building-data quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
-   bias); the commune-median fallback applies a residential median to
-   non-residential / never-diagnosed parcels. Era→year uses band midpoints
+   bias); the commune-median fallback applies to never-diagnosed housing.
+   Non-residential buildings without a BD TOPO year are taken at mid-life, a
+   neutral assumption rather than a measurement (the DPE tertiaire dataset is
+   unchecked). Era→year uses band midpoints
    (mitigated for pre-1948 stock, which hits the depreciation floor regardless).
    A clear improvement over the prior degenerate baseline, but a documented
    generalisation.
@@ -451,8 +605,8 @@ Ranked by how much they move published (category/quintile) results.
    (habitable ÷ true gross area), the least-sourced link: ±0.05 moves building
    value by about ±7 %, and that flows into the land residual. The measured
    `net_to_gross` sets euro levels only. The other panel communes keep
-   uncalibrated pilot costs. Non-residential parcels take the flat ratios (and
-   the flat €/m², item 7). BD TOPO storey miscounts are the main source of
+   uncalibrated pilot costs. Non-residential costs are ratios to the housing
+   cost from one commercial guide (item 7). BD TOPO storey miscounts are the main source of
    parcel-level scatter in floor area; where the count is missing it is imputed
    by building type (§3.1), a judgement tested on six communes, and the 3.5 m
    storey height for tall commercial buildings has no primary source.
@@ -460,23 +614,33 @@ Ranked by how much they move published (category/quintile) results.
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
    Lyon and 53 other communes. No commune now has more than half its built parcels
-   at a bound; Neuilly-sur-Seine has the most at the cap (25.0 %), Paris 3.2 %
+   at a bound; Neuilly-sur-Seine has the most at the cap (25.3 %), Paris 5.6 %
    (§3.7). The preflight `land_share_clip` check flags it. The effective-age cap
    (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a sensitivity
    on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
-7. **Non-residential market value** borrows the residential €/m² surface and the
-   flat area ratios, and its building value the housing cost; professionnels
-   (2017 VLC revision) need a separate stratum. Rural buildings exempt under CGI
-   art. 1382 6° are now left out (§3.5), through a usage-and-zoning proxy. The storey rule (§3.1) removed the largest
-   error, sheds counted as multi-storey, and the industrial and commercial
-   shares of building value in the low communes fell (Santeny industrial 51 →
-   33 %, Vaujours industrial 56 → 30 %, Villepinte commercial — the exhibition
-   centre — 45 → 21 %, Périgny "other" 50 → 44 %). Non-residential prices and
-   costs remain the next lever on the communes at the edge of the band; the two
-   still below it (Limeil-Brévannes, Vaujours) also have large blocks of flats
-   and houses in their building value (§3.7).
+7. **Non-residential valuation.** Storeys are imputed by type (§3.1), farm
+   buildings exempt under CGI art. 1382 6° are left out (§3.5), each building
+   type has its own cost, life and floor (§3.1), and shed-type parcels are
+   valued by depreciated replacement cost (§3.4). What remains:
+   - **Costs** rest on one commercial guide scaled to our housing level, with
+     no Moniteur, Untec or Chambre d'agriculture primary document reachable:
+     ±25 %. Lives and floors are judgement.
+   - **Offices** still take the residential price surface and the flat area
+     ratios, at the office cost. A business-premises price surface from DVF
+     (by size band, trimmed) is the better target; professionnels (2017 VLC
+     revision) need a separate stratum.
+   - **Mixed parcels.** The parcel's largest building decides its route: a
+     parcel led by a shed is valued wholly at cost (any house on it included),
+     and one led by housing or an office wholly by the residual (any shed on it
+     at its own cost).
+   - **The business-land ratio** (0.45 / 0.35) rests on n ≈ 20–80 sales a
+     year per area, classified by current land use (MOS) or business-zone
+     polygons, not by zoning. It is a prior, not a measurement. DRC land at
+     prevailing use is a floor for an LVT, which wants the permitted use; the
+     two coincide inside business zones.
+   - **Yards** outside urban zoning (3 × floor area) are judgement.
 8. **Income (Filosofi)**: 2021 (last vintage), communes ≥5 000 inhabitants only,
    some IRIS statistically suppressed.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are
@@ -485,7 +649,8 @@ Ranked by how much they move published (category/quintile) results.
 10. **Building-less land in U zones is priced as building land.** Public open
     space zoned urban (Paris PLU *UV*: parks, cemeteries, sports grounds; Lyon
     PLU-H *USP* public-service land) and vacant *industrial-zone* land (*UEi*)
-    take the residential terrain-à-bâtir €/m². `audit_land.py <commune>`
+    take the residential terrain-à-bâtir €/m² (built sheds there take the
+    business-land ratio, §3.4). `audit_land.py <commune>`
     quantifies the levy this land carries per zoning label.
 11. **Exemptions are only partly modelled.** Obviously exempt public property is
     flagged (§3.5), but deliberately conservatively: public units inside
