@@ -252,7 +252,8 @@ def improvement_value(buildings: pd.DataFrame, cfg,
         mean_age=("year_built", lambda s: ref_year - s.mean()),
         imp_quality=("imp_quality", lambda s: s.mode().iat[0] if len(s) else "none"),
     ).reset_index()
-    dom = (b.sort_values("floor_area", kind="stable").groupby("idpar").tail(1)
+    dom = (b.sort_values("floor_area", kind="stable", na_position="first")
+           .groupby("idpar").tail(1)
            .set_index("idpar")["building_type"])
     out["building_type"] = out["idpar"].map(dom)
     out["valuation"] = out["building_type"].map(lambda t: BUILDING_TYPES[t][3])
@@ -393,8 +394,10 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
         buildings, garage plots): depreciated replacement cost, the standard
         method for property that rarely sells. land = constructible €/m²
         (× cfg.activity_land_ratio for business land) × parcel area, floored
-        at the dirt value; market = land + building; no residential price
-        and no land-share clip.
+        at the dirt value; in A/N or unzoned land only a yard of
+        DRC_CURTILAGE_FACTOR × floor area takes that price, the rest the dirt
+        value. market = land + building; no residential price and no
+        land-share clip.
       * constructible vacant: land = development €/m² × parcel area.
       * agricultural/natural vacant: land = ag €/m² × parcel area.
       * unknown vacant: priced as agricultural (conservative).
@@ -435,7 +438,18 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
         ratio = float(getattr(cfg, "activity_land_ratio", 1.0))
         activity = (out["drc_land"].eq("activity").fillna(False)
                     if "drc_land" in out.columns else pd.Series(False, index=out.index))
-        drc_land = (con * np.where(activity, ratio, 1.0) * area).clip(lower=ag * area)
+        price = con * np.where(activity, ratio, 1.0)
+        # Outside urban zoning (A/N, or no PLU), only the building's yard is
+        # building land; the rest of a farm-sized parcel is priced as farmland.
+        from config import DRC_CURTILAGE_FACTOR
+        # (no zone_typ column at all = zoning not supplied: no yard rule)
+        rural_zone = ((out["zone_typ"].isin(["A", "N"]) | out["zone_typ"].isna())
+                      if "zone_typ" in out.columns
+                      else pd.Series(False, index=out.index))
+        floor_area = pd.to_numeric(out["floor_area_m2"], errors="coerce").fillna(0.0)
+        yard = np.minimum(area, DRC_CURTILAGE_FACTOR * floor_area)
+        yard = yard.where(rural_zone, area)
+        drc_land = (price * yard + ag * (area - yard)).clip(lower=ag * area)
         land = land.mask(drc, drc_land)
         flag = flag.mask(drc, "built_drc")
 

@@ -641,7 +641,17 @@ def test_drc_parcels_value_land_at_local_price_not_residual():
     assert h.loc["S", "improvement_value"] == 300_000.0
     assert h.loc["R", "improvement_value"] != 800_000.0
     import dataclasses
-    for bad in (0.0, 1.5, float("nan"), True, "0.4"):
+    # a shed on a 10 ha farmland parcel: only its yard is building land
+    farm = p.assign(zone_typ=["U", "A", "U"], parcel_area_m2=[1000.0, 100_000.0, 1000.0])
+    o = estimate.land_value_residual(farm, CFG).set_index("idpar")
+    yard = 3.0 * 500.0
+    assert abs(o.loc["S", "land_value"]
+               - (600.0 * CFG.activity_land_ratio * yard + 1.0 * (100_000 - yard))) < 1e-6
+    # urban zoning: the whole plot
+    urban = p.assign(zone_typ="U", parcel_area_m2=[1000.0, 100_000.0, 1000.0])
+    assert abs(estimate.land_value_residual(urban, CFG).set_index("idpar").loc["S", "land_value"]
+               - 600.0 * CFG.activity_land_ratio * 100_000) < 1e-6
+    for bad in (0.0, 0.01, 1.5, float("nan"), True, "0.4"):
         _assert_raises(ValueError, dataclasses.replace, CFG, activity_land_ratio=bad)
 
 

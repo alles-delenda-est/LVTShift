@@ -31,6 +31,11 @@ COST_NET_TO_GROSS_DEFAULT = {"Appartement": 0.71, "Maison": 0.82}
 # departmental price would lose (Rungis vs Santeny).
 ACTIVITY_LAND_RATIO_DEFAULT = 0.45
 ACTIVITY_LAND_RATIO_LYON = 0.35
+ACTIVITY_LAND_RATIO_MIN = 0.05        # below this is a typo, not a market
+# A shed on a farm-sized parcel outside urban zoning: only a yard of this many
+# times its floor area is building land (logistics plots run ~2-2.5x the
+# footprint; judgement), the rest is farmland.
+DRC_CURTILAGE_FACTOR = 3.0
 
 COST_MAX_EUR_M2 = 20_000.0            # catches unit typos (e.g. € per ft², k€)
 AREA_RATIO_TYPES = frozenset({"Appartement", "Maison"})
@@ -129,8 +134,9 @@ class CommuneConfig:
                                                    "cost_net_to_gross")
         r = self.activity_land_ratio
         if isinstance(r, (bool, str)) or not isinstance(r, numbers.Real) \
-                or not (math.isfinite(r) and 0 < r <= 1):
-            raise ValueError(f"activity_land_ratio must be in (0, 1], got {r!r}")
+                or not (math.isfinite(r) and ACTIVITY_LAND_RATIO_MIN <= r <= 1):
+            raise ValueError(f"activity_land_ratio must be in "
+                             f"[{ACTIVITY_LAND_RATIO_MIN}, 1], got {r!r}")
         self.activity_land_ratio = float(r)
         for name in ("construction_cost_eur_m2", "house_cost_eur_m2"):
             v = getattr(self, name)
