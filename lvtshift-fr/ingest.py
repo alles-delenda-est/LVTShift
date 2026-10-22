@@ -297,7 +297,8 @@ def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     fetched), then mapped to the schema estimate.improvement_value expects:
 
         idpar, footprint_m2, n_levels, height_m, year_built, usage
-        (+ n_dwellings, ff_match — carried for category derivation & QA)
+        (+ nature, construction_legere — storey imputation;
+           n_dwellings, ff_match — category derivation & QA)
 
     The WFS bbox spans the whole commune (and a sliver of neighbours); the
     spatial join to this commune's parcels drops anything off-commune.
@@ -312,7 +313,8 @@ def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
             f"({cfg.insee_code}); check the WFS endpoint / bbox.")
 
     keep = ["geometry", "nombre_d_etages", "hauteur", "date_d_apparition",
-            "usage_1", "nombre_de_logements", "appariement_fichiers_fonciers"]
+            "usage_1", "nombre_de_logements", "appariement_fichiers_fonciers",
+            "nature", "construction_legere"]
     bg = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)
     bg = bg[[c for c in keep if c in bg.columns]].copy()
     bg["bld_footprint_m2"] = bg.geometry.area
@@ -335,6 +337,12 @@ def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
         "height_m": pd.to_numeric(inter.get("hauteur"), errors="coerce").values,
         "year_built": year.dt.year.values,
         "usage": inter.get("usage_1").values,
+        # shed / greenhouse / light-structure signals for storey imputation
+        "nature": (inter["nature"] if "nature" in inter.columns
+                   else pd.Series(None, index=inter.index)).values,
+        "construction_legere": (inter["construction_legere"]
+                                if "construction_legere" in inter.columns
+                                else pd.Series(False, index=inter.index)).values,
         # dwellings area-weighted so a shared building isn't double-counted
         "n_dwellings": (pd.to_numeric(inter.get("nombre_de_logements"),
                                       errors="coerce") * share).values,

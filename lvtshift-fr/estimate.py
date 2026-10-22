@@ -95,6 +95,53 @@ def habitable_basis(p: pd.DataFrame, cfg) -> pd.DataFrame:
     return out
 
 
+# Storey imputation when BD TOPO has no nombre_d_etages (never filled for
+# annexes, light structures or buildings unmatched to the fichiers fonciers).
+# Height ÷ 3 m suits housing (measured 2.65 m per storey) but turns a 14 m
+# single-storey warehouse into five storeys; ~90 % of shed area with a known
+# count has one level (docs/research/nonres-valuation-2025.md §1).
+ONE_LEVEL_NATURES = frozenset({"Industriel, agricole ou commercial", "Serre", "Silo"})
+ONE_LEVEL_USAGES = frozenset({"Annexe", "Agricole", "Industriel", "Sportif", "Religieux"})
+COMMERCIAL_USAGE = "Commercial et services"
+COMMERCIAL_ONE_LEVEL_BELOW_M = 7.0     # shop / hall below this height
+COMMERCIAL_M_PER_LEVEL = 3.5           # offices above it
+RESIDENTIAL_M_PER_LEVEL = 3.0
+
+
+def impute_levels(b: pd.DataFrame) -> pd.Series:
+    """
+    Storey count for buildings whose BD TOPO nombre_d_etages is missing.
+
+    b: building rows with height_m and, when available, usage, nature and
+    construction_legere (older frames without them fall back to height ÷ 3 m).
+
+      * shed natures (Industriel/agricole/commercial, Serre, Silo), light
+        structures, and usages Annexe/Agricole/Industriel/Sportif/Religieux
+        -> 1 level, whatever the height;
+      * other Commercial et services -> 1 level below 7 m, else height ÷ 3.5 m;
+      * everything else (housing) -> height ÷ 3 m.
+    Unknown or zero height -> 1 level. Returns a float Series aligned with b.
+    """
+    h = (pd.to_numeric(b["height_m"], errors="coerce") if "height_m" in b.columns
+         else pd.Series(np.nan, index=b.index))
+    h = h.where(h > 0)
+    usage = b["usage"] if "usage" in b.columns else pd.Series(None, index=b.index)
+    nature = b["nature"] if "nature" in b.columns else pd.Series(None, index=b.index)
+    # explicit parse: astype(bool) would read the string "false" as True
+    light = (b["construction_legere"].map(
+                 lambda v: v is True or v is np.True_
+                 or (isinstance(v, str) and v.strip().lower() in ("true", "1", "oui")))
+             if "construction_legere" in b.columns
+             else pd.Series(False, index=b.index))
+    one = nature.isin(ONE_LEVEL_NATURES) | usage.isin(ONE_LEVEL_USAGES) | light
+    commercial = ~one & usage.eq(COMMERCIAL_USAGE)
+    lv = (h / RESIDENTIAL_M_PER_LEVEL).round()
+    lv = lv.mask(commercial, np.where(h < COMMERCIAL_ONE_LEVEL_BELOW_M, 1.0,
+                                      (h / COMMERCIAL_M_PER_LEVEL).round()))
+    lv = lv.mask(one, 1.0)
+    return lv.fillna(1.0).clip(lower=1.0).astype(float)
+
+
 def improvement_value(buildings: pd.DataFrame, cfg,
                       maint_weight: pd.Series | None = None) -> pd.DataFrame:
     """
@@ -117,8 +164,8 @@ def improvement_value(buildings: pd.DataFrame, cfg,
     b = buildings.copy()
     quality = pd.Series("measured", index=b.index)
 
-    missing_lvl = b["n_levels"].isna()
-    b.loc[missing_lvl, "n_levels"] = (b.loc[missing_lvl, "height_m"] / 3.0).clip(lower=1).round()
+    missing_lvl = b["n_levels"].isna() | (b["n_levels"] <= 0)
+    b.loc[missing_lvl, "n_levels"] = impute_levels(b.loc[missing_lvl])
     quality[missing_lvl] = "imputed_levels"
     b["n_levels"] = b["n_levels"].fillna(1)
 
