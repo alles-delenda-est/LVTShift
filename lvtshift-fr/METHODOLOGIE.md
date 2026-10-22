@@ -56,7 +56,8 @@ parcelle (`estimate.improvement_value`) :
 ```
 surface_plancher  = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
 surface_habitable = net_to_gross[type] × surface_plancher     (appartements 0,64, maisons 0,61)
-coût_hab          = coût_construction_€m2 ÷ cost_net_to_gross[type]   (appartements 0,71, maisons 0,82)
+coût[type]        = house_cost_eur_m2 pour les maisons s'il est fixé, sinon coût_construction_€m2
+coût_hab          = coût[type] ÷ cost_net_to_gross[type]          (appartements 0,71, maisons 0,82)
 âge               = année_référence − année_construction
 q                 = prix hédonique médian €/m² des parcelles bâties de l'IRIS
                     ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
@@ -68,9 +69,10 @@ valeur_marché     = €/m² hédonique × surface_habitable          (§3.3)
 ```
 
 `année_construction` provient du DPE (§3.2) ; `coût_construction_€m2`,
-`dep_years`, `dep_floor` sont en config par commune (§4) ; `type` est le
-`type_local` dominant de la parcelle (les types autres qu'appartement et maison
-prennent les ratios des appartements).
+`house_cost_eur_m2`, `dep_years`, `dep_floor` sont en config par commune (§4) ;
+`type` est le `type_local` dominant de la parcelle (les types autres
+qu'appartement et maison prennent les ratios des appartements et le coût
+communal).
 
 *Base surface habitable.* Les prix DVF sont exprimés par m² de surface habitable
 (`surface_reelle_bati`), alors que `surface_plancher` est l'emprise BD TOPO ×
@@ -110,7 +112,8 @@ dépréciation par l'âge absorbe aussi l'obsolescence économique. Un plafond u
 a été testé et écarté : il place la moitié des parcelles bâties de Roubaix et un
 tiers de celles de Cahors à la borne basse de 15 %. q garde délibérément la base
 sur laquelle sa rampe a été calée (prix habitable ÷ coût par m² brut) : le
-recalculer par m² habitable recalerait la règle sans le dire. Il baisse
+recalculer par m² habitable recalerait la règle sans le dire. Pour la même
+raison, q utilise toujours le coût communal, maisons comprises. Il baisse
 légèrement avec les coûts recalés (plus élevés).
 
 Les bâtiments sont
@@ -239,7 +242,7 @@ l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
 par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−18,8 à −20,2 %, dernier +12,7 à +13,8 %).
+−18,6 à −20,3 %, dernier +12,5 à +13,6 %).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -250,8 +253,8 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +10,7 % alors que le groupe paie
-−7,9 % et son ménage type −11,8 %, car les grands immeubles, où vivent la plupart
+parcelle médiane du quintile le plus pauvre paie +4,8 % alors que le groupe paie
+−8,1 % et son ménage type −10,1 %, car les grands immeubles, où vivent la plupart
 de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
@@ -269,16 +272,34 @@ parcelles bâties étaient à la borne de 0,85 et le chiffre de 84,9 % était fi
 la borne. La règle du bâti entretenu (§3.1) valorise ces immeubles à un âge
 effectif de 30 ans, ce qui ramenait Paris à 83,3 % avec 34,8 % des parcelles
 bâties encore à la borne. Avec les deux termes du résiduel en surface habitable et
-les coûts recalés (§3.1, §4), Paris ressort à **74,0 %** avec 0,4 % des parcelles
-bâties à la borne : sa part foncière est désormais mesurée, non fixée par la
-borne. Aucune commune n'a plus de la moitié de ses parcelles bâties au plafond ;
-Neuilly-sur-Seine en a le plus (18,3 %), et le contrôle `land_share_clip` du
-preflight ne signale plus aucune commune. Lyon est à 58,6 %, la couronne
-parisienne à 60,6 % et la couronne lyonnaise à 55,4 %. Sur les 188 communes
-modélisées, 21 dépassent la bande de vraisemblance 40–65 % (138 avant ce
-changement) et 5 sont en dessous. Le champ `headline.built_at_cap_pct` enregistre
-la part des parcelles bâties à la borne, et le site qualifie la part foncière de
-« plafonnée » quand elle atteint 50 %.
+les coûts recalés (§3.1, §4), Paris ressort à **74,2 %** avec 3,2 % des parcelles
+bâties à la borne (0,4 % avant que les maisons aient leur propre coût, plus
+bas) : sa part foncière est mesurée, non fixée par la borne. Aucune commune n'a
+plus de la moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le
+plus (25,0 %), et le contrôle `land_share_clip` du preflight ne signale aucune
+commune. Lyon est à 57,8 %, la couronne parisienne à 61,7 % et la couronne
+lyonnaise à 52,6 %. Sur les 188 communes modélisées, 24 dépassent la bande de
+vraisemblance 40–65 % (138 avant la base surface habitable) et 4 sont en dessous
+(Vaujours 35,7 %, Santeny 36,2 %, Limeil-Brévannes 37,4 %, Villepinte 39,4 %).
+Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
+la borne, et le site qualifie la part foncière de « plafonnée » quand elle
+atteint 50 %.
+
+*Coût des maisons.* Le coût propre aux maisons déplace les parts foncières dans
+le sens attendu : à la hausse autour de Paris, où une maison coûte désormais
+moins cher à reconstruire qu'un appartement (Paris 74,0 → 74,2 %, couronne
+parisienne 60,6 → 61,7 %, Montreuil 62,5 → 63,7 %), à la baisse autour de Lyon,
+où elle coûte plus cher (Lyon 58,6 → 57,8 %, couronne lyonnaise 55,4 → 52,6 %,
+Villeurbanne 54,2 → 52,5 %). Plusieurs communes aisées de la petite couronne
+passent juste au-dessus de 65 % (Les Lilas, Vanves, Meudon, Puteaux et Malakoff
+de moins d'un point ; Sceaux 66,3 %, Marnes-la-Coquette 67,3 %), tandis que
+quatre communes des Monts d'Or reviennent dans la bande (Saint-Didier, Saint-Cyr,
+Collonges, Saint-Romain) et que Fleurieu-sur-Saône passe de 75,3 à 71,7 %. Il ne
+relève qu'en partie les communes basses en lisière de la couronne parisienne (Santeny 33,2 →
+36,2 %, Vaujours 34,3 → 35,7 %, Limeil-Brévannes 35,1 → 37,4 %, Villepinte
+37,4 → 39,4 %, Périgny 38,2 → 40,3 %) : les maisons n'y font que 18 à 36 % de la
+valeur bâtie, dominée par des parcelles industrielles et commerciales valorisées
+au coût du logement et au prix des appartements (§6, point 7).
 
 ## 4. Paramètres et hypothèses clés
 
@@ -297,6 +318,29 @@ la part des parcelles bâties à la borne, et le site qualifie la part foncière
   1900, Sète/La Rochelle 1850, Roubaix 1750, Cahors 1650, Figeac 1600. (Anciennes
   valeurs pilotes : Paris 2300, petite couronne 2150, Lyon et les deux
   territoires lyonnais 1950.)
+- **Coût des maisons €/m²** (`house_cost_eur_m2`) : coût appliqué aux parcelles
+  dont le `type_local` dominant est une maison, sur la même base que ci-dessus.
+  Le coût communal étant calé sur le logement social collectif, les maisons de
+  Paris, de la petite couronne et des territoires lyonnais sont valorisées sur
+  l'enquête du SDES sur les maisons individuelles neuves (EPTB 2024, € par m² de
+  surface de plancher : Île-de-France 1 863, Rhône 2 127), indexée en 2025 (BT01
+  ×1,014), avec travaux de finition ×1,06, honoraires, assurances et études ×1,05
+  (×1,03 dans la couronne lyonnaise), prime de parcelle contrainte (Paris ×1,20,
+  petite couronne et Lyon ×1,10, couronne lyonnaise ×1,05), ÷ 0,90 habitable ÷
+  SDP, puis × 0,82 vers la vraie surface brute
+  (`docs/research/house-costs-2025.md`) : **Paris 2300**, **petite couronne
+  2100** (Montreuil et tout le 92/93/94), **Lyon et Villeurbanne 2400**,
+  **couronne métropolitaine 2250**, soit par m² habitable 2800, 2550, 2950 et
+  2750 (fourchettes plausibles 2300–3400, 2100–3050, 2500–3450, 2400–3250). Les
+  maisons coûtent moins cher que les appartements autour de Paris mais plus cher
+  autour de Lyon, à rebours du gradient du logement collectif : l'échantillon
+  francilien de l'EPTB est surtout fait de maisons sur catalogue des départements
+  de grande couronne, alors que les maisons neuves du Rhône sont probablement plus
+  sur mesure (non vérifié). Les chiffres lyonnais appellent donc plus de
+  prudence ; une variante prudente pour la couronne lyonnaise serait d'environ
+  2080. Les autres communes du panel gardent un coût unique (`house_cost_eur_m2`
+  = None), leurs valeurs pilotes reposant déjà sur le gradient EPTB. Le
+  déclencheur q du bâti entretenu garde le coût communal (§3.1).
 - **Ratios de surface** (par `type_local` ; les autres types prennent le ratio
   des appartements) : `net_to_gross` = habitable ÷ surface plancher du modèle,
   mesuré : appartements 0,64 (0,59–0,68), maisons 0,61 (0,58–0,66)
@@ -342,8 +386,8 @@ la part des parcelles bâties à la borne, et le site qualifie la part foncière
 - **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
   du prélèvement (Cahors 0,3 %) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
-  progressif (totaux de groupe : quintile le plus pauvre −16,1 %, le plus aisé
-  +14,7 %).
+  progressif (totaux de groupe : quintile le plus pauvre −15,8 %, le plus aisé
+  +14,9 %).
 - **Tests** — `test_units.py` (tests unitaires hors-ligne de la logique pure) et
   `test_synthetic.py` (bout-en-bout via le vrai solveur).
 
@@ -370,7 +414,10 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 4. **Coûts de construction et base de surface.** Les coûts de Paris, de la petite
    couronne et des territoires lyonnais sont calés, avec des fourchettes
    plausibles publiées (§4) ; le logement social est un indicateur du parc privé
-   et sous-estimera le bâti de prestige ou protégé. La principale incertitude
+   et sous-estimera le bâti de prestige ou protégé. Les maisons y ont leur propre
+   coût fondé sur l'EPTB, dont l'étape la moins sourcée est la majoration de
+   finition (chaque ±4 points la déplace de ±4 %) et dont le niveau lyonnais
+   repose sur un échantillon probablement plus sur mesure que le parc. La principale incertitude
    restante est `cost_net_to_gross` (habitable ÷ vraie surface brute), le maillon
    le moins sourcé : ±0,05 déplace la valeur bâti d'environ ±7 %, qui se reporte
    sur le résiduel foncier. Le `net_to_gross` mesuré ne fixe que les niveaux en
@@ -383,7 +430,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
    de Paris (95,5 % à la borne), de Lyon et de 53 autres communes. Aucune commune
    n'a désormais plus de la moitié de ses parcelles bâties à une borne ;
-   Neuilly-sur-Seine en a le plus au plafond (18,3 %), Paris 0,4 % (§3.7). Le
+   Neuilly-sur-Seine en a le plus au plafond (25,0 %), Paris 3,2 % (§3.7). Le
    contrôle `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).
@@ -391,8 +438,13 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    forfaitaire ; les `AU fermées` mériteraient une décote plus forte et les
    pastilles `Nh/Ah` sont sous-évaluées.
 7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
-   résidentielle et les ratios de surface des appartements ; les locaux professionnels (révision 2017) nécessitent une
-   strate dédiée.
+   résidentielle et les ratios de surface des appartements, et sa valeur bâtie le
+   coût du logement ; les locaux professionnels (révision 2017) nécessitent une
+   strate dédiée. C'est désormais le principal levier pour les communes sous la
+   bande de vraisemblance : les parcelles industrielles et commerciales y dominent
+   la valeur bâtie (Santeny 51 % industriel, Vaujours 56 % industriel, Villepinte
+   45 % commercial — le parc des expositions — et Périgny 50 % « autre »), ce qui
+   explique que le coût des maisons ne les ait relevées qu'en partie (§3.7).
 8. **Revenus (Filosofi)** : 2021 (dernier millésime), communes ≥ 5 000 habitants
    uniquement, certains IRIS sous secret statistique.
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont

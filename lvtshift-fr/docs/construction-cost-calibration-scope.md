@@ -1,7 +1,11 @@
 # Work-item scope — Construction-cost calibration (FFB / BT01)
 
-**Status:** scoped, not started. **Owner:** TBD. **Depends on:** nothing (pure
-open-data + config work; does *not* require the Fichiers Fonciers).
+**Status:** done for Paris, the inner ring and the Lyon areas, on DHUP/SISAL
+collective costs (`docs/research/construction-costs-2025.md`), with houses split
+out on EPTB (`docs/research/house-costs-2025.md`, `house_cost_eur_m2`); the other
+panel communes keep pilots and non-residential is still open. This note is the
+original scope. **Depends on:** nothing (pure open-data + config work; does
+*not* require the Fichiers Fonciers).
 
 ## Why this is the highest-value next step
 

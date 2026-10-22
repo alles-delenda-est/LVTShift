@@ -59,8 +59,11 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    mesurés sur 35 communes (DPE × BD TOPO). Coûts 2025 par m² brut, honoraires et
    TVA inclus, calés pour Paris (2 650), la petite couronne (2 400), Lyon et
    Villeurbanne (2 000) et la couronne lyonnaise (1 850) sur les coûts du
-   logement social neuf (DHUP/SISAL, indice BT01), puis divisés par 0,71
-   (appartements) ou 0,82 (maisons) pour passer au m² habitable.
+   logement social neuf (DHUP/SISAL, indice BT01) ; les maisons y ont leur
+   propre coût, tiré de l'enquête EPTB du SDES sur les maisons neuves (Paris
+   2 300, petite couronne 2 100, Lyon et Villeurbanne 2 400, couronne lyonnaise
+   2 250). Ces coûts sont divisés par 0,71 (appartements) ou 0,82 (maisons)
+   pour passer au m² habitable.
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
    (médiane rétrécie, shrinkage k=8) × surface habitable, volontairement simple
    et critiquable ;
@@ -169,14 +172,19 @@ export CSV seul : `run(..., make_report=False)`.
   plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
   reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
   à la borne de 85 %. Avec cette règle, les deux termes du résiduel en surface
-  habitable et les coûts recalés, Paris ressort à 74,0 % (0,4 % des parcelles
+  habitable et les coûts recalés, Paris ressort à 74,2 % (3,2 % des parcelles
   bâties à la borne) ; aucune commune n'a plus de la moitié de ses parcelles
-  bâties au plafond (Neuilly-sur-Seine en a le plus, 18,3 %).
+  bâties au plafond (Neuilly-sur-Seine en a le plus, 25,0 %).
 - **Coûts de construction et ratio habitable ÷ brut.** Hors Paris, petite
   couronne et territoires lyonnais, les coûts restent des valeurs pilotes non
   calées. Le maillon le moins sourcé est le rapport surface habitable ÷ vraie
   surface brute sous-jacent aux coûts (0,71 / 0,82) : ±0,05 déplace la valeur
-  bâti d'environ ±7 %. Le non-résidentiel est valorisé comme des appartements.
+  bâti d'environ ±7 %. Le coût des maisons est plus incertain autour de Lyon,
+  où les maisons neuves de l'échantillon EPTB sont probablement plus sur
+  mesure que le parc. Le non-résidentiel est valorisé comme des appartements ; le corriger est désormais le
+  principal levier pour les communes dont la part terrain sort sous 40 %
+  (Santeny, Vaujours, Villepinte), où l'industrie et le commerce dominent la
+  valeur bâtie.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la

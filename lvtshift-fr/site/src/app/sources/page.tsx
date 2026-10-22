@@ -221,12 +221,18 @@ export default function SourcesPage() {
         </div>
 
         <p className="text-xs text-gris mt-4 leading-relaxed max-w-2xl">
-          Deux références de prix non-ouverts complètent la configuration :{" "}
+          Des références de prix publiées complètent la configuration :{" "}
           <strong>SAFER « Le prix des terres »</strong> (barème départemental
           2024, agricole&nbsp;/&nbsp;naturel) pour le foncier non
-          constructible, et le <strong>repli national EPTB (SDES)</strong>{" "}
-          2023 (99&nbsp;€/m²) pour les terrains à bâtir sans comparables
-          locaux DVF suffisants. Ces valeurs sont des paramètres de
+          constructible ; l&apos;enquête{" "}
+          <strong>EPTB du SDES</strong> (prix des terrains et du bâti des
+          maisons individuelles), pour le repli national 2023
+          (99&nbsp;€/m²) des terrains à bâtir sans comparables locaux DVF
+          suffisants et, dans son édition 2024 (Île-de-France, Rhône), pour
+          le coût de reconstruction des maisons à Paris, à Lyon et dans
+          leurs couronnes ; le <strong>bilan des logements aidés
+          DHUP/SISAL</strong> pour le coût des autres bâtiments sur ces
+          mêmes territoires. Ces valeurs sont des paramètres de
           configuration explicites, documentés dans{" "}
           <code className="font-mono bg-lisere px-1">config.py</code> et
           modifiables par commune.

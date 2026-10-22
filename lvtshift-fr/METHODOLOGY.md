@@ -50,7 +50,8 @@ the parcel (`estimate.improvement_value`):
 ```
 floor_area     = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
 habitable_area = net_to_gross[type] × floor_area            (flats 0.64, houses 0.61)
-cost_hab       = construction_cost_eur_m2 ÷ cost_net_to_gross[type]   (flats 0.71, houses 0.82)
+cost[type]     = house_cost_eur_m2 for houses where set, else construction_cost_eur_m2
+cost_hab       = cost[type] ÷ cost_net_to_gross[type]             (flats 0.71, houses 0.82)
 age            = reference_year − year_built
 q              = median hedonic €/m² of the built parcels in the parcel's IRIS
                  ÷ construction_cost_eur_m2   (commune median if the IRIS has none)
@@ -61,9 +62,10 @@ imp_value      = habitable_area × cost_hab × depreciation
 market_value   = hedonic €/m² × habitable_area                (§3.3)
 ```
 
-`year_built` is taken from DPE (§3.2); `construction_cost_eur_m2`, `dep_years`,
-`dep_floor` are per-commune config (§4); `type` is the parcel's dominant
-`type_local` (types other than flat and house use the flat ratios).
+`year_built` is taken from DPE (§3.2); `construction_cost_eur_m2`,
+`house_cost_eur_m2`, `dep_years`, `dep_floor` are per-commune config (§4); `type`
+is the parcel's dominant `type_local` (types other than flat and house use the
+flat ratios and the commune cost).
 
 *Habitable-area basis.* DVF prices are per m² of habitable area
 (`surface_reelle_bati`), while `floor_area` is BD TOPO footprint × storeys.
@@ -98,8 +100,9 @@ markets (q ≤ 1.2: Roubaix, Cahors) the rule is inactive and age-based deprecia
 also absorbs economic obsolescence. A uniform cap was tested and rejected: it puts
 half of Roubaix's and a third of Cahors's built parcels on the 15 % lower bound.
 q deliberately keeps the basis its ramp was calibrated on (habitable price ÷ cost
-per gross m²): restating it per habitable m² would silently retune the rule. It
-falls slightly with the recalibrated (higher) costs.
+per gross m²): restating it per habitable m² would silently retune the rule. For
+the same reason q always uses the commune cost, houses included. It falls
+slightly with the recalibrated (higher) costs.
 
 Buildings join parcels by **area-weighted
 intersection** (a building straddling a boundary credits each parcel by overlap
@@ -213,8 +216,8 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (median residential parcel: poorest fifth −18.8 to −20.2 %, richest
-+12.7 to +13.8 %).
+barely moves (median residential parcel: poorest fifth −18.6 to −20.3 %, richest
++12.5 to +13.6 %).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -224,7 +227,7 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+10.7 % while the group as a whole pays −7.9 % and its typical household −11.8 %,
++4.8 % while the group as a whole pays −8.1 % and its typical household −10.1 %,
 because the large blocks, where most of its households live, gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
 residential parcels without a count are imputed (a house = 1; flats = gross floor
@@ -242,15 +245,31 @@ sat at the 0.85 bound and the 84.9 % headline was set by the cap. The
 maintained-stock rule (§3.1) values such buildings at a 30-year effective age,
 which brought Paris to 83.3 % with 34.8 % of built parcels still at the bound.
 With both sides of the residual on habitable area and the calibrated costs
-(§3.1, §4), Paris comes out at **74.0 %** with 0.4 % of built
-parcels at the bound: its land share is now measured, not set by the cap. No
-commune has more than half its built parcels at the cap; Neuilly-sur-Seine has
-the most (18.3 %), and the preflight `land_share_clip` check no longer warns
-anywhere. Lyon is at 58.6 %, the Paris ring 60.6 % and the Lyon ring 55.4 %.
-Across the 188 modelled communes, 21 lie above the 40–65 % plausibility band
-(138 before this change) and 5 below. `headline.built_at_cap_pct` records the
-share of built parcels at the bound, and the site labels the land share
-"plafonnée" when it is ≥ 50 %.
+(§3.1, §4), Paris comes out at **74.2 %** with 3.2 % of built parcels at the
+bound (0.4 % before houses got their own, lower cost): its land share is
+measured, not set by the cap. No commune has more than half its built parcels at
+the cap; Neuilly-sur-Seine has the most (25.0 %), and the preflight
+`land_share_clip` check warns nowhere. Lyon is at 57.8 %, the Paris ring 61.7 %
+and the Lyon ring 52.6 %. Across the 188 modelled communes, 24 lie above the
+40–65 % plausibility band (138 before the habitable-area basis) and 4 below
+(Vaujours 35.7 %, Santeny 36.2 %, Limeil-Brévannes 37.4 %, Villepinte 39.4 %).
+`headline.built_at_cap_pct` records the share of built parcels at the bound,
+and the site labels the land share "plafonnée" when it is ≥ 50 %.
+
+*House costs.* The house cost moves land shares the way its sign predicts:
+up around Paris, where houses are now cheaper to rebuild than flats (Paris
+74.0 → 74.2 %, the Paris ring 60.6 → 61.7 %, Montreuil 62.5 → 63.7 %), down
+around Lyon, where they are dearer (Lyon 58.6 → 57.8 %, the Lyon ring
+55.4 → 52.6 %, Villeurbanne 54.2 → 52.5 %). Several affluent inner-ring
+communes moved just over 65 % (Les Lilas, Vanves, Meudon, Puteaux and Malakoff
+by under a point; Sceaux 66.3 %, Marnes-la-Coquette 67.3 %), while four
+Monts-d'Or communes fell back inside the band (Saint-Didier, Saint-Cyr,
+Collonges, Saint-Romain) and Fleurieu-sur-Saône fell from 75.3 to 71.7 %. It
+only partly lifts the low outer-ring communes (Santeny 33.2 →
+36.2 %, Vaujours 34.3 → 35.7 %, Limeil-Brévannes 35.1 → 37.4 %, Villepinte
+37.4 → 39.4 %, Périgny 38.2 → 40.3 %): houses are only 18–36 % of their building
+value, which is dominated by industrial and commercial parcels valued at the
+housing cost and the flat price (§6, item 7).
 
 ## 4. Key parameters and assumptions
 
@@ -267,6 +286,26 @@ share of built parcels at the bound, and the site labels the land share
   (EPTB) gradient: Grenoble/Annemasse 1900, Sète/La Rochelle 1850, Roubaix 1750,
   Cahors 1650, Figeac 1600. (Earlier pilots: Paris 2300, inner ring 2150, Lyon
   and both Lyon areas 1950.)
+- **House cost €/m²** (`house_cost_eur_m2`): the cost applied to parcels whose
+  dominant `type_local` is a house, on the same basis as above. The commune cost
+  is calibrated on collective social housing, so in Paris, the inner ring and the
+  Lyon areas houses are priced instead on the SDES survey of new individual
+  houses (EPTB 2024, € per m² of surface de plancher: Île-de-France 1 863, Rhône
+  2 127), indexed to 2025 (BT01 ×1.014), with finishing works ×1.06, fees,
+  insurance and studies ×1.05 (×1.03 in the Lyon ring), a tight-plot premium
+  (Paris ×1.20, inner ring and Lyon ×1.10, Lyon ring ×1.05), ÷ 0.90 habitable ÷
+  SDP, then × 0.82 to true gross (`docs/research/house-costs-2025.md`): **Paris
+  2300**, **inner ring 2100** (Montreuil and all of 92/93/94), **Lyon and
+  Villeurbanne 2400**, **Lyon ring 2250**, i.e. per habitable m² 2800, 2550,
+  2950 and 2750 (plausible ranges 2300–3400, 2100–3050, 2500–3450,
+  2400–3250). Houses are cheaper than flats around Paris but dearer around
+  Lyon, the opposite of the collective-housing gradient: EPTB's Île-de-France
+  sample is mostly outer-département catalogue houses, while Rhône new builds
+  are probably more bespoke (unverified). The Lyon figures deserve more caution;
+  a cautious alternative for the Lyon ring is about 2080. The other panel
+  communes keep their one cost (`house_cost_eur_m2` = None), as their pilots are
+  already on the EPTB gradient. The maintained-stock trigger q keeps the commune
+  cost (§3.1).
 - **Area ratios** (by `type_local`; other types use the flat ratio):
   `net_to_gross` = habitable ÷ the model's floor area, measured: flats 0.64
   (0.59–0.68), houses 0.61 (0.58–0.66)
@@ -307,7 +346,7 @@ share of built parcels at the bound, and the site labels the land share
 - **Sign checks** — agricultural/natural land bears a negligible share of the
   levy (Cahors 0.3 %); under-used constructible land pays *more* (the LVT
   incentive); the Montreuil income gradient is progressive (group totals:
-  poorest fifth −16.1 %, richest +14.7 %).
+  poorest fifth −15.8 %, richest +14.9 %).
 - **Tests** — `test_units.py` (offline unit tests of the pure logic) and
   `test_synthetic.py` (end-to-end through the real solver).
 
@@ -333,7 +372,10 @@ Ranked by how much they move published (category/quintile) results.
 4. **Construction costs and the area basis.** Costs for Paris, the inner ring and
    the Lyon areas are calibrated, with published plausible ranges (§4); social
    housing is a proxy for the private stock and will understate prime or
-   listed buildings. The main remaining uncertainty is `cost_net_to_gross`
+   listed buildings. Houses there have their own EPTB-based cost, whose
+   least-sourced step is the finishing uplift (each ±4 points moves it ±4 %) and
+   whose Lyon level rests on a sample that is probably more bespoke than the
+   stock. The main remaining uncertainty is `cost_net_to_gross`
    (habitable ÷ true gross area), the least-sourced link: ±0.05 moves building
    value by about ±7 %, and that flows into the land residual. The measured
    `net_to_gross` sets euro levels only. The other panel communes keep
@@ -344,14 +386,19 @@ Ranked by how much they move published (category/quintile) results.
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
    Lyon and 53 other communes. No commune now has more than half its built parcels
-   at a bound; Neuilly-sur-Seine has the most at the cap (18.3 %), Paris 0.4 %
+   at a bound; Neuilly-sur-Seine has the most at the cap (25.0 %), Paris 3.2 %
    (§3.7). The preflight `land_share_clip` check flags it. The effective-age cap
    (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a sensitivity
    on them is open (THEORY.md).
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
 7. **Non-residential market value** borrows the residential €/m² surface and the
-   flat area ratios; professionnels (2017 VLC revision) need a separate stratum.
+   flat area ratios, and its building value the housing cost; professionnels
+   (2017 VLC revision) need a separate stratum. This is now the main lever on the
+   communes below the plausibility band: industrial and commercial parcels
+   dominate their building value (Santeny 51 % industrial, Vaujours 56 %
+   industrial, Villepinte 45 % commercial — the exhibition centre — and Périgny
+   50 % "other"), which is why the house cost only partly lifted them (§3.7).
 8. **Income (Filosofi)**: 2021 (last vintage), communes ≥5 000 inhabitants only,
    some IRIS statistically suppressed.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are

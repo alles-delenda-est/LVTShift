@@ -28,11 +28,14 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   per agglomeration (mixing a local flats series with a regional houses series
   created artefacts).
 - **improvement value** = cost per habitable m² × habitable area × depreciation.
-  Costs are calibrated per m² of true gross area (DHUP/SISAL building-only social
-  housing cost, BT01-indexed, fees and VAT: Paris 2 650, inner ring 2 400, Lyon
-  2 000, Lyon ring 1 850) and divided by the habitable ÷ true-gross ratio they
-  assume (0.71 flats, 0.82 houses). The land share then depends on that ratio,
-  not on the measured one, which only sets euro levels. Depreciation is
+  Costs are calibrated per m² of true gross area and divided by the habitable ÷
+  true-gross ratio they assume (0.71 flats, 0.82 houses); the land share then
+  depends on that ratio, not on the measured one, which only sets euro levels.
+  Each building type takes the cost of its own evidence: flats and other
+  buildings the DHUP/SISAL collective social-housing cost (Paris 2 650, inner
+  ring 2 400, Lyon 2 000, Lyon ring 1 850), houses the SDES EPTB new-house survey
+  brought to a turnkey basis (Paris 2 300, inner ring 2 100, Lyon 2 400, Lyon
+  ring 2 250). Depreciation is
   market-conditional: where IRIS prices far exceed rebuild cost, effective age is
   capped at 30 years (maintained stock); construction eras come from DPE.
 - **land value** = classify-then-price: built parcels take the residual;
@@ -72,10 +75,17 @@ land-share band, so error propagates visibly rather than silently.
   fixed that (34.8 % left). Second, market value multiplied a *habitable* price by
   an inflated BD TOPO area while building value used the same area, so both sides
   were overstated by different amounts. Putting both on habitable area and
-  calibrating costs brings Paris to **74.0 %** with **0.4 %** of built parcels at
-  the clip: the land share is now measured, not set by the bound. Lyon 58.6 %,
-  rings 60.6 % / 55.4 %; communes above the 40–65 % plausibility band fall from
-  138 to 21. Gemini judges these consistent with French evidence.
+  calibrating costs brings Paris to **74 %** with only 3 % of built parcels at
+  the clip: the land share is now measured, not set by the bound. Lyon 58 %,
+  rings 62 % / 53 %; communes above the 40–65 % plausibility band fell from
+  138 to about 20. Gemini judges these consistent with French evidence.
+- **A wrong-looking commune is not always the parameter it looks like.** House-
+  heavy outer-ring communes sat at 33–38 % land share, which pointed at the house
+  cost. A separate house cost was right (around Paris a house costs ~13 % less
+  per m² than a flat; around Lyon, surprisingly, ~20 % more) but moved them only
+  2–4 points: houses are a third or less of their building value. Warehouses,
+  shops and the Villepinte exhibition centre, priced at the housing cost and the
+  flat price, dominate. Decompose by category before tuning a parameter.
 - **Changing a variable's units silently retunes every rule calibrated on it.**
   Restating the depreciation trigger per habitable m² halved Lyon's maintained
   weight before it was caught; the trigger keeps its calibrated basis. Check
@@ -111,15 +121,20 @@ land-share band, so error propagates visibly rather than silently.
   uncertainty** (0.71 flats, 0.82 houses): ±0.05 moves building value about ±7 %.
   The flats figure traces to the cost research's surface-utile conversion; the
   houses figure is a desk estimate.
-- **One cost per commune fits house-dominated suburbs poorly.** Outer-ring house
-  communes (Santeny 33 %, Vaujours 34 %) take the inner-ring collectif cost; a
-  per-type cost (EPTB for houses) is the likely fix. Panel communes outside the
-  Paris and Lyon areas still use uncalibrated pilot costs.
-- **Small-commune outliers** (Fleurieu-sur-Saône 75 %) may reflect thin DVF samples
-  or BD TOPO annexes; worth checking before they are quoted.
-- **Non-residential parcels borrow the flat price and ratios.** No open cost series
-  exists for sheds or shops; the ±10-point band bounds it, but per-commune rows
-  with large industrial land (Feyzin) are fragile.
+- **Non-residential parcels are now the main source of implausible communes.**
+  They borrow the flat price, the flat ratios and the housing cost (a logistics
+  shed costs perhaps half as much to build). Santeny, Vaujours, Limeil-Brévannes
+  and Villepinte stay below 40 % because of them, and per-commune rows with large
+  industrial land (Feyzin) are fragile. A crude commercial/industrial cost split
+  is the next lever; no open cost series exists, so it needs a research pass.
+- **The house cost rests on a survey of new catalogue houses.** The finishing-work
+  uplift is a judgement, and Lyon coming out dearer than the Paris ring is
+  probably a sample effect (bespoke Rhône houses vs outer-IdF catalogue houses).
+  Panel communes outside the Paris and Lyon areas keep their single pilot costs.
+- **The 40–65 % band is a heuristic.** After the house cost, 24 communes sit above
+  it, most of them affluent inner-ring communes within 1.5 points (Sceaux 66,
+  Marnes-la-Coquette 67), where a high land share is plausible; Neuilly (77 %) and
+  Fleurieu-sur-Saône (72 %) remain the ones to check.
 - **Current-tax baseline within built parcels** still spreads the produit by floor
   area, ignoring cadastral category and weighting coefficients — the per-parcel VLC
   in the Fichiers fonciers is the real resolution. Exemptions beyond obvious public

@@ -74,6 +74,8 @@ def habitable_basis(p: pd.DataFrame, cfg) -> pd.DataFrame:
     measured cfg.net_to_gross and priced at the cost per habitable m²
     (cost ÷ cfg.cost_net_to_gross): improvement × net_to_gross ÷
     cost_net_to_gross, by type_local (unlisted types use 'Appartement').
+    Houses are priced at cfg.house_cost instead of the commune cost
+    (improvement_value is linear in cost, so the ratio rescales it).
     Adds habitable_area_m2; floor_area_m2 is left as is.
     """
     ntg = _check_net_to_gross(cfg.net_to_gross)
@@ -81,8 +83,14 @@ def habitable_basis(p: pd.DataFrame, cfg) -> pd.DataFrame:
     t = p["type_local"]
     r = t.map(ntg).fillna(ntg["Appartement"]).astype(float)
     rc = t.map(cntg).fillna(cntg["Appartement"]).astype(float)
+    house = float(getattr(cfg, "house_cost", cfg.construction_cost_eur_m2))
+    cost = float(cfg.construction_cost_eur_m2)
+    if not (np.isfinite(house) and house > 0 and np.isfinite(cost) and cost > 0):
+        raise ValueError("construction costs must be finite and positive")
+    is_house = t.eq("Maison").fillna(False).to_numpy(dtype=bool)
+    k = np.where(is_house, house / cost, 1.0)
     out = p.copy()
-    out["improvement_value"] = out["improvement_value"] * r / rc
+    out["improvement_value"] = out["improvement_value"] * r / rc * k
     out["habitable_area_m2"] = out["floor_area_m2"] * r
     return out
 
