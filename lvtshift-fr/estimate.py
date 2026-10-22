@@ -106,6 +106,8 @@ COMMERCIAL_USAGE = "Commercial et services"
 COMMERCIAL_ONE_LEVEL_BELOW_M = 7.0     # shop / hall below this height
 COMMERCIAL_M_PER_LEVEL = 3.5           # offices above it
 RESIDENTIAL_M_PER_LEVEL = 3.0
+MAX_HEIGHT_M = 350.0                   # taller than any French building: corrupt
+MAX_LEVELS = 100.0
 
 
 def impute_levels(b: pd.DataFrame) -> pd.Series:
@@ -120,11 +122,12 @@ def impute_levels(b: pd.DataFrame) -> pd.Series:
         -> 1 level, whatever the height;
       * other Commercial et services -> 1 level below 7 m, else height ÷ 3.5 m;
       * everything else (housing) -> height ÷ 3 m.
-    Unknown or zero height -> 1 level. Returns a float Series aligned with b.
+    Unknown, zero or implausible (> 350 m) height -> 1 level; at most 100
+    levels. Returns a float Series aligned with b.
     """
     h = (pd.to_numeric(b["height_m"], errors="coerce") if "height_m" in b.columns
          else pd.Series(np.nan, index=b.index))
-    h = h.where(h > 0)
+    h = h.where((h > 0) & (h <= MAX_HEIGHT_M))
     usage = b["usage"] if "usage" in b.columns else pd.Series(None, index=b.index)
     nature = b["nature"] if "nature" in b.columns else pd.Series(None, index=b.index)
     # explicit parse: astype(bool) would read the string "false" as True
@@ -139,7 +142,7 @@ def impute_levels(b: pd.DataFrame) -> pd.Series:
     lv = lv.mask(commercial, np.where(h < COMMERCIAL_ONE_LEVEL_BELOW_M, 1.0,
                                       (h / COMMERCIAL_M_PER_LEVEL).round()))
     lv = lv.mask(one, 1.0)
-    return lv.fillna(1.0).clip(lower=1.0).astype(float)
+    return lv.fillna(1.0).clip(lower=1.0, upper=MAX_LEVELS).astype(float)
 
 
 def improvement_value(buildings: pd.DataFrame, cfg,
@@ -164,6 +167,7 @@ def improvement_value(buildings: pd.DataFrame, cfg,
     b = buildings.copy()
     quality = pd.Series("measured", index=b.index)
 
+    b["n_levels"] = pd.to_numeric(b["n_levels"], errors="coerce")
     missing_lvl = b["n_levels"].isna() | (b["n_levels"] <= 0)
     b.loc[missing_lvl, "n_levels"] = impute_levels(b.loc[missing_lvl])
     quality[missing_lvl] = "imputed_levels"

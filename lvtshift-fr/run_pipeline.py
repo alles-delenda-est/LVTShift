@@ -110,6 +110,13 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
+    # a single non-finite value would poison the solver's rates for everyone
+    for col in ("market_value", "land_value", "improvement_value", "current_tax"):
+        bad = ~np.isfinite(pd.to_numeric(p[col], errors="coerce"))
+        if bad.any():
+            raise ValueError(f"[{cfg.name}] {int(bad.sum())} non-finite {col} "
+                             f"values before the solve")
+
     # ---- LVTShift's real revenue-neutral solver -------------------- #
     # Exempt public property (exemptions.py) pays neither tax: zero share of
     # today's FB (current_tax above) and zero taxable value in the solve, so the

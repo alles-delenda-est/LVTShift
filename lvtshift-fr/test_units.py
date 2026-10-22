@@ -191,6 +191,11 @@ def test_missing_levels_by_building_type():
     s = pd.DataFrame({"usage": ["Résidentiel"] * 3, "height_m": [9.0] * 3,
                       "construction_legere": ["false", "true", None]})
     assert list(estimate.impute_levels(s)) == [3.0, 1.0, 3.0]   # "false" is not True
+    huge = pd.DataFrame({"usage": ["Commercial et services", "Résidentiel", "Résidentiel"],
+                         "height_m": [1e9, float("inf"), 330.0]})
+    assert list(estimate.impute_levels(huge)) == [1.0, 1.0, 100.0]   # corrupt -> unknown; cap
+    txt = estimate.improvement_value(pd.DataFrame([_bld(n_levels="2")]), CFG)
+    assert txt["floor_area_m2"].iloc[0] == 200.0
     legacy = pd.DataFrame({"height_m": [9.0, np.nan]})
     assert list(estimate.impute_levels(legacy)) == [3.0, 1.0]
 
