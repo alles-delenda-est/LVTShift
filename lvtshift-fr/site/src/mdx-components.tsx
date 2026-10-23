@@ -1,6 +1,7 @@
 import type { MDXComponents } from "mdx/types";
 import Link from "next/link";
 import type { AnchorHTMLAttributes } from "react";
+import { isAnchorHref, isInternalHref, isSafeExternalHref } from "@/lib/links";
 
 // Single source of MDX prose styling for the campaign pagers. The persistent
 // site header owns the only <h1>; PagerLayout renders the page title as <h2>,
@@ -8,21 +9,31 @@ import type { AnchorHTMLAttributes } from "react";
 // styled <h3>/<h4> — the visual hierarchy below the page title.
 
 function MdxLink({ href = "", ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) {
-  const isInternal = href.startsWith("/");
-  if (isInternal) {
+  if (isInternalHref(href)) {
     return (
       <Link href={href} className="text-rouge underline underline-offset-2 hover:text-marine">
         {props.children}
       </Link>
     );
   }
+  if (isAnchorHref(href)) {
+    return (
+      <a {...props} href={href} className="text-rouge underline underline-offset-2 hover:text-marine" />
+    );
+  }
+  // Any scheme other than http(s)/mailto (javascript:, data:…) is shown as text.
+  if (!isSafeExternalHref(href)) {
+    return <span>{props.children}</span>;
+  }
+  // Spread author-supplied props first so they can never override the
+  // security attributes that follow (target/rel) or the link styling.
   return (
     <a
+      {...props}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="text-rouge underline underline-offset-2 hover:text-marine"
-      {...props}
     />
   );
 }
