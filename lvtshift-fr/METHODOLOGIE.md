@@ -936,7 +936,10 @@ l'appariement spatial bâtiment↔parcelle → les liens MAJIC natifs ; l'absenc
 typologie de propriétaires / vacance / exonérations → ces champs directement. Le
 pilote va jusqu'ici sur données ouvertes ; l'*acte d'engagement* transforme chaque
 ligne en donnée administrative exacte, à coût marginal nul pour la structure
-partenaire. **La démonstration est l'argument d'accès.**
+partenaire. **La démonstration est l'argument d'accès.** Un dossier de demande
+prêt à compléter, avec le tableau limitation→champ, figure dans
+`docs/access/fichiers-fonciers-dossier.md` ; les étapes restantes (choix de la
+structure éligible porteuse, signature) reviennent au porteur du projet.
 
 ## 8. Reproductibilité
 
