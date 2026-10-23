@@ -5,9 +5,11 @@ Adaptation française de [LVTShift](https://github.com/gregmiller00/LVTShift)
 vers une taxe sur la valeur du foncier (LVT), **à recettes constantes**,
 à la parcelle, sur **données ouvertes uniquement**.
 
-Zéro fork : le code appelle directement le solveur et l'export standard de
-LVTShift (`model_split_rate_tax`, `save_standard_export`). Les améliorations
-amont profitent automatiquement à la version française.
+Zéro modification de l'amont : le code (dans `lvtshift-fr/`, au sein de ce
+fork) appelle directement le solveur et l'export standard de LVTShift
+(`model_split_rate_tax`, `save_standard_export`) sans toucher aux fichiers
+amont. Les améliorations amont profitent automatiquement à la version
+française.
 
 ## Pourquoi ce dépôt existe
 
@@ -169,7 +171,8 @@ export CSV seul : `run(..., make_report=False)`.
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
   sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
-  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires.
+  ventes de terrains nus) ; d'où la bande de sensibilité ±10 pts publiée avec
+  chaque commune (voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
   distribution **non bornée** des parts terrain à côté des résultats bornés.
@@ -180,6 +183,14 @@ export CSV seul : `run(..., make_report=False)`.
   habitable et les coûts recalés, Paris ressort à 74,2 % (3,2 % des parcelles
   bâties à la borne) ; aucune commune n'a plus de la moitié de ses parcelles
   bâties au plafond (Neuilly-sur-Seine en a le plus, 25,0 %).
+  La part avant bornage est conservée (colonne `land_share_raw`) pour publier
+  la distribution non bornée.
+- **Exonérations TFPB partiellement modélisées** : le foncier public
+  manifestement exonéré est repéré (règle prudente, voir plus haut), comme les
+  bâtiments agricoles (CGI art. 1382 6°, approchés par l'usage BD TOPO et le
+  zonage) ; les édifices religieux associatifs et les exonérations temporaires
+  (HLM neufs, abattement QPV) absorbent encore une part du produit actuel **et**
+  paient la LVT simulée.
 - **Coûts de construction et ratio habitable ÷ brut.** Hors Paris, petite
   couronne et territoires lyonnais, les coûts restent des valeurs pilotes non
   calées. Le maillon le moins sourcé est le rapport surface habitable ÷ vraie
