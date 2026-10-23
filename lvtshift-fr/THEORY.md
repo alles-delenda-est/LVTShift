@@ -118,20 +118,21 @@ propagates visibly rather than silently.
   −1 %); ranked within each commune it is progressive (+5 % → +12 %). The
   ring-wide view mixes the reform with rich-vs-poor commune differences that
   the reform does not touch. Territories therefore publish both views.
-- **In Paris the model measures a revaluation, not a land/building split, and
-  the 85 % land share is an artefact.** Old stock (median age ~95 years) hits
-  the 25 % depreciation floor, so the raw land share is 92.9 % and 95.5 % of
-  built parcels sit at the 85 % clip. Valuing maintained buildings at a ~30-year
-  effective age gives 82–85 % (no write-down at all: 63–79 %, a lower bound): the
-  level is plausible, but the cap is hit because the depreciation rule treats a
-  maintained Haussmann building as worn out, and it hands every parcel the same
-  split. With every parcel at the same split, a land tax is simply a
-  tax proportional to market value: the Paris result (strongly progressive,
-  poorest −17 %, richest +11 %; flat sensitivity band) is the move from today's
-  floor-area bill to a value bill, and rests on the weakest input, the
-  current-tax proxy. The register flags any commune whose split is set by the
-  clip; the site labels such land shares "plafonnée". The fix is a depreciation
-  rule for maintained stock.
+- **Age is not wear where markets pay for maintenance; the 85 % cap was mostly a
+  depreciation artefact.** Straight-line-to-25 % depreciation treated maintained
+  Haussmann stock as worn out (≈ €575/m² against ≈ €10,860/m² prices), so 95.5 %
+  of Paris's built parcels, and 55 communes in all, sat on the 85 % clip. A
+  uniform effective-age cap fixed strong markets but pushed Roubaix and Cahors
+  onto the 15 % *lower* clip: in weak markets age-based depreciation is also
+  absorbing economic obsolescence (price ≈ rebuild cost). The adopted rule is
+  market-conditional: effective age capped at 30 years, phased in continuously
+  as the IRIS price/rebuild-cost ratio goes from 1.2 to 2.5 (q at IRIS level so
+  land uplift is not read as a newer building). Clip warnings fall from 55 to 1
+  (Neuilly); Paris 83.9 % with 47.6 % still at the cap, which is genuine at
+  Paris prices. Every distributional direction survived the change, so the
+  quintile story is robust to the building-value assumption. Paris still reads
+  largely as a revaluation from a floor-area bill to a value bill, and rests on
+  the weakest input, the current-tax proxy.
 - **Building-less land is mispriced locally, not in aggregate.** U-zoned public
   open space (Paris UV parks, Lyon USP, Saint-Cloud's UL domain) and vacant
   industrial/port land (UEi, Port Édouard Herriot UEp) take the residential
@@ -203,6 +204,10 @@ propagates visibly rather than silently.
   at all — Cahors and Figeac have too few distinct IRIS incomes, so the exporter
   emits `null` and no quintile chart is published (the register flags this per
   commune via the real `build_by_income_quintile`, not a proxy).
+- **The maintained-stock parameters are judgement calls.** The 30-year cap and
+  the 1.2–2.5 ramp are informed by the literature but not estimated; no sensitivity
+  on them is published yet. A condition signal (DPE energy class) would ground
+  effective age in the building rather than the neighbourhood price.
 - **Construction costs are coarse regional pilots** (1600–2300 €/m²); a ±15% move
   flows linearly into improvement value, so they need FFB/BT01 calibration — and
   a stated floor-area basis (BD TOPO footprint × storeys is gross, published

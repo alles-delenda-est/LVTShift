@@ -55,12 +55,37 @@ parcelle (`estimate.improvement_value`) :
 ```
 surface_plancher = emprise_m2 × niveaux       (niveaux imputés par hauteur/3 si absent)
 âge              = année_référence − année_construction
-dépréciation     = borne(1 − (1 − dep_floor) × âge / dep_years,  min = dep_floor)
+q                = prix hédonique médian €/m² des parcelles bâties de l'IRIS
+                   ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
+w                = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp)
+âge_effectif     = w × min(âge, 30) + (1 − w) × âge            (dep_maintained_age_cap)
+dépréciation     = borne(1 − (1 − dep_floor) × âge_effectif / dep_years,  min = dep_floor)
 valeur_bâti      = surface_plancher × coût_construction_€m2 × dépréciation
 ```
 
 `année_construction` provient du DPE (§3.2) ; `coût_construction_€m2`,
-`dep_years`, `dep_floor` sont en config par commune (§4). Les bâtiments sont
+`dep_years`, `dep_floor` sont en config par commune (§4).
+
+*Bâti entretenu (âge effectif).* Là où les prix du quartier dépassent largement le
+coût de reconstruction, les propriétaires rénovent en continu : l'âge réel ne
+mesure plus l'usure. Un immeuble de 1880 entretenu est valorisé comme s'il avait
+30 ans (coefficient 0,72) au lieu de tomber au plancher de 25 %. C'est la notion
+d'âge effectif des évaluateurs (Davis, Larson, Oliner & Shui, FHFA WP 19-01),
+appuyée par l'absence de dépréciation physique de long terme du bâti bien
+entretenu (Francke & van de Minne 2017) ; les comptes de patrimoine de l'INSEE
+capitalisent eux aussi les rénovations (durée de vie 70 ans, base 2020). Le poids
+`w` croît continûment avec q, si bien que deux parcelles voisines ne basculent
+jamais d'un régime à l'autre, et q est calculé à l'IRIS, non à la parcelle, pour
+qu'une hausse locale du foncier ne soit pas lue comme un bâtiment plus récent. La
+médiane de l'IRIS ne retient que les parcelles bâties : les terrains nus portent un
+type de logement par défaut et tireraient un quartier pavillonnaire vers le prix des
+appartements. Dans
+les marchés faibles (q ≤ 1,2 : Roubaix, Cahors), la règle est inactive et la
+dépréciation par l'âge absorbe aussi l'obsolescence économique. Un plafond uniforme
+a été testé et écarté : il place la moitié des parcelles bâties de Roubaix et un
+tiers de celles de Cahors à la borne basse de 15 %.
+
+Les bâtiments sont
 rattachés aux parcelles par **intersection pondérée par la surface** (un bâtiment
 à cheval sur une limite crédite chaque parcelle au prorata du recouvrement), et
 non par centroïde.
@@ -135,16 +160,21 @@ couronne. Une commune en échec figure dans le champ `coverage`, jamais imputée
 Montreuil et Villeurbanne apparaissent seules et dans leur couronne ; les totaux du
 panel sur le site ne les comptent qu'une fois.
 
-**La part foncière de 84,9 % à Paris est fixée par la borne, pas mesurée.** 95,5 %
-des parcelles bâties parisiennes (Lyon : 59,8 %) sont à la borne haute de 0,85, car
-la règle de dépréciation ramène un immeuble d'environ 95 ans, entretenu en continu,
-à son plancher de 25 % (≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m²) : la
-part agrégée non bornée est de 92,9 %. Valoriser le bâti entretenu comme s'il
-avait ~30 ans (âge effectif, cf. littérature) donne 82–85 % (coût de reconstruction
-2 760–2 300 €/m²) ; sans aucune décote, 63–79 % (borne basse). Le niveau est donc
-plausible ; c'est l'uniformité du partage entre parcelles qui est un artefact. Le
-champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à la
-borne, et le site qualifie la part foncière de « plafonnée » quand elle atteint 50 %.
+**Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
+jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
+continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m² : 95,5 % des
+parcelles bâties étaient à la borne de 0,85 (Lyon 59,8 % ; 55 communes signalées)
+et le chiffre de 84,9 % était fixé par la borne. La règle du bâti entretenu (§3.1)
+valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais à
+**83,9 %**, avec 47,6 % des parcelles bâties encore à la borne. Ce reliquat est réel,
+pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
+reconstruction laisse un foncier supérieur à 85 % dans les rues chères
+(Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
+passe à 72,0 %, sans parcelle à la borne ; sur le panel, les alertes
+`land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
+(borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
+parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »
+quand elle atteint 50 %.
 
 ## 4. Paramètres et hypothèses clés
 
@@ -153,7 +183,10 @@ borne, et le site qualifie la part foncière de « plafonnée » quand elle atte
   (Montreuil et tout le 92/93/94), Lyon, Villeurbanne et la couronne
   métropolitaine 1950, Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650,
   Figeac 1600.
-- **Dépréciation** : linéaire sur `dep_years` = 80 ans, plancher `dep_floor` = 0,25.
+- **Dépréciation** : linéaire sur `dep_years` = 80 ans, plancher `dep_floor` = 0,25,
+  appliquée à l'âge effectif ; plafond bâti entretenu 30 ans
+  (`dep_maintained_age_cap`), rampe q ∈ [1,2 ; 2,5] (`dep_q_ramp`). Ce sont des
+  choix raisonnés éclairés par la littérature (§3.1), non des paramètres estimés.
 - **Bornes de part foncière** : [0,15 ; 0,85] — contrainte de conception, pas une
   mesure. Là où la plupart des parcelles atteignent la borne haute (Paris, Lyon), la
   cause identifiée est la surdépréciation du bâti ancien entretenu, non un foncier
@@ -215,11 +248,14 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 4. **Coûts de construction** : gradient régional pilote grossier ; un écart de
    ±15 % se propage linéairement dans la valeur bâti (donc terrain).
 5. **Bornage de part foncière** : quand la plupart des parcelles bâties sont à une
-   borne, la part foncière est une hypothèse, pas un résultat (Paris 95,5 % à la
-   borne de 0,85, Lyon 59,8 %), et la variation du bâti entre parcelles disparaît. À
-   Paris, la cause est le plancher de dépréciation qui ramène le bâti ancien
-   entretenu à 25 % (§3.7). Le contrôle `land_share_clip` du preflight le signale ;
-   publier la distribution non bornée à côté (la part avant bornage est conservée
+   borne, la part foncière est une hypothèse, pas un résultat, et la variation du
+   bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
+   de Paris (95,5 % à la borne), de Lyon et de 53 autres communes ; c'est désormais
+   le seul cas de Neuilly-sur-Seine, Paris étant à 47,6 % (§3.7). Le contrôle
+   `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
+   la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
+   paramètres reste à faire (THEORY.md).
+   Publier la distribution non bornée à côté (la part avant bornage est conservée
    dans la colonne `land_share_raw`). Précédence quand plancher agricole et
    bornage se contredisent : le plancher (une observation de marché) l'emporte ;
    ces parcelles sont flaggées `built_floored_ag` et leur part terrain peut

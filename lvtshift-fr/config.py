@@ -25,6 +25,13 @@ class CommuneConfig:
     # below `dep_floor` (structures retain site-prep / shell value).
     dep_years: int = 80
     dep_floor: float = 0.25
+    # Maintained stock: where neighbourhood prices far exceed rebuild cost,
+    # owners renovate, so age stops measuring wear (effective age, see
+    # METHODOLOGY §3.1). Effective age = w·min(age, cap) + (1−w)·age, with w
+    # ramping linearly from 0 to 1 as q = IRIS median price/m² ÷ construction
+    # cost goes from dep_q_ramp[0] to dep_q_ramp[1]. None disables it.
+    dep_maintained_age_cap: int | None = 30
+    dep_q_ramp: tuple = (1.2, 2.5)
     # Land share sanity anchors (INSEE comptes de patrimoine: terrains bâtis
     # ~45-50% of household real estate nationally; dense cores higher,
     # periphery lower). Used to clip/flag, not to impose.

@@ -255,14 +255,20 @@ def test_leak_guard_rejects_parcel_ids_and_iris_codes_by_value():
     with pytest.raises(AssertionError, match="IRIS"):
         ew.assert_aggregate_only({**base, "name": "751010101"})
     # ordinary 5-digit INSEE codes and euro amounts stay allowed
-    ew.assert_aggregate_only({**base, "name": "75056", "headline": {"levy": 1840896539}})
+    ew.assert_aggregate_only({**base, "name": "75056",
+                              "headline": {"neutral_levy_eur": 1840896539}})
+    # nested headline keys are whitelisted too
+    with pytest.raises(AssertionError, match="headline keys"):
+        ew.assert_aggregate_only({**base, "headline": {"parcel_value": 1.0}})
 
 
 def test_built_at_cap_pct_counts_only_built_parcels_at_the_bound():
     import export_web as ew
     df = pd.DataFrame({
-        "taxable_land_value": [85.0, 85.0, 50.0, 10.0],
-        "taxable_improvement_value": [15.0, 15.0, 50.0, 0.0],  # last one is vacant
+        "taxable_land_value": [85.0] * 20 + [50.0] * 10 + [10.0],
+        "taxable_improvement_value": [15.0] * 20 + [50.0] * 10 + [0.0],  # last: vacant
     })
-    assert ew.built_at_cap_pct(df) == round(100 * 2 / 3, 1)
-    assert ew.built_at_cap_pct(df.iloc[[3]]) is None
+    assert ew.built_at_cap_pct(df) == round(100 * 20 / 30, 1)
+    # under 30 built parcels the % would describe individual parcels: withheld
+    assert ew.built_at_cap_pct(df.iloc[:29]) is None
+    assert ew.built_at_cap_pct(df.iloc[[30]]) is None

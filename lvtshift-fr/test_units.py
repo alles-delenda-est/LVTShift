@@ -19,6 +19,15 @@ import ingest
 from config import CAHORS as CFG   # construction 1650 €/m², dep 80y/0.25, bounds [.15,.85]
 
 
+def _assert_raises(exc_type, fn, *args, **kwargs):
+    """Framework-free stand-in for pytest.raises."""
+    try:
+        fn(*args, **kwargs)
+    except exc_type:
+        return
+    raise AssertionError(f"expected {exc_type.__name__}")
+
+
 # ------------------------------------------------------------------ #
 # current_tax: built-only, no land-area term
 # ------------------------------------------------------------------ #
@@ -159,6 +168,39 @@ def test_land_agricultural_vacant_priced_cheap():
     assert out["land_value"].iloc[0] < 0.01 * (10000.0 * 120.0)
 
 
+def test_land_built_clipped_low_and_dirt_floor():
+    # share 0.05 < 0.15 floor -> clipped up to 0.15 of market, flagged low
+    df = _classified_frame([
+        ["built", 100.0, 0.5, 100.0, 100000.0, 95000.0, 80.0],
+        # improvement above market: residual floored at dirt value (2000 m² × 0.5
+        # = 1000 €); the floor is a market observation and wins over the share
+        # clip, so the parcel keeps the dirt value and is flagged as floored
+        ["built", 2000.0, 0.5, 100.0, 10000.0, 20000.0, 80.0],
+    ])
+    out = estimate._land_value_classified(df, CFG)
+    assert abs(out["land_value"].iloc[0] - 15000.0) < 1e-6
+    assert out["lv_flag"].iloc[0] == "built_clipped_low"
+    assert abs(out["land_value"].iloc[1] - 1000.0) < 1e-6
+    assert out["lv_flag"].iloc[1] == "built_floored_ag"
+    assert (out["land_value"] >= 0).all()
+
+
+def test_land_deferred_au_and_unknown_vacant():
+    df = _classified_frame([
+        ["constructible_deferred", 400.0, 0.5, 30.0, 0.0, 0.0, 0.0],
+        ["unknown", 1000.0, 0.5, 120.0, 0.0, 0.0, 0.0],
+        ["natural", 1000.0, 0.5, 120.0, 0.0, 0.0, 0.0],
+    ])
+    out = estimate._land_value_classified(df, CFG)
+    # deferred AU priced at its (already discounted) development rate
+    assert abs(out["land_value"].iloc[0] - 12000.0) < 1e-6
+    # unknown zoning priced conservatively as dirt, and flagged as such
+    assert abs(out["land_value"].iloc[1] - 500.0) < 1e-6
+    assert out["lv_flag"].iloc[1] == "vacant_unknown_ag"
+    assert out["lv_flag"].iloc[2] == "natural"
+    assert (out["improvement_value"] == 0.0).all()
+
+
 # ------------------------------------------------------------------ #
 # improvement_value: depreciated replacement cost
 # ------------------------------------------------------------------ #
@@ -197,6 +239,33 @@ def test_newer_building_depreciates_less():
     old = estimate.improvement_value(pd.DataFrame([_bld(year_built=1961.0)]), CFG)
     new = estimate.improvement_value(pd.DataFrame([_bld(year_built=2017.0)]), CFG)
     assert new["improvement_value"].iloc[0] > old["improvement_value"].iloc[0]
+
+
+def test_maintained_stock_effective_age():
+    # w = 1: a 125-year-old building is valued as if 30 years old;
+    # w = 0.5: halfway between that and its real age; w = 0: unchanged
+    b = pd.DataFrame([_bld(year_built=1900.0)])
+    cap = CFG.dep_maintained_age_cap
+    full = 1 - (1 - CFG.dep_floor) * cap / CFG.dep_years
+    for w, age in ((1.0, cap), (0.5, (cap + 125) / 2), (0.0, 125)):
+        out = estimate.improvement_value(b, CFG, maint_weight=pd.Series({"P": w}))
+        factor = max(CFG.dep_floor, 1 - (1 - CFG.dep_floor) * age / CFG.dep_years)
+        assert abs(out["improvement_value"].iloc[0] - 200 * 1650 * factor) < 1e-3
+    assert full > CFG.dep_floor
+
+
+def test_maintenance_weight_ramps_on_area_price_ratio():
+    lo, hi = CFG.dep_q_ramp
+    cost = CFG.construction_cost_eur_m2
+    surface = pd.DataFrame({"cell": ["a", "b", "c"], "type_local": ["Appartement"] * 3,
+                            "eur_m2": [cost * lo, cost * (lo + hi) / 2, cost * hi * 2]})
+    parcels = pd.DataFrame({"idpar": ["1", "2", "3", "4"], "cell": ["a", "b", "c", "c"],
+                            "type_local": ["Appartement"] * 4,
+                            "iris": ["I1", "I2", "I3", None]})
+    w = estimate.maintenance_weight(parcels, surface, CFG)
+    assert w["1"] == 0.0 and abs(w["2"] - 0.5) < 1e-9 and w["3"] == 1.0
+    # no IRIS -> commune median price (between cells b and c) -> above the ramp
+    assert w["4"] == 1.0
 
 
 # ------------------------------------------------------------------ #
@@ -307,6 +376,45 @@ def test_commune_slate_is_complete():
         assert COMMUNES[key].departement == dep
     for dep in ("34", "17", "68"):
         assert dep in AG_EUR_M2_BY_DEP, f"missing agricultural rate for dep {dep}"
+
+
+def test_maintained_rule_rejects_bad_config():
+    import dataclasses
+    b = pd.DataFrame([_bld(year_built=1900.0)])
+    w = pd.Series({"P": 1.0})
+    _assert_raises(ValueError, estimate.improvement_value, b,
+                   dataclasses.replace(CFG, dep_maintained_age_cap=-50), maint_weight=w)
+    # an out-of-range weight is clamped, never inflates value above new
+    out = estimate.improvement_value(b, CFG, maint_weight=pd.Series({"P": 5.0}))
+    assert out["improvement_value"].iloc[0] <= 200 * 1650 + 1e-6
+    surface = pd.DataFrame({"cell": ["a"], "type_local": ["Appartement"], "eur_m2": [3000.0]})
+    parcels = pd.DataFrame({"idpar": ["P"], "cell": ["a"], "type_local": ["Appartement"]})
+    for ramp in ((2.0, 1.0), (1.0,), (float("nan"), 2.0)):
+        _assert_raises(ValueError, estimate.maintenance_weight, parcels, surface,
+                       dataclasses.replace(CFG, dep_q_ramp=ramp))
+
+
+def test_maintenance_weight_ignores_unbuilt_parcels():
+    # vacant plots carry a placeholder type_local; they must not set the area price
+    cost = CFG.construction_cost_eur_m2
+    surface = pd.DataFrame({"cell": ["a", "a"], "type_local": ["Maison", "Appartement"],
+                            "eur_m2": [cost * 3.0, cost * 1.0]})
+    parcels = pd.DataFrame({
+        "idpar": ["H1", "H2", "V1", "V2", "V3"], "cell": ["a"] * 5,
+        "type_local": ["Maison", "Maison", "Appartement", "Appartement", "Appartement"],
+        "category_fr": ["maison", "maison", "terrain_nu", "terrain_nu", "terrain_nu"],
+        "iris": ["I1"] * 5,
+    })
+    w = estimate.maintenance_weight(parcels, surface, CFG)
+    # houses set the price (q = 3, above the ramp); vacant plots inherit it
+    assert (w == 1.0).all(), w.to_dict()
+    # an IRIS with no built parcel falls back to the commune's built median
+    parcels.loc[parcels["idpar"].isin(["V1", "V2", "V3"]), "iris"] = "I2"
+    w = estimate.maintenance_weight(parcels, surface, CFG)
+    assert (w == 1.0).all(), w.to_dict()
+    # no built parcel anywhere: fall back to every parcel rather than fail
+    w = estimate.maintenance_weight(parcels.iloc[2:], surface, CFG)
+    assert (w == 0.0).all(), w.to_dict()
 
 
 # ------------------------------------------------------------------ #

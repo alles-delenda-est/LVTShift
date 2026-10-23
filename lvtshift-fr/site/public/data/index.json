@@ -2,111 +2,111 @@
   "communes": [
     {
       "n_communes_unique": 1,
-      "parcels_unique": 12853,
+      "parcels_unique": 12895,
       "commune_key": "grenoble",
       "name": "Grenoble",
       "kind": "commune",
       "insee": "38185",
       "departement": "38",
-      "parcels_modeled": 12853,
-      "land_share_pct": 70.0,
-      "gross_pct_of_levy": 33.9
+      "parcels_modeled": 12895,
+      "land_share_pct": 66.9,
+      "gross_pct_of_levy": 33.7
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 5111,
+      "parcels_unique": 5204,
       "commune_key": "annemasse",
       "name": "Annemasse",
       "kind": "commune",
       "insee": "74012",
       "departement": "74",
-      "parcels_modeled": 5111,
-      "land_share_pct": 70.0,
-      "gross_pct_of_levy": 19.3
+      "parcels_modeled": 5204,
+      "land_share_pct": 64.9,
+      "gross_pct_of_levy": 20.0
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 10753,
+      "parcels_unique": 10782,
       "commune_key": "villeurbanne",
       "name": "Villeurbanne",
       "kind": "commune",
       "insee": "69266",
       "departement": "69",
-      "parcels_modeled": 10753,
-      "land_share_pct": 72.4,
-      "gross_pct_of_levy": 12.3
+      "parcels_modeled": 10782,
+      "land_share_pct": 68.0,
+      "gross_pct_of_levy": 12.0
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 33917,
+      "parcels_unique": 33992,
       "commune_key": "roubaix",
       "name": "Roubaix",
       "kind": "commune",
       "insee": "59512",
       "departement": "59",
-      "parcels_modeled": 33917,
-      "land_share_pct": 57.0,
-      "gross_pct_of_levy": 29.7
+      "parcels_modeled": 33992,
+      "land_share_pct": 56.8,
+      "gross_pct_of_levy": 29.6
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 21796,
+      "parcels_unique": 21906,
       "commune_key": "cahors",
       "name": "Cahors",
       "kind": "commune",
       "insee": "46042",
       "departement": "46",
-      "parcels_modeled": 21796,
-      "land_share_pct": 54.0,
+      "parcels_modeled": 21906,
+      "land_share_pct": 53.9,
       "gross_pct_of_levy": 14.8
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 14189,
+      "parcels_unique": 14218,
       "commune_key": "montreuil",
       "name": "Montreuil",
       "kind": "commune",
       "insee": "93048",
       "departement": "93",
-      "parcels_modeled": 14189,
-      "land_share_pct": 83.9,
-      "gross_pct_of_levy": 16.8
+      "parcels_modeled": 14218,
+      "land_share_pct": 75.8,
+      "gross_pct_of_levy": 19.1
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 12809,
+      "parcels_unique": 12877,
       "commune_key": "figeac",
       "name": "Figeac",
       "kind": "commune",
       "insee": "46102",
       "departement": "46",
-      "parcels_modeled": 12809,
+      "parcels_modeled": 12877,
       "land_share_pct": 58.4,
-      "gross_pct_of_levy": 11.6
+      "gross_pct_of_levy": 11.5
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 11272,
+      "parcels_unique": 11300,
       "commune_key": "sete",
       "name": "Sète",
       "kind": "commune",
       "insee": "34301",
       "departement": "34",
-      "parcels_modeled": 11272,
-      "land_share_pct": 71.5,
-      "gross_pct_of_levy": 21.3
+      "parcels_modeled": 11300,
+      "land_share_pct": 66.4,
+      "gross_pct_of_levy": 21.5
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 29108,
+      "parcels_unique": 29209,
       "commune_key": "larochelle",
       "name": "La Rochelle",
       "kind": "commune",
       "insee": "17300",
       "departement": "17",
-      "parcels_modeled": 29108,
-      "land_share_pct": 83.5,
-      "gross_pct_of_levy": 23.8
+      "parcels_modeled": 29209,
+      "land_share_pct": 74.1,
+      "gross_pct_of_levy": 25.7
     },
     {
       "n_communes_unique": 1,
@@ -117,8 +117,8 @@
       "insee": "75056",
       "departement": "75",
       "parcels_modeled": 78189,
-      "land_share_pct": 84.9,
-      "gross_pct_of_levy": 14.4
+      "land_share_pct": 83.9,
+      "gross_pct_of_levy": 15.3
     },
     {
       "n_communes_unique": 1,
@@ -129,8 +129,8 @@
       "insee": "69123",
       "departement": "69",
       "parcels_modeled": 34142,
-      "land_share_pct": 81.6,
-      "gross_pct_of_levy": 14.7
+      "land_share_pct": 72.0,
+      "gross_pct_of_levy": 15.0
     },
     {
       "n_communes_unique": 121,
@@ -140,9 +140,9 @@
       "kind": "territory",
       "insee": null,
       "departement": "92/93/94",
-      "parcels_modeled": 608220,
-      "land_share_pct": 80.6,
-      "gross_pct_of_levy": 15.8
+      "parcels_modeled": 608249,
+      "land_share_pct": 74.1,
+      "gross_pct_of_levy": 16.8
     },
     {
       "n_communes_unique": 56,
@@ -152,9 +152,9 @@
       "kind": "territory",
       "insee": null,
       "departement": "69",
-      "parcels_modeled": 246397,
-      "land_share_pct": 73.2,
-      "gross_pct_of_levy": 19.6
+      "parcels_modeled": 246426,
+      "land_share_pct": 67.4,
+      "gross_pct_of_levy": 20.3
     }
   ],
   "currency": "EUR"

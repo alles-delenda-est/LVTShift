@@ -111,3 +111,63 @@ def test_land_share_clip_warns_when_split_is_set_by_the_bound(tmp_path):
     clip = checks["land_share_clip"]
     assert clip["severity"] == pf.WARN
     assert clip["detail"]["at_cap_pct"] == round(100 * 8 / 9, 1)  # vacant row excluded
+
+
+def test_probe_retries_transient_failures_but_not_404(monkeypatch):
+    import urllib.error
+    monkeypatch.setattr(pf.time, "sleep", lambda s: None)
+    seq = []
+
+    class Resp:
+        status = 206
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def flaky(req, timeout=30):
+        seq.append(1)
+        if len(seq) < 3:
+            raise TimeoutError("dropped")
+        return Resp()
+    monkeypatch.setattr(pf.urllib.request, "urlopen", flaky)
+    assert pf._probe("https://example.org/f") == 206 and len(seq) == 3
+
+    seq.clear()
+    def missing(req, timeout=30):
+        seq.append(1)
+        raise urllib.error.HTTPError("u", 404, "nf", {}, None)
+    monkeypatch.setattr(pf.urllib.request, "urlopen", missing)
+    assert pf._probe("https://example.org/f") == 404 and len(seq) == 1
+
+    seq.clear()
+    def busy(req, timeout=30):
+        seq.append(1)
+        if len(seq) < 2:
+            raise urllib.error.HTTPError("u", 503, "busy", {}, None)
+        return Resp()
+    monkeypatch.setattr(pf.urllib.request, "urlopen", busy)
+    assert pf._probe("https://example.org/f") == 206 and len(seq) == 2
+
+    seq.clear()
+    def down(req, timeout=30):
+        seq.append(1)
+        raise OSError("offline")
+    monkeypatch.setattr(pf.urllib.request, "urlopen", down)
+    assert pf._probe("https://example.org/f") is None and len(seq) == 3
+
+
+def test_rei_fetch_paginates_past_one_page(monkeypatch):
+    import json
+    import ingest
+    rows = [{"annee": "2025", "destinataire": f"S{i}", "varlib": "MONTANT REEL",
+             "valeur": 1.0} for i in range(150)]
+    offsets = []
+
+    def fake_get(url, *a, **k):
+        off = int(url.split("offset=")[1].split("&")[0])
+        offsets.append(off)
+        return json.dumps({"results": rows[off:off + 100]}).encode()
+    monkeypatch.setattr(ingest, "_get", fake_get)
+    out = pf._rei_fb_by_layer(_Cfg(insee="75056"))
+    assert offsets == [0, 100]
+    assert len(out["2025"]) == 150
+

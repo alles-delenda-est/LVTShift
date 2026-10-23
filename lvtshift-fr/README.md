@@ -53,7 +53,9 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 ## Méthode, en bref
 
 1. **Valeur bâti** = emprise × niveaux × coût de construction (€/m², indices BT)
-   × dépréciation linéaire plancher (25 % résiduel à 80 ans).
+   × dépréciation linéaire plancher (25 % résiduel à 80 ans), appliquée à
+   l'**âge effectif** : là où les prix de l'IRIS dépassent nettement le coût de
+   reconstruction, le bâti entretenu compte au plus 30 ans.
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
    (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable.
 3. **Terrain : classer puis valoriser.** Parcelles bâties → résiduel
@@ -154,12 +156,14 @@ export CSV seul : `run(..., make_report=False)`.
   chaque commune (voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
-  distribution **non bornée** des parts terrain (colonne `land_share_raw`,
-  conservée à cet effet) à côté des résultats bornés, et signaler que les
-  cœurs denses peuvent légitimement dépasser 85 %. À Paris, 95,5 % des
-  parcelles bâties sont à la borne de 85 % : la part foncière affichée (84,9 %)
-  est fixée par la borne, pas mesurée — la cause est la dépréciation du bâti
-  ancien entretenu, pas un foncier supérieur à 85 %.
+  distribution **non bornée** des parts terrain à côté des résultats bornés.
+  La dépréciation du bâti ancien entretenu se fait à l'**âge effectif** (au
+  plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
+  reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
+  à la borne de 85 %. Avec la règle, Paris ressort à 83,9 % (47,6 % à la borne,
+  un reliquat réel aux prix parisiens) et seule Neuilly-sur-Seine reste signalée.
+  La part avant bornage est conservée (colonne `land_share_raw`) pour publier
+  la distribution non bornée.
 - **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
   hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
   (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la

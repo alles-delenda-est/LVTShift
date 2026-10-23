@@ -8,23 +8,25 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, branch `depreciation-old-stock`)**
 
-| | Parcels | TFPB held neutral | Land share | Amount shifted | Share paying more |
-|---|---|---|---|---|---|
-| Paris | 78,189 | €1,840.9 M | 84.9 % ⚠ *set by cap* | 14.4 % | 52.5 % |
-| Lyon | 34,142 | €362.9 M | 81.6 % ⚠ *mostly cap* | 14.7 % | 73.1 % |
-| Paris extra-muros (122) | 608,220 | €3,569.3 M | 80.6 % | 15.8 % | 69.8 % |
-| Lyon extra-muros (57) | 246,397 | €528.2 M | 73.2 % | 19.6 % | 69.8 % |
+| | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
+|---|---|---|---|---|---|---|
+| Paris | 78,189 | €1,840.9 M | 83.9 % | 47.6 % | 15.3 % | 54.0 % |
+| Lyon | 34,142 | €362.9 M | 72.0 % | 0.0 % | 15.0 % | 69.6 % |
+| Paris extra-muros (122) | 608,249 | €3,569.3 M | 74.1 % | 1.3 % | 16.8 % | 68.9 % |
+| Lyon extra-muros (57) | 246,426 | €528.2 M | 67.4 % | 0.0 % | 20.3 % | 69.6 % |
 
-⚠ **The land share is not a finding where most parcels hit the 85 % cap.** Share of
-built parcels at the cap: Paris 95.5 %, Lyon 59.8 %, Paris ring 36.5 %, Lyon ring 5.6 %.
-Before the cap, Paris comes out at 92.9 %, because the depreciation rule writes old,
-maintained buildings down to 25 % of rebuild cost. Valuing maintained buildings
-as ~30 years old (the literature's effective age) gives 82–85 %, and no write-down
-at all gives 63–79 % (a lower bound). So the *level* is roughly right; what the cap
-gets wrong is that every Paris parcel receives the same split. The site now labels capped land shares "plafonnée"
-(`headline.built_at_cap_pct` ≥ 50 %). The fix is C1, now in progress on its own branch.
+**About the land share.** The first version of this branch depreciated every
+building by age alone, down to 25 % of rebuild cost. That treated maintained
+Haussmann stock as worn out, and put 95.5 % of Paris's built parcels (Lyon 59.8 %,
+55 communes in all) on the 85 % cap, so the land share there was an assumption.
+The maintained-stock rule (C1, see A7) values such buildings at a 30-year
+effective age where neighbourhood prices are well above rebuild cost. Cap warnings
+fall from 55 communes to 1 (Neuilly-sur-Seine). Paris keeps 47.6 % of parcels at
+the cap, which is genuine at Paris prices. The direction of every distributional
+result is unchanged: the full before/after table is in
+`output/diagnostics/depreciation_before_after.csv`, summarised under A7.
 
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
@@ -38,20 +40,17 @@ gets wrong is that every Paris parcel receives the same split. The site now labe
 
 ## A. Decisions only you can make (economics / framing)
 
-- [ ] **A1. How to present Paris.** 95.5 % of Paris's built parcels sit at the
-  85 % land-share cap. Old stock (median age ~95 years) is depreciated to the 25 %
-  floor, so the land share before the cap is ~93 %, an artefact of the depreciation
-  rule rather than a measurement (see the ⚠ note above). With every parcel at the same split, the
-  land tax becomes a tax proportional to market value: the Paris result is
-  really a revaluation from today's floor-area bill to a market-value bill. It
-  is strongly progressive (poorest income quintile −16.7 %, richest +10.5 %), and
-  the sensitivity band is flat. Options:
-  (a) publish with a prominent caveat, framed as "where land is ~90 % of value,
-      LVT ≈ a modern value tax";
-  (b) hold Paris back until the cap / depreciation question (C1) is settled;
-  (c) publish an uncapped variant alongside.
-  *Recommendation: (a) now, (c) as follow-up.* The register flags the same
-  cap problem for Lyon and 53 other communes (`land_share_clip`).
+- [ ] **A1. How to present Paris.** Land share 83.9 %, with 47.6 % of built
+  parcels still at the 85 % cap: in the dearest streets land really is above 85 %
+  of value. So much of Paris still gets a near-uniform split, and the result reads
+  largely as a move from today's floor-area bill to a market-value bill. It is
+  strongly progressive (poorest income quintile −18.1 %, richest +11.4 %). Options:
+  (a) publish with a caveat, framed as "where land is ~85 % of value, LVT ≈ a
+      modern value tax";
+  (b) also raise the cap for Paris (e.g. 0.95), letting the dearest streets
+      differentiate; this is a new design choice to review.
+  *Recommendation: (a).* The site already labels a land share "plafonnée" when
+  half or more of the parcels sit at the cap; Paris is now just below that line.
 - [ ] **A2. Income quintiles for the rings.** Ranked across the whole ring, Lyon
   extra-muros looks *regressive* (poorest +9 %, richest −1 %). Ranked within each
   commune it is *progressive* (+5 % → +12 %): the pooled view mixes in rich-vs-poor
@@ -86,6 +85,28 @@ gets wrong is that every Paris parcel receives the same split. The site now labe
   for exempt social housing (material in 93 and Paris). Open proxies exist: the RPLS
   social-housing register, QPV boundaries, BD TOPO *zones d'activité*. Priority?
 
+- [ ] **A7. Approve the maintained-stock depreciation rule (C1).** Effective age
+  = w·min(age, 30) + (1−w)·age, where w rises from 0 to 1 as the IRIS median
+  price/m² goes from 1.2× to 2.5× rebuild cost. Basis: appraisal "effective age"
+  (FHFA WP 19-01), little long-run deterioration in maintained stock (Francke & van
+  de Minne 2017), INSEE capitalising renovation. Gemini 4 Argon asked for the
+  continuous ramp and IRIS-level prices (both adopted). It also proposed using the
+  DPE energy class as a condition signal (follow-up C9).
+  What it changes (before → after):
+  - land share: Paris 84.9 → 83.9 %, Lyon 81.6 → 72.0 %, Montreuil 83.9 → 75.8 %,
+    La Rochelle 83.5 → 74.1 %, Paris ring 80.6 → 74.1 %, Lyon ring 73.2 → 67.4 %;
+  - weak markets unchanged (Roubaix, Cahors, Figeac: rule inactive);
+  - poorest/richest quintile, median change: Paris −16.7/+10.5 → −18.1/+11.4;
+    Montreuil −10.3/+10.7 → −13.4/+11.9; Grenoble −7.7/+21.7 → −7.5/+17.8.
+    Every direction is preserved.
+  Review fix (external code review): the IRIS price q is now taken over built
+  parcels only, because vacant plots carried a placeholder "flat" type. Paris is
+  unchanged; 15 of 188 communes move by more than 1 point of land share, at most
+  2.5 points (Couzon-au-Mont-d'Or); Annemasse moves most on the site (66.1 → 64.9 %).
+  Eight communes lose their land-share-band warning. Figures above include it.
+  Decide: accept the 30-year cap and the 1.2–2.5 ramp, or ask for a sensitivity
+  run on them (e.g. cap 20/40) before merging.
+
 ## B. Before merging this branch
 
 - [ ] **B1.** Read the territory view locally (`cd site && npm run build`, then serve `out/`),
@@ -96,14 +117,15 @@ gets wrong is that every Paris parcel receives the same split. The site now labe
   in Paris; per the REI it does not.
 - [ ] **B3.** Ask Claude to commit (scoped files only: **not** `charts_fr.py`,
   `Comms docs/`, `LVTShift/`), push, and open the PR; the push creates the Vercel preview.
-- [ ] **B4.** The 9 existing communes' published files were deliberately left
-  unchanged. Their open data has moved since they were modelled (e.g. Grenoble now
+- [ ] **B4.** On the Paris/Lyon branch the 9 existing communes' files were left
+  unchanged. **The depreciation branch refreshes them**, because the method changed
+  for every commune; that also brings them to today's open-data vintage. Their open data has moved since they were modelled (e.g. Grenoble now
   has 12,895 parcels vs 12,853; its headline is unchanged). Decide whether to
   refresh the whole panel to one data vintage, in a separate PR.
 
 ## C. Follow-up work (separate PRs — one feature each)
 
-- [ ] **C1.** Land-share cap and depreciation: depreciation calibrated for old, maintained stock (unblocks A1). **In progress**, branch `depreciation-old-stock`.
+- [x] **C1.** Depreciation for old, maintained stock. Done on branch `depreciation-old-stock` (decision A7).
 - [ ] **C2.** Zoning-label rule for public, green and industrial land (A5).
 - [ ] **C3.** Exemption proxies: RPLS, QPV and public land (A6).
 - [ ] **C4.** Fix the INSEE vacancy benchmark. It has **never** returned a value
@@ -113,6 +135,13 @@ gets wrong is that every Paris parcel receives the same split. The site now labe
 - [ ] **C5.** Offices and La Défense: non-residential value still borrows the residential €/m² (Courbevoie, Puteaux, Paris 8e).
 - [ ] **C6.** Cache housekeeping: add `--refresh` and record the download date in each payload's provenance (security review, info).
 - [ ] **C7.** Add an aggregate-only guard to the public register writer (security review, low). The register is now 692 KB; consider splitting out the ring members.
+- [ ] **C9.** DPE energy class as a building-condition signal for effective age
+  (Gemini's suggestion: a 1900 building rated B/C has been renovated, F/G has not).
+  Needs the DPE class field verified live and a coverage check, since only
+  diagnosed dwellings have one.
+- [ ] **C10.** Floor-area basis (A4): DVF prices are per m² *habitable*, our floor
+  area is gross. For the land *share* this cancels only if the rebuild cost is
+  also per habitable m². The +20 % cost sensitivity brackets it (Paris 81.5 %).
 - [ ] **C8.** Marseille (16 arrondissements) can now be added the same way as Paris and Lyon.
 
 ---

@@ -15,6 +15,7 @@ injectable (`probe=`) so the logic is unit-testable offline.
 
 import json
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -49,21 +50,31 @@ def _chk(name, category, severity, message, adaptation=None, detail=None) -> dic
     }
 
 
-def _probe(url: str, timeout: int = 30):
+def _probe(url: str, timeout: int = 30, attempts: int = 3):
     """Final HTTP status for `url` following redirects, or None on error.
 
     Uses a 1-byte ranged GET so it never downloads a whole file: 200/206 =
-    present, 404 = absent. Network failures return None (treated as 'unknown').
+    present, 404 = absent. Transient failures (dropped connection, timeout,
+    429, 5xx) are retried with a short backoff, so one flaky request among
+    many parallel probes does not turn into a spurious WARN; if every attempt
+    fails the result is None (treated as 'unknown').
     """
     req = urllib.request.Request(
         url, headers={"User-Agent": "lvtshift-fr-preflight/1.0", "Range": "bytes=0-0"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status
-    except urllib.error.HTTPError as e:
-        return e.code
-    except Exception:
-        return None
+    status = None
+    for attempt in range(max(1, attempts)):
+        if attempt:
+            time.sleep(2 ** attempt)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            status = e.code
+            if e.code != 429 and e.code < 500:
+                return e.code
+        except Exception:
+            status = None
+    return status
 
 
 def _available(status) -> bool:
@@ -162,9 +173,20 @@ def _rei_fb_by_layer(cfg) -> dict:
     from ingest import _get
     where = (f'idcom="{cfg.insee_code}" and dispositif_fiscal="FB" '
              f'and varlib like "MONTANT"')
-    q = urllib.parse.urlencode({"where": where, "limit": 100,
-                                "select": "annee,destinataire,varlib,valeur"})
-    rows = json.loads(_get(f"{SRC['ofgl_rei']}?{q}")).get("results", [])
+    rows = []
+    # paginate: a single page would silently drop rows past 100. Opendatasoft
+    # refuses offset + limit > 10 000, so stop there with a clear error.
+    for offset in range(0, 10_000, 100):
+        q = urllib.parse.urlencode({
+            "where": where, "limit": 100, "offset": offset,
+            "order_by": "annee,destinataire,varlib",
+            "select": "annee,destinataire,varlib,valeur"})
+        page = json.loads(_get(f"{SRC['ofgl_rei']}?{q}")).get("results", [])
+        rows.extend(page)
+        if len(page) < 100:
+            break
+    else:
+        raise RuntimeError(f"REI query for {cfg.insee_code} exceeds 10 000 rows")
     out = {}
     for r in rows:
         if r.get("valeur") is None or "MONTANT R" not in (r.get("varlib") or "").upper():
