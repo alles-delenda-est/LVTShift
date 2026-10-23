@@ -34,11 +34,11 @@ française.
 | Bâtiments | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, emprise communale | courant | emprise, niveaux, hauteur, logements, usage, flag d'appariement FF |
 | Année de construction | DPE logements existants (ADEME) | API data-fair par `code_insee_ban` | depuis 07/2021 | dépréciation (tranche → année) |
 | Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties |
-| Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | 2024 | €/m² du foncier non constructible |
+| Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | édition 2025 (marché 2024) | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
 | Géométrie IRIS | Contours IRIS (IGN) | WFS `STATISTICALUNITS.IRIS:contours_iris` | courant | rattachement parcelle → IRIS pour le revenu |
-| Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 | analyse distributive (quintiles) |
+| Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 (voir §6.8) | analyse distributive (quintiles) |
 
 Toutes sous Licence Ouverte / Etalab. Les URL exactes sont dans
 `config.DATA_SOURCES`.
@@ -103,7 +103,8 @@ ne dégénère jamais en « inconnu ».
 DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log €/m²,
 rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 8),
 × surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
-la mutation, le €/m² écrêté aux 1er/99e centiles.
+la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées sont d'abord
+ramenées en euros 2025 (paragraphe suivant).
 
 **Déflateur de prix.** Les cinq années DVF couvrent un cycle (hausse jusqu'en 2022,
 puis correction), d'ampleur très variable selon les lieux : chaque vente est donc
@@ -260,9 +261,12 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    la VLC réelle par parcelle (Fichiers fonciers).
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
-   Atténué par le bornage [0,15 ; 0,85], l'agrégation et la bande de sensibilité.
-   Le foncier non bâti **n'utilise pas** le résiduel : le message clé (le
-   sous-utilisé paie plus) est indépendant de la qualité des données bâti.
+   Atténué par le bornage [0,15 ; 0,85] et l'agrégation, et rendu visible par la
+   bande de sensibilité part-terrain ±10 pts publiée avec les chiffres clés de
+   chaque commune (`headline_sensitivity`, recalculée à recettes constantes à
+   chaque extrémité). Le foncier non bâti
+   **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
+   indépendant de la qualité des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*
    diagnostiqués → biais de sélection) ; le repli médian communal applique une
    médiane résidentielle au non-résidentiel / non diagnostiqué. Tranche→année par
@@ -279,14 +283,24 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).
+   Publier la distribution non bornée à côté (la part avant bornage est conservée
+   dans la colonne `land_share_raw`). Précédence quand plancher agricole et
+   bornage se contredisent : le plancher (une observation de marché) l'emporte ;
+   ces parcelles sont flaggées `built_floored_ag` et leur part terrain peut
+   légitimement dépasser les bornes.
 6. **Nuance de zonage** : tout AU est traité constructible avec une décote
    forfaitaire ; les `AU fermées` mériteraient une décote plus forte et les
    pastilles `Nh/Ah` sont sous-évaluées.
 7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
    résidentielle ; les locaux professionnels (révision 2017) nécessitent une
    strate dédiée.
-8. **Revenus (Filosofi)** : 2021 (dernier millésime), communes ≥ 5 000 habitants
-   uniquement, certains IRIS sous secret statistique.
+8. **Revenus (Filosofi)** : millésime 2021 ; l'INSEE a publié en mai 2026 un
+   millésime « Filosofi 2 » 2023 avec indicateurs IRIS (rupture méthodologique) —
+   2021 est conservé en attendant évaluation. Communes ≥ 5 000 habitants
+   uniquement, certains IRIS sous secret statistique. Les quintiles exigent en
+   outre ≥ 5 IRIS aux revenus distincts : une commune à un ou deux IRIS
+   (p. ex. Figeac, pourtant ≥ 5 000 hab.) perd silencieusement ses graphiques de
+   revenu (l'amont saute le graphique quand les quantiles dégénèrent).
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont
    modélisées comme communes entières à partir de leurs arrondissements (§3.7) ;
    Marseille pourrait l'être de la même façon.
@@ -296,11 +310,39 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
     terrains à bâtir. `audit_land.py <commune>` chiffre, par libellé de zone, la
     part de l'impôt qu'il porte.
-11. **Les exonérations ne sont pas modélisées.** Le produit REI est net
-    d'exonérations (logement social neuf, art. 1384 A CGI ; abattement QPV ;
-    foncier public), mais l'état initial le répartit sur toutes les parcelles
-    bâties — surestimant la cotisation actuelle des HLM exonérés et la
-    sous-estimant ailleurs (sensible en Seine-Saint-Denis et à Paris).
+11. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
+    = emprise × niveaux est une surface brute murs compris (type SHOB), mais elle
+    multiplie un coût de construction exprimé en €/m² SHON et un €/m² hédonique
+    estimé sur la `surface_reelle_bati` DVF (habitable). Les deux niveaux de
+    valeur sont surestimés (ordre de 10–25 % selon le type de bâti) et le
+    résiduel hérite du biais ; le contrôle descendant du §5 l'absorbe en partie
+    (numérateur et dénominateur gonflés ensemble), pas les niveaux en euros des
+    graphiques. Signalé par la revue fondatrice (PR #1) ; nécessite un facteur
+    brut→habitable documenté.
+12. **Les exonérations ne sont pas modélisées.** Le produit REI est net
+    d'exonérations (logement social neuf, art. 1384 A CGI ; abattement QPV), et
+    les bâtiments publics (mairies, écoles, hôpitaux), les édifices religieux et
+    les bâtiments ruraux exonérés en permanence (CGI art. 1382) sont exonérés de
+    TFPB en réalité. Ici ils absorbent une part du produit actuel (via leur
+    surface plancher) **et** paient la LVT simulée — surestimant la cotisation
+    actuelle des HLM exonérés et du foncier public, dégonflant celle de tous les
+    autres (sensible en Seine-Saint-Denis et à Paris) et déplaçant les barres par
+    catégorie publiées comme chaque pourcentage. Le `exemption_flag_col` de
+    l'amont est géré et inutilisé ; les attributs BD TOPO `usage_1`/`nature`
+    permettraient de flagger les cas évidents.
+13. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
+    lignes hors commune gardent leur valeur dans le prix de la mutation mais
+    sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes
+    sont fréquentes (maisons rurales) — un biais haussier spatialement structuré
+    que l'écrêtage par centiles ne corrige pas (voir la docstring de
+    `ingest.fetch_dvf`).
+14. **Cache des données brutes optionnel.** `run_commune --cache-dir` (ou
+    `LVTFR_CACHE_DIR`) met en cache les téléchargements bruts par empreinte
+    d'URL, ce qui rend les lots reprenables ; sans lui, chaque exécution
+    re-télécharge depuis des endpoints vivants qui bougent parfois
+    (l'avertissement de config.py). Il n'y a pas encore de manifeste (source,
+    URL, date, empreinte) : les exécutions sont reproductibles comme commandes,
+    pas comme données.
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

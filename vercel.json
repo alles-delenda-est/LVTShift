@@ -3,5 +3,6 @@
   "framework": null,
   "installCommand": "cd lvtshift-fr/site && npm install",
   "buildCommand": "cd lvtshift-fr/site && npm run build",
-  "outputDirectory": "lvtshift-fr/site/out"
+  "outputDirectory": "lvtshift-fr/site/out",
+  "cleanUrls": true
 }
