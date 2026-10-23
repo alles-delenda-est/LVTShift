@@ -456,6 +456,17 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     for k in ("industrial", "professional"):
         out[f"target_{k}_share"] = share(rec.get("targets"), k)
         out[f"achieved_{k}_share"] = share(rec.get("achieved"), k)
+    # where industrial m² would pay less than professional m² the two groups
+    # are one (warehouses taxed as professional premises): only their combined
+    # share is meaningful, so report it as professional and say so
+    merged = "industrial merged into professional" in str(rec.get("note", ""))
+    out["industrial_merged_into_professional"] = merged
+    if merged:
+        for kind in ("target", "achieved"):
+            i, p = out[f"{kind}_industrial_share"], out[f"{kind}_professional_share"]
+            out[f"{kind}_professional_share"] = (round(i + p, 4)
+                                                 if i is not None and p is not None else None)
+            out[f"{kind}_industrial_share"] = None
     return out
 
 

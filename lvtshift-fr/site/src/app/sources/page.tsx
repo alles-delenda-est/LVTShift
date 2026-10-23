@@ -49,6 +49,12 @@ const DATA_SOURCES: {
     licence: "Licence Ouverte / Etalab",
   },
   {
+    name: "REI 2025 — répartition de la base",
+    source: "DGFiP, via OFGL (jeux rei et base-fiscale-simplifiee)",
+    role: "Base TFPB (E11), compensation de l'abattement industriel (WC75), bases brutes de CFE (T29, T29_1, X503) et taux de TFPB 2020 : parts industrielle, professionnelle et logement de la taxe actuelle, commune par commune",
+    licence: "Licence Ouverte / Etalab",
+  },
+  {
     name: "Contours IRIS",
     source: "IGN",
     role: "Géométrie des IRIS pour l'attribution parcelle → zone de revenu",
@@ -323,6 +329,89 @@ export default function SourcesPage() {
                 className="underline text-marine break-all"
               >
                 quostra.com
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-8 max-w-3xl">
+          <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-2">
+            Répartition de la taxe actuelle
+          </h4>
+          <p className="font-body text-sm text-gris leading-relaxed mb-3">
+            Les parts de la taxe foncière payées aujourd&apos;hui par les
+            établissements industriels, les locaux professionnels et les
+            logements sont reconstituées commune par commune à partir des
+            sources suivantes, consultées en octobre 2026. La méthode est
+            documentée dans la note de recherche{" "}
+            <code className="text-xs font-mono bg-lisere px-1">
+              docs/research/tfpb-baseline-calibration.md
+            </code>
+            .
+          </p>
+          <ul className="font-body text-sm text-encre leading-relaxed space-y-2 list-disc pl-5">
+            <li>
+              <strong>
+                DGFiP, recensement des éléments d&apos;imposition à la
+                fiscalité directe locale (REI) 2025
+              </strong>
+              , diffusé par l&apos;OFGL : base nette de TFPB (E11),
+              allocation compensatrice de l&apos;abattement de 50&nbsp;% des
+              valeurs locatives des établissements industriels (WC75), bases
+              brutes de CFE totales et des locaux professionnels (T29,
+              T29_1), abattement industriel de CFE (X503) ; taux de TFPB 2020
+              tirés de la base fiscale simplifiée.{" "}
+              <a
+                href="https://data.ofgl.fr/explore/dataset/rei/"
+                className="underline text-marine break-all"
+              >
+                data.ofgl.fr
+              </a>
+              {" · "}
+              <a
+                href="https://www.data.gouv.fr/datasets/impots-locaux-fichier-de-recensement-des-elements-dimposition-a-la-fiscalite-directe-locale-rei-4"
+                className="underline text-marine break-all"
+              >
+                data.gouv.fr
+              </a>
+            </li>
+            <li>
+              <strong>Loi n° 2020-1721 de finances pour 2021, art. 29</strong>{" "}
+              : division par deux des valeurs locatives industrielles et
+              compensation égale à la base perdue × le taux de TFPB de 2020
+              (taux 2014 du Rhône pour les communes de la Métropole de Lyon).{" "}
+              <a
+                href="https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000042753620"
+                className="underline text-marine break-all"
+              >
+                legifrance.gouv.fr
+              </a>
+            </li>
+            <li>
+              <strong>Code général des impôts, art. 1388</strong> : la TFPB est
+              établie sur la valeur locative cadastrale, sous déduction de
+              50&nbsp;%, pour toutes les propriétés bâties (d&apos;où le
+              facteur 0,5 appliqué à la base de CFE).{" "}
+              <a
+                href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006311555"
+                className="underline text-marine break-all"
+              >
+                legifrance.gouv.fr
+              </a>
+            </li>
+            <li>
+              <strong>
+                Cour des comptes, <em>Les taxes foncières</em>
+              </strong>{" "}
+              (observations définitives, 27 février 2023) : établissements
+              industriels 5,7&nbsp;% et locaux professionnels 22&nbsp;% du
+              produit de la taxe foncière en 2021, repères nationaux du
+              calage.{" "}
+              <a
+                href="https://www.ccomptes.fr/sites/default/files/2023-10/20230227-S2023-0028-Taxes-foncieres.pdf"
+                className="underline text-marine break-all"
+              >
+                ccomptes.fr
               </a>
             </li>
           </ul>

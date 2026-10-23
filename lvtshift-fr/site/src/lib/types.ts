@@ -73,6 +73,8 @@ export interface Commune {
       method: string; members_calibrated?: number;
       target_industrial_share?: number | null; achieved_industrial_share?: number | null;
       target_professional_share?: number | null; achieved_professional_share?: number | null;
+      /** industrial and professional treated as one group (warehouses taxed as professional premises) */
+      industrial_merged_into_professional?: boolean;
     };
     /** parcels treated as exempt public property (count only; absent in older payloads) */
     exempt_public_parcels?: number;

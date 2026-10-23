@@ -802,7 +802,14 @@ def test_load_baseline_coerces_sidecar(tmp=None):
         b = ew.load_baseline("zzb", str(d))
         assert b == {"method": "calibrated", "target_industrial_share": None,
                      "achieved_industrial_share": None, "target_professional_share": 0.2,
-                     "achieved_professional_share": None}
+                     "achieved_professional_share": None,
+                     "industrial_merged_into_professional": False}
+        side.write_text(json.dumps({"method": "calibrated", "note": "industrial merged into professional",
+                                    "targets": {"industrial": 0.01, "professional": 0.2},
+                                    "achieved": {"industrial": 0.05, "professional": 0.16}}))
+        m = ew.load_baseline("zzb", str(d))
+        assert m["industrial_merged_into_professional"] and m["achieved_industrial_share"] is None
+        assert m["target_professional_share"] == 0.21 and m["achieved_professional_share"] == 0.21
         side.write_text(json.dumps({"method": {"x": "<script>"}}))
         _assert_raises(ValueError, ew.load_baseline, "zzb", str(d))
         side.write_text("[1, 2]")

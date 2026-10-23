@@ -1,6 +1,6 @@
 # Paris & Lyon (intra- and extra-muros) — review checklist
 
-Branch `paris-lyon-territories` · prepared 2026-10-19 · nothing committed or pushed yet.
+Branch `baseline-weights` (stacked on `paris-lyon-territories` and the non-residential branches) · prepared 2026-10-19, updated 2026-10-23.
 
 **What was added.** Paris (20 arrondissements, one city-wide rate), Lyon (9
 arrondissements), *Paris extra-muros* (all 122 communes of 92/93/94) and *Lyon
@@ -8,20 +8,21 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs, storey counts by building type, exempt farm buildings and non-residential valuation, branch `nonres-valuation`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs, storey counts by building type, exempt farm buildings, non-residential valuation and today's tax calibrated to each commune's REI split, central professional scale 2.5, branch `baseline-weights`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,090 | €1,840.9 M | 75.8 % | 5.6 % | 19.2 % | 50.2 % |
-| Lyon | 31,022 | €362.9 M | 60.0 % | 0.8 % | 20.4 % | 70.8 % |
-| Paris extra-muros (122) | 566,442 | €3,569.3 M | 65.3 % | 1.8 % | 28.1 % | 68.6 % |
-| Lyon extra-muros (57) | 224,841 | €528.2 M | 55.4 % | 1.2 % | 38.3 % | 69.3 % |
+| Paris | 75,090 | €1,840.9 M | 75.8 % | 5.6 % | 19.6 % | 52.8 % |
+| Lyon | 31,022 | €362.9 M | 60.0 % | 0.8 % | 20.9 % | 74.6 % |
+| Paris extra-muros (122) | 566,442 | €3,569.3 M | 65.3 % | 1.8 % | 30.4 % | 70.8 % |
+| Lyon extra-muros (57) | 224,841 | €528.2 M | 55.4 % | 1.2 % | 43.0 % | 74.6 % |
 
-**Do not merge this branch alone, and do not publish its distributional
-figures yet.** Today's tax is still shared out by floor area with no category
-weights, which overstates what warehouses and factories pay today; the
-industrial cuts and the households' smaller gains around Lyon below are
-exaggerated by it. The category-weighted baseline is the next proposed PR.
+**Publish distributional figures only with the low bound beside them.** The
+professional-premises scale in today's-tax baseline (central 2.5, low bound 1.0)
+moves household results by 10–15 points; the new bills are the same in both
+cases. Low-bound amount shifted: Paris 30.2 %, Lyon 30.9 %, Paris ring 36.7 %,
+Lyon ring 40.6 %; share paying more 42.5 / 51.5 / 56.1 / 58.4 %. See
+"Calibrated current-tax baseline" below.
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -158,7 +159,7 @@ building footprint, Villeurbanne 0.1 %), mostly public and largely exempt anyway
 the fichiers fonciers' exemption codes would verify actual use.
 `--no-exemptions` turns off both exemptions.
 
-**Non-residential valuation (third non-residential step; do not merge alone).**
+**Non-residential valuation (third non-residential step; merge with the fourth).**
 Each building is typed from BD TOPO usage and nature (`estimate.building_type`,
 `config.BUILDING_TYPES`): shed, workshop, retail box, office, farm shed,
 greenhouse, sports hall, annex, religious or residential. Each type's cost is a
@@ -197,16 +198,89 @@ land €8.6bn → €3.8bn, buildings €8.5bn → €2.6bn; industrial bills �
 commercial −7 → −17 %, houses −1 → +6 %; amount shifted 26.6 → 38.3 % of the
 levy; poorest fifth's total change −13.5 → −3.7 %. Paris ring: industrial bills
 −31 %; "other" (garage and sports plots) +67 %, but only 1.4 % of today's tax.
-Income group totals: Paris −20.1 … +14.9 %, Lyon −18.7 … +13.6 %. **Key caveat:**
-the industrial cut, and the households' smaller gains around Lyon, are
-exaggerated by today's-tax baseline, which still shares the TFPB produit by
-floor area with no category weights. Industrial rental values under art. 1499
-CGI were halved in 2021, and RVLLP tariffs for warehouses and retail boxes are
-low per m², so the baseline overstates what they pay today. The recommendation,
-shared by the Gemini review, is not to publish these distributional figures until the baseline
-carries category weights (next PR). Evidence:
-`docs/research/nonres-valuation-2025.md` §2–5 and
+Income group totals: Paris −20.1 … +14.9 %, Lyon −18.7 … +13.6 %. These figures
+were on the floor-area baseline, which the fourth step (below) replaces.
+Evidence: `docs/research/nonres-valuation-2025.md` §2–5 and
 `docs/research/nonres_costs_calc.py`.
+
+**Calibrated current-tax baseline (fourth non-residential step, C11).** Today's
+TFPB used to be shared over taxable built parcels by floor area. It is now
+calibrated per commune to its official 2025 REI split into three groups
+(`config.BASELINE_MODEL`, `ingest.fetch_rei_baseline_split`,
+`estimate.baseline_floor`, `estimate.calibrated_weights`,
+`run_pipeline._baseline_weights`; evidence
+`docs/research/tfpb-baseline-calibration.md`):
+- *Industrial establishments (art. 1499 CGI):* WC75 (the State's compensation
+  for the 2021 halving) ÷ the 2020 commune + département rate (LFI 2021 art. 29;
+  Métropole de Lyon communes use the Rhône 2014 rate, 11.03 %). A national run
+  gives 5.7 % of the TFPB base, exactly the Cour des comptes figure (*Les taxes
+  foncières*, 2023); the CFE industrial line cross-checks within 0.6–1.13.
+- *Professional premises (RVLLP):* 0.5 × the CFE gross base of professional
+  premises (T29_1, else T29 − X503). The 0.5 is the TFPB's 50 % deduction (CGI
+  1388), which applies to all built property. The CFE is an occupier tax, so
+  vacant premises and non-CFE occupiers drop out: nationally the proxy gives
+  8.6 % against the Cour's 22 %. It is scaled by **2.5** (central); the raw
+  proxy (× 1.0) is the lower bound.
+- *Housing and other:* the rest.
+
+Floor area is grouped by BD TOPO usage (industrial = Industriel; professional =
+Commercial et services, Sportif and the ground floor of residential buildings
+whose usage_2 is commercial: 45 % of residential buildings in sampled Paris
+arrondissements, 5 % in Villeurbanne, < 1 % in Villepinte; housing = the rest).
+The produit is shared between groups in the target proportions and by floor
+area within each. Industrial merges into professional where it would pay less
+per m² (Villepinte, Santeny: warehouses taxed as professional premises, about
+0.42–0.46 × housing per m²). Per-m² weights are capped at 5 × housing;
+communes whose industrial + professional share exceeds 75 % are scaled to 75 %
+(Rungis 77 %, Marcy-l'Étoile 84 %, Vaujours 93 %). Missing REI data fall back
+to floor area with a note; 188/188 communes are calibrated. Method, targets and
+achieved shares are in the payload provenance (`current_tax_baseline`);
+`run_commune --baseline floor` keeps the old baseline as a sensitivity. Example
+weights per m² vs housing: Saint-Fons industrial 1.30, professional 0.91;
+Rungis 1.71 (merged); Vaujours and Marcy-l'Étoile capped at 5. Both of Gemini's
+legal claims (that the 0.5 covers housing only, and a 2017 rate) were checked on
+Légifrance and were wrong; its point that the CFE proxy undercounts was right.
+
+**Key result, the opposite of the expectation.** Business pays *more* per m²
+than floor area implied: art. 1499 values include fixed plant, and professional
+premises were revalued to 2013 rents while housing is on 1970 values. So the
+reform shifts even more from businesses to households than the floor-area
+baseline suggested. Land shares are unchanged.
+
+| | Before (floor area) | Central (× 2.5) | Low bound (× 1.0) |
+|---|---|---|---|
+| Paris income totals Q1..Q5 | −20.1 −11.2 −4.2 +5.7 +14.9 | −17.4 −8.3 −1.3 +8.9 +18.9 | −27.6 −18.8 −12.1 −2.9 +3.9 |
+| Lyon | −18.7 −8.5 −0.8 +3.2 +13.6 | −14.0 −3.5 +4.4 +8.5 +18.9 | −27.7 −18.2 −10.8 −7.0 +3.5 |
+| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.8 −16.9 −12.1 −12.6 −9.0 |
+| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.8 +2.8 +10.7 +4.9 −1.1 | −15.8 −11.4 −7.7 −12.1 −14.2 |
+| Amount shifted (% of levy): Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.0 | 30.2 / 30.9 / 36.7 / 40.6 |
+| Share paying more: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.8 / 74.6 | 42.5 / 51.5 / 56.1 / 58.4 |
+
+By category, central: Lyon ring industrial share of today's tax 10.0 → 11.9 %,
+commercial 15.0 → 16.6 %; bills industrial −63 %, commercial −24 %, houses
++13 %. Paris ring industrial share 5.3 → 5.8 %; bills industrial −36 %,
+commercial −15 %, houses +18 %. Low bound: Lyon ring commercial +47 %,
+industrial −42 %, houses −6 %; Paris ring commercial +77 %, industrial +1 %,
+houses +1 %.
+
+**The professional scale is now the load-bearing uncertainty.** It moves
+household results by 10–15 points; the new bills are identical, only the
+starting point moves. 2.5 is better supported (the raw proxy captures about
+40 % nationally), but one national multiplier cannot fit every commune;
+per-commune professional values (Fichiers fonciers) are the real fix. Present
+central and low bound side by side.
+
+**Plant.** The modelled LVT counts only the shed in an industrial parcel's
+improvement value, so it implicitly exempts the fixed plant that art. 1499
+values include; taxing it is a policy choice. A first-order estimate
+(`docs/research/plant_effect.py`) adds the plant's revalued cost to the
+improvement base and re-solves 4:1. Industrial bills, shed only → with plant
+depreciated / gross: Lyon ring −63 → −62 / −60 %, Paris ring −36 → −36 / −33 %,
+Marcy-l'Étoile −90 → −84 / −76 %, Saint-Fons −60 → −59 / −53 %. Industry's cut
+is overwhelmingly the land shift (cheap industrial land against today's
+capital-heavy base). **Policy finding:** in the Lyon chemical and industrial
+corridor, the LVT shifts tax from industry to households under the central
+baseline.
 
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
@@ -226,14 +300,18 @@ carries category weights (next PR). Evidence:
   needed. It is above 65 %, as are 47 other communes (mostly the inner ring next
   to Paris, plus La Rochelle, Fleurieu-sur-Saône, Collonges-au-Mont-d'Or,
   Feyzin); 40–65 % is now presented as a metro-wide reference, not a
-  per-commune test. The result is strongly progressive (group totals: poorest
-  income quintile −20.1 %, richest +14.9 %).
+  per-commune test. The result is progressive (group totals: poorest income
+  quintile −17.4 %, richest +18.9 % on the central baseline; −27.6 % and +3.9 %
+  on the low bound).
   *Recommendation:* publish with the usual ±10 pt band, and note that the main
-  remaining uncertainty is the habitable ÷ gross ratio behind the costs
-  (`cost_net_to_gross`; ±0.05 moves building value about ±7 %).
+  remaining uncertainty for the land share is the habitable ÷ gross ratio
+  behind the costs (`cost_net_to_gross`; ±0.05 moves building value about
+  ±7 %), and for the distributional results the professional scale in today's
+  tax (central 2.5 vs low bound 1.0).
 - [ ] **A2. Income quintiles for the rings.** Ranked across the whole ring, Lyon
-  extra-muros looks *regressive* (poorest +9 %, richest −1 %). Ranked within each
-  commune it is *progressive* (+5 % → +12 %): the pooled view mixes in rich-vs-poor
+  extra-muros looks flat to *regressive* (group totals, central baseline: poorest
+  +0.8 %, richest −1.1 %; median residential parcel +19 % → −1 %). Ranked within
+  each commune it is *progressive* (group totals −6.5 % → +9.9 %): the pooled view mixes in rich-vs-poor
   commune differences the reform does not touch. The site now shows both, with an
   explanation. Confirm you are happy with that framing, or prefer within-commune only.
 - [ ] **A3. Syndicate layer (Métropole de Lyon).** 45 ring communes have a
@@ -316,8 +394,8 @@ carries category weights (next PR). Evidence:
   (null for all published communes) because the INSEE page gives counts, not a
   percentage. Its comparator is also degenerate in dense cities (Lyon shows 99.9 %
   "under-built").
-- [x] **C5.** Non-residential valuation. Done in three stacked steps: storey counts by building type (`nonres-storeys`), farm buildings exempt under CGI 1382 6° (`rural-exemption`), per-type costs, lives and floors with replacement-cost valuation for shed-type parcels (`nonres-valuation`, do not merge alone). Remaining: offices still take the residential price surface (a DVF business-premises price surface is the follow-up).
-- [ ] **C11.** Category weights in today's-tax baseline (**next**, needed before `nonres-valuation` can be published). Floor-area sharing with no weights overstates what warehouses and factories pay today (art. 1499 industrial values halved in 2021; low RVLLP tariffs per m² for warehouses and retail boxes). Check whether the DGFiP REI produits split by category at commune level.
+- [x] **C5.** Non-residential valuation. Done in three stacked steps: storey counts by building type (`nonres-storeys`), farm buildings exempt under CGI 1382 6° (`rural-exemption`), per-type costs, lives and floors with replacement-cost valuation for shed-type parcels (`nonres-valuation`), and today's tax calibrated by tax group (`baseline-weights`, C11). Remaining: offices still take the residential price surface (a DVF business-premises price surface is the follow-up).
+- [x] **C11.** Category weights in today's-tax baseline. Done on branch `baseline-weights`: calibrated per commune to the REI 2025 split (industrial from WC75, professional from the CFE × 0.5 × 2.5, housing the rest). The REI does not split TFPB produits by category, so the split is rebuilt from those two lines. Remaining: the professional scale is one national multiplier; per-commune values need the Fichiers fonciers.
 - [ ] **C6.** Cache housekeeping: add `--refresh` and record the download date in each payload's provenance (security review, info).
 - [ ] **C7.** Add an aggregate-only guard to the public register writer (security review, low). The register is now 692 KB; consider splitting out the ring members.
 - [ ] **C9.** DPE energy class as a building-condition signal for effective age
