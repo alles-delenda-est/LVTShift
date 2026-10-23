@@ -1,0 +1,40 @@
+{
+  "commune_key": "roubaix",
+  "insee": "59512",
+  "name": "Roubaix",
+  "departement": "59",
+  "checks": [
+    {
+      "benchmark": "Vacance des logements (INSEE)",
+      "independence": "independent",
+      "external_value_pct": null,
+      "model_comparable_pct": 74.2,
+      "model_comparable_label": "part sous-bâtie/vacante de la base (valeur)",
+      "status": "non disponible",
+      "note": "Corrélation directionnelle entre communes (vacance INSEE vs foncier sous-utilisé), pas une égalité par commune."
+    },
+    {
+      "benchmark": "Part du foncier dans la valeur (ancrage national)",
+      "independence": "independent",
+      "model_land_share_pct": 57.0,
+      "band": [
+        40.0,
+        65.0
+      ],
+      "within_band": true,
+      "status": "ok",
+      "note": "Ancrage INSEE comptes de patrimoine ~45–50 % national ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
+    },
+    {
+      "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",
+      "independence": "data-quality",
+      "cadastre_built_share_pct": 89.7,
+      "model_built_share_pct": 79.9,
+      "n_parcels_cadastre": 33917,
+      "n_buildings_cadastre": 37619,
+      "gap_pt": 9.8,
+      "status": "ok",
+      "note": "Accord entre deux cartes du bâti d'agences différentes ; contrôle qualité de l'entrée 'bâti', pas de la valorisation."
+    }
+  ]
+}

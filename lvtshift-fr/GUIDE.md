@@ -113,7 +113,15 @@ It downloads that commune's parcels (cadastre), property sales (DVF), buildings
 (BD TOPO), and the real taxe-foncière total (REI via OFGL), then runs the model
 and writes the CSV + euro charts. Pre-configured communes you can swap in:
 `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`, `grenoble`,
-`annemasse`. Add `--no-report` for a spreadsheet-only run.
+`annemasse`, `sete`, `larochelle`, `paris`, `lyon`, plus any commune of the two
+inner rings by its plain-letters name (e.g. `boulogne-billancourt`). Add
+`--no-report` for a spreadsheet-only run, and `--cache-dir output/cache` to keep
+the downloads so a re-run is quick.
+
+To model a whole inner ring (each commune keeps its own tax total), run
+`python run_territory.py paris-extra-muros` (or `lyon-extra-muros`), then
+`python export_web.py paris-extra-muros` to build its website summary. The
+batch can be stopped and restarted; finished communes are skipped.
 
 > On Windows, run `$env:PYTHONUTF8 = "1"` once in the same PowerShell window
 > before the command (some labels use characters the old console can't print).

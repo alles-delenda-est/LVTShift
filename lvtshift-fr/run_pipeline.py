@@ -22,7 +22,7 @@ sys.path.insert(0, str(LVTSHIFT))
 from lvt.lvt_utils import model_split_rate_tax, save_standard_export  # noqa: E402
 
 import estimate  # noqa: E402
-from config import GRENOBLE as CFG  # switch commune here  # noqa: E402
+from config import GRENOBLE as CFG, slug_of  # noqa: E402
 
 # French -> LVTShift standard property categories (exact strings from
 # lvt_utils.STANDARD_PROPERTY_CATEGORIES)
@@ -57,7 +57,7 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
     (always, for France). What remains: category impact, ±10 % share,
     income-quintile (Filosofi), and the tax-change distribution.
     """
-    name = cfg.name.lower().replace(" ", "")
+    name = slug_of(cfg)
     try:
         from charts_fr import create_city_report_fr
     except ImportError as exc:  # matplotlib not installed
@@ -121,7 +121,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
             "iris": "std_geoid", "median_income_eur": "median_income"}),
             left_on=income_key, right_on="std_geoid", how="left")
 
-    name = cfg.name.lower().replace(" ", "")
+    name = slug_of(cfg)
     Path(out_dir).mkdir(exist_ok=True)
     out = save_standard_export(
         df=p, city=name,

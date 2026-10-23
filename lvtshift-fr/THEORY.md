@@ -67,27 +67,27 @@ propagates visibly rather than silently.
 2. **Aggregate, never per-parcel, for publication.** Imputation error averages out
    by property category and income quintile (Filosofi IRIS); individual bills do
    not — so they are never published.
-3. **Sensitivity as a first-class output** (the commitment). Every headline
-   result is to carry a land-share ±10pt band. Status: the band function
-   (`estimate.sensitivity_band`) exists and is unit tested, but is not yet
-   wired into the pipeline outputs — published runs do not carry the band
-   yet (METHODOLOGY §6, item 2).
+3. **Sensitivity as a first-class output.** Every headline result carries a
+   land-share ±10pt band, published with each commune's figures
+   (`headline_sensitivity`).
 4. **The access argument.** Each open-data compromise maps to a specific Fichiers
    fonciers (CEREMA/DGFiP) variable that would resolve it — making the demo itself
    the case for administrative data access.
+5. **Coverage is a finding, not a silent failure.** `preflight.py` probes every
+   source per commune and runs the post-run validations, classifying each
+   OK/WARN/FAIL with an analysed cause and adaptation, and writes a register
+   (`docs/INGESTION_REGISTER.md` + `site/public/data/ingestion_register.json`).
+   A commune that cannot be modelled is *documented with its reason*, never
+   dropped quietly — the register is itself part of the transparency argument.
+   The advocacy-site data layer (`export_web.py`) emits aggregate-only JSON per
+   commune (+ `validate_external.py` independent checks) for the public site.
 
 ## Key discoveries
 
-- **Real ingest now works end-to-end on live open data.** `run_commune.py` runs
-  cadastre → DVF → BD TOPO → REI → solver → euro charts for any configured
-  commune, **revenue-neutral to the euro** (Montreuil €101.8M, Cahors €22.7M hit
-  exactly). The pipeline is no longer synthetic-only.
-- **Classify-then-price fixed the rural artifact.** After the fix, agricultural +
-  natural land in Cahors (9 083 parcels, 42% of them) bears **0.3%** of the levy
-  (was: it swamped the base); built stock bears 98.4%, and built categories shift
-  only ±3% (was −83%). In Montreuil the built stock bears 98.5%, constructible
-  vacant 1.5% — and that vacant land still pays *more* (the LVT development
-  incentive, now correctly sized). Both stay revenue-neutral to the euro.
+- **Real ingest works end-to-end on live open data**, revenue-neutral to the
+  euro on every run. Classify-then-price fixed the rural artifact: farm/natural
+  land now bears a negligible share (Cahors 0.3 %), and vacant constructible land
+  still pays *more* — the LVT incentive, correctly sized.
 - **Construction year was a hidden degeneracy.** BD TOPO's date_d_apparition is
   null for whole communes (100 % of Cahors), so every building's age was
   "unknown" → building value ≈ 0 → every built parcel pinned at the 85 %
@@ -98,10 +98,82 @@ propagates visibly rather than silently.
   effect is large where buildings are a real share of value (cheap-land communes)
   and negligible where land dominates and the clip legitimately binds (Montreuil
   stays ~0.85) — the residual's sensitivity to building value, made visible.
-- **Arrondissement fiscal gotcha.** Paris/Lyon/Marseille arrondissements have
-  INSEE codes for cadastre/DVF/buildings but **no separate taxe foncière** (the
-  city + métropole levy it), so REI has no per-arrondissement produit. "Inner
-  Lyon" is therefore modelled as Villeurbanne (autonomous inner-ring commune).
+- **Paris and Lyon were never a data gap, only a key mismatch.** Their
+  arrondissements carry the data codes (cadastre/DVF/DPE/IRIS) while the city's
+  INSEE code carries the levy (REI). Splitting a config into a fiscal code and
+  data codes, fetching spatially one arrondissement at a time, and solving one
+  city-wide rate (as the PLM-law city actually votes) models both whole cities
+  revenue-neutral to the euro (Paris €1,840.9M on 78k parcels, Lyon €362.9M).
+- **Inner rings are aggregates of jurisdictions, not a metro tax.** The 179
+  extra-muros communes (122 in 92/93/94, 57 in the Métropole de Lyon) are each
+  solved on their own levy and pooled afterwards; the sensitivity band is
+  re-solved per commune. Live REI settles the layer question with data: no
+  GFP/EPT foncier-bâti exists in the petite couronne (two Gemini reviews
+  asserted otherwise, once each way — both checked against REI), and the
+  Métropole de Lyon has no départemental FB layer (its ex-départemental share
+  sits inside the commune rate since 2021). Syndicat layers are material in 45
+  Lyon-ring communes but scale euros, not percentages.
+- **Pooling incomes across jurisdictions manufactures a false gradient.** Ranked
+  ring-wide, the Lyon ring looks regressive (poorest quintile +9 %, richest
+  −1 %); ranked within each commune it is progressive (+5 % → +12 %). The
+  ring-wide view mixes the reform with rich-vs-poor commune differences that
+  the reform does not touch. Territories therefore publish both views.
+- **In Paris the model measures a revaluation, not a land/building split, and
+  the 85 % land share is an artefact.** Old stock (median age ~95 years) hits
+  the 25 % depreciation floor, so the raw land share is 92.9 % and 95.5 % of
+  built parcels sit at the 85 % clip. Valuing maintained buildings at a ~30-year
+  effective age gives 82–85 % (no write-down at all: 63–79 %, a lower bound): the
+  level is plausible, but the cap is hit because the depreciation rule treats a
+  maintained Haussmann building as worn out, and it hands every parcel the same
+  split. With every parcel at the same split, a land tax is simply a
+  tax proportional to market value: the Paris result (strongly progressive,
+  poorest −17 %, richest +11 %; flat sensitivity band) is the move from today's
+  floor-area bill to a value bill, and rests on the weakest input, the
+  current-tax proxy. The register flags any commune whose split is set by the
+  clip; the site labels such land shares "plafonnée". The fix is a depreciation
+  rule for maintained stock.
+- **Building-less land is mispriced locally, not in aggregate.** U-zoned public
+  open space (Paris UV parks, Lyon USP, Saint-Cloud's UL domain) and vacant
+  industrial/port land (UEi, Port Édouard Herriot UEp) take the residential
+  terrain-à-bâtir price. Aggregate effect is small (Paris 0.9 % of levy, rings
+  3.6 % / 6.2 %), but it concentrates: Saint-Cloud 24 %, Feyzin 19 %. Since the
+  site shows per-commune rows, this matters there first.
+- **Alsace-Moselle is a hard coverage boundary.** Depts 57/67/68 record sales in
+  the **Livre Foncier** (German-law registry), not the DGFiP DVF — so the open
+  DVF dataset has *no* file for them (Mulhouse/Colmar/Strasbourg/Metz all 404;
+  verified). With no sales there is no hedonic and no terrain-à-bâtir floor, so
+  these communes are **not modellable by this method** — not a transient miss,
+  not fixable by retry or fallback. Mulhouse is therefore documented in the
+  register as a coverage gap and excluded from the modelled panel (now 9: it was
+  the "Est/Rhin" slot). A Livre-Foncier ingest would be the only fix.
+- **The full 9-commune panel runs on live data.** One background pass ran all
+  ten; nine succeeded revenue-neutral, Mulhouse failed structurally. Re-running
+  also replaced a stale Grenoble sample (5 000-row/3-IRIS) with the real
+  12 853-parcel run — a reminder that cached CSVs can silently predate the
+  pipeline, which the register's post-run checks now catch.
+- **Imputed land share runs systematically high in hot markets.** The register
+  shows 6 of 9 communes above a 40–65 % land-share band (Montreuil 84 %, La
+  Rochelle 83.5 %, Villeurbanne 72 %). Partly the genuine LVT thesis (land
+  dominates value in high-demand cores), but the magnitude points at the
+  construction-cost calibration (too-low €/m² → inflated land residual) — the
+  first-order sensitivity below, now visible per commune rather than asserted.
+- **The "owner-occupier pays less" message is only half true — and the model
+  says which half.** The campaign's instinct (shifting off buildings spares the
+  resident household) holds for **apartments**, whose land is split across the
+  copropriété, so they are building-heavy and mostly pay *less*. It fails for the
+  **individual house on a valuable plot**, which is land-heavy: in dense/high-land
+  communes the large majority of *maisons individuelles* pay **more** — Villeurbanne
+  90.8 %, Annemasse 90.2 %, Grenoble 88.9 %, Sète 89.5 % (median change +15 to
+  +29 %) — while in cheap-land communes (Roubaix 25.8 %, La Rochelle 27.2 %) most
+  pay less. The determinant is the property's land share, not tenure. This is the
+  honest core of the distributional story and a genuine tension for advocacy: the
+  reform is *not* a free lunch for all owner-occupiers. The site states this
+  plainly (the sceptiques pager + a data-grounded callout reading live figures)
+  rather than repeating the comfortable slogan — but the framing of the campaign
+  message itself is a decision for the domain expert, not the model.
+- **The advocacy site** (Next.js, `site/`) reads aggregate JSON only: the
+  `/resultats` explorer (communes + the two ring aggregates with a per-member
+  table), argument pagers, and a méthodologie page carrying the register.
 
 ## Open questions / where the theory might break
 
@@ -127,9 +199,19 @@ propagates visibly rather than silently.
   quintiles −10 %, richer +9/+12 %). Caveats: 2021 is the last vintage, IRIS
   income exists only for communes ≥5 000 inhabitants, some IRIS are suppressed
   (NaN → drop out), and the quintile split inherits the current-tax baseline
-  weakness, so read it as directional.
-- **Construction costs are coarse regional pilots** (1600–2150 €/m²); a ±15% move
-  flows linearly into improvement value, so they need FFB/BT01 calibration.
+  weakness, so read it as directional. **Small communes can't form 5 quintiles**
+  at all — Cahors and Figeac have too few distinct IRIS incomes, so the exporter
+  emits `null` and no quintile chart is published (the register flags this per
+  commune via the real `build_by_income_quintile`, not a proxy).
+- **Construction costs are coarse regional pilots** (1600–2300 €/m²); a ±15% move
+  flows linearly into improvement value, so they need FFB/BT01 calibration — and
+  a stated floor-area basis (BD TOPO footprint × storeys is gross, published
+  costs are mostly per m² surface utile). In old dense stock depreciation, not
+  cost, decides the split.
+- **Exemptions are absent from the baseline** (HLM art. 1384 A, QPV abatement,
+  public land): the produit is net of them but spread over every built parcel.
+  Open proxies exist (RPLS social-housing register, QPV perimeters, BD TOPO
+  zones d'activité) but none is wired in yet.
 - **DPE construction year carries selection bias.** DPE covers diagnosed (sold/
   rented/renovated) *residential* dwellings, so the commune-median-era fallback
   applies a residential-diagnosed median to non-residential and never-diagnosed

@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -136,6 +136,22 @@ analysis/reports/
 *.tmp
 *.temp
 *~
+
+# The advocacy site SHIPS its aggregate JSON (build-time data for the Next.js
+# app). These overrides re-include it despite the data/ and *.json rules above.
+# The per-parcel CSVs in output/ stay ignored — only aggregates are published.
+!lvtshift-fr/site/public/data/
+!lvtshift-fr/site/public/data/*.json
+
+# The Next.js app legitimately needs JSON configs (package.json, tsconfig.json,
+# package-lock.json, …) which the blanket *.json rule above would ignore. Track
+# all JSON under the site EXCEPT its build/dep dirs (node_modules/ and .next/
+# stay ignored via lvtshift-fr/site/.gitignore, so git never descends into them).
+!lvtshift-fr/site/**/*.json
+
+# The Vercel deploy config at the repo root (tells Vercel to build the site
+# subfolder). Must be tracked despite the blanket *.json rule above.
+!/vercel.json
 
 # macOS
 .DS_Store

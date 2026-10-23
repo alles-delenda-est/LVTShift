@@ -112,22 +112,67 @@ fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'expo
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
 (surcouche de localisation monétaire du rapport amont).
 
+**3.7 Paris, Lyon et leurs couronnes** — Paris (75056) et Lyon (69123) lèvent la
+TFPB en tant que commune unique, mais cadastre, DVF, DPE et IRIS sont publiés par
+arrondissement (75101–75120, 69381–69389). La configuration porte les deux :
+`insee_code` est le code fiscal sur lequel le REI est indexé, `sub_codes` les
+codes de données. Chaque collecteur parcourt les codes de données (les requêtes
+spatiales se font une emprise d'arrondissement à la fois, de sorte qu'un bâtiment
+en limite n'est attribué qu'aux parcelles qu'il recouvre), les tables sont
+empilées en une seule commune et **un** split-rate neutre en recettes est résolu
+pour la ville — comme l'impôt réel, à taux unique. Les DPE rattachés au code de la
+ville sont également récupérés.
+
+Les **territoires extra-muros** — *Paris extra-muros* (les 122 communes des 92/93/94)
+et *Lyon extra-muros* (les 57 autres communes de la Métropole de Lyon ; liste figée
+dans `territories.py`) — ne sont **pas** un impôt métropolitain. Chaque commune
+membre est résolue sur son propre produit REI et reste à recettes constantes
+(`run_territory.py`, un processus par commune) ; `export_web.build_territory_payload`
+agrège ensuite les résultats par parcelle. La bande de sensibilité ±10 pt est
+recalculée commune par commune (chacune inclinée autour de sa propre part
+foncière) avant agrégation ; les quintiles de revenu sont classés sur toute la
+couronne. Une commune en échec figure dans le champ `coverage`, jamais imputée.
+Montreuil et Villeurbanne apparaissent seules et dans leur couronne ; les totaux du
+panel sur le site ne les comptent qu'une fois.
+
+**La part foncière de 84,9 % à Paris est fixée par la borne, pas mesurée.** 95,5 %
+des parcelles bâties parisiennes (Lyon : 59,8 %) sont à la borne haute de 0,85, car
+la règle de dépréciation ramène un immeuble d'environ 95 ans, entretenu en continu,
+à son plancher de 25 % (≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m²) : la
+part agrégée non bornée est de 92,9 %. Valoriser le bâti entretenu comme s'il
+avait ~30 ans (âge effectif, cf. littérature) donne 82–85 % (coût de reconstruction
+2 760–2 300 €/m²) ; sans aucune décote, 63–79 % (borne basse). Le niveau est donc
+plausible ; c'est l'uniformité du partage entre parcelles qui est un artefact. Le
+champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à la
+borne, et le site qualifie la part foncière de « plafonnée » quand elle atteint 50 %.
+
 ## 4. Paramètres et hypothèses clés
 
 - **Coût de construction €/m²** (clé en main, hors foncier ; gradient régional
-  pilote, à caler sur FFB/indice BT01) : IdF 2150 (Montreuil), Lyon/Villeurbanne
-  1950, Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650, Figeac 1600.
+  pilote, à caler sur FFB/indice BT01) : Paris 2300, petite couronne 2150
+  (Montreuil et tout le 92/93/94), Lyon, Villeurbanne et la couronne
+  métropolitaine 1950, Grenoble/Annemasse 1900, Roubaix 1750, Cahors 1650,
+  Figeac 1600.
 - **Dépréciation** : linéaire sur `dep_years` = 80 ans, plancher `dep_floor` = 0,25.
 - **Bornes de part foncière** : [0,15 ; 0,85] — contrainte de conception, pas une
-  mesure ; les cœurs denses peuvent légitimement dépasser 0,85 (publier la
-  distribution non bornée).
+  mesure. Là où la plupart des parcelles atteignent la borne haute (Paris, Lyon), la
+  cause identifiée est la surdépréciation du bâti ancien entretenu, non un foncier
+  réellement supérieur à 85 % (§3.7).
 - **Ratio split-rate** : 4:1 (terrain:bâti), scénario de référence.
 - **€/m² agricole** (SAFER, par département, agricole / naturel) : défaut
   0,64 / 0,49 ; Lot 0,45 / 0,35 ; Seine-St-Denis 1,00 / 0,60 ; Nord 0,85 / 0,50 ;
-  Rhône 0,70 / 0,50 ; Haute-Savoie 0,75 / 0,55 ; Isère 0,60 / 0,45.
+  Rhône 0,70 / 0,50 ; Haute-Savoie 0,75 / 0,55 ; Isère 0,60 / 0,45 ; Paris,
+  Hauts-de-Seine, Val-de-Marne 1,00 / 0,60 (ancrage francilien ; sans effet
+  matériel).
 - **Repli terrain à bâtir EPTB** : 99 €/m² (national).
 - **Décote AU** (`au_strict_factor`) : 0,55. **Shrinkage hédonique** k = 8.
-- **Strates REI** neutralisées : Commune + intercommunalité (configurable).
+- **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
+  contrôle `rei_layers` du preflight indique, par commune, les strates FB
+  existantes et la part laissée de côté : dans le 92/93/94 il n'y a pas de strate
+  GFP (ni les EPT ni la MGP ne lèvent de FB) ; dans la Métropole de Lyon une
+  strate *Syndicat* est significative dans 45 communes (5 à 23 % du produit FB).
+  Les taux syndicaux portent sur la même base VLC : les exclure réduit les montants
+  en euros mais pas les variations en %.
 
 ## 5. Validation
 
@@ -155,11 +200,10 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    la VLC réelle par parcelle (Fichiers fonciers).
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
-   Atténué par le bornage [0,15 ; 0,85] et l'agrégation. La bande de sensibilité
-   part-terrain ±10 pts (`estimate.sensitivity_band`) existe et est testée
-   unitairement, mais n'est **pas encore branchée sur les sorties du pipeline** —
-   aucune sortie publiée ne la porte à ce jour ; toute mention de la bande
-   ailleurs est un engagement, pas une description. Le foncier non bâti
+   Atténué par le bornage [0,15 ; 0,85] et l'agrégation, et rendu visible par la
+   bande de sensibilité part-terrain ±10 pts publiée avec les chiffres clés de
+   chaque commune (`headline_sensitivity`, recalculée à recettes constantes à
+   chaque extrémité). Le foncier non bâti
    **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
    indépendant de la qualité des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*
@@ -170,13 +214,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    généralisation à documenter.
 4. **Coûts de construction** : gradient régional pilote grossier ; un écart de
    ±15 % se propage linéairement dans la valeur bâti (donc terrain).
-5. **Bornage de part foncière** : peut masquer des parts > 85 % légitimes dans
-   les cœurs denses (Montreuil) ; publier la distribution non bornée à côté
-   (la part avant bornage est conservée dans la colonne `land_share_raw`).
-   Précédence quand plancher agricole et bornage se contredisent : le plancher
-   (une observation de marché) l'emporte ; ces parcelles sont flaggées
-   `built_floored_ag` et leur part terrain peut légitimement dépasser les
-   bornes.
+5. **Bornage de part foncière** : quand la plupart des parcelles bâties sont à une
+   borne, la part foncière est une hypothèse, pas un résultat (Paris 95,5 % à la
+   borne de 0,85, Lyon 59,8 %), et la variation du bâti entre parcelles disparaît. À
+   Paris, la cause est le plancher de dépréciation qui ramène le bâti ancien
+   entretenu à 25 % (§3.7). Le contrôle `land_share_clip` du preflight le signale ;
+   publier la distribution non bornée à côté (la part avant bornage est conservée
+   dans la colonne `land_share_raw`). Précédence quand plancher agricole et
+   bornage se contredisent : le plancher (une observation de marché) l'emporte ;
+   ces parcelles sont flaggées `built_floored_ag` et leur part terrain peut
+   légitimement dépasser les bornes.
 6. **Nuance de zonage** : tout AU est traité constructible avec une décote
    forfaitaire ; les `AU fermées` mériteraient une décote plus forte et les
    pastilles `Nh/Ah` sont sous-évaluées.
@@ -190,10 +237,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    outre ≥ 5 IRIS aux revenus distincts : une commune à un ou deux IRIS
    (p. ex. Figeac, pourtant ≥ 5 000 hab.) perd silencieusement ses graphiques de
    revenu (l'amont saute le graphique quand les quantiles dégénèrent).
-9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte ; les arrondissements
-   de Paris/Lyon/Marseille n'ont pas de TFPB propre (modélisés via des communes
-   autonomes, p. ex. Villeurbanne pour le cœur lyonnais).
-10. **Pool de prix nominaux (2021–2025).** Les ventes DVF entrent dans
+9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont
+   modélisées comme communes entières à partir de leurs arrondissements (§3.7) ;
+   Marseille pourrait l'être de la même façon.
+10. **Le foncier non bâti en zone U est évalué comme terrain à bâtir.** Les
+    espaces publics ouverts classés urbains (PLU de Paris *UV* : parcs,
+    cimetières, terrains de sport ; PLU-H de Lyon *USP* : services publics) et le
+    foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
+    terrains à bâtir. `audit_land.py <commune>` chiffre, par libellé de zone, la
+    part de l'impôt qu'il porte.
+11. **Pool de prix nominaux (2021–2025).** Les ventes DVF entrent dans
     l'hédonique et dans la base de prix terrain-à-bâtir en prix nominaux ;
     l'indice Notaires-INSEE a bougé de ~+7–8 % (2021), ~+5–6 % (2022), ~−2 %
     (2023), ~−1 % (2024) — un balancement de ~8–10 points dans la fenêtre, donc
@@ -201,7 +254,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     systématiquement différents de celles qui vendent tard (erreur spatialement
     structurée, signalée par la revue fondatrice du projet). Le crochet
     `deflator` de `fit_hedonic` attend l'indice cité.
-11. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
+12. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
     = emprise × niveaux est une surface brute murs compris (type SHOB), mais elle
     multiplie un coût de construction exprimé en €/m² SHON et un €/m² hédonique
     estimé sur la `surface_reelle_bati` DVF (habitable). Les deux niveaux de
@@ -210,26 +263,30 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (numérateur et dénominateur gonflés ensemble), pas les niveaux en euros des
     graphiques. Signalé par la revue fondatrice (PR #1) ; nécessite un facteur
     brut→habitable documenté.
-12. **Exonérations TFPB non modélisées.** Les bâtiments publics (mairies,
-    écoles, hôpitaux), les édifices religieux et les bâtiments ruraux exonérés
-    en permanence (CGI art. 1382) sont exonérés de TFPB en réalité ; ici ils
-    absorbent une part du produit actuel (via leur surface plancher) **et**
-    paient la LVT simulée, ce qui dégonfle la facture de tous les autres — cela
-    touche les barres par catégorie publiées et la base de départ de chaque
-    pourcentage. Le `exemption_flag_col` de l'amont est géré et inutilisé ; les
-    attributs BD TOPO `usage_1`/`nature` permettraient de flagger les cas
-    évidents.
-13. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
+13. **Les exonérations ne sont pas modélisées.** Le produit REI est net
+    d'exonérations (logement social neuf, art. 1384 A CGI ; abattement QPV), et
+    les bâtiments publics (mairies, écoles, hôpitaux), les édifices religieux et
+    les bâtiments ruraux exonérés en permanence (CGI art. 1382) sont exonérés de
+    TFPB en réalité. Ici ils absorbent une part du produit actuel (via leur
+    surface plancher) **et** paient la LVT simulée — surestimant la cotisation
+    actuelle des HLM exonérés et du foncier public, dégonflant celle de tous les
+    autres (sensible en Seine-Saint-Denis et à Paris) et déplaçant les barres par
+    catégorie publiées comme chaque pourcentage. Le `exemption_flag_col` de
+    l'amont est géré et inutilisé ; les attributs BD TOPO `usage_1`/`nature`
+    permettraient de flagger les cas évidents.
+14. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes
     sont fréquentes (maisons rurales) — un biais haussier spatialement structuré
     que l'écrêtage par centiles ne corrige pas (voir la docstring de
     `ingest.fetch_dvf`).
-14. **Pas de cache des données brutes.** Chaque exécution réelle re-télécharge
-    toutes les sources depuis des endpoints vivants qui bougent parfois
-    (l'avertissement de config.py) ; les exécutions sont reproductibles comme
-    commandes, pas comme données. Une couche cache + manifeste (source, URL,
-    date, empreinte) reste à faire.
+15. **Cache des données brutes optionnel.** `run_commune --cache-dir` (ou
+    `LVTFR_CACHE_DIR`) met en cache les téléchargements bruts par empreinte
+    d'URL, ce qui rend les lots reprenables ; sans lui, chaque exécution
+    re-télécharge depuis des endpoints vivants qui bougent parfois
+    (l'avertissement de config.py). Il n'y a pas encore de manifeste (source,
+    URL, date, empreinte) : les exécutions sont reproductibles comme commandes,
+    pas comme données.
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 
@@ -253,8 +310,18 @@ python run_commune.py <commune>          # exécution réelle ; CSV + graphiques
 ```
 
 Communes : `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
-`grenoble`, `annemasse`. Options : `--layers` (strates REI), `--no-dpe` (année BD
-TOPO seule, pour la comparaison de dépréciation), `--no-report` (CSV seul). Sous
+`grenoble`, `annemasse`, `sete`, `larochelle`, `paris`, `lyon` (et chaque commune
+des couronnes, par clé ASCII, p. ex. `boulogne-billancourt`). Options :
+`--layers` (strates REI), `--no-dpe` (année BD TOPO seule, pour la comparaison de
+dépréciation), `--no-report` (CSV seul), `--cache-dir` (réutilise les
+téléchargements ; reprise possible). Territoires :
+
+```
+python run_territory.py lyon-extra-muros --workers 4   # lot reprenable
+python export_web.py lyon-extra-muros                  # JSON agrégé
+python audit_land.py paris                             # audit du foncier non bâti
+```
+ Sous
 Windows, exporter `PYTHONUTF8=1`. Les sorties sont écrites dans
 `output/<commune>.csv` et `output/reports/<commune>/*.png` (toutes deux
 gitignorées).

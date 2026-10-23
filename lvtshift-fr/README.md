@@ -67,10 +67,8 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.*
 5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
-6. **Sensibilité** : engagement de publication — toute publication devra
-   porter la bande part-terrain ±10 pts. État actuel : la fonction existe et
-   est testée (`estimate.sensitivity_band`) mais n'est **pas encore branchée**
-   sur les sorties du pipeline (voir METHODOLOGY §6).
+6. **Sensibilité** : chaque commune publiée porte la bande part-terrain
+   ±10 pts (`headline_sensitivity`), recalculée à recettes constantes.
 
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
@@ -114,8 +112,11 @@ python run_commune.py montreuil     # commune réelle, données ouvertes en dire
 
 `run_commune.py` enchaîne l'ingest réel (cadastre Etalab, DVF, bâtiments
 BD TOPO via WFS IGN, cible REI via OFGL) puis appelle le solveur LVTShift.
-Communes pré-configurées : `villeurbanne` (cœur lyonnais), `roubaix`,
-`cahors`, `figeac` (Lot rural), `montreuil`, `grenoble`, `annemasse`.
+Communes pré-configurées : `villeurbanne`, `roubaix`, `cahors`, `figeac`
+(Lot rural), `montreuil`, `grenoble`, `annemasse`, `sete`, `larochelle`,
+`paris` et `lyon` (assemblées depuis leurs arrondissements, taux unique), plus
+les 179 communes des couronnes (`run_territory.py paris-extra-muros` /
+`lyon-extra-muros`, chacune à recettes constantes sur son propre produit).
 `--layers Commune` pour ne neutraliser que la part communale ;
 `--no-report` pour un export CSV seul.
 
@@ -149,14 +150,16 @@ export CSV seul : `run(..., make_report=False)`.
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
   sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
-  ventes de terrains nus) ; d'où les bandes de sensibilité obligatoires
-  (fonction existante mais **pas encore branchée** sur les sorties — aucune
-  sortie actuelle ne porte la bande ; voir METHODOLOGY §6).
+  ventes de terrains nus) ; d'où la bande de sensibilité ±10 pts publiée avec
+  chaque commune (voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la
   distribution **non bornée** des parts terrain (colonne `land_share_raw`,
   conservée à cet effet) à côté des résultats bornés, et signaler que les
-  cœurs denses peuvent légitimement dépasser 85 %.
+  cœurs denses peuvent légitimement dépasser 85 %. À Paris, 95,5 % des
+  parcelles bâties sont à la borne de 85 % : la part foncière affichée (84,9 %)
+  est fixée par la borne, pas mesurée — la cause est la dépréciation du bâti
+  ancien entretenu, pas un foncier supérieur à 85 %.
 - **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
   hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
   (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la

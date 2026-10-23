@@ -207,7 +207,12 @@ def main():
     ap.add_argument("--no-dpe", action="store_true",
                     help="don't anchor construction year on DPE (BD TOPO only) "
                          "— for the depreciation side-by-side")
+    ap.add_argument("--cache-dir", default=None,
+                    help="cache raw downloads here (resumable batch runs); "
+                         "default: env LVTFR_CACHE_DIR, else no cache")
     args = ap.parse_args()
+    if args.cache_dir:
+        ingest.CACHE_DIR = args.cache_dir
 
     cfg = COMMUNES[args.commune]
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
@@ -235,6 +240,28 @@ def main():
     lc["levy_pct"] = (100 * lc["levy_eur"] / o["new_tax"].sum()).round(1)
     lc["levy_eur"] = lc["levy_eur"].round(0)
     print("levy borne by land class:\n", lc.sort_values("levy_eur").to_string())
+
+    # Local audit file (output/ is git-ignored; NEVER published — per-parcel
+    # imputations are only honest in aggregate). Lets the validation pass check
+    # e.g. which zoning labels the building-less 'constructible' land carries.
+    from pathlib import Path
+    from config import slug_of
+    p = parcels.reset_index(drop=True)
+    diag = pd.DataFrame({
+        "idpar": p["idpar"].values,
+        "land_type": p["land_type"].values,
+        "zone_typ": p.get("zone_typ", pd.Series([None] * len(p))).values,
+        "zone_libelle": p.get("zone_libelle", pd.Series([None] * len(p))).values,
+        "category_fr": p["category_fr"].values,
+        "parcel_area_m2": p["parcel_area_m2"].values,
+        "land_value": o["taxable_land_value"].values,
+        "improvement_value": o["taxable_improvement_value"].values,
+        "current_tax": o["current_tax"].values,
+        "new_tax": o["new_tax"].values,
+    })
+    ddir = Path(args.out_dir) / "diagnostics"
+    ddir.mkdir(parents=True, exist_ok=True)
+    diag.to_csv(ddir / f"{slug_of(cfg)}_parcels.csv", index=False)
 
 
 if __name__ == "__main__":
