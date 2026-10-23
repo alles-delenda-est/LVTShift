@@ -110,6 +110,9 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p = estimate.habitable_basis(p, cfg)
     p = estimate.market_value(p, surface, cfg.net_to_gross)
     p = estimate.land_value_residual(p, cfg)
+    stale = Path(out_dir) / f"{slug_of(cfg)}.baseline.json"
+    if stale.exists():          # never pair a new export with an old sidecar
+        stale.unlink()
     baseline = _baseline_weights(p, buildings, baseline_split, cfg)
     if baseline["weights"]:
         p = p.merge(baseline.pop("floor"), on="idpar", how="left")
@@ -187,11 +190,20 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
     if split is None:
         out["note"] = "REI split unavailable"
         return out
-    targeted = split["industrial"] + split["professional"]
-    if not (0 <= targeted <= M["max_targeted_share"]):
-        out["note"] = f"industrial + professional {targeted:.0%} out of bounds"
+    if not (0 <= split["industrial"] <= 1 and 0 <= split["professional"] <= 1):
+        out["note"] = f"invalid split {split}"
         print(f"[{cfg.name}] baseline: {out['note']}; floor-area baseline kept")
         return out
+    # business-heavy communes (Rungis, Vaujours…): the national professional
+    # scale can overshoot, so both shares are scaled down to the ceiling
+    targeted = split["industrial"] + split["professional"]
+    cap_note = ""
+    if targeted > M["max_targeted_share"]:
+        k = M["max_targeted_share"] / targeted
+        split = {**split, "industrial": split["industrial"] * k,
+                 "professional": split["professional"] * k}
+        cap_note = f"industrial + professional {targeted:.0%} scaled to {M['max_targeted_share']:.0%}; "
+    out["targets"] = split
     floor = estimate.baseline_floor(buildings)
     q = p[["idpar", "floor_area_m2"]].merge(floor, on="idpar", how="left")
     taxable = q["floor_area_m2"].fillna(0).to_numpy() > 0
@@ -200,6 +212,7 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
     totals = {k: float(q.loc[taxable, f"floor_{k}"].fillna(0).sum())
               for k in estimate.BUCKETS}
     w, note = estimate.calibrated_weights(totals, split, M["max_weight_ratio"])
+    note = cap_note + note
     out.update(method="calibrated", weights=w, note=note, floor=floor,
                floor_totals=totals)
     print(f"[{cfg.name}] baseline weights per m² vs housing: industrial "

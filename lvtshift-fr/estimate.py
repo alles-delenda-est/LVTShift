@@ -591,6 +591,10 @@ def calibrated_weights(floor: dict, targets: dict, max_ratio: float) -> tuple:
     """
     s = {"industrial": float(targets["industrial"]),
          "professional": float(targets["professional"])}
+    if not all(np.isfinite(v) and 0 <= v <= 1 for v in s.values()):
+        return {k: 1.0 for k in BUCKETS}, f"invalid targets {s}: floor-area baseline"
+    if not all(np.isfinite(float(floor.get(k, 0.0))) for k in BUCKETS):
+        return {k: 1.0 for k in BUCKETS}, "non-finite floor: floor-area baseline"
     s["housing"] = 1.0 - s["industrial"] - s["professional"]
     f = {k: float(floor.get(k, 0.0)) for k in BUCKETS}
     notes = []
@@ -672,6 +676,11 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
     if category_weights and category_col in out.columns:   # sensitivity only
         w = w * out[category_col].map(category_weights).fillna(1.0)
     if bucket_weights:      # calibrated baseline: weighted floor by tax group
+        bad = {k: v for k, v in bucket_weights.items()
+               if not (np.isfinite(float(v)) and float(v) > 0)}
+        if bad or set(bucket_weights) != set(BUCKETS):
+            raise ValueError(f"bucket weights must be finite and positive for "
+                             f"{BUCKETS}, got {bucket_weights}")
         cols = [f"floor_{k}" for k in BUCKETS]
         if all(c in out.columns for c in cols):
             wf = sum(out[f"floor_{k}"].fillna(0.0) * float(bucket_weights[k])
@@ -679,5 +688,7 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
             # parcels with a building but no grouped floor keep plain floor area
             w = w.where(wf <= 0, wf.where(w > 0, 0.0))
     total = w.sum()
+    if commune_tfpb_produit > 0 and not (np.isfinite(total) and total > 0):
+        raise ValueError(f"current-tax weights sum to {total}: cannot share the produit")
     out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out

@@ -127,6 +127,14 @@ class CommuneConfig:
     key: str = ""
 
     def __post_init__(self):
+        # INSEE codes go into OFGL/WFS query strings: digits only (2A/2B Corsica)
+        import re
+        for c in (self.insee_code, *self.sub_codes):
+            if not (isinstance(c, str) and re.fullmatch(r"\d{5}|2[AB]\d{3}", c)):
+                raise ValueError(f"invalid INSEE code {c!r}")
+        if not (isinstance(self.departement, str)
+                and re.fullmatch(r"\d{2,3}|2[AB]", self.departement)):
+            raise ValueError(f"invalid département {self.departement!r}")
         # validate once at construction, and freeze the maps so a later edit to
         # one config can never leak into another that shares them (copy.copy)
         self.net_to_gross = check_area_ratios(self.net_to_gross, "net_to_gross")

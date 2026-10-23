@@ -8,6 +8,7 @@ solver. Never emits per-parcel rows. See docs/superpowers/specs/
 """
 
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -438,13 +439,31 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     if not path.exists():
         return {"method": "floor_area"}
     rec = json.loads(path.read_text(encoding="utf-8"))
-    out = {"method": rec.get("method", "floor_area")}
+    if not isinstance(rec, dict):
+        raise ValueError(f"{path}: baseline sidecar must be an object")
+    method = rec.get("method")
+    if method not in ("calibrated", "floor_area"):
+        raise ValueError(f"{path}: unknown baseline method {method!r}")
+
+    def share(d, k):
+        v = d.get(k) if isinstance(d, dict) else None
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            return None
+        v = float(v)
+        return round(v, 4) if math.isfinite(v) and 0 <= v <= 1 else None
+
+    out = {"method": method}
     for k in ("industrial", "professional"):
-        t = (rec.get("targets") or {}).get(k)
-        a = (rec.get("achieved") or {}).get(k)
-        out[f"target_{k}_share"] = round(float(t), 4) if t is not None else None
-        out[f"achieved_{k}_share"] = round(float(a), 4) if a is not None else None
+        out[f"target_{k}_share"] = share(rec.get("targets"), k)
+        out[f"achieved_{k}_share"] = share(rec.get("achieved"), k)
     return out
+
+
+def _territory_baseline(present: list, out_dir: str) -> dict:
+    """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'."""
+    n = sum(load_baseline(k, out_dir)["method"] == "calibrated" for k in present)
+    method = ("calibrated" if n == len(present) else "floor_area" if n == 0 else "mixed")
+    return {"method": method, "members_calibrated": n}
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
@@ -626,11 +645,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
-            "current_tax_baseline": {
-                "method": "calibrated",
-                "members_calibrated": sum(
-                    load_baseline(k, out_dir)["method"] == "calibrated" for k in present),
-            },
+            "current_tax_baseline": _territory_baseline(present, out_dir),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "

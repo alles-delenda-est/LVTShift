@@ -654,10 +654,14 @@ def fetch_rei_tfpb_produit(cfg, layers=("Commune", "GFP"),
     return float(total)
 
 
-def _ofgl_records(url: str, where: str, select: str) -> list:
-    """All records of an OFGL Opendatasoft query (paged, cached via _get)."""
+def _ofgl_records(url: str, where: str, select: str, max_pages: int = 5) -> list:
+    """All records of an OFGL Opendatasoft query (paged, cached via _get).
+    A per-commune query returns a handful of rows; more than max_pages pages
+    means the filter matched far more than one commune, so it fails."""
     rows, offset = [], 0
     while True:
+        if offset >= 100 * max_pages:
+            raise IngestUnavailable("REI", f"query returned over {offset} rows: {where[:80]}")
         q = urllib.parse.urlencode({"where": where, "select": select,
                                     "limit": 100, "offset": offset})
         page = json.loads(_get(f"{url}?{q}")).get("results", [])
@@ -678,27 +682,58 @@ def fetch_rei_baseline_split(cfg) -> dict:
     REI lines needed are missing (the caller then keeps the floor-area
     baseline and says so).
     """
+    try:
+        return _rei_baseline_split(cfg)
+    except IngestUnavailable:
+        raise
+    except Exception as exc:     # any malformed answer: fall back, never crash
+        raise IngestUnavailable("REI", f"baseline split for {cfg.insee_code}: "
+                                       f"{type(exc).__name__}: {exc}") from exc
+
+
+def _num(v):
+    """A finite float, or None (missing, text, NaN, inf)."""
+    import math
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return None
+    v = float(v)
+    return v if math.isfinite(v) else None
+
+
+def _rei_baseline_split(cfg) -> dict:
     from config import BASELINE_MODEL as M
     year = str(M["rei_year"])
     wanted = ("E11", "WC75", "T29", "T29_1", "X503")
     vars_sql = ",".join(f'"{v}"' for v in wanted)
-    rei = {r["var"]: r.get("valeur") for r in _ofgl_records(
-        SRC["ofgl_rei"], f'idcom="{cfg.insee_code}" and annee="{year}" '
-                         f'and var in ({vars_sql})', "var,valeur")}
+    rei = {}
+    for r in _ofgl_records(SRC["ofgl_rei"], f'idcom="{cfg.insee_code}" and annee="{year}" '
+                                            f'and var in ({vars_sql})', "var,valeur"):
+        var = r.get("var")
+        if var in rei:
+            raise IngestUnavailable("REI", f"duplicate REI line {var} for {cfg.insee_code}")
+        rei[var] = _num(r.get("valeur"))
     e11 = rei.get("E11")
     if not e11 or e11 <= 0:
         raise IngestUnavailable("REI", f"no TFPB base (E11) {year} for {cfg.insee_code}")
-    rates = {r["destinataire"]: r.get("taux_net") for r in _ofgl_records(
+    rates = {r.get("destinataire"): _num(r.get("taux_net")) for r in _ofgl_records(
         SRC["ofgl_base_fiscale"],
         f'idcom="{cfg.insee_code}" and exer="{M["rates_year"]}" and dispositif_fiscal="TFPB"',
         "destinataire,taux_net")}
     t_com = rates.get("Commune")
-    if t_com is None:
+    if not t_com or t_com <= 0:
         raise IngestUnavailable("REI", f"no {M['rates_year']} TFPB rate for {cfg.insee_code}")
     # Métropole de Lyon communes: the law uses the Rhône 2014 rate, not the
-    # Métropole's 2020 rate that the simplified base reports as 'Département'
-    t_dep = (M["rhone_2014_fb_rate"] if cfg.departement == "69"
-             else (rates.get("Département") or 0.0))
+    # Métropole's 2020 rate that the simplified base reports as 'Département';
+    # Paris levies both shares under one commune rate (no département line)
+    if cfg.departement == "69":
+        t_dep = M["rhone_2014_fb_rate"]
+    elif cfg.departement == "75":
+        t_dep = 0.0
+    else:
+        t_dep = rates.get("Département")
+        if t_dep is None or t_dep < 0:
+            raise IngestUnavailable("REI", f"no {M['rates_year']} département TFPB rate "
+                                           f"for {cfg.insee_code}")
     industrial = (rei.get("WC75") or 0.0) / ((t_com + t_dep) / 100.0)
     if rei.get("T29_1"):
         cfe_pro, src = rei["T29_1"], "T29_1"
