@@ -180,11 +180,10 @@ Ranked by how much they move published (category/quintile) results.
    the starting bill. Resolved only by per-parcel VLC (Fichiers Fonciers).
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
-   value. Mitigated by the [0.15, 0.85] clip and aggregation. The land-share
-   ±10 pt sensitivity band (`estimate.sensitivity_band`) exists and is unit
-   tested, but is **not yet wired into the pipeline outputs** — published runs
-   do not carry it yet; treat any band language elsewhere as a commitment, not
-   a description. Vacant land does **not** use the residual, so the LVT headline
+   value. Mitigated by the [0.15, 0.85] clip and aggregation, and made visible
+   by the land-share ±10 pt sensitivity band published with every commune's
+   headline figures (`headline_sensitivity`, re-solved revenue-neutral at each
+   end). Vacant land does **not** use the residual, so the LVT headline
    (under-used land pays more) is unaffected by building-data quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies a residential median to
