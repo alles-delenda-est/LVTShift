@@ -43,7 +43,8 @@ propagates visibly rather than silently.
   MAJIC-derived attributes per building (hauteur, nombre_d_etages,
   nombre_de_logements, usage_1, appariement_fichiers_fonciers) queryable by
   commune bbox — avoiding the multi-GB BDNB departmental download for equivalent
-  content. Buildings join to cadastre parcels by centroid-in-polygon.
+  content. Buildings join to cadastre parcels by area-weighted intersection
+  (see the land-classification bullet below).
 - **Tax target: OFGL's commune-level REI API.** Foncier bâti is `FB`; the target
   is the `MONTANT RÉEL` line summed over the chosen beneficiary layers (default
   Commune + intercommunalité). Which layers are held neutral is an explicit
@@ -67,7 +68,8 @@ propagates visibly rather than silently.
    by property category and income quintile (Filosofi IRIS); individual bills do
    not — so they are never published.
 3. **Sensitivity as a first-class output.** Every headline result carries a
-   land-share ±10pt band.
+   land-share ±10pt band, published with each commune's figures
+   (`headline_sensitivity`).
 4. **The access argument.** Each open-data compromise maps to a specific Fichiers
    fonciers (CEREMA/DGFiP) variable that would resolve it — making the demo itself
    the case for administrative data access.
