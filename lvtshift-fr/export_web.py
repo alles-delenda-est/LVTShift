@@ -429,10 +429,29 @@ def assert_aggregate_only(payload: dict) -> None:
     assert not IRIS_CODE_RE.search(blob), "an IRIS code leaked into payload"
 
 
+def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
+    """How the run shared today's tax (run_pipeline sidecar): method, and the
+    commune-level target and achieved shares by tax group. Older runs without
+    the sidecar report the floor-area method. Scalars only."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.baseline.json"
+    if not path.exists():
+        return {"method": "floor_area"}
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    out = {"method": rec.get("method", "floor_area")}
+    for k in ("industrial", "professional"):
+        t = (rec.get("targets") or {}).get(k)
+        a = (rec.get("achieved") or {}).get(k)
+        out[f"target_{k}_share"] = round(float(t), 4) if t is not None else None
+        out[f"achieved_{k}_share"] = round(float(a), 4) if a is not None else None
+    return out
+
+
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     from config import COMMUNES
     cfg = COMMUNES[commune_key]
     df = load_parcels(commune_key, out_dir)
+    baseline = load_baseline(commune_key, out_dir)
     return {
         "commune_key": commune_key,
         "kind": "commune",
@@ -450,6 +469,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
             "activity_land_ratio": getattr(cfg, "activity_land_ratio", None),
+            "current_tax_baseline": baseline,
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
@@ -606,6 +626,11 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
+            "current_tax_baseline": {
+                "method": "calibrated",
+                "members_calibrated": sum(
+                    load_baseline(k, out_dir)["method"] == "calibrated" for k in present),
+            },
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "

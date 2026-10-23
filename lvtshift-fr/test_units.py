@@ -655,6 +655,83 @@ def test_drc_parcels_value_land_at_local_price_not_residual():
         _assert_raises(ValueError, dataclasses.replace, CFG, activity_land_ratio=bad)
 
 
+def test_baseline_floor_groups_and_shops_below_flats():
+    iac = "Industriel, agricole ou commercial"
+    b = pd.DataFrame([
+        dict(idpar="F", footprint_m2=100.0, n_levels=3.0, usage="Industriel", usage_2=None, nature=iac),
+        dict(idpar="O", footprint_m2=100.0, n_levels=4.0, usage="Commercial et services",
+             usage_2=None, nature="Indifférenciée"),
+        dict(idpar="M", footprint_m2=100.0, n_levels=5.0, usage="Résidentiel",
+             usage_2="Commercial et services", nature="Indifférenciée"),
+        dict(idpar="H", footprint_m2=100.0, n_levels=np.nan, height_m=6.0, usage="Résidentiel",
+             usage_2=None, nature="Indifférenciée"),
+    ])
+    f = estimate.baseline_floor(b).set_index("idpar")
+    assert f.loc["F"].tolist() == [300.0, 0.0, 0.0]
+    assert f.loc["O"].tolist() == [0.0, 400.0, 0.0]
+    assert f.loc["M"].tolist() == [0.0, 100.0, 400.0]     # shop on the ground floor
+    assert f.loc["H"].tolist() == [0.0, 0.0, 200.0]       # storeys imputed as elsewhere
+
+
+def test_calibrated_weights_hit_targets_merge_and_cap():
+    floor = {"industrial": 1000.0, "professional": 1000.0, "housing": 8000.0}
+    w, note = estimate.calibrated_weights(floor, {"industrial": 0.2, "professional": 0.1}, 5.0)
+    tax = {k: floor[k] * w[k] for k in floor}
+    tot = sum(tax.values())
+    assert abs(tax["industrial"] / tot - 0.2) < 1e-12 and abs(tax["professional"] / tot - 0.1) < 1e-12
+    assert note == "calibrated"
+    # warehouses taxed as professional premises: industrial per m² below
+    # professional -> one merged group carrying both targets
+    w, note = estimate.calibrated_weights(floor, {"industrial": 0.002, "professional": 0.14}, 5.0)
+    assert w["industrial"] == w["professional"] and "merged" in note
+    tax = {k: floor[k] * w[k] for k in floor}
+    assert abs((tax["industrial"] + tax["professional"]) / sum(tax.values()) - 0.142) < 1e-12
+    # one big plant on a few m²: capped
+    w, note = estimate.calibrated_weights({"industrial": 10.0, "professional": 1000.0,
+                                           "housing": 8990.0},
+                                          {"industrial": 0.3, "professional": 0.1}, 5.0)
+    assert w["industrial"] == 5.0 and "capped" in note
+    # no non-residential floor at all: everything back on housing
+    w, _ = estimate.calibrated_weights({"industrial": 0.0, "professional": 0.0, "housing": 10.0},
+                                       {"industrial": 0.1, "professional": 0.1}, 5.0)
+    assert w == {"housing": 1.0, "industrial": 1.0, "professional": 1.0}
+
+
+def test_current_tax_with_bucket_weights_is_revenue_exact():
+    p = pd.DataFrame({"floor_area_m2": [100.0, 100.0, 0.0, 100.0],
+                      "floor_industrial": [100.0, 0.0, 0.0, 0.0],
+                      "floor_professional": [0.0, 0.0, 0.0, 100.0],
+                      "floor_housing": [0.0, 100.0, 0.0, 0.0],
+                      "is_exempt_public": [False, False, False, True]})
+    out = estimate.current_tax(p, 3000.0, bucket_weights={"industrial": 2.0, "professional": 0.5,
+                                                          "housing": 1.0})
+    assert abs(out["current_tax"].sum() - 3000.0) < 1e-9
+    assert out["current_tax"].tolist() == [2000.0, 1000.0, 0.0, 0.0]   # exempt and unbuilt pay 0
+
+
+def test_rei_baseline_split(monkeypatch=None):
+    import ingest
+    rei = [{"var": "E11", "valeur": 1_000_000.0}, {"var": "WC75", "valeur": 30_000.0},
+           {"var": "T29", "valeur": 500_000.0}, {"var": "X503", "valeur": 100_000.0}]
+    rates = [{"destinataire": "Commune", "taux_net": 20.0},
+             {"destinataire": "Département", "taux_net": 10.0}]
+    orig = ingest._ofgl_records
+    ingest._ofgl_records = lambda url, where, select: rei if "rei" in url else rates
+    try:
+        s = ingest.fetch_rei_baseline_split(CFG)
+        assert abs(s["industrial"] - 0.1) < 1e-12          # 30 000 / 30 % / 1 M
+        assert abs(s["professional"] - 0.2) < 1e-12        # 0.5 × (500k − 100k) / 1 M
+        assert s["pro_source"] == "T29-X503"
+        import dataclasses
+        lyon = dataclasses.replace(CFG, departement="69")   # Rhône 2014 rate, not 10 %
+        assert abs(ingest.fetch_rei_baseline_split(lyon)["industrial"]
+                   - 30_000 / 0.3103 / 1e6) < 1e-12
+        rei[0]["valeur"] = None
+        _assert_raises(ingest.IngestUnavailable, ingest.fetch_rei_baseline_split, CFG)
+    finally:
+        ingest._ofgl_records = orig
+
+
 # ------------------------------------------------------------------ #
 
 if __name__ == "__main__":

@@ -314,7 +314,7 @@ def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
 
     keep = ["geometry", "nombre_d_etages", "hauteur", "date_d_apparition",
             "usage_1", "nombre_de_logements", "appariement_fichiers_fonciers",
-            "nature", "construction_legere"]
+            "nature", "construction_legere", "usage_2"]
     bg = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)
     bg = bg[[c for c in keep if c in bg.columns]].copy()
     bg["bld_footprint_m2"] = bg.geometry.area
@@ -343,6 +343,9 @@ def _fetch_buildings_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
         "construction_legere": (inter["construction_legere"]
                                 if "construction_legere" in inter.columns
                                 else pd.Series(False, index=inter.index)).values,
+        # secondary use: shops below flats (current-tax baseline)
+        "usage_2": (inter["usage_2"] if "usage_2" in inter.columns
+                    else pd.Series(None, index=inter.index)).values,
         # dwellings area-weighted so a shared building isn't double-counted
         "n_dwellings": (pd.to_numeric(inter.get("nombre_de_logements"),
                                       errors="coerce") * share).values,
@@ -649,6 +652,68 @@ def fetch_rei_tfpb_produit(cfg, layers=("Commune", "GFP"),
           f"(layers {'+'.join(layers)})"
           + ("" if use == want else f"  [{want} unavailable, used {use}]"))
     return float(total)
+
+
+def _ofgl_records(url: str, where: str, select: str) -> list:
+    """All records of an OFGL Opendatasoft query (paged, cached via _get)."""
+    rows, offset = [], 0
+    while True:
+        q = urllib.parse.urlencode({"where": where, "select": select,
+                                    "limit": 100, "offset": offset})
+        page = json.loads(_get(f"{url}?{q}")).get("results", [])
+        rows.extend(page)
+        if len(page) < 100:
+            return rows
+        offset += 100
+
+
+def fetch_rei_baseline_split(cfg) -> dict:
+    """
+    Shares of the commune's TFPB base held by industrial establishments and by
+    professional premises, from open REI aggregates (config.BASELINE_MODEL;
+    docs/research/tfpb-baseline-calibration.md).
+
+    Returns {"industrial": float, "professional": float, "year": int,
+    "pro_source": "T29_1" | "T29-X503"}; raises IngestUnavailable when the
+    REI lines needed are missing (the caller then keeps the floor-area
+    baseline and says so).
+    """
+    from config import BASELINE_MODEL as M
+    year = str(M["rei_year"])
+    wanted = ("E11", "WC75", "T29", "T29_1", "X503")
+    vars_sql = ",".join(f'"{v}"' for v in wanted)
+    rei = {r["var"]: r.get("valeur") for r in _ofgl_records(
+        SRC["ofgl_rei"], f'idcom="{cfg.insee_code}" and annee="{year}" '
+                         f'and var in ({vars_sql})', "var,valeur")}
+    e11 = rei.get("E11")
+    if not e11 or e11 <= 0:
+        raise IngestUnavailable("REI", f"no TFPB base (E11) {year} for {cfg.insee_code}")
+    rates = {r["destinataire"]: r.get("taux_net") for r in _ofgl_records(
+        SRC["ofgl_base_fiscale"],
+        f'idcom="{cfg.insee_code}" and exer="{M["rates_year"]}" and dispositif_fiscal="TFPB"',
+        "destinataire,taux_net")}
+    t_com = rates.get("Commune")
+    if t_com is None:
+        raise IngestUnavailable("REI", f"no {M['rates_year']} TFPB rate for {cfg.insee_code}")
+    # Métropole de Lyon communes: the law uses the Rhône 2014 rate, not the
+    # Métropole's 2020 rate that the simplified base reports as 'Département'
+    t_dep = (M["rhone_2014_fb_rate"] if cfg.departement == "69"
+             else (rates.get("Département") or 0.0))
+    industrial = (rei.get("WC75") or 0.0) / ((t_com + t_dep) / 100.0)
+    if rei.get("T29_1"):
+        cfe_pro, src = rei["T29_1"], "T29_1"
+    elif rei.get("T29") is not None:
+        cfe_pro, src = max(rei["T29"] - (rei.get("X503") or 0.0), 0.0), "T29-X503"
+    else:
+        raise IngestUnavailable("REI", f"no CFE base (T29) {year} for {cfg.insee_code}")
+    pro = M["pro_cfe_factor"] * cfe_pro * M["pro_undercount_scale"]
+    out = {"industrial": industrial / e11, "professional": pro / e11,
+           "year": int(year), "pro_source": src}
+    if not (0 <= out["industrial"] <= 1 and 0 <= out["professional"] <= 1):
+        raise IngestUnavailable("REI", f"implausible baseline split for {cfg.insee_code}: {out}")
+    print(f"  [{cfg.name}] TFPB base {year}: industrial {100 * out['industrial']:.1f}%, "
+          f"professional {100 * out['professional']:.1f}% ({src})")
+    return out
 
 
 # ------------------------------------------------------------------ #

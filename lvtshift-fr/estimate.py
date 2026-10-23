@@ -538,11 +538,102 @@ def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
 # 4. Current tax: REI total distributed via VLC proxy
 # ------------------------------------------------------------------ #
 
+BUCKETS = ("industrial", "professional", "housing")
+
+
+def baseline_floor(buildings: pd.DataFrame) -> pd.DataFrame:
+    """
+    Floor area per parcel by current-tax group, for the calibrated baseline.
+
+      industrial    BD TOPO usage 'Industriel' (factories, sheds, workshops)
+      professional  other non-residential uses (Commercial et services,
+                    Sportif) and the ground floor of residential buildings
+                    whose secondary use is commercial (shops below flats)
+      housing       the rest (dwellings, annexes, unclassified)
+
+    buildings: idpar, footprint_m2, n_levels (missing counts imputed with
+    impute_levels), usage, usage_2. Returns idpar + floor_<bucket> columns.
+    Total floor equals improvement_value's floor_area_m2 per parcel.
+    """
+    b = buildings
+    levels = pd.to_numeric(b["n_levels"], errors="coerce")
+    missing = levels.isna() | (levels <= 0)
+    if missing.any():          # same storey rule as improvement_value
+        levels = levels.mask(missing, impute_levels(b.loc[missing]))
+    floor = pd.to_numeric(b["footprint_m2"], errors="coerce").fillna(0.0) * levels
+    usage = b["usage"] if "usage" in b.columns else pd.Series(None, index=b.index)
+    usage2 = b["usage_2"] if "usage_2" in b.columns else pd.Series(None, index=b.index)
+    ind = usage.eq("Industriel").to_numpy(dtype=bool)
+    pro = usage.isin(["Commercial et services", "Sportif"]).to_numpy(dtype=bool)
+    shop_below = (~ind & ~pro & usage2.eq("Commercial et services").to_numpy(dtype=bool))
+    ground = np.minimum(pd.to_numeric(b["footprint_m2"], errors="coerce").fillna(0.0), floor)
+    f_ind = np.where(ind, floor, 0.0)
+    f_pro = np.where(pro, floor, 0.0) + np.where(shop_below, ground, 0.0)
+    f_hou = floor - f_ind - f_pro
+    out = pd.DataFrame({"idpar": b["idpar"].values, "floor_industrial": f_ind,
+                        "floor_professional": f_pro, "floor_housing": f_hou})
+    return out.groupby("idpar", as_index=False).sum()
+
+
+def calibrated_weights(floor: dict, targets: dict, max_ratio: float) -> tuple:
+    """
+    Per-m² weight of each current-tax group so that its share of the produit
+    matches `targets` ({'industrial': s_i, 'professional': s_p}; housing
+    takes the rest), within these rules:
+      * a group with a target but no floor area, or whose per-m² weight would
+        fall below the professional one (warehouses taxed as professional
+        premises, not as plants), is merged into the professional group;
+      * the professional group likewise merges into housing if it has no
+        floor area;
+      * no group pays more than max_ratio × housing per m².
+    floor: {bucket: m²} over taxable built parcels. Returns ({bucket: weight},
+    note) with housing weight 1.
+    """
+    s = {"industrial": float(targets["industrial"]),
+         "professional": float(targets["professional"])}
+    s["housing"] = 1.0 - s["industrial"] - s["professional"]
+    f = {k: float(floor.get(k, 0.0)) for k in BUCKETS}
+    notes = []
+    if s["housing"] <= 0 or f["housing"] <= 0:
+        return {k: 1.0 for k in BUCKETS}, "no housing share: floor-area baseline"
+
+    def per_m2(k):
+        return s[k] / f[k] if f[k] > 0 else None
+
+    merged = {k: k for k in BUCKETS}
+    if f["professional"] <= 0 and s["professional"] > 0:
+        s["housing"] += s["professional"]; s["professional"] = 0.0
+        notes.append("no professional floor: share to housing")
+    wi, wp = per_m2("industrial"), per_m2("professional")
+    if s["industrial"] > 0 and (wi is None or (wp is not None and wi < wp)):
+        s["professional"] += s["industrial"]; s["industrial"] = 0.0
+        f["professional"] += f["industrial"]; merged["industrial"] = "professional"
+        notes.append("industrial merged into professional")
+    if f["professional"] <= 0 and s["professional"] > 0:   # merged but still empty
+        s["housing"] += s["professional"]; s["professional"] = 0.0
+        merged["industrial"] = merged["professional"] = "housing"
+        notes.append("no non-residential floor: share to housing")
+    wh = s["housing"] / f["housing"]
+    w = {"housing": 1.0}
+    for k in ("industrial", "professional"):
+        raw = (s[k] / f[k] / wh) if (f[k] > 0 and s[k] > 0) else None
+        if raw is not None and raw > max_ratio:
+            notes.append(f"{k} weight capped at {max_ratio:g} (target {raw:.1f})")
+            raw = max_ratio
+        w[k] = raw
+    # unassigned groups take the weight of the group they merged into
+    for k in ("industrial", "professional"):
+        if w[k] is None:
+            w[k] = w[merged[k]] if w.get(merged[k]) is not None else 1.0
+    return w, "; ".join(notes) or "calibrated"
+
+
 def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
                 vlc_proxy_cols=("floor_area_m2",),
                 category_weights: dict | None = None,
                 category_col: str = "category_fr",
-                exempt_col: str | None = "is_exempt_public") -> pd.DataFrame:
+                exempt_col: str | None = "is_exempt_public",
+                bucket_weights: dict | None = None) -> pd.DataFrame:
     """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
     THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
@@ -563,8 +654,14 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
       famously regressive vs market (central old stock under-assessed, peripheral
       over-assessed), so a value tilt would *worsen* fidelity to the current
       system. ``category_weights`` (e.g. weighting professionnel m² above housing
-      m², post-2017 revision) is offered only as a labelled **sensitivity**, off
-      by default — never as the published baseline.
+      m², post-2017 revision) is offered only as a labelled **sensitivity**.
+
+    * **Calibrated by tax group** when ``bucket_weights`` is given (from
+      ``calibrated_weights``): floor_industrial / floor_professional /
+      floor_housing columns are weighted so each group's share of the produit
+      matches the commune's official REI split (industrial establishments,
+      professional premises, housing + other). This is the published baseline;
+      plain floor area remains the fallback when the REI lines are missing.
     """
     out = p.copy()
     w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
@@ -574,6 +671,13 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         w = w.where(~out[exempt_col].fillna(False).astype(bool), 0.0)
     if category_weights and category_col in out.columns:   # sensitivity only
         w = w * out[category_col].map(category_weights).fillna(1.0)
+    if bucket_weights:      # calibrated baseline: weighted floor by tax group
+        cols = [f"floor_{k}" for k in BUCKETS]
+        if all(c in out.columns for c in cols):
+            wf = sum(out[f"floor_{k}"].fillna(0.0) * float(bucket_weights[k])
+                     for k in BUCKETS)
+            # parcels with a building but no grouped floor keep plain floor area
+            w = w.where(wf <= 0, wf.where(w > 0, 0.0))
     total = w.sum()
     out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out

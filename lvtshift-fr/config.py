@@ -219,6 +219,8 @@ DATA_SOURCES = {
     # the revenue target is the "MONTANT RÉEL" line per beneficiary layer
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
+    "ofgl_base_fiscale": ("https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/"
+                          "base-fiscale-simplifiee/records"),
 
     # DGFiP « Fichiers des locaux et des parcelles des personnes morales »
     # (Licence Ouverte 2.0, annual). Catalog of yearly zip attachments; ids change
@@ -500,6 +502,27 @@ BUILDING_TYPES = {
     "sports":      (1.033, 50, 0.20, "drc", "residential"),
     "annex":       (0.227, 50, 0.20, "drc", "residential"),
 }
+# Current-tax baseline calibrated by category (docs/research/
+# tfpb-baseline-calibration.md). Each commune's TFPB base is split into
+# industrial establishments (art. 1499), professional premises (RVLLP) and
+# housing + other, from REI aggregates; the produit is shared between the three
+# groups in those proportions, then by floor area within each group.
+#   industrial base = WC75 / (commune + département TFPB rate 2020)   [LFI 2021 art. 29]
+#   professional base = PRO_CFE_FACTOR × CFE gross base of professional premises
+#                       (T29_1, else T29 − X503) × PRO_UNDERCOUNT_SCALE
+# CFE is an occupier tax: vacant premises and non-CFE occupiers drop out, so
+# the scale corrects the undercount. Per-m² weights are capped relative to
+# housing so a single plant's base cannot load every shed in the commune.
+BASELINE_MODEL = {
+    "rei_year": 2025,
+    "rates_year": 2020,
+    "rhone_2014_fb_rate": 11.03,         # Métropole de Lyon communes (art. 29 III A 2)
+    "pro_cfe_factor": 0.5,               # TFPB base = VL × 50 % (CGI 1388); CFE = VL
+    "pro_undercount_scale": 1.0,
+    "max_weight_ratio": 5.0,             # per-m² tax vs housing, industrial and pro
+    "max_targeted_share": 0.6,           # sanity bound on industrial + pro
+}
+
 LAND_MODEL = {
     # AU (à urbaniser) discount vs fully-serviced U / AUc land. AU "fermée/
     # stricte" is development-deferred; pricing it at full U value overstates it
