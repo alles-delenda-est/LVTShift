@@ -417,6 +417,20 @@ def test_maintenance_weight_ignores_unbuilt_parcels():
     assert (w == 0.0).all(), w.to_dict()
 
 
+def test_dwellings_per_parcel_counts_homes_not_plots():
+    from run_pipeline import dwellings_per_parcel, GROSS_M2_PER_DWELLING
+    p = pd.DataFrame({"idpar": ["H", "B", "Bx", "Hx", "S", "V"],
+                      "category_fr": ["maison", "immeuble_collectif", "immeuble_collectif",
+                                      "maison", "commerce", "terrain_nu"],
+                      "floor_area_m2": [120.0, 5000.0, 10 * GROSS_M2_PER_DWELLING,
+                                        90.0, 800.0, 0.0]})
+    b = pd.DataFrame({"idpar": ["H", "B", "B", "S"],
+                      "n_dwellings": [1.0, 40.0, 19.5, 3.0]})
+    out = dwellings_per_parcel(p, b)
+    # measured counts summed over a parcel's buildings; missing ones imputed
+    # (house 1, flats from floor area); non-residential parcels count 0
+    assert list(out["n_dwellings"]) == [1.0, 59.5, 10.0, 1.0, 0.0, 0.0]
+    assert list(out["dwellings_imputed"]) == [False, False, True, True, False, False]
 def test_price_index_parses_full_years_only():
     def series(obs, idbank="010567012", freq="T"):
         return (f'<x><Series IDBANK="{idbank}" FREQ="{freq}">' + obs

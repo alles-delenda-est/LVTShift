@@ -77,27 +77,37 @@
         {
           "quintile": 1,
           "median_change_pct": 5.8,
-          "median_change_pct_residential": 6.4
+          "median_change_pct_residential": 6.4,
+          "total_change_pct": -7.7,
+          "household_median_change_pct": -10.6
         },
         {
           "quintile": 2,
           "median_change_pct": 8.3,
-          "median_change_pct_residential": 8.3
+          "median_change_pct_residential": 8.3,
+          "total_change_pct": 0.2,
+          "household_median_change_pct": -7.0
         },
         {
           "quintile": 3,
           "median_change_pct": 5.9,
-          "median_change_pct_residential": 12.0
+          "median_change_pct_residential": 12.0,
+          "total_change_pct": -3.4,
+          "household_median_change_pct": -6.0
         },
         {
           "quintile": 4,
           "median_change_pct": 9.2,
-          "median_change_pct_residential": 10.8
+          "median_change_pct_residential": 10.8,
+          "total_change_pct": 2.2,
+          "household_median_change_pct": 2.5
         },
         {
           "quintile": 5,
           "median_change_pct": 10.9,
-          "median_change_pct_residential": 12.9
+          "median_change_pct_residential": 12.9,
+          "total_change_pct": 6.3,
+          "household_median_change_pct": 4.3
         }
       ]
     },
@@ -155,27 +165,37 @@
         {
           "quintile": 1,
           "median_change_pct": 5.1,
-          "median_change_pct_residential": 5.6
+          "median_change_pct_residential": 5.6,
+          "total_change_pct": -7.6,
+          "household_median_change_pct": -10.3
         },
         {
           "quintile": 2,
           "median_change_pct": 7.6,
-          "median_change_pct_residential": 8.0
+          "median_change_pct_residential": 8.0,
+          "total_change_pct": 0.5,
+          "household_median_change_pct": -7.6
         },
         {
           "quintile": 3,
           "median_change_pct": 5.5,
-          "median_change_pct_residential": 11.3
+          "median_change_pct_residential": 11.3,
+          "total_change_pct": -3.1,
+          "household_median_change_pct": -6.5
         },
         {
           "quintile": 4,
           "median_change_pct": 7.2,
-          "median_change_pct_residential": 10.0
+          "median_change_pct_residential": 10.0,
+          "total_change_pct": 2.1,
+          "household_median_change_pct": 1.9
         },
         {
           "quintile": 5,
           "median_change_pct": 10.1,
-          "median_change_pct_residential": 12.2
+          "median_change_pct_residential": 12.2,
+          "total_change_pct": 6.1,
+          "household_median_change_pct": 3.9
         }
       ]
     },
@@ -233,27 +253,37 @@
         {
           "quintile": 1,
           "median_change_pct": 6.3,
-          "median_change_pct_residential": 7.0
+          "median_change_pct_residential": 7.0,
+          "total_change_pct": -7.7,
+          "household_median_change_pct": -10.8
         },
         {
           "quintile": 2,
           "median_change_pct": 8.9,
-          "median_change_pct_residential": 8.9
+          "median_change_pct_residential": 8.9,
+          "total_change_pct": 0.0,
+          "household_median_change_pct": -7.1
         },
         {
           "quintile": 3,
           "median_change_pct": 6.3,
-          "median_change_pct_residential": 13.3
+          "median_change_pct_residential": 13.3,
+          "total_change_pct": -3.7,
+          "household_median_change_pct": -5.8
         },
         {
           "quintile": 4,
           "median_change_pct": 9.9,
-          "median_change_pct_residential": 11.7
+          "median_change_pct_residential": 11.7,
+          "total_change_pct": 2.3,
+          "household_median_change_pct": 2.9
         },
         {
           "quintile": 5,
           "median_change_pct": 11.5,
-          "median_change_pct_residential": 13.7
+          "median_change_pct_residential": 13.7,
+          "total_change_pct": 6.3,
+          "household_median_change_pct": 4.8
         }
       ]
     }
@@ -336,35 +366,50 @@
       "median_income_eur": 17410.0,
       "median_change_pct": 5.8,
       "median_change_pct_residential": 6.4,
-      "parcels": 2381
+      "total_change_pct": -7.7,
+      "household_median_change_pct": -10.6,
+      "parcels": 2381,
+      "dwellings": 10498
     },
     {
       "quintile": 2,
       "median_income_eur": 20240.0,
       "median_change_pct": 8.3,
       "median_change_pct_residential": 8.3,
-      "parcels": 1563
+      "total_change_pct": 0.2,
+      "household_median_change_pct": -7.0,
+      "parcels": 1563,
+      "dwellings": 8121
     },
     {
       "quintile": 3,
       "median_income_eur": 21160.0,
       "median_change_pct": 5.9,
       "median_change_pct_residential": 12.0,
-      "parcels": 1807
+      "total_change_pct": -3.4,
+      "household_median_change_pct": -6.0,
+      "parcels": 1807,
+      "dwellings": 8691
     },
     {
       "quintile": 4,
       "median_income_eur": 22560.0,
       "median_change_pct": 9.2,
       "median_change_pct_residential": 10.8,
-      "parcels": 1909
+      "total_change_pct": 2.2,
+      "household_median_change_pct": 2.5,
+      "parcels": 1909,
+      "dwellings": 18527
     },
     {
       "quintile": 5,
       "median_income_eur": 24110.0,
       "median_change_pct": 10.9,
       "median_change_pct_residential": 12.9,
-      "parcels": 1903
+      "total_change_pct": 6.3,
+      "household_median_change_pct": 4.3,
+      "parcels": 1903,
+      "dwellings": 17314
     }
   ],
   "by_improvement_ratio": [

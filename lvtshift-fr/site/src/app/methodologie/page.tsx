@@ -536,6 +536,27 @@ export default function MethodologiePage() {
             </p>
           </div>
 
+          {/* Income groups */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Groupes de revenu — totaux et ménages, pas parcelles
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Pour chaque quintile de revenu, la barre donne la variation de
+              l&apos;impôt payé par l&apos;ensemble des logements du groupe, et
+              le losange celle du ménage type : chaque parcelle y compte autant
+              de fois qu&apos;elle a de logements. Une simple médiane par
+              parcelle compterait un immeuble de 200 logements une seule fois,
+              comme une maison. À Villeurbanne, elle montrerait le quintile le
+              plus pauvre en hausse (+6,4&nbsp;%), alors que ce groupe paie
+              7,7&nbsp;% de moins au total et que son ménage type paie
+              10,6&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              ses ménages, sont les plus gagnants. Le nombre de logements vient
+              de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
+              parcelles résidentielles qui n&apos;en ont pas.
+            </p>
+          </div>
+
           {/* Mulhouse */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
