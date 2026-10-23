@@ -22,17 +22,22 @@ import re
 
 import pandas as pd
 
-# Matches a US money token like "$1,234", "$1,234.56" or "-$987". Commas are
-# only consumed as thousands separators (between digit groups), so trailing
-# punctuation such as the comma in "$156, +0.3%" is left untouched.
-_MONEY = re.compile(r"(-?)\$(\d{1,3}(?:,\d{3})*(?:\.\d+)?)")
+# Matches a US money token like "$1,234", "$1,234.56", "-$987", "$-568" or
+# "$1234" (upstream's legacy paths format without a thousands separator and
+# may put the sign after the dollar). Commas are only consumed between digit
+# groups, so trailing punctuation such as the comma in "$156, +0.3%" is left
+# untouched.
+_MONEY = re.compile(r"(-?)\$(-?)(\d+(?:,\d+)*(?:\.\d+)?)")
 
 
 def _money_to_eur(match: re.Match) -> str:
-    """`-$2,691,246` -> `-2 691 246 €` (French: space thousands, trailing €)."""
-    sign, number = match.group(1), match.group(2)
-    number = number.replace(",", " ")  # non-breaking space as thousands sep
-    return f"{sign}{number} €"
+    """`-$2,691,246` / `$-568` / `$1234` -> `-2 691 246 €` / `-568 €` / `1 234 €`
+    (French: non-breaking-space thousands separator, trailing €, sign in front)."""
+    sign = match.group(1) or match.group(2)
+    number = match.group(3).replace(",", "")
+    int_part, _, frac = number.partition(".")
+    int_part = f"{int(int_part):,}".replace(",", " ")  # regroup thousands, NBSP
+    return f"{sign}{int_part}{'.' + frac if frac else ''} €"
 
 
 def _to_eur_text(text: str) -> str:
