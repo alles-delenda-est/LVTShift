@@ -338,6 +338,21 @@ def test_baseline_sensitivity_changes_only_todays_tax():
     leak = {"baseline_sensitivity": {**b, "low": {**b["low"], "idpar": "x"}}}
     with pytest.raises(AssertionError):
         ew.assert_aggregate_only(leak)
+    row = (b["low"]["by_category"] or [{}])[0]
+    for smuggle in ({**b["low"], "by_category": [{**row, "median_change_eur": list(range(60))}]},
+                    {**b["low"], "gross_pct_of_levy": [1, 2, 3]},
+                    {**b["low"], "share_paying_more_pct": {"x": 1}}):
+        with pytest.raises(AssertionError):
+            ew.assert_aggregate_only({"baseline_sensitivity": {**b, "low": smuggle}})
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only({"baseline_sensitivity": {**b, "pro_scale_low": "1"}})
+    # no real lower bound: nothing published
+    assert ew.build_baseline_sensitivity(df.assign(current_tax_low=df["current_tax"])) is None
+    # a territory member without the figures: a clear error naming it
+    mixed = low.assign(_commune=["a", "a", "b", "b"],
+                       current_tax_low=[1200.0, 50.0, None, None])
+    with pytest.raises(ValueError, match="b"):
+        ew.build_baseline_sensitivity(mixed)
 
 
 def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
@@ -356,7 +371,9 @@ def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
     side.to_csv(tmp_path / "x.households.csv", index=False)
     out = ew.load_parcels("x", out_dir=str(tmp_path))
     assert list(out["current_tax_low"]) == [1200.0, 50.0, 1600.0, 1000.0]
-    side.assign(current_tax_low=[1200.0, 50.0, 1600.0, 9000.0]).to_csv(
-        tmp_path / "x.households.csv", index=False)
-    with pytest.raises(ValueError):
-        ew.load_parcels("x", out_dir=str(tmp_path))
+    for bad in ([1200.0, 50.0, 1600.0, 9000.0],      # total off
+                [2900.0, 50.0, -100.0, 1000.0],      # negative, same total
+                [1250.0, 0.0, 1600.0, 1000.0]):      # untaxed parcel moved
+        side.assign(current_tax_low=bad).to_csv(tmp_path / "x.households.csv", index=False)
+        with pytest.raises(ValueError):
+            ew.load_parcels("x", out_dir=str(tmp_path))

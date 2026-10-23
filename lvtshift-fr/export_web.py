@@ -94,10 +94,14 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
     df = df.assign(n_dwellings=side["n_dwellings"].to_numpy(float))
     if "current_tax_low" in side.columns:
         low = side["current_tax_low"].to_numpy(float)
-        if not np.isfinite(low).all() or abs(low.sum() - df["current_tax"].sum()) > \
-                max(1.0, 1e-6 * abs(df["current_tax"].sum())):
-            raise ValueError(f"{side_path.name}: lower-bound current tax is not "
-                             f"revenue-neutral with {path.name}")
+        cur = df["current_tax"].to_numpy(float)
+        ok = (np.isfinite(low).all() and (low >= 0).all()
+              # untaxed today (exempt, unbuilt) in one baseline = in both
+              and ((low > 0) == (cur > 0)).all()
+              and abs(low.sum() - cur.sum()) <= max(1.0, 1e-6 * abs(cur.sum())))
+        if not ok:
+            raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
+                             f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
     return df
 
@@ -360,6 +364,16 @@ def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False) -> dict |
     and so every change, differs. None when the run carries no lower bound."""
     if "current_tax_low" not in df.columns:
         return None
+    missing = df["current_tax_low"].isna()
+    if missing.any():
+        who = sorted(set(df.loc[missing, "_commune"])) if "_commune" in df.columns else []
+        raise ValueError(f"lower-bound current tax missing for {who or 'some parcels'}; "
+                         f"re-run those communes")
+    # no real lower bound (floor-area baseline, or identical shares): say
+    # nothing rather than show two identical columns
+    if np.allclose(df["current_tax_low"].to_numpy(float), df["current_tax"].to_numpy(float),
+                   rtol=1e-9, atol=0.01):
+        return None
     from config import BASELINE_MODEL as M
     revenue = float(df["current_tax"].sum())
     land = float(df["taxable_land_value"].sum())
@@ -421,6 +435,30 @@ IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
 FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$")
 
 
+def _check_leg(g: dict, what: str) -> None:
+    """A sensitivity leg: known keys, scalar headline fields, bounded lists of
+    rows with known keys and scalar values only (a nested list or dict could
+    smuggle per-parcel values)."""
+    assert isinstance(g, dict), f"{what} leg must be an object"
+    assert set(g) <= SENSITIVITY_LEG_KEYS, \
+        f"unexpected {what} leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
+    lists = {"by_category", "by_income_quintile", "by_income_quintile_within"}
+    for k, v in g.items():
+        if k not in lists:
+            assert v is None or (isinstance(v, (int, float)) and not isinstance(v, bool)), \
+                f"non-numeric {what} leg field {k}"
+    assert len(g.get("by_category") or []) <= 10
+    rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
+    for k in ("by_income_quintile", "by_income_quintile_within"):
+        assert len(g.get(k) or []) <= 5
+        rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
+    for r, keys in rows:
+        assert isinstance(r, dict), f"{what} row must be an object"
+        assert set(r) <= set(keys), f"unexpected {what} row keys: {set(r) - set(keys)}"
+        assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()), \
+            f"non-scalar value in a {what} row"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -441,33 +479,18 @@ def assert_aggregate_only(payload: dict) -> None:
                     "non-scalar value in a quintile row"
     bs = payload.get("baseline_sensitivity")
     if bs is not None:
-        assert set(bs) <= {"pro_scale_central", "pro_scale_low", "central", "low"}, \
-            f"unexpected baseline_sensitivity keys: {set(bs)}"
+        assert isinstance(bs, dict) and \
+            set(bs) <= {"pro_scale_central", "pro_scale_low", "central", "low"}, \
+            f"unexpected baseline_sensitivity keys: {set(bs) if isinstance(bs, dict) else bs}"
+        for k in ("pro_scale_central", "pro_scale_low"):
+            v = bs.get(k)
+            assert isinstance(v, (int, float)) and not isinstance(v, bool), f"{k} must be a number"
         for leg in ("central", "low"):
-            g = bs.get(leg) or {}
-            assert set(g) <= SENSITIVITY_LEG_KEYS, \
-                f"unexpected baseline leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
-            assert len(g.get("by_category") or []) <= 10
-            rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
-            for k in ("by_income_quintile", "by_income_quintile_within"):
-                assert len(g.get(k) or []) <= 5
-                rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
-            for r, keys in rows:
-                assert set(r) <= set(keys), f"unexpected baseline row keys: {set(r) - set(keys)}"
+            _check_leg(bs.get(leg) or {}, "baseline")
     sens = payload.get("headline_sensitivity") or {}
     assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
-        g = sens.get(leg) or {}
-        assert set(g) <= SENSITIVITY_LEG_KEYS,             f"unexpected sensitivity leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
-        assert len(g.get("by_category") or []) <= 10
-        rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
-        for k in ("by_income_quintile", "by_income_quintile_within"):
-            assert len(g.get(k) or []) <= 5
-            rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
-        for r, keys in rows:
-            assert set(r) <= set(keys), f"unexpected band row keys: {set(r) - set(keys)}"
-            # scalars only: a nested list/dict could smuggle per-parcel values
-            assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()),                 "non-scalar value in a band row"
+        _check_leg(sens.get(leg) or {}, "band")
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
