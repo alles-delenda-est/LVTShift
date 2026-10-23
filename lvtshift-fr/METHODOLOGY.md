@@ -307,6 +307,12 @@ claims were wrong. Its point that the CFE proxy undercounts was right, and the
 - **Published.** The method, the targets and the achieved shares are in each
   payload's provenance (`current_tax_baseline`). `run_commune.py --baseline
   floor` reproduces the old floor-area baseline as a sensitivity.
+- **Lower bound computed alongside.** Every run also shares today's tax a
+  second time with the professional target at the raw proxy (× 1.0,
+  `pro_undercount_scale_low`), under the same groups, merge rule and caps. It
+  is stored in the households sidecar (`current_tax_low`), checked to be
+  revenue-neutral on export, and published as `baseline_sensitivity` (§3.7).
+  The LVT bills do not change; only today's tax does.
 
 Example weights per m², relative to housing: Saint-Fons industrial 1.30,
 professional 0.91; Rungis 1.71 (industrial merged into professional); Vaujours
@@ -409,8 +415,8 @@ treated as robust only if it holds across the band; in Paris the quintile gradie
 barely moves (median residential parcel: poorest fifth −17.1 to −19.1 %, richest
 +15.6 to +15.8 %). The band holds today's-tax baseline fixed. The baseline's own
 uncertainty, the professional-premises scale (§3.5), moves household results
-far more than the band does, and is reported separately as a low bound (§6,
-item 1).
+far more than the band does. It is published separately, as a lower bound shown
+beside the central case (§3.7, §6 item 1).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -559,6 +565,17 @@ Low bound: in the Lyon ring commercial bills rise 47 %, industrial fall 42 % and
 houses fall 6 %; in the Paris ring commercial +77 %, industrial +1 %, houses
 +1 %.
 
+*On the site.* Each commune and territory payload carries
+`baseline_sensitivity`, with a central (× 2.5) and a low (× 1.0) leg: amount
+shifted, share of parcels paying more, residential median change, categories and
+income-group totals (territories also rank groups within each commune). The
+results page shows the two side by side in the table "Incertitude sur la taxe
+actuelle des locaux professionnels", after the land-share sensitivity table. The
+LVT bills are identical in both columns; only today's tax differs. In
+Villepinte, for example, 68.8 % of parcels pay more in the central case and
+19.3 % at the low bound. The territory figures in the table above come from a
+scratch run of the same code; the published payloads should reproduce them.
+
 **The professional scale is now the load-bearing uncertainty.** It moves the
 household results by 10–15 points (Paris's poorest fifth −17.4 % central against
 −27.6 % low; the Lyon ring's +0.8 % against −15.8 %). Under the central case
@@ -574,13 +591,15 @@ commune (§6, item 1).
 shifts tax from industry to households under the central baseline (Saint-Fons
 industrial bills −60 %, Marcy-l'Étoile −90 %).
 
-*Plant.* Art. 1499 values include fixed plant, while the model's improvement
-value for an industrial parcel counts only the shed. The modelled LVT therefore
-implicitly exempts plant; whether a reform should tax it is a policy choice. A
-first-order estimate (`docs/research/plant_effect.py`) adds the plant's revalued
-cost to the improvement base (industrial base ÷ 0.03, gross or × 0.5 for
-depreciation, less the model's building value) and re-solves the 4:1 split per
-commune:
+*Plant: a design decision.* The modelled reform taxes land, and buildings at
+the split rate; it does **not** tax fixed industrial plant. The project lead
+took this decision, consistent with land-value-tax theory, which avoids
+penalising capital investment. It needs no code change: art. 1499 values include
+fixed plant, but the model's improvement value for an industrial parcel already
+counts only the shed. To show how little the decision matters, a first-order
+estimate (`docs/research/plant_effect.py`) adds the plant's revalued cost to the
+improvement base (industrial base ÷ 0.03, gross or × 0.5 for depreciation, less
+the model's building value) and re-solves the 4:1 split per commune:
 
 | Industrial bills vs today | Shed only (published) | With plant, depreciated | With plant, gross |
 |---|---|---|---|
@@ -589,9 +608,9 @@ commune:
 | Marcy-l'Étoile | −90 % | −84 % | −76 % |
 | Saint-Fons | −60 % | −59 % | −53 % |
 
-Industry's cut is therefore overwhelmingly the land shift: cheap industrial
-land set against today's capital-heavy tax base. The plant exemption is a minor
-part of it.
+Taxing plant would move industrial bills by only 1–3 points in the rings
+(Marcy-l'Étoile up to 14). Industry's cut is overwhelmingly the land shift:
+cheap industrial land set against today's capital-heavy tax base.
 
 ## 4. Key parameters and assumptions
 
@@ -663,7 +682,8 @@ part of it.
 - **AU discount** (`au_strict_factor`): 0.55. **Hedonic shrinkage** k = 8.
 - **Today's-tax baseline** (`config.BASELINE_MODEL`, §3.5): REI 2025, 2020
   TFPB rates (Métropole de Lyon: Rhône 2014 rate, 11.03 %); professional proxy
-  0.5 × CFE gross base (CGI art. 1388) × **2.5** (central; 1.0 = low bound);
+  0.5 × CFE gross base (CGI art. 1388) × **2.5** (central; 1.0 = low bound,
+  computed on every run and published beside the central case);
   per-m² weights capped at 5 × housing; industrial + professional share capped
   at 75 %.
 - **REI layers** held neutral: Commune + intercommunalité (configurable). The
@@ -698,7 +718,7 @@ part of it.
 Ranked by how much they move published (category/quintile) results.
 
 1. **Today's-tax baseline: the professional-premises scale (load-bearing for
-   every distributional figure), and plant.**
+   every distributional figure).**
    - **The professional scale.** Each commune's industrial and professional
      shares of today's tax come from its REI (§3.5). The industrial share is
      close to exact. The professional share is a CFE proxy scaled by one
@@ -711,19 +731,23 @@ Ranked by how much they move published (category/quintile) results.
      only the starting point moves. 2.5 is the better-supported value, but the
      undercount is surely not uniform: it should be larger where many premises
      are vacant or occupied by public bodies and associations, as in Paris.
-     **Always present the central case and the low bound side by side.**
-     Per-commune professional values (Fichiers fonciers) are the real fix.
+     The site shows both side by side on every results page (table
+     "Incertitude sur la taxe actuelle des locaux professionnels"); **always
+     present both in any write-up too.** Per-commune professional values
+     (Fichiers fonciers) are the real fix.
    - **Within each group** today's tax is still shared by floor area, which
      ignores cadastral category and weighted-surface coefficients, so read the
      **change**, not the starting bill, and never publish per-parcel amounts.
      BD TOPO usage decides the group; a shop not recorded as a secondary usage
      is taxed as housing.
-   - **Plant.** Industrial values under art. 1499 include fixed plant, but the
-     model's improvement value for industrial parcels counts only the shed, so
-     the modelled LVT implicitly exempts plant. Whether plant should be taxed
-     under a reform is a policy choice. A first-order estimate shows it is a
-     minor part of industry's cut (Lyon ring −63 % → −62 % depreciated or −60 %
-     gross; §3.7): the cut comes overwhelmingly from cheap industrial land.
+   - **Plant is out of scope by design, not a limitation.** The modelled
+     reform taxes land and buildings, not fixed industrial plant (the project
+     lead's decision, in line with land-value-tax theory; §3.7). Art. 1499
+     values include plant and the model's improvement value counts only the
+     shed, so the model matches the decision. Taxing plant would move
+     industrial bills by only 1–3 points (Lyon ring −63 % → −62 % depreciated
+     or −60 % gross; Marcy-l'Étoile up to 14): the cut comes overwhelmingly
+     from cheap industrial land.
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
    value. Mitigated by the [0.15, 0.85] clip, aggregation, and the sensitivity

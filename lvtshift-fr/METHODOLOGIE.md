@@ -341,6 +341,13 @@ le facteur 2,5 en découle.
   dans la provenance de chaque fichier publié (`current_tax_baseline`).
   `run_commune.py --baseline floor` reproduit l'ancienne base à la surface
   plancher, en sensibilité.
+- **Borne basse calculée en parallèle.** Chaque calcul répartit une seconde fois
+  la taxe actuelle avec la cible professionnelle à l'indicateur brut (× 1,0,
+  `pro_undercount_scale_low`), selon les mêmes groupes, la même règle de fusion
+  et les mêmes plafonds. Elle est conservée dans le fichier annexe des ménages
+  (`current_tax_low`), vérifiée à produit constant à l'export et publiée sous
+  `baseline_sensitivity` (§3.7). Les cotisations LVT ne changent pas ; seule la
+  taxe actuelle change.
 
 Exemples de pondérations au m², rapportées au logement : Saint-Fons industriel
 1,30, professionnel 0,91 ; Rungis 1,71 (industriel fondu dans le
@@ -457,7 +464,8 @@ par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
 −17,1 à −19,1 %, dernier +15,6 à +15,8 %). La bande laisse la base de la taxe
 actuelle inchangée. L'incertitude propre à cette base, le facteur appliqué aux
 locaux professionnels (§3.5), déplace les résultats des ménages bien plus que la
-bande ; elle est publiée à part, sous forme de borne basse (§6, point 1).
+bande. Elle est publiée à part, sous forme de borne basse présentée à côté du
+cas central (§3.7, §6 point 1).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -621,6 +629,19 @@ Borne basse : dans la couronne lyonnaise, les cotisations commerciales
 augmentent de 47 %, les industrielles baissent de 42 % et les maisons de 6 % ;
 dans la couronne parisienne, commerce +77 %, industrie +1 %, maisons +1 %.
 
+*Sur le site.* Chaque fichier de commune et de territoire porte
+`baseline_sensitivity`, avec une branche centrale (× 2,5) et une branche basse
+(× 1,0) : montant déplacé, part des parcelles qui paient plus, variation médiane
+résidentielle, catégories et totaux par groupe de revenu (les territoires
+classent aussi les groupes au sein de chaque commune). La page de résultats
+présente les deux côte à côte dans le tableau « Incertitude sur la taxe actuelle
+des locaux professionnels », après le tableau de sensibilité à la part foncière.
+Les cotisations LVT sont identiques dans les deux colonnes ; seule la taxe
+actuelle diffère. À Villepinte, par exemple, 68,8 % des parcelles paient plus
+dans le cas central, 19,3 % en borne basse. Les chiffres des territoires du
+tableau ci-dessus viennent d'un calcul d'essai du même code ; les fichiers
+publiés devraient les reproduire.
+
 **Le facteur professionnel est désormais l'incertitude porteuse.** Il déplace
 les résultats des ménages de 10 à 15 points (premier quintile parisien −17,4 %
 en central contre −27,6 % en borne basse ; couronne lyonnaise +0,8 % contre
@@ -637,13 +658,17 @@ lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
 central (cotisations industrielles de Saint-Fons −60 %, de Marcy-l'Étoile
 −90 %).
 
-*Outillage.* Les valeurs de l'art. 1499 incluent l'outillage fixe, alors que la
-valeur bâtie du modèle pour une parcelle industrielle ne compte que le hangar.
-La LVT modélisée exonère donc implicitement l'outillage ; le taxer ou non dans
-une réforme est un choix politique. Une estimation de premier ordre
-(`docs/research/plant_effect.py`) ajoute à la base bâtie le coût réévalué de
-l'outillage (base industrielle ÷ 0,03, brut ou × 0,5 pour la dépréciation, moins
-la valeur bâtie du modèle) et résout de nouveau le 4:1 commune par commune :
+*Outillage : un choix de conception.* La réforme modélisée taxe le sol, et le
+bâti au taux réduit ; elle ne taxe **pas** l'outillage industriel fixe. Le
+responsable du projet a tranché en ce sens, conformément à la théorie de la taxe
+foncière sur le sol, qui évite de pénaliser l'investissement productif. Aucun
+changement de code n'est nécessaire : les valeurs de l'art. 1499 incluent
+l'outillage fixe, mais la valeur bâtie du modèle pour une parcelle industrielle
+ne compte déjà que le hangar. Pour montrer le faible poids de ce choix, une
+estimation de premier ordre (`docs/research/plant_effect.py`) ajoute à la base
+bâtie le coût réévalué de l'outillage (base industrielle ÷ 0,03, brut ou × 0,5
+pour la dépréciation, moins la valeur bâtie du modèle) et résout de nouveau le
+4:1 commune par commune :
 
 | Cotisations industrielles vs aujourd'hui | Hangar seul (publié) | Avec outillage, déprécié | Avec outillage, brut |
 |---|---|---|---|
@@ -652,9 +677,10 @@ la valeur bâtie du modèle) et résout de nouveau le 4:1 commune par commune :
 | Marcy-l'Étoile | −90 % | −84 % | −76 % |
 | Saint-Fons | −60 % | −59 % | −53 % |
 
-La baisse industrielle tient donc avant tout au déplacement vers le sol : un
-foncier industriel bon marché face à une base actuelle chargée en capital.
-L'exonération de l'outillage n'en est qu'une part mineure.
+Taxer l'outillage ne déplacerait les cotisations industrielles que de 1 à
+3 points dans les couronnes (jusqu'à 14 à Marcy-l'Étoile). La baisse
+industrielle tient avant tout au déplacement vers le sol : un foncier
+industriel bon marché face à une base actuelle chargée en capital.
 
 ## 4. Paramètres et hypothèses clés
 
@@ -735,7 +761,8 @@ L'exonération de l'outillage n'en est qu'une part mineure.
 - **Base de la taxe actuelle** (`config.BASELINE_MODEL`, §3.5) : REI 2025,
   taux de TFPB 2020 (Métropole de Lyon : taux 2014 du Rhône, 11,03 %) ;
   indicateur professionnel 0,5 × base brute de CFE (art. 1388 CGI) × **2,5**
-  (central ; 1,0 = borne basse) ; pondérations au m² plafonnées à 5 × le
+  (central ; 1,0 = borne basse, calculée à chaque passage et publiée à côté du
+  cas central) ; pondérations au m² plafonnées à 5 × le
   logement ; parts industrielle + professionnelle plafonnées à 75 %.
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
@@ -772,7 +799,7 @@ L'exonération de l'outillage n'en est qu'une part mineure.
 Classées par impact sur les résultats publiés (catégorie/quintile).
 
 1. **Base de la taxe actuelle : le facteur des locaux professionnels (porteur
-   pour tout chiffre distributif), et l'outillage.**
+   pour tout chiffre distributif).**
    - **Le facteur professionnel.** Les parts industrielle et professionnelle de
      la taxe actuelle de chaque commune viennent de son REI (§3.5). La part
      industrielle est quasi exacte. La part professionnelle est un indicateur
@@ -786,23 +813,26 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      cas ; seul le point de départ bouge. 2,5 est la valeur la mieux étayée,
      mais le sous-comptage n'est sûrement pas uniforme : il devrait être plus
      fort là où beaucoup de locaux sont vacants ou occupés par des organismes
-     publics et des associations, comme à Paris. **Toujours présenter côte à
-     côte le cas central et la borne basse.** Les valeurs professionnelles par
-     commune (Fichiers fonciers) sont la vraie solution.
+     publics et des associations, comme à Paris. Le site présente les deux côte à côte
+     sur chaque page de résultats (tableau « Incertitude sur la taxe actuelle
+     des locaux professionnels ») ; **les présenter aussi côte à côte dans
+     toute publication.** Les valeurs professionnelles par commune (Fichiers
+     fonciers) sont la vraie solution.
    - **Au sein de chaque groupe**, la taxe actuelle reste répartie à la surface
      plancher, qui ignore la catégorie cadastrale et les coefficients de
      pondération de surface : lire la **variation**, pas le montant de départ,
      et ne jamais publier de montants par parcelle. L'usage BD TOPO décide du
      groupe ; un commerce non enregistré en usage secondaire est imposé comme
      du logement.
-   - **L'outillage.** Les valeurs industrielles de l'art. 1499 incluent
-     l'outillage fixe, mais la valeur bâtie du modèle pour les parcelles
-     industrielles ne compte que le hangar : la LVT modélisée exonère donc
-     implicitement l'outillage. Le taxer ou non dans une réforme est un choix
-     politique. Une estimation de premier ordre montre qu'il ne pèse que pour
-     une part mineure dans la baisse industrielle (couronne lyonnaise −63 % →
-     −62 % déprécié ou −60 % brut ; §3.7) : elle vient avant tout du foncier
-     industriel bon marché.
+   - **L'outillage est hors champ par choix, ce n'est pas une limite.** La
+     réforme modélisée taxe le sol et le bâti, pas l'outillage industriel fixe
+     (décision du responsable du projet, conforme à la théorie de la taxe
+     foncière sur le sol ; §3.7). Les valeurs de l'art. 1499 incluent
+     l'outillage et la valeur bâtie du modèle ne compte que le hangar : le
+     modèle suit donc ce choix. Taxer l'outillage ne déplacerait les
+     cotisations industrielles que de 1 à 3 points (couronne lyonnaise −63 % →
+     −62 % déprécié ou −60 % brut ; jusqu'à 14 à Marcy-l'Étoile) : la baisse
+     vient avant tout du foncier industriel bon marché.
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
    Atténué par le bornage [0,15 ; 0,85], l'agrégation et la bande de sensibilité.

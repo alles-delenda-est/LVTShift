@@ -589,16 +589,19 @@ export default function MethodologiePage() {
               deux cas : seul le point de départ change. Le facteur 2,5 est le
               mieux étayé, mais un multiplicateur national unique ne peut
               convenir à chaque commune. Seuls les Fichiers fonciers, qui
-              donnent la valeur réelle de chaque local, trancheraient.
+              donnent la valeur réelle de chaque local, trancheraient. La page
+              de résultats présente donc les deux colonnes côte à côte, cas
+              central et borne basse, dans le tableau «&nbsp;Incertitude sur
+              la taxe actuelle des locaux professionnels&nbsp;».
             </p>
             <p className="font-body text-sm text-encre leading-relaxed">
-              <strong>Les machines.</strong> La LVT modélisée ne taxe que le
-              bâtiment d&apos;une usine, pas ses installations fixes, que la
-              taxe actuelle inclut : elle les exonère donc implicitement. Les
-              taxer ou non est un choix politique. Le calcul montre que ce
-              point pèse peu : dans la couronne lyonnaise, la baisse de
-              l&apos;impôt industriel passerait de 63&nbsp;% à 60–62&nbsp;%.
-              Elle tient surtout à un foncier industriel bon marché.
+              <strong>Les machines.</strong> Par choix, la réforme modélisée
+              taxe le sol et les bâtiments, pas les machines et installations
+              fixes des usines, pour ne pas pénaliser l&apos;investissement.
+              Ce choix pèse peu : les taxer ne déplacerait l&apos;impôt
+              industriel que de 1 à 3 points (dans la couronne lyonnaise, la
+              baisse passerait de 63&nbsp;% à 60–62&nbsp;%). Elle tient
+              surtout à un foncier industriel bon marché.
             </p>
           </div>
 
