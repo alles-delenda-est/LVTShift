@@ -300,3 +300,39 @@ def exempt_public(cfg, parcels: pd.DataFrame, has_building: pd.Series,
     out["is_exempt_public"] = exempt.fillna(False).astype(bool)
     out["exempt_tier"] = out["tier"].where(out["is_exempt_public"])
     return out[["idpar", "is_exempt_public", "exempt_tier"]]
+
+
+# CGI art. 1382 6° exempts from TFPB the buildings permanently and exclusively
+# used for agriculture (granges, étables, serres affectées à une exploitation
+# rurale…); the land under them pays the TFPNB, outside the modelled levy.
+# Use, not ownership, is the test, so the open-data proxy is the BD TOPO usage:
+# 'Agricole', and either a greenhouse/silo or a farmland/natural PLU zone (an
+# 'Agricole' shed in an urban zone may be a converted workshop and stays
+# taxable). Garden-centre greenhouses carry a commercial usage: taxable.
+# A shed-type building ('Industriel, agricole ou commercial') with no usage
+# recorded, in a farmland/natural zone, is a farm building too: BD TOPO often
+# leaves the usage of farm sheds unfilled.
+RURAL_NATURES = frozenset({"Serre", "Silo"})
+RURAL_ZONES = frozenset({"A", "N"})
+UNLABELLED_USAGES = frozenset({"Indifférencié"})
+SHED_NATURE = "Industriel, agricole ou commercial"
+
+
+def rural_buildings(buildings: pd.DataFrame, zoning: pd.DataFrame) -> pd.Series:
+    """Boolean mask over `buildings` of TFPB-exempt rural buildings.
+
+    buildings: idpar, usage (BD TOPO usage_1), nature.
+    zoning: idpar, zone_typ (fetch_parcel_zoning); parcels absent or unzoned
+    rely on the nature test alone.
+    """
+    zone = buildings["idpar"].map(
+        zoning.drop_duplicates("idpar").set_index("idpar")["zone_typ"])
+    nature = (buildings["nature"] if "nature" in buildings.columns
+              else pd.Series(None, index=buildings.index))
+    usage = (buildings["usage"] if "usage" in buildings.columns
+             else pd.Series(None, index=buildings.index))
+    rural_zone = zone.isin(RURAL_ZONES)
+    agri = usage.eq("Agricole") & (nature.isin(RURAL_NATURES) | rural_zone)
+    unlabelled_shed = ((usage.isna() | usage.isin(UNLABELLED_USAGES))
+                       & nature.eq(SHED_NATURE) & rural_zone)
+    return (agri | unlabelled_shed).fillna(False).astype(bool)

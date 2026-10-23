@@ -29,7 +29,7 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Transactions | DVF géolocalisé (Etalab) | CSV per commune | 5 rolling years | hedonic market value; terrain-à-bâtir comparables |
 | Buildings | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, commune bbox | current | footprint, storeys, height, dwellings, usage, FF-match flag |
 | Construction era | DPE logements existants (ADEME) | data-fair API by `code_insee_ban` | since 07/2021 | depreciation (period band → year) |
-| Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels |
+| Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels; A/N test for exempt farm buildings (§3.5) |
 | Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2025 edition (2024 sales) | non-constructible land €/m² |
 | Building-plot fallback | EPTB (SDES) | national figure (config) | 2023 | constructible €/m² when local comparables are thin |
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
@@ -196,10 +196,38 @@ building unit recorded is exempt only where the model also sees no building
 (parks, woods, cemeteries); a building there (a concession such as the Stade de
 France) stays taxable until corroborated. Exempt parcels bear no share of today's
 produit and are left out of the LVT base, so the same levy falls on the taxable
-parcels. In Paris this flags 3,098 parcels (1,362 built) carrying €91.6 M (5.0 %) of
+parcels. In Paris this flags 3,099 parcels (1,362 built) carrying €91.6 M (5.0 %) of
 the produit the baseline used to spread onto them. Owner names are read only to
 recognise utilities and housing managers and are never stored or published.
-`--no-exemptions` reproduces the unflagged run.
+
+**Exempt rural buildings** (`exemptions.rural_buildings`). CGI art. 1382 6°
+exempts from the TFPB buildings permanently and exclusively used for agriculture
+(greenhouses, barns, silos, stables); the land under them pays the TFPNB, outside
+the modelled levy. The legal test is use, not ownership
+(`docs/research/nonres-valuation-2025.md` §7, read via doctrine.fr; Légifrance and
+BOFiP could not be fetched live). Open data cannot see use, so the model takes a
+BD TOPO proxy. A building counts as rural when either
+- its usage is « Agricole » **and** its nature is Serre or Silo, or its parcel
+  lies in a PLU A or N zone; or
+- it is a shed (« Industriel, agricole ou commercial ») with no usage recorded or
+  « Indifférencié », in an A or N zone: BD TOPO often leaves farm sheds unlabelled.
+
+An « Agricole » shed in an urban zone stays taxable (it may be a converted
+workshop), and so do garden-centre greenhouses (commercial usage). Zoning is now
+fetched once, before the buildings are filtered. Rural buildings are dropped
+before valuation and before today's TFPB is shared out. On a mixed parcel
+(farmhouse plus greenhouses) the farmhouse stays. A parcel holding only rural
+buildings becomes unbuilt land and is priced like any other farmland (SAFER
+agricultural / natural €/m², or its zone class, §3.4): it bears no TFPB today and
+only its land value under the LVT, as other unbuilt land does. 156 modelled
+communes have at least one rural building. In urban communes the N-zone rule
+also catches outbuildings in parks (Vitry-sur-Seine 1.2 % of building footprint,
+Villeurbanne 0.1 %); these are mostly public and largely exempt anyway. The
+proxy cannot check actual agricultural use; the fichiers fonciers' exemption
+codes would.
+
+`--no-exemptions` turns off both the public-property and the rural-building
+exemption and reproduces the unflagged run.
 
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
@@ -302,6 +330,19 @@ carry less of it, and the amount shifted rises in the rings (Paris ring 20.6 →
 21.7 % of the levy, Lyon ring 23.9 → 26.4 %). The income gradient is unchanged
 in direction (Paris group totals: poorest fifth −19.8 → −20.0 %, richest
 +16.2 → +16.1 %).
+
+*Rural buildings.* Exempting farm buildings (§3.5) matters only where there are
+many of them. Périgny, the greenhouse commune, moves most (41.8 → 47.9 %): about
+half its building footprint was greenhouses and farm buildings. Mandres-les-Roses
+60.0 → 62.1 %, Solaize 51.7 → 52.3 %, Santeny 40.4 → 40.8 %; every other commune
+moves by less than half a point. The land shares of Paris (74.2 %), Lyon (57.8 %),
+the Paris ring (62.2 %) and the Lyon ring (53.0 %) are unchanged. The share of
+parcels paying more in the Paris ring falls from 67.6 to 67.4 %; in the Lyon ring
+the amount shifted rises from 26.4 to 26.6 % of the levy and the share paying
+more from 60.7 to 60.8 %. The band counts are unchanged: 2 communes below 40 %
+(Limeil-Brévannes, Vaujours), 26 above 65 %. A few public parcels whose only
+buildings were rural now count as unbuilt and join the exempt public land (Paris
+ring 41,711 → 41,807 exempt parcels, Lyon ring 21,515 → 21,585).
 
 ## 4. Key parameters and assumptions
 
@@ -436,7 +477,7 @@ Ranked by how much they move published (category/quintile) results.
 7. **Non-residential market value** borrows the residential €/m² surface and the
    flat area ratios, and its building value the housing cost; professionnels
    (2017 VLC revision) need a separate stratum. Rural buildings exempt under CGI
-   art. 1382 6° are still taxed. The storey rule (§3.1) removed the largest
+   art. 1382 6° are now left out (§3.5), through a usage-and-zoning proxy. The storey rule (§3.1) removed the largest
    error, sheds counted as multi-storey, and the industrial and commercial
    shares of building value in the low communes fell (Santeny industrial 51 →
    33 %, Vaujours industrial 56 → 30 %, Villepinte commercial — the exhibition
@@ -464,12 +505,13 @@ Ranked by how much they move published (category/quintile) results.
     condominiums or under leases, worship buildings owned by associations,
     private non-profit schools and hospitals, the Assemblée and Sénat (unusual
     legal forms), out-of-territory partial exemptions and public buildings with
-    no unit recorded stay taxable. Temporary exemptions (new social housing under
+    no unit recorded stay taxable. Farm buildings (CGI art. 1382 6°) are
+    identified from BD TOPO usage and PLU zoning, not from actual use: an
+    unlabelled farm shed in an urban zone stays taxed, and park outbuildings in
+    N zones are exempted (§3.5). Temporary exemptions (new social housing under
     CGI art. 1384 A, the QPV abatement) are not identifiable from open data, so
     the baseline still overstates today's bill on exempt HLM and understates it
     elsewhere (material in 93).
-    Farm buildings (CGI art. 1382 6°: greenhouses, barns) are not yet exempted
-    either.
 12. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural

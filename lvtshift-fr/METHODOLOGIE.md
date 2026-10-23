@@ -33,7 +33,7 @@ française.
 | Transactions | DVF géolocalisé (Etalab) | CSV par commune | 5 ans glissants | valeur de marché hédonique ; comparables terrains à bâtir |
 | Bâtiments | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, emprise communale | courant | emprise, niveaux, hauteur, logements, usage, flag d'appariement FF |
 | Année de construction | DPE logements existants (ADEME) | API data-fair par `code_insee_ban` | depuis 07/2021 | dépréciation (tranche → année) |
-| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties |
+| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties ; critère A/N des bâtiments agricoles exonérés (§3.5) |
 | Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | édition 2025 (marché 2024) | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
@@ -219,11 +219,42 @@ bailleur (les locaux de réseaux type poste ENEDIS sont ignorés). Le foncier pu
 bâtiment (parcs, bois, cimetières) ; un bâtiment y reste imposable (concession type
 Stade de France) tant qu'il n'est pas corroboré. Les parcelles exonérées ne portent
 aucune part du produit actuel et sortent de l'assiette LVT : le même produit pèse
-sur les parcelles imposables. À Paris, 3 098 parcelles (dont 1 362 bâties) sont
+sur les parcelles imposables. À Paris, 3 099 parcelles (dont 1 362 bâties) sont
 signalées ; elles portaient 91,6 M€ (5,0 %) du produit que l'état initial leur
 attribuait. Les dénominations ne servent qu'à reconnaître réseaux et bailleurs et
-ne sont jamais stockées ni publiées. `--no-exemptions` reproduit le calcul sans
-signalement.
+ne sont jamais stockées ni publiées.
+
+**Bâtiments ruraux exonérés** (`exemptions.rural_buildings`). L'art. 1382 6° du
+CGI exonère de TFPB les bâtiments affectés de manière permanente et exclusive à un
+usage agricole (serres, granges, silos, étables) ; le sol qui les porte acquitte
+la TFPNB, hors du produit modélisé. Le critère légal est l'usage, non la propriété
+(`docs/research/nonres-valuation-2025.md` §7, consulté via doctrine.fr ;
+Légifrance et le BOFiP n'ont pu être interrogés en direct). Les données ouvertes
+ne voient pas l'usage : le modèle prend un indicateur BD TOPO. Un bâtiment est
+rural si
+- son usage est « Agricole » **et** sa nature est Serre ou Silo, ou sa parcelle
+  est en zone A ou N du PLU ; ou
+- c'est un hangar (« Industriel, agricole ou commercial ») sans usage renseigné
+  ou « Indifférencié », en zone A ou N : la BD TOPO laisse souvent vide l'usage
+  des hangars agricoles.
+
+Un hangar « Agricole » en zone urbaine reste imposable (ce peut être un atelier
+reconverti), de même que les serres de jardinerie (usage commercial). Le zonage
+est désormais chargé une seule fois, avant le filtrage des bâtiments. Les
+bâtiments ruraux sont retirés avant la valorisation et avant la répartition de la
+TFPB actuelle. Sur une parcelle mixte (ferme et serres), la ferme reste. Une
+parcelle qui ne porte que des bâtiments ruraux devient du foncier non bâti, évalué
+comme toute terre agricole (€/m² SAFER agricole / naturel, ou sa classe de zone,
+§3.4) : elle ne paie pas de TFPB aujourd'hui et, sous la LVT, seulement sur la
+valeur de son sol, comme les autres terrains non bâtis. 156 communes modélisées
+comptent au moins un bâtiment rural. En commune urbaine, la règle des zones N
+saisit aussi des dépendances de parcs (Vitry-sur-Seine 1,2 % de l'emprise bâtie,
+Villeurbanne 0,1 %), pour l'essentiel publiques et déjà largement exonérées.
+L'indicateur ne vérifie pas l'usage agricole réel ; les codes d'exonération des
+fichiers fonciers le permettraient.
+
+`--no-exemptions` désactive à la fois l'exonération du foncier public et celle
+des bâtiments ruraux, et reproduit le calcul sans signalement.
 
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
 fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
@@ -336,6 +367,22 @@ dans les couronnes (couronne parisienne 20,6 → 21,7 % du produit, couronne
 lyonnaise 23,9 → 26,4 %). Le gradient de revenu garde son sens (totaux par groupe
 à Paris : cinquième le plus modeste −19,8 → −20,0 %, le plus aisé
 +16,2 → +16,1 %).
+
+*Bâtiments ruraux.* L'exonération des bâtiments agricoles (§3.5) ne compte que là
+où ils sont nombreux. Périgny, la commune des serres, bouge le plus (41,8 →
+47,9 %) : près de la moitié de son emprise bâtie était faite de serres et de
+bâtiments agricoles. Mandres-les-Roses 60,0 → 62,1 %, Solaize 51,7 → 52,3 %,
+Santeny 40,4 → 40,8 % ; toutes les autres communes bougent de moins d'un
+demi-point. Les parts foncières de Paris (74,2 %), Lyon (57,8 %), de la couronne
+parisienne (62,2 %) et de la couronne lyonnaise (53,0 %) sont inchangées. La part
+des parcelles qui paient plus dans la couronne parisienne passe de 67,6 à
+67,4 % ; dans la couronne lyonnaise, le montant déplacé passe de 26,4 à 26,6 % du
+produit et la part qui paie plus de 60,7 à 60,8 %. Les effectifs hors bande ne
+changent pas : 2 communes sous 40 % (Limeil-Brévannes, Vaujours), 26 au-dessus
+de 65 %. Quelques parcelles publiques dont les seuls bâtiments étaient ruraux
+deviennent non bâties et rejoignent le foncier public exonéré (couronne
+parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 →
+21 585).
 
 ## 4. Paramètres et hypothèses clés
 
@@ -487,7 +534,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    résidentielle et les ratios de surface des appartements, et sa valeur bâtie le
    coût du logement ; les locaux professionnels (révision 2017) nécessitent une
    strate dédiée. Les bâtiments ruraux exonérés au titre de l'art. 1382 6° du CGI
-   restent imposés. La règle des niveaux (§3.1) a supprimé l'erreur la plus
+   sont désormais exclus (§3.5), via un indicateur d'usage et de zonage. La règle des niveaux (§3.1) a supprimé l'erreur la plus
    lourde, des hangars comptés sur plusieurs niveaux, et la part industrielle ou
    commerciale de la valeur bâtie des communes basses a reculé (Santeny industriel
    51 → 33 %, Vaujours industriel 56 → 30 %, Villepinte commercial — le parc des
@@ -516,13 +563,14 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     copropriété ou sous bail, les lieux de culte détenus par des associations, les
     écoles et hôpitaux privés non lucratifs, l'Assemblée et le Sénat (formes
     juridiques atypiques), les exonérations partielles hors territoire et les
-    bâtiments publics sans local enregistré restent imposables. Les exonérations
-    temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
+    bâtiments publics sans local enregistré restent imposables. Les bâtiments
+    agricoles (art. 1382 6° CGI) sont repérés par l'usage BD TOPO et le zonage
+    PLU, non par leur usage réel : un hangar agricole non renseigné en zone urbaine
+    reste imposé, et des dépendances de parcs en zone N sont exonérées (§3.5). Les
+    exonérations temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
     pas identifiables en données ouvertes : l'état initial surestime encore la
     cotisation actuelle des HLM exonérés et la sous-estime ailleurs (sensible en
     Seine-Saint-Denis).
-    Les bâtiments ruraux (art. 1382 6° CGI : serres, granges) ne sont pas encore
-    exonérés non plus.
 12. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes

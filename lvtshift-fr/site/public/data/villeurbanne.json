@@ -7,15 +7,15 @@
   "reference_year": 2025,
   "model_type": "split_rate:4.0",
   "headline": {
-    "parcels_modeled": 9661,
-    "tax_base_eur": 27251582098.69571,
-    "land_base_eur": 14269900778.602978,
-    "improvement_base_eur": 12981681320.092731,
+    "parcels_modeled": 9660,
+    "tax_base_eur": 27245468305.16645,
+    "land_base_eur": 14266386720.67535,
+    "improvement_base_eur": 12979081584.491102,
     "land_share_pct": 52.4,
     "built_at_cap_pct": 0.0,
     "neutral_levy_eur": 87188801.0,
-    "gross_shifted_eur": 13281602.230683062,
-    "net_shifted_eur": 6640801.115341531,
+    "gross_shifted_eur": 13283016.950235065,
+    "net_shifted_eur": 6641508.475117527,
     "gross_pct_of_levy": 15.2,
     "net_pct_of_levy": 7.6,
     "gross_bps_of_base": 4.9,
@@ -165,7 +165,7 @@
         {
           "quintile": 1,
           "median_change_pct": 2.5,
-          "median_change_pct_residential": 3.6,
+          "median_change_pct_residential": 3.5,
           "total_change_pct": -7.9,
           "household_median_change_pct": -10.3
         },
@@ -269,7 +269,7 @@
           "median_change_pct": 9.8,
           "median_change_pct_residential": 10.5,
           "total_change_pct": -5.5,
-          "household_median_change_pct": -5.4
+          "household_median_change_pct": -5.3
         },
         {
           "quintile": 4,
@@ -292,11 +292,11 @@
     {
       "category": "Single Family Residential",
       "label_fr": "Maison individuelle",
-      "parcels": 3908,
-      "share_of_parcels_pct": 40.5,
+      "parcels": 3907,
+      "share_of_parcels_pct": 40.4,
       "median_change_pct": 14.6,
       "median_change_eur": 165.0,
-      "count_paying_more": 3518,
+      "count_paying_more": 3517,
       "share_paying_more_pct": 90.0
     },
     {
@@ -368,8 +368,8 @@
       "median_change_pct_residential": 4.9,
       "total_change_pct": -8.0,
       "household_median_change_pct": -10.0,
-      "parcels": 2381,
-      "dwellings": 10498
+      "parcels": 2380,
+      "dwellings": 10497
     },
     {
       "quintile": 2,
@@ -440,8 +440,8 @@
     {
       "bucket": "r25_50",
       "label": "Sous-bâti (25–50 %)",
-      "parcels": 7082,
-      "value_eur": 18419096936.052242,
+      "parcels": 7081,
+      "value_eur": 18412983142.522987,
       "value_pct_of_base": 67.6,
       "share_of_gross_change_pct": 55.2
     },
@@ -450,7 +450,7 @@
       "label": "Bâti (≥50 %)",
       "parcels": 1562,
       "value_eur": 8704951828.054955,
-      "value_pct_of_base": 31.9,
+      "value_pct_of_base": 32.0,
       "share_of_gross_change_pct": 41.8
     }
   ],
@@ -461,7 +461,7 @@
       0.15,
       0.85
     ],
-    "exempt_public_parcels": 1121,
+    "exempt_public_parcels": 1122,
     "note": "Agrégats uniquement — imputations honnêtes au niveau catégorie/quintile, jamais à la parcelle."
   },
   "currency": "EUR"

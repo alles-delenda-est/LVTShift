@@ -8,14 +8,14 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs and storey counts by building type, branch `nonres-storeys`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs, storey counts by building type and exempt farm buildings, branch `rural-exemption`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,091 | €1,840.9 M | 74.2 % | 3.2 % | 17.5 % | 51.2 % |
-| Lyon | 31,023 | €362.9 M | 57.8 % | 0.0 % | 16.5 % | 68.8 % |
-| Paris extra-muros (122) | 566,538 | €3,569.3 M | 62.2 % | 0.2 % | 21.7 % | 67.6 % |
-| Lyon extra-muros (57) | 224,911 | €528.2 M | 53.0 % | 0.0 % | 26.4 % | 60.7 % |
+| Paris | 75,090 | €1,840.9 M | 74.2 % | 3.2 % | 17.5 % | 51.2 % |
+| Lyon | 31,022 | €362.9 M | 57.8 % | 0.0 % | 16.5 % | 68.8 % |
+| Paris extra-muros (122) | 566,442 | €3,569.3 M | 62.2 % | 0.2 % | 21.7 % | 67.4 % |
+| Lyon extra-muros (57) | 224,841 | €528.2 M | 53.0 % | 0.0 % | 26.6 % | 60.8 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -39,7 +39,7 @@ holds (Paris quintiles −18.1/+11.4 → −18.2/+11.9).
 authorities or public hospitals / universities / schools, with no lease, condominium
 or private manager, are now treated as exempt today and under the LVT (DGFiP
 « personnes morales » files, conservative rule). "Parcels" above count taxable
-parcels only (Paris 3,098 exempt, Lyon 3,119, Paris ring 41,711, Lyon ring 21,515,
+parcels only (Paris 3,099 exempt, Lyon 3,120, Paris ring 41,807, Lyon ring 21,585,
 mostly roads, parks and other public land). They carried 3.1–9.6 % of the levy the
 baseline spread onto them (Paris 5.0 %, Lyon 4.7 %, Grenoble 8.2 %, Roubaix 9.6 %); that share now
 falls on taxable parcels. Land shares barely move; the income gradient flattens
@@ -121,10 +121,37 @@ Vaujours 35.7 → 39.0 %, Villepinte 39.4 → 42.8 %, Tremblay-en-France 44.0 �
 40–65 % band 4 → 2 (Limeil-Brévannes, Vaujours), above 24 → 26 (Clamart and
 Collonges-au-Mont-d'Or just over 65). Paris group totals: poorest fifth −19.8 →
 −20.0 %, richest +16.2 → +16.1 %. This is the first of three stacked
-non-residential PRs; the rural-building exemption (CGI 1382 6°) and per-type
-non-residential costs, with replacement-cost valuation for sheds, are still to
-come. Evidence: `docs/research/nonres-valuation-2025.md` §1 and
-`docs/research/nonres_probes/`.
+non-residential PRs; the rural-building exemption (CGI 1382 6°, below) is the
+second, and per-type non-residential costs, with replacement-cost valuation for
+sheds, are still to come. Evidence: `docs/research/nonres-valuation-2025.md` §1
+and `docs/research/nonres_probes/`.
+
+**Exempt farm buildings (second non-residential step).** CGI art. 1382 6° exempts
+from the TFPB buildings permanently and exclusively used for agriculture
+(greenhouses, barns, silos, stables); the land under them pays the TFPNB, outside
+the modelled levy. The test is use, not ownership (`nonres-valuation-2025.md` §7,
+read via doctrine.fr; Légifrance and BOFiP could not be fetched live). The open-data
+proxy (`exemptions.rural_buildings`): BD TOPO usage « Agricole » with nature Serre
+or Silo or a parcel in a PLU A/N zone; or a shed (« Industriel, agricole ou
+commercial ») with no usage or « Indifférencié » in an A/N zone, since BD TOPO
+often leaves farm sheds unlabelled. « Agricole » sheds in urban zones and
+garden-centre greenhouses stay taxable. Rural buildings are dropped before
+valuation and before today's TFPB is shared out; zoning is now fetched once,
+before that filter. A mixed parcel keeps its farmhouse; a parcel holding only
+rural buildings becomes unbuilt farmland (SAFER price or zone class), with no
+TFPB today and only its land value under the LVT. 156 communes have at least one
+rural building. Before → after: Périgny 41.8 → 47.9 % (about half its footprint
+was greenhouses and farm buildings), Mandres-les-Roses 60.0 → 62.1 %, Solaize
+51.7 → 52.3 %, Santeny 40.4 → 40.8 %, every other commune < 0.5 pt. Paris, Lyon
+and both rings: land share unchanged; Paris ring share paying more 67.6 → 67.4 %;
+Lyon ring amount shifted 26.4 → 26.6 %, share paying more 60.7 → 60.8 %. Band
+counts unchanged (2 below 40 %: Limeil-Brévannes, Vaujours; 26 above 65 %). The
+small drop in "Parcels" is public land whose only buildings were rural: it now
+counts as unbuilt and qualifies as exempt public property. Caveat: in urban
+communes the N-zone rule also catches park outbuildings (Vitry-sur-Seine 1.2 % of
+building footprint, Villeurbanne 0.1 %), mostly public and largely exempt anyway;
+the fichiers fonciers' exemption codes would verify actual use.
+`--no-exemptions` turns off both exemptions.
 
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
@@ -233,7 +260,7 @@ come. Evidence: `docs/research/nonres-valuation-2025.md` §1 and
   (null for all published communes) because the INSEE page gives counts, not a
   percentage. Its comparator is also degenerate in dense cities (Lyon shows 99.9 %
   "under-built").
-- [ ] **C5.** Non-residential valuation: offices, shops and industry still borrow the residential €/m² and the housing construction cost (La Défense: Courbevoie, Puteaux, Paris 8e; the low-land-share communes Vaujours, Limeil-Brévannes, Périgny, Villepinte). First step done on branch `nonres-storeys` (storey counts by building type); the rural-building exemption (CGI 1382 6°) and per-type costs with replacement-cost valuation for sheds are next.
+- [ ] **C5.** Non-residential valuation: offices, shops and industry still borrow the residential €/m² and the housing construction cost (La Défense: Courbevoie, Puteaux, Paris 8e; the low-land-share communes Vaujours, Limeil-Brévannes, Périgny, Villepinte). First step done on branch `nonres-storeys` (storey counts by building type), second on branch `rural-exemption` (farm buildings exempt under CGI 1382 6°); per-type costs with replacement-cost valuation for sheds are next.
 - [ ] **C6.** Cache housekeeping: add `--refresh` and record the download date in each payload's provenance (security review, info).
 - [ ] **C7.** Add an aggregate-only guard to the public register writer (security review, low). The register is now 692 KB; consider splitting out the ring members.
 - [ ] **C9.** DPE energy class as a building-condition signal for effective age

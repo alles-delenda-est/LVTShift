@@ -26,13 +26,13 @@
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 9661,
+      "parcels_unique": 9660,
       "commune_key": "villeurbanne",
       "name": "Villeurbanne",
       "kind": "commune",
       "insee": "69266",
       "departement": "69",
-      "parcels_modeled": 9661,
+      "parcels_modeled": 9660,
       "land_share_pct": 52.4,
       "gross_pct_of_levy": 15.2
     },
@@ -58,43 +58,43 @@
       "departement": "46",
       "parcels_modeled": 20778,
       "land_share_pct": 41.2,
-      "gross_pct_of_levy": 19.9
+      "gross_pct_of_levy": 20.0
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 13325,
+      "parcels_unique": 13317,
       "commune_key": "montreuil",
       "name": "Montreuil",
       "kind": "commune",
       "insee": "93048",
       "departement": "93",
-      "parcels_modeled": 13325,
+      "parcels_modeled": 13317,
       "land_share_pct": 63.9,
       "gross_pct_of_levy": 20.4
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 11811,
+      "parcels_unique": 11804,
       "commune_key": "figeac",
       "name": "Figeac",
       "kind": "commune",
       "insee": "46102",
       "departement": "46",
-      "parcels_modeled": 11811,
-      "land_share_pct": 46.2,
-      "gross_pct_of_levy": 17.3
+      "parcels_modeled": 11804,
+      "land_share_pct": 46.3,
+      "gross_pct_of_levy": 17.6
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 10691,
+      "parcels_unique": 10689,
       "commune_key": "sete",
       "name": "Sète",
       "kind": "commune",
       "insee": "34301",
       "departement": "34",
-      "parcels_modeled": 10691,
+      "parcels_modeled": 10689,
       "land_share_pct": 55.0,
-      "gross_pct_of_levy": 25.2
+      "gross_pct_of_levy": 25.3
     },
     {
       "n_communes_unique": 1,
@@ -105,56 +105,56 @@
       "insee": "17300",
       "departement": "17",
       "parcels_modeled": 27432,
-      "land_share_pct": 66.1,
-      "gross_pct_of_levy": 30.7
+      "land_share_pct": 66.2,
+      "gross_pct_of_levy": 30.9
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 75091,
+      "parcels_unique": 75090,
       "commune_key": "paris",
       "name": "Paris",
       "kind": "commune",
       "insee": "75056",
       "departement": "75",
-      "parcels_modeled": 75091,
+      "parcels_modeled": 75090,
       "land_share_pct": 74.2,
       "gross_pct_of_levy": 17.5
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 31023,
+      "parcels_unique": 31022,
       "commune_key": "lyon",
       "name": "Lyon",
       "kind": "commune",
       "insee": "69123",
       "departement": "69",
-      "parcels_modeled": 31023,
+      "parcels_modeled": 31022,
       "land_share_pct": 57.8,
       "gross_pct_of_levy": 16.5
     },
     {
       "n_communes_unique": 121,
-      "parcels_unique": 553213,
+      "parcels_unique": 553125,
       "commune_key": "paris-extra-muros",
       "name": "Paris extra-muros (petite couronne)",
       "kind": "territory",
       "insee": null,
       "departement": "92/93/94",
-      "parcels_modeled": 566538,
+      "parcels_modeled": 566442,
       "land_share_pct": 62.2,
       "gross_pct_of_levy": 21.7
     },
     {
       "n_communes_unique": 56,
-      "parcels_unique": 215250,
+      "parcels_unique": 215181,
       "commune_key": "lyon-extra-muros",
       "name": "Lyon extra-muros (Métropole hors Lyon)",
       "kind": "territory",
       "insee": null,
       "departement": "69",
-      "parcels_modeled": 224911,
+      "parcels_modeled": 224841,
       "land_share_pct": 53.0,
-      "gross_pct_of_levy": 26.4
+      "gross_pct_of_levy": 26.6
     }
   ],
   "currency": "EUR"
