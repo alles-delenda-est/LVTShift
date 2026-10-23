@@ -167,8 +167,9 @@ export default function MethodologiePage() {
 
           <p>
             <strong>Pour chaque parcelle bâtie,</strong> on estime d&apos;abord
-            la valeur du bâtiment — coût de remplacement déprécié : emprise
-            au sol × nombre d&apos;étages × coût de construction au m² ×
+            la valeur du bâtiment — coût de remplacement déprécié : surface
+            habitable (emprise au sol × nombre d&apos;étages, ramenée à la
+            surface habitable) × coût de construction au m² habitable ×
             coefficient de dépréciation linéaire calculé à partir de
             l&apos;année de construction (fournie par les diagnostics
             énergétiques DPE de l&apos;ADEME). Là où les prix du quartier
@@ -524,12 +525,14 @@ export default function MethodologiePage() {
               10&nbsp;860&nbsp;€/m². 95,5&nbsp;% des parcelles bâties
               parisiennes atteignaient alors le plafond de 85&nbsp;% : le
               partage terrain/bâti était fixé par la borne, pas mesuré. Avec
-              la règle de l&apos;âge effectif décrite plus haut, la part
-              foncière de Paris ressort à 83,3&nbsp;%, et 34,8&nbsp;% des
-              parcelles restent au plafond : aux prix parisiens, le foncier
-              dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
-              chères. Lyon passe à 70,4&nbsp;%, sans parcelle au plafond.
-              Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              la règle de l&apos;âge effectif décrite plus haut, une valeur de
+              marché et une valeur du bâti calculées toutes deux sur la surface
+              habitable, et des coûts de construction recalés, la part
+              foncière de Paris ressort à 74,0&nbsp;%, avec 0,4&nbsp;% des
+              parcelles bâties au plafond : elle est désormais mesurée.
+              Aucune commune n&apos;a plus de la moitié de ses parcelles
+              bâties au plafond (Neuilly-sur-Seine en a le plus,
+              18,3&nbsp;%). Lyon est à 58,6&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
               l&apos;indice Notaires-INSEE le plus local (appartements
               parisiens, départements de petite couronne, agglomération
               lyonnaise…), ce qui retire le pic de 2021–2022.
@@ -548,9 +551,9 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+6,4&nbsp;%), alors que ce groupe paie
-              7,7&nbsp;% de moins au total et que son ménage type paie
-              10,6&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              plus pauvre en hausse (+10,7&nbsp;%), alors que ce groupe paie
+              7,9&nbsp;% de moins au total et que son ménage type paie
+              11,8&nbsp;% de moins : les grands immeubles, où vit la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
@@ -578,27 +581,35 @@ export default function MethodologiePage() {
           {/* Construction cost caveat */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
-              Coûts de construction — gradient régional pilote
+              Coûts de construction et surface habitable
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
-              Les coûts de construction au m² utilisés pour estimer la valeur
-              du bâti (de 1&thinsp;600&thinsp;€/m² à Figeac à
-              2&thinsp;300&thinsp;€/m² à Paris) sont des valeurs
-              pilotes fondées sur un gradient régional grossier, en attente
-              d&apos;un calage sur les indices FFB&nbsp;/&nbsp;BT01. Un écart
-              de ±&thinsp;15&nbsp;% sur ce paramètre se propage linéairement
-              dans la valeur bâti et, par conséquent, dans le résiduel
-              foncier. C&apos;est la raison pour laquelle le registre signale
-              en WARN les communes dont la part foncière imputée dépasse la
-              bande 40–65&nbsp;% (6 communes sur 9 dans le panel) : cette
-              anomalie peut indiquer un bâti sous-évalué et un résiduel
-              foncier correspondamment surestimé — autant qu&apos;un marché
-              foncier effectivement très tendu. Les deux lectures sont
-              plausibles, et il serait trompeur de trancher sans calage. La
-              bande de sensibilité ±&thinsp;10 points encadre cette
-              incertitude dans tous les résultats publiés : chiffres clés,
-              catégories de bien et quintiles de revenu, où elle apparaît en
-              traits fins autour de chaque barre.
+              Les coûts de construction de Paris (2&thinsp;650&thinsp;€/m²),
+              de la petite couronne (2&thinsp;400&thinsp;€/m²), de Lyon et
+              Villeurbanne (2&thinsp;000&thinsp;€/m²) et de la couronne
+              lyonnaise (1&thinsp;850&thinsp;€/m²) sont calés sur le coût du
+              bâtiment des logements sociaux neufs publié par le ministère
+              (DHUP/SISAL), ramené en euros 2025 par l&apos;indice BT01 :
+              bâtiment seul, par m² de surface brute, honoraires et TVA
+              compris. Les autres communes du panel gardent des valeurs
+              pilotes (de 1&thinsp;600&thinsp;€/m² à Figeac à
+              1&thinsp;900&thinsp;€/m² à Grenoble et Annemasse). Les prix
+              DVF étant exprimés au m² habitable, la valeur de marché et la
+              valeur du bâti sont toutes deux calculées sur la surface
+              habitable, estimée à 64&nbsp;% (appartements) et 61&nbsp;%
+              (maisons) de la surface emprise × étages, ratios mesurés sur 35
+              communes. Le maillon le moins sûr est le rapport entre surface
+              habitable et surface brute sous-jacent aux coûts : un écart de
+              0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
+              reporte sur le résiduel foncier. Le registre signale en WARN les
+              communes dont la part foncière imputée sort de la bande
+              40–65&nbsp;% (21 au-dessus et 5 en dessous sur 188, dont Paris
+              et La Rochelle dans le panel) : cela peut traduire un marché
+              foncier très tendu autant qu&apos;un bâti sous-évalué. La bande
+              de sensibilité ±&thinsp;10 points encadre cette incertitude dans
+              tous les résultats publiés : chiffres clés, catégories de bien
+              et quintiles de revenu, où elle apparaît en traits fins autour
+              de chaque barre.
             </p>
           </div>
 

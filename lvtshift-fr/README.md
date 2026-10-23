@@ -53,12 +53,19 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 
 ## Méthode, en bref
 
-1. **Valeur bâti** = emprise × niveaux × coût de construction (€/m², indices BT)
+1. **Valeur bâti** = surface habitable × coût de construction par m² habitable
    × dépréciation linéaire plancher (25 % résiduel à 80 ans), appliquée à
    l'**âge effectif** : là où les prix de l'IRIS dépassent nettement le coût de
-   reconstruction, le bâti entretenu compte au plus 30 ans.
+   reconstruction, le bâti entretenu compte au plus 30 ans. Surface habitable =
+   emprise × niveaux (BD TOPO) × 0,64 (appartements) ou 0,61 (maisons), ratios
+   mesurés sur 35 communes (DPE × BD TOPO). Coûts 2025 par m² brut, honoraires et
+   TVA inclus, calés pour Paris (2 650), la petite couronne (2 400), Lyon et
+   Villeurbanne (2 000) et la couronne lyonnaise (1 850) sur les coûts du
+   logement social neuf (DHUP/SISAL, indice BT01), puis divisés par 0,71
+   (appartements) ou 0,82 (maisons) pour passer au m² habitable.
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
-   (médiane rétrécie, shrinkage k=8), volontairement simple et critiquable ;
+   (médiane rétrécie, shrinkage k=8) × surface habitable, volontairement simple
+   et critiquable ;
    chaque vente est d'abord ramenée en euros 2025 par l'indice Notaires-INSEE
    le plus local (Paris, départements de petite couronne, agglomérations de
    Lyon, Marseille, Lille, régions, Province).
@@ -164,8 +171,10 @@ export CSV seul : `run(..., make_report=False)`.
   La dépréciation du bâti ancien entretenu se fait à l'**âge effectif** (au
   plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
   reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
-  à la borne de 85 %. Avec la règle, Paris ressort à 83,3 % (34,8 % à la borne,
-  un reliquat réel aux prix parisiens) et seule Neuilly-sur-Seine reste signalée.
+  à la borne de 85 %. Avec cette règle, les deux termes du résiduel en surface
+  habitable et les coûts recalés, Paris ressort à 74,0 % (0,4 % des parcelles
+  bâties à la borne) ; aucune commune n'a plus de la moitié de ses parcelles
+  bâties au plafond (Neuilly-sur-Seine en a le plus, 18,3 %).
   La part avant bornage est conservée (colonne `land_share_raw`) pour publier
   la distribution non bornée.
 - **Exonérations TFPB partiellement modélisées** : le foncier public
@@ -173,11 +182,11 @@ export CSV seul : `run(..., make_report=False)`.
   édifices religieux associatifs, les bâtiments agricoles (CGI art. 1382 6°) et
   les exonérations temporaires (HLM neufs, abattement QPV) absorbent encore une
   part du produit actuel **et** paient la LVT simulée.
-- **Surfaces brutes × prix habitables** : la surface plancher (emprise ×
-  niveaux, type SHOB) multiplie un coût €/m² SHON et un €/m² hédonique estimé
-  sur la surface réelle bâtie DVF — niveaux de valeur surestimés (~10–25 %
-  selon le type de bâti), le résiduel hérite du biais (signalé par la revue
-  fondatrice, PR #1).
+- **Coûts de construction et ratio habitable ÷ brut.** Hors Paris, petite
+  couronne et territoires lyonnais, les coûts restent des valeurs pilotes non
+  calées. Le maillon le moins sourcé est le rapport surface habitable ÷ vraie
+  surface brute sous-jacent aux coûts (0,71 / 0,82) : ±0,05 déplace la valeur
+  bâti d'environ ±7 %. Le non-résidentiel est valorisé comme des appartements.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
