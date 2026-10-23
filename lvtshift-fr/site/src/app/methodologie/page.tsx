@@ -218,6 +218,31 @@ export default function MethodologiePage() {
           </p>
 
           <p>
+            <strong>Entrepôts, ateliers et autres locaux d&apos;activité.</strong>{" "}
+            Chaque bâtiment est classé d&apos;après la BD TOPO : hangar,
+            atelier, grande surface, bureaux, hangar agricole, serre, salle de
+            sport, annexe, lieu de culte ou logement. Chaque type a son propre
+            coût de construction, exprimé en proportion de celui du logement
+            collectif (un entrepôt coûte environ le quart d&apos;un immeuble au
+            m², des bureaux environ 80&nbsp;%), hors TVA pour les entreprises
+            qui la récupèrent, ainsi que sa propre durée de vie (40 ans pour
+            un entrepôt, 60 pour des bureaux, 80 pour le logement). Un
+            entrepôt ou une grande surface se vend rarement : on ne peut donc
+            pas lui appliquer le prix au m² des appartements. Les parcelles
+            dont le plus grand bâtiment est de ce type sont évaluées comme le
+            font les experts pour les biens sans marché, par la méthode
+            « sol + construction » : le bâtiment à son coût de reconstruction
+            déprécié, le terrain au prix local des terrains à bâtir, réduit
+            pour le foncier d&apos;activité (× 0,45 autour de Paris et
+            ailleurs, × 0,35 autour de Lyon, d&apos;après les ventes de terrains
+            d&apos;activité enregistrées dans DVF). Hors zone urbaine, seule
+            une cour autour du bâtiment est comptée comme terrain à bâtir, le
+            reste comme terre agricole. Les bureaux, qui se vendent, restent
+            évalués par le résiduel. Ces coûts reposent sur un seul guide
+            professionnel et sont à ±&thinsp;25&nbsp;% près.
+          </p>
+
+          <p>
             Cette approche <em>classer-puis-valoriser</em> remplace une
             méthode antérieure qui appliquait une part foncière uniforme à
             toutes les parcelles — source d&apos;artefacts importants dans
@@ -498,6 +523,31 @@ export default function MethodologiePage() {
           Limites et réserves honnêtes
         </h3>
         <div className="space-y-7 max-w-3xl">
+          {/* Today's-tax baseline and non-residential results */}
+          <div className="border-l-4 border-rouge pl-5">
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Taxe actuelle — entrepôts et usines surtaxés dans la base de départ
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Faute d&apos;accès aux valeurs locatives réelles, la taxe
+              foncière d&apos;aujourd&apos;hui est répartie entre les parcelles
+              bâties au prorata de leur surface de plancher, sans distinguer
+              logements, commerces et locaux industriels. Or les valeurs
+              locatives des établissements industriels ont été divisées par
+              deux en 2021, et les tarifs des entrepôts et grandes surfaces
+              sont bas au m². La base de départ attribue donc aux entrepôts
+              et aux usines une taxe actuelle trop élevée. Depuis que leurs
+              bâtiments et leur terrain sont évalués à leur propre valeur, plus
+              basse, cette erreur ne se compense plus : la baisse simulée de
+              leur cotisation (environ −55&nbsp;% dans la couronne lyonnaise,
+              −31&nbsp;% dans la couronne parisienne) est exagérée, et les
+              gains des ménages autour de Lyon sont sous-estimés.
+              Les résultats par catégorie et par revenu de cette étape sont à
+              lire comme provisoires ; une base pondérée par catégorie de
+              local est la prochaine étape.
+            </p>
+          </div>
+
           {/* Paris & Lyon, and the inner rings */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
@@ -536,12 +586,13 @@ export default function MethodologiePage() {
               partage terrain/bâti était fixé par la borne, pas mesuré. Avec
               la règle de l&apos;âge effectif décrite plus haut, une valeur de
               marché et une valeur du bâti calculées toutes deux sur la surface
-              habitable, et des coûts de construction recalés, la part
-              foncière de Paris ressort à 74,2&nbsp;%, avec 3,2&nbsp;% des
+              habitable, des coûts de construction recalés et une
+              valorisation propre aux locaux d&apos;activité, la part
+              foncière de Paris ressort à 75,8&nbsp;%, avec 5,6&nbsp;% des
               parcelles bâties au plafond : elle est désormais mesurée.
               Aucune commune n&apos;a plus de la moitié de ses parcelles
               bâties au plafond (Neuilly-sur-Seine en a le plus,
-              25,0&nbsp;%). Lyon est à 57,8&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              25,3&nbsp;%). Lyon est à 60,0&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
               l&apos;indice Notaires-INSEE le plus local (appartements
               parisiens, départements de petite couronne, agglomération
               lyonnaise…), ce qui retire le pic de 2021–2022.
@@ -629,13 +680,15 @@ export default function MethodologiePage() {
               habitable et surface brute sous-jacent aux coûts : un écart de
               0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
               reporte sur le résiduel foncier. Le registre signale en WARN les
-              communes dont la part foncière imputée sort de la bande
-              40–65&nbsp;% (26 au-dessus et 2 en dessous sur 188, dont Paris
-              et La Rochelle dans le panel) : cela peut traduire un marché
-              foncier très tendu autant qu&apos;un bâti sous-évalué. Les
-              locaux industriels et commerciaux restent valorisés au prix et
-              au coût du logement, ce qui pèse encore sur la part foncière de
-              communes comme Vaujours ou Villepinte. La bande
+              communes dont la part foncière imputée sort de la fourchette
+              40–65&nbsp;% (48 au-dessus et 1 en dessous sur 188, dont Paris
+              et La Rochelle dans le panel). Cette fourchette est un repère à
+              l&apos;échelle d&apos;une métropole, pas un test que chaque
+              commune devrait passer : les communes limitrophes de Paris
+              (76&nbsp;%) se situent naturellement entre 65 et 75&nbsp;%, comme
+              les quartiers d&apos;affaires de premier rang. Les bureaux restent
+              valorisés au prix de vente des logements, faute d&apos;une
+              surface de prix propre aux locaux professionnels. La bande
               de sensibilité ±&thinsp;10 points encadre cette incertitude dans
               tous les résultats publiés : chiffres clés, catégories de bien
               et quintiles de revenu, où elle apparaît en traits fins autour

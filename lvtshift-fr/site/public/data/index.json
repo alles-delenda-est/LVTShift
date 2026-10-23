@@ -9,8 +9,8 @@
       "insee": "38185",
       "departement": "38",
       "parcels_modeled": 11922,
-      "land_share_pct": 55.1,
-      "gross_pct_of_levy": 39.7
+      "land_share_pct": 61.5,
+      "gross_pct_of_levy": 52.0
     },
     {
       "n_communes_unique": 1,
@@ -21,8 +21,8 @@
       "insee": "74012",
       "departement": "74",
       "parcels_modeled": 4424,
-      "land_share_pct": 52.0,
-      "gross_pct_of_levy": 25.0
+      "land_share_pct": 54.6,
+      "gross_pct_of_levy": 27.9
     },
     {
       "n_communes_unique": 1,
@@ -33,8 +33,8 @@
       "insee": "69266",
       "departement": "69",
       "parcels_modeled": 9660,
-      "land_share_pct": 52.4,
-      "gross_pct_of_levy": 15.2
+      "land_share_pct": 52.8,
+      "gross_pct_of_levy": 23.1
     },
     {
       "n_communes_unique": 1,
@@ -45,8 +45,8 @@
       "insee": "59512",
       "departement": "59",
       "parcels_modeled": 31714,
-      "land_share_pct": 42.3,
-      "gross_pct_of_levy": 35.6
+      "land_share_pct": 41.9,
+      "gross_pct_of_levy": 43.7
     },
     {
       "n_communes_unique": 1,
@@ -57,8 +57,8 @@
       "insee": "46042",
       "departement": "46",
       "parcels_modeled": 20778,
-      "land_share_pct": 41.2,
-      "gross_pct_of_levy": 20.0
+      "land_share_pct": 38.6,
+      "gross_pct_of_levy": 31.1
     },
     {
       "n_communes_unique": 1,
@@ -69,8 +69,8 @@
       "insee": "93048",
       "departement": "93",
       "parcels_modeled": 13317,
-      "land_share_pct": 63.9,
-      "gross_pct_of_levy": 20.4
+      "land_share_pct": 66.6,
+      "gross_pct_of_levy": 24.4
     },
     {
       "n_communes_unique": 1,
@@ -81,8 +81,8 @@
       "insee": "46102",
       "departement": "46",
       "parcels_modeled": 11804,
-      "land_share_pct": 46.3,
-      "gross_pct_of_levy": 17.6
+      "land_share_pct": 45.4,
+      "gross_pct_of_levy": 31.4
     },
     {
       "n_communes_unique": 1,
@@ -93,8 +93,8 @@
       "insee": "34301",
       "departement": "34",
       "parcels_modeled": 10689,
-      "land_share_pct": 55.0,
-      "gross_pct_of_levy": 25.3
+      "land_share_pct": 56.5,
+      "gross_pct_of_levy": 35.1
     },
     {
       "n_communes_unique": 1,
@@ -105,8 +105,8 @@
       "insee": "17300",
       "departement": "17",
       "parcels_modeled": 27432,
-      "land_share_pct": 66.2,
-      "gross_pct_of_levy": 30.9
+      "land_share_pct": 69.8,
+      "gross_pct_of_levy": 38.1
     },
     {
       "n_communes_unique": 1,
@@ -117,8 +117,8 @@
       "insee": "75056",
       "departement": "75",
       "parcels_modeled": 75090,
-      "land_share_pct": 74.2,
-      "gross_pct_of_levy": 17.5
+      "land_share_pct": 75.8,
+      "gross_pct_of_levy": 19.2
     },
     {
       "n_communes_unique": 1,
@@ -129,8 +129,8 @@
       "insee": "69123",
       "departement": "69",
       "parcels_modeled": 31022,
-      "land_share_pct": 57.8,
-      "gross_pct_of_levy": 16.5
+      "land_share_pct": 60.0,
+      "gross_pct_of_levy": 20.4
     },
     {
       "n_communes_unique": 121,
@@ -141,8 +141,8 @@
       "insee": null,
       "departement": "92/93/94",
       "parcels_modeled": 566442,
-      "land_share_pct": 62.2,
-      "gross_pct_of_levy": 21.7
+      "land_share_pct": 65.3,
+      "gross_pct_of_levy": 28.1
     },
     {
       "n_communes_unique": 56,
@@ -153,8 +153,8 @@
       "insee": null,
       "departement": "69",
       "parcels_modeled": 224841,
-      "land_share_pct": 53.0,
-      "gross_pct_of_levy": 26.6
+      "land_share_pct": 55.4,
+      "gross_pct_of_levy": 38.3
     }
   ],
   "currency": "EUR"

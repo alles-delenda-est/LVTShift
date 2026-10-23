@@ -65,7 +65,13 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    propre coût, tiré de l'enquête EPTB du SDES sur les maisons neuves (Paris
    2 300, petite couronne 2 100, Lyon et Villeurbanne 2 400, couronne lyonnaise
    2 250). Ces coûts sont divisés par 0,71 (appartements) ou 0,82 (maisons)
-   pour passer au m² habitable.
+   pour passer au m² habitable. Les bâtiments non résidentiels sont typés
+   d'après l'usage et la nature BD TOPO (hangar, atelier, grande surface,
+   bureaux, hangar agricole, serre, salle de sport, annexe, culte) ; chaque
+   type a un coût en ratio du coût du logement collectif (hangar 0,25,
+   bureaux 0,825, salle de sport 1,033…, hors TVA pour les types
+   professionnels), une durée de vie et un plancher propres, et, sans année
+   connue, il est pris à mi-vie (le DPE ne date que le logement).
 2. **Valeur de marché** : effets fixes cellule×type sur les €/m² DVF
    (médiane rétrécie, shrinkage k=8) × surface habitable, volontairement simple
    et critiquable ;
@@ -79,7 +85,15 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    le constructible est valorisé aux comparables **terrains à bâtir** DVF
    (médiane communale, repli EPTB national), le non-bâti aux prix **SAFER**
    départementaux (~0,4–1 €/m²). Bâtiments rattachés aux parcelles par
-   **intersection pondérée par surface** (et non par centroïde).
+   **intersection pondérée par surface** (et non par centroïde). Les parcelles
+   dont le plus grand bâtiment est un hangar, un atelier, une grande surface,
+   un hangar agricole, une serre, une salle de sport ou une annexe sont
+   évaluées au **coût de remplacement déprécié** (« sol + construction ») :
+   bâti au coût déprécié, terrain au prix local des terrains à bâtir × 0,45
+   (Paris et ailleurs) ou × 0,35 (territoires lyonnais) pour le foncier
+   d'activité (ventes DVF de terrains d'activité), × 1 pour le sport et les
+   annexes ; hors zone urbaine, seule une cour de 3 × la surface plancher prend
+   ce prix. Les bureaux restent au résiduel, à leur propre coût.
 4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
    d'un proxy de VLC (surface plancher). *Maillon faible assumé.* Le foncier
    public manifestement exonéré (art. 1382-1° CGI) et les bâtiments agricoles
@@ -156,6 +170,15 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
+- **Ne pas publier les chiffres distributifs de la valorisation du
+  non-résidentiel en l'état.** La taxe actuelle est répartie à la surface
+  plancher sans pondération par catégorie, ce qui surestime ce que paient
+  aujourd'hui entrepôts et usines (valeurs locatives industrielles divisées
+  par deux en 2021, tarifs RVLLP bas au m² pour les entrepôts et grandes
+  surfaces). Avec un bâti non résidentiel désormais évalué bien plus bas, la
+  baisse des cotes industrielles (couronne lyonnaise −55 %, couronne
+  parisienne −31 %) et les gains plus faibles des ménages autour de Lyon sont
+  exagérés. Prochaine étape : une base pondérée par catégorie.
 - **Taxe actuelle (maillon porteur désormais).** La TFPB est un impôt sur le
   **bâti** : les parcelles non bâties portent désormais **zéro** taxe actuelle
   (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT
@@ -180,9 +203,12 @@ export CSV seul : `run(..., make_report=False)`.
   plus 30 ans là où les prix de l'IRIS dépassent nettement le coût de
   reconstruction) : sans cela, 95,5 % des parcelles bâties parisiennes étaient
   à la borne de 85 %. Avec cette règle, les deux termes du résiduel en surface
-  habitable et les coûts recalés, Paris ressort à 74,2 % (3,2 % des parcelles
-  bâties à la borne) ; aucune commune n'a plus de la moitié de ses parcelles
-  bâties au plafond (Neuilly-sur-Seine en a le plus, 25,0 %).
+  habitable, les coûts recalés et la valorisation du non-résidentiel, Paris
+  ressort à 75,8 % (5,6 % des parcelles bâties à la borne) ; aucune commune
+  n'a plus de la moitié de ses parcelles bâties au plafond (Neuilly-sur-Seine
+  en a le plus, 25,3 %). La fourchette 40–65 % est un repère métropolitain,
+  pas un test par commune : les communes limitrophes de Paris se situent
+  naturellement entre 65 et 75 %.
   La part avant bornage est conservée (colonne `land_share_raw`) pour publier
   la distribution non bornée.
 - **Exonérations TFPB partiellement modélisées** : le foncier public
@@ -202,9 +228,10 @@ export CSV seul : `run(..., make_report=False)`.
   constructions légères ; hauteur ÷ 3,5 m pour les autres bâtiments
   commerciaux de 7 m et plus ; hauteur ÷ 3 m pour le logement) : l'ancienne
   règle unique hauteur ÷ 3 m gonflait 2 à 2,7 fois la surface des entrepôts.
-  Le non-résidentiel reste valorisé au prix et au coût des appartements ; le
-  corriger est le prochain levier pour les communes dont la part terrain sort
-  sous 40 % (Limeil-Brévannes, Vaujours) ou en est proche.
+  Les coûts du non-résidentiel reposent sur un seul guide commercial ramené
+  à notre niveau de logement (±25 %), le ratio du foncier d'activité sur
+  n ≈ 20 à 80 ventes, et les bureaux restent valorisés au prix résidentiel.
+  Sur une parcelle mixte, le plus grand bâtiment décide de la méthode.
 - Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
   ignore la catégorie cadastrale et les coefficients de pondération de
   surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
@@ -220,8 +247,9 @@ export CSV seul : `run(..., make_report=False)`.
   poids relatif résidentiel/professionnel ; à traiter par strate.
 - Année de construction (DPE) : la période est issue des DPE (logements
   **diagnostiqués** uniquement — biais de sélection), mappée à l'année médiane de
-  la tranche ; pour les parcelles sans DPE on retombe sur l'**année médiane
-  communale** (issue des DPE résidentiels), appliquée aussi au non-résidentiel.
+  la tranche ; pour les logements sans DPE on retombe sur l'**année médiane
+  communale** (issue des DPE résidentiels) ; le non-résidentiel sans année
+  propre est pris à mi-vie.
   Nette amélioration sur la base dégénérée précédente (bâti ≈ 0 quand l'année BD
   TOPO est nulle), mais généralisation à documenter.
 - Revenus (Filosofi) : millésime 2021 (le dernier produit), à l'IRIS,

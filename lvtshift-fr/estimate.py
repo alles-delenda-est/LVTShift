@@ -89,9 +89,14 @@ def habitable_basis(p: pd.DataFrame, cfg) -> pd.DataFrame:
         raise ValueError("construction costs must be finite and positive")
     is_house = t.eq("Maison").fillna(False).to_numpy(dtype=bool)
     k = np.where(is_house, house / cost, 1.0)
+    # parcels valued by replacement cost (sheds…) never meet a DVF habitable
+    # price: their building stays on its own floor area
+    drc = (p["valuation"].eq("drc").fillna(False).to_numpy(dtype=bool)
+           if "valuation" in p.columns else np.zeros(len(p), dtype=bool))
+    factor = np.where(drc, 1.0, r / rc * k)
     out = p.copy()
-    out["improvement_value"] = out["improvement_value"] * r / rc * k
-    out["habitable_area_m2"] = out["floor_area_m2"] * r
+    out["improvement_value"] = out["improvement_value"] * factor
+    out["habitable_area_m2"] = out["floor_area_m2"] * np.where(drc, 1.0, r)
     return out
 
 
@@ -145,6 +150,32 @@ def impute_levels(b: pd.DataFrame) -> pd.Series:
     return lv.fillna(1.0).clip(lower=1.0, upper=MAX_LEVELS).astype(float)
 
 
+IAC_NATURE = "Industriel, agricole ou commercial"
+
+
+def building_type(b: pd.DataFrame) -> pd.Series:
+    """
+    BUILDING_TYPES key per building, from BD TOPO usage_1 and nature.
+
+    Shed-type natures (Industriel, agricole ou commercial) separate warehouses
+    and retail boxes from workshops and offices in ordinary buildings.
+    Housing, 'Indifférencié' and unknown usages are 'residential'.
+    """
+    usage = b["usage"] if "usage" in b.columns else pd.Series(None, index=b.index)
+    nature = b["nature"] if "nature" in b.columns else pd.Series(None, index=b.index)
+    iac = nature.eq(IAC_NATURE)
+    t = pd.Series("residential", index=b.index, dtype=object)
+    t = t.mask(iac, "shed")                     # unknown/indifférencié usage
+    t = t.mask(usage.eq("Industriel"), np.where(iac, "shed", "workshop"))
+    t = t.mask(usage.eq("Commercial et services"), np.where(iac, "retail_box", "office"))
+    t = t.mask(usage.eq("Agricole"), "agri_shed")
+    t = t.mask(usage.eq("Sportif"), "sports")
+    t = t.mask(usage.eq("Annexe"), "annex")
+    t = t.mask(usage.eq("Religieux"), "religious")
+    t = t.mask(nature.eq("Serre"), "greenhouse")
+    return t
+
+
 def improvement_value(buildings: pd.DataFrame, cfg,
                       maint_weight: pd.Series | None = None) -> pd.DataFrame:
     """
@@ -161,8 +192,16 @@ def improvement_value(buildings: pd.DataFrame, cfg,
         year_built     construction year (BDNB / DPE periode; NaN ok)
         usage          residential / commercial / etc. (BDNB usage_principal)
 
+    Non-residential buildings (building_type) take their own cost ratio,
+    economic life and floor (config.BUILDING_TYPES); with no construction
+    year of their own they are taken at mid-life, not at the commune median
+    age (which comes from dwellings). The maintained-stock rule is a housing
+    rule and leaves them alone.
+
     Returns parcel-level frame: idpar, improvement_value, floor_area_m2,
-    mean_age, imp_quality ('measured' | 'imputed_age' | 'imputed_levels').
+    mean_age, imp_quality ('measured' | 'imputed_age' | 'imputed_levels'),
+    building_type and valuation ('residual' | 'drc') of the parcel's largest
+    building by floor area, and drc_land ('activity' | 'residential' | None).
     """
     b = buildings.copy()
     quality = pd.Series("measured", index=b.index)
@@ -175,11 +214,22 @@ def improvement_value(buildings: pd.DataFrame, cfg,
 
     b["floor_area"] = b["footprint_m2"] * b["n_levels"]
 
+    from config import BUILDING_TYPES
+    b["building_type"] = building_type(b)
+    spec = b["building_type"].map(BUILDING_TYPES)
+    ratio = spec.map(lambda s: s[0]).astype(float)
+    life = spec.map(lambda s: s[1]).astype(float).fillna(float(cfg.dep_years))
+    floor = spec.map(lambda s: s[2]).astype(float).fillna(float(cfg.dep_floor))
+    nonres = b["building_type"].ne("residential")
+
     ref_year = float(getattr(cfg, "reference_year", 2025))
     age = (ref_year - b["year_built"]).clip(lower=0)
     missing_age = age.isna()
-    # neighbourhood median age would be better; commune median as fallback
-    age = age.fillna(age.median())
+    # housing: commune median age (neighbourhood median would be better);
+    # other types: mid-life, since the median comes from dwellings (DPE)
+    res_median = age[~nonres].median()
+    age = age.mask(missing_age & nonres, life / 2.0)
+    age = age.fillna(res_median if pd.notna(res_median) else age.median())
     quality[missing_age & (quality == "measured")] = "imputed_age"
 
     cap = getattr(cfg, "dep_maintained_age_cap", None)
@@ -189,11 +239,11 @@ def improvement_value(buildings: pd.DataFrame, cfg,
         if not maint_weight.index.is_unique:
             raise ValueError("maint_weight must have one entry per idpar")
         w = b["idpar"].map(maint_weight).fillna(0.0).astype(float).clip(0.0, 1.0)
+        w = w.where(~nonres, 0.0)               # a housing-market rule
         age = w * age.clip(upper=cap) + (1.0 - w) * age
 
-    dep = (1.0 - (1.0 - cfg.dep_floor) * (age / cfg.dep_years)).clip(
-        lower=cfg.dep_floor, upper=1.0)
-    b["imp_value"] = b["floor_area"] * cfg.construction_cost_eur_m2 * dep
+    dep = (1.0 - (1.0 - floor) * (age / life)).clip(lower=floor, upper=1.0)
+    b["imp_value"] = b["floor_area"] * cfg.construction_cost_eur_m2 * ratio * dep
     b["imp_quality"] = quality
 
     out = b.groupby("idpar").agg(
@@ -202,6 +252,12 @@ def improvement_value(buildings: pd.DataFrame, cfg,
         mean_age=("year_built", lambda s: ref_year - s.mean()),
         imp_quality=("imp_quality", lambda s: s.mode().iat[0] if len(s) else "none"),
     ).reset_index()
+    dom = (b.sort_values("floor_area", kind="stable", na_position="first")
+           .groupby("idpar").tail(1)
+           .set_index("idpar")["building_type"])
+    out["building_type"] = out["idpar"].map(dom)
+    out["valuation"] = out["building_type"].map(lambda t: BUILDING_TYPES[t][3])
+    out["drc_land"] = out["building_type"].map(lambda t: BUILDING_TYPES[t][4])
     return out
 
 
@@ -334,6 +390,14 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     Pricing:
       * built (floor_area>0): residual = market − improvement, floored at the
         dirt (agricultural) value, land-share clipped to cfg.land_share_bounds.
+      * built and valuation == 'drc' (sheds, retail boxes, farm and sports
+        buildings, garage plots): depreciated replacement cost, the standard
+        method for property that rarely sells. land = constructible €/m²
+        (× cfg.activity_land_ratio for business land) × parcel area, floored
+        at the dirt value; in A/N or unzoned land only a yard of
+        DRC_CURTILAGE_FACTOR × floor area takes that price, the rest the dirt
+        value. market = land + building; no residential price and no
+        land-share clip.
       * constructible vacant: land = development €/m² × parcel area.
       * agricultural/natural vacant: land = ag €/m² × parcel area.
       * unknown vacant: priced as agricultural (conservative).
@@ -379,11 +443,36 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     flag = flag.mask(is_un, "vacant_unknown_ag")
     flag = flag.mask(no_floor, "built_no_floor")
 
+    # built, valued by depreciated replacement cost (DRC)
+    drc = built & (out["valuation"].eq("drc").fillna(False)
+                   if "valuation" in out.columns else False)
+    if drc.any():
+        ratio = float(getattr(cfg, "activity_land_ratio", 1.0))
+        activity = (out["drc_land"].eq("activity").fillna(False)
+                    if "drc_land" in out.columns else pd.Series(False, index=out.index))
+        price = con * np.where(activity, ratio, 1.0)
+        # Outside urban zoning (A/N, or no PLU), only the building's yard is
+        # building land; the rest of a farm-sized parcel is priced as farmland.
+        from config import DRC_CURTILAGE_FACTOR
+        # (no zone_typ column at all = zoning not supplied: no yard rule)
+        rural_zone = ((out["zone_typ"].isin(["A", "N"]) | out["zone_typ"].isna())
+                      if "zone_typ" in out.columns
+                      else pd.Series(False, index=out.index))
+        floor_area = pd.to_numeric(out["floor_area_m2"], errors="coerce").fillna(0.0)
+        yard = np.minimum(area, DRC_CURTILAGE_FACTOR * floor_area)
+        yard = yard.where(rural_zone, area)
+        drc_land = (price * yard + ag * (area - yard)).clip(lower=ag * area)
+        land = land.mask(drc, drc_land)
+        flag = flag.mask(drc, "built_drc")
+
     out["land_value"] = land
     # pre-clip land share (post-floor residual ÷ market), retained so the
     # unclipped distribution promised in the methods docs can be published
     out["land_share_raw"] = share.where(built, 1.0)
     out["improvement_value"] = (mv - land).clip(lower=0).where(built, 0.0)
+    if drc.any():
+        out.loc[drc, "improvement_value"] = imp[drc]
+        mv = mv.mask(drc, land + imp)
     out["market_value"] = mv.where(built, land)
     out["land_share"] = out["land_value"] / out["market_value"].replace(0, np.nan)
     out["lv_flag"] = flag

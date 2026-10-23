@@ -35,16 +35,24 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   buildings the DHUP/SISAL collective social-housing cost (Paris 2 650, inner
   ring 2 400, Lyon 2 000, Lyon ring 1 850), houses the SDES EPTB new-house survey
   brought to a turnkey basis (Paris 2 300, inner ring 2 100, Lyon 2 400, Lyon
-  ring 2 250). Depreciation is
-  market-conditional: where IRIS prices far exceed rebuild cost, effective age is
-  capped at 30 years (maintained stock); construction eras come from DPE.
-- **land value** = classify-then-price: built parcels take the residual;
-  building-less parcels are classified by legal constructibility (GPU zoning) and
-  priced against terrain-à-bâtir comparables or SAFER farmland.
+  ring 2 250), non-residential buildings a type-specific ratio to the collective
+  cost, VAT excluded for businesses (warehouse 0.25, retail box 0.47, office
+  0.83). Housing depreciation is market-conditional: where IRIS prices far exceed
+  rebuild cost, effective age is capped at 30 years (maintained stock);
+  construction eras come from DPE, which dates dwellings only. Other buildings
+  have their own lives (sheds 40 years) and, undated, sit at mid-life.
+- **land value** = classify-then-price. Built parcels take the residual, except
+  those dominated by sheds, retail boxes, farm, sports or garage buildings: they
+  rarely sell and match no residential price, so they take depreciated
+  replacement cost (land at the local building-plot price, × 0.45/0.35 for
+  business land, building at depreciated cost). Building-less parcels are
+  classified by legal constructibility (GPU zoning) and priced against
+  terrain-à-bâtir comparables or SAFER farmland.
 - **current tax** = the commune's real REI foncier-bâti produit spread by a floor-
   area proxy over taxable built parcels. Public property obviously exempt under
-  CGI 1382-1° (DGFiP *personnes morales* files, conservative ownership rule) bears
-  nothing today and nothing under the LVT.
+  CGI 1382-1° (DGFiP *personnes morales* files, conservative ownership rule) and
+  farm buildings under CGI 1382 6° (BD TOPO agricultural use, greenhouses, sheds
+  in farmland zones) bear nothing today and nothing under the LVT.
 
 Each weak step is flagged in-band and every published figure carries a ±10-point
 land-share band, so error propagates visibly rather than silently.
@@ -75,17 +83,27 @@ land-share band, so error propagates visibly rather than silently.
   fixed that (34.8 % left). Second, market value multiplied a *habitable* price by
   an inflated BD TOPO area while building value used the same area, so both sides
   were overstated by different amounts. Putting both on habitable area and
-  calibrating costs brings Paris to **74 %** with only 3 % of built parcels at
-  the clip: the land share is now measured, not set by the bound. Lyon 58 %,
-  rings 62 % / 53 %; communes above the 40–65 % plausibility band fell from
-  138 to about 20. Gemini judges these consistent with French evidence.
+  calibrating costs brought Paris to 74 % with only 3 % of built parcels at the
+  clip: the land share is now measured, not set by the bound. With the
+  non-residential fixes Paris is 76 %, Lyon 60 %, rings 65 % / 55 %; Gemini judges
+  these consistent with French evidence.
 - **A wrong-looking commune is not always the parameter it looks like.** House-
   heavy outer-ring communes sat at 33–38 % land share, which pointed at the house
-  cost. A separate house cost was right (around Paris a house costs ~13 % less
-  per m² than a flat; around Lyon, surprisingly, ~20 % more) but moved them only
-  2–4 points: houses are a third or less of their building value. Warehouses,
-  shops and the Villepinte exhibition centre, priced at the housing cost and the
-  flat price, dominate. Decompose by category before tuning a parameter.
+  cost. A separate house cost was right (around Paris ~13 % cheaper per m² than a
+  flat; around Lyon, surprisingly, ~20 % dearer) but moved them 2–4 points:
+  houses were a third or less of their building value. Decomposing by category
+  found three non-residential errors stacked on each other: tall single-storey
+  sheds imputed as five storeys from their height (the Villepinte exhibition hall
+  counted 828 000 m² of floor on a 165 000 m² footprint), farm greenhouses taxed
+  and valued as housing, and every shed priced at the flat price and the housing
+  cost. Fixed in turn, they lift Santeny 36 → 52 % and Vaujours 36 → 50 %.
+- **Fixing one side of a comparison exposes the other.** Once industrial land is
+  valued at business-land prices it is worth far less (Lyon ring €8.6bn → €3.8bn),
+  so industry's share of the LVT falls; but today's tax is still shared by floor
+  area, which overstates what warehouses pay now (industrial values were halved
+  in 2021). The apparent −55 % industrial cut and the smaller household gains are
+  largely the baseline's error, not the reform's. The baseline is now the
+  load-bearing weak link for the distributional results.
 - **Changing a variable's units silently retunes every rule calibrated on it.**
   Restating the depreciation trigger per habitable m² halved Lyon's maintained
   weight before it was caught; the trigger keeps its calibrated basis. Check
@@ -121,30 +139,30 @@ land-share band, so error propagates visibly rather than silently.
   uncertainty** (0.71 flats, 0.82 houses): ±0.05 moves building value about ±7 %.
   The flats figure traces to the cost research's surface-utile conversion; the
   houses figure is a desk estimate.
-- **Non-residential parcels are now the main source of implausible communes.**
-  They borrow the flat price, the flat ratios and the housing cost (a logistics
-  shed costs perhaps half as much to build). Santeny, Vaujours, Limeil-Brévannes
-  and Villepinte stay below 40 % because of them, and per-commune rows with large
-  industrial land (Feyzin) are fragile. A crude commercial/industrial cost split
-  is the next lever; no open cost series exists, so it needs a research pass.
+- **The current-tax baseline needs category weights before distributional
+  results are quoted.** It spreads the produit by floor area, so a warehouse m²
+  pays like a flat m². Industrial (art. 1499, halved in 2021) and RVLLP retail and
+  storage values are far lower per m². Weights calibrated on REI or DGFiP totals
+  are the next step; the per-parcel VLC in the Fichiers fonciers is the real fix.
+  HLM (art. 1384 A) and QPV abatements are not yet modelled either.
+- **Non-residential costs rest on one commercial guide** scaled to our housing
+  level (±25 %), the business-land ratio on 20–80 sales per area, and offices
+  still read the residential price surface, which overstates distressed suburban
+  office markets (La Défense). Mixed parcels follow their largest building.
 - **The house cost rests on a survey of new catalogue houses.** The finishing-work
   uplift is a judgement, and Lyon coming out dearer than the Paris ring is
   probably a sample effect (bespoke Rhône houses vs outer-IdF catalogue houses).
   Panel communes outside the Paris and Lyon areas keep their single pilot costs.
-- **The 40–65 % band is a heuristic.** After the house cost, 24 communes sit above
-  it, most of them affluent inner-ring communes within 1.5 points (Sceaux 66,
-  Marnes-la-Coquette 67), where a high land share is plausible; Neuilly (77 %) and
+- **The 40–65 % band is a metro-wide reference, not a per-commune test.** 48
+  communes now sit above it, nearly all contiguous to Paris (itself 76 %), where
+  Gemini judges 65–75 % normal; only Cahors is below. Neuilly (78 %) and
   Fleurieu-sur-Saône (72 %) remain the ones to check.
-- **Current-tax baseline within built parcels** still spreads the produit by floor
-  area, ignoring cadastral category and weighting coefficients — the per-parcel VLC
-  in the Fichiers fonciers is the real resolution. Exemptions beyond obvious public
-  property (HLM art. 1384 A, QPV abatement) are not yet modelled.
 - **Maintained-stock parameters are judgement calls** (30-year cap, 1.2–2.5 ramp),
   informed by the literature but not estimated; a DPE condition signal would ground
   effective age in the building rather than the neighbourhood price.
 - **Building-less public and industrial land** is still priced as residential
   building land where the exemption rule does not reach it (Paris UV parks partly,
-  Port Édouard Herriot, Feyzin's chemical valley).
+  Port Édouard Herriot); built industrial land now takes the business-land price.
 - **Income data limits.** Filosofi 2021 is the last vintage, IRIS income exists only
   for communes of 5 000+ inhabitants, and small communes cannot form five quintiles,
   so no income chart is published for them.

@@ -8,14 +8,20 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs, storey counts by building type and exempt farm buildings, branch `rural-exemption`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs, house costs, storey counts by building type, exempt farm buildings and non-residential valuation, branch `nonres-valuation`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,090 | €1,840.9 M | 74.2 % | 3.2 % | 17.5 % | 51.2 % |
-| Lyon | 31,022 | €362.9 M | 57.8 % | 0.0 % | 16.5 % | 68.8 % |
-| Paris extra-muros (122) | 566,442 | €3,569.3 M | 62.2 % | 0.2 % | 21.7 % | 67.4 % |
-| Lyon extra-muros (57) | 224,841 | €528.2 M | 53.0 % | 0.0 % | 26.6 % | 60.8 % |
+| Paris | 75,090 | €1,840.9 M | 75.8 % | 5.6 % | 19.2 % | 50.2 % |
+| Lyon | 31,022 | €362.9 M | 60.0 % | 0.8 % | 20.4 % | 70.8 % |
+| Paris extra-muros (122) | 566,442 | €3,569.3 M | 65.3 % | 1.8 % | 28.1 % | 68.6 % |
+| Lyon extra-muros (57) | 224,841 | €528.2 M | 55.4 % | 1.2 % | 38.3 % | 69.3 % |
+
+**Do not merge this branch alone, and do not publish its distributional
+figures yet.** Today's tax is still shared out by floor area with no category
+weights, which overstates what warehouses and factories pay today; the
+industrial cuts and the households' smaller gains around Lyon below are
+exaggerated by it. The category-weighted baseline is the next proposed PR.
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -122,9 +128,8 @@ Vaujours 35.7 → 39.0 %, Villepinte 39.4 → 42.8 %, Tremblay-en-France 44.0 �
 Collonges-au-Mont-d'Or just over 65). Paris group totals: poorest fifth −19.8 →
 −20.0 %, richest +16.2 → +16.1 %. This is the first of three stacked
 non-residential PRs; the rural-building exemption (CGI 1382 6°, below) is the
-second, and per-type non-residential costs, with replacement-cost valuation for
-sheds, are still to come. Evidence: `docs/research/nonres-valuation-2025.md` §1
-and `docs/research/nonres_probes/`.
+second, and per-type non-residential valuation (below) the third. Evidence:
+`docs/research/nonres-valuation-2025.md` §1 and `docs/research/nonres_probes/`.
 
 **Exempt farm buildings (second non-residential step).** CGI art. 1382 6° exempts
 from the TFPB buildings permanently and exclusively used for agriculture
@@ -153,6 +158,56 @@ building footprint, Villeurbanne 0.1 %), mostly public and largely exempt anyway
 the fichiers fonciers' exemption codes would verify actual use.
 `--no-exemptions` turns off both exemptions.
 
+**Non-residential valuation (third non-residential step; do not merge alone).**
+Each building is typed from BD TOPO usage and nature (`estimate.building_type`,
+`config.BUILDING_TYPES`): shed, workshop, retail box, office, farm shed,
+greenhouse, sports hall, annex, religious or residential. Each type's cost is a
+ratio to the commune's collective-housing cost: shed 0.25, workshop 0.354,
+retail box 0.467, office 0.825, farm shed 0.073, greenhouse 0.081, sports
+1.033, annex 0.227. Business types exclude VAT (firms recover it; RICS adds
+VAT only where irrecoverable), annexes include it. The ratios are anchored on
+one commercial cost guide scaled to our housing level: ±25 %. Lives and floors:
+sheds, workshops and retail boxes 40 y / 15 %, offices 60 y / 20 %, farm sheds
+30 y / 10 %, greenhouses 25 y / 10 %, sports and annexes 50 y / 20 %; housing
+keeps 80 y / 25 %. Non-residential buildings with no year of their own are
+taken at mid-life; DPE years and the DPE median, and the maintained-stock rule,
+now apply to housing only. Parcels whose largest building is a shed, workshop,
+retail box, farm shed, greenhouse, sports hall or annex are valued by
+depreciated replacement cost (DRC, « sol + construction »), the RICS standard
+for property that rarely sells: building = depreciated cost, land = local
+terrain-à-bâtir €/m² × 0.45 (Paris area) or × 0.35 (Lyon area) for business
+types, from open DVF activity-land sales (93: 381 vs 658 = 0.58; 94: 282 vs
+771 = 0.37; Lyon 0.29–0.40), × 1.0 for sports and annexes; market value = land
++ building, no residential price, no clip. In A/N or unzoned land only a yard
+of 3 × floor area takes the building-land price, the rest is farmland (the
+security review found a 10 ha farmland parcel valued at €16 M without it).
+Offices keep the residual against the residential price surface, at the office
+cost. The business-land ratio is published in the payload provenance
+(`activity_land_ratio`). Before → after (land share): Paris 74.2 → 75.8 % (5.6 %
+at the cap), Lyon 57.8 → 60.0 %, Paris ring 62.2 → 65.3 %, Lyon ring 53.0 →
+55.4 %, Santeny 40.8 → 52.1 %, Vaujours 39.0 → 49.8 %, Tremblay-en-France 47.6 →
+58.3 %, Villepinte 42.8 → 49.5 %, Périgny 47.9 → 50.1 %, Limeil-Brévannes 38.0 →
+41.7 %. Below 40 %: 2 → 1 (Cahors 38.6 %). Above 65 %: 26 → 48, mostly
+inner-ring communes next to Paris (Puteaux 71.0 %, Saint-Cloud 76.8 %, Clichy
+74.8 %, Courbevoie, Nanterre, Montreuil, Pantin…). Gemini (gemini-4-argon)
+judges these plausible: 40–65 % is a metro-wide reference, not a per-commune
+test; communes contiguous to Paris (76 %) naturally sit at 65–75 %, and land is
+65–75 % of value in prime office districts. Lyon ring by category: industrial
+land €8.6bn → €3.8bn, buildings €8.5bn → €2.6bn; industrial bills −3.5 → −55 %,
+commercial −7 → −17 %, houses −1 → +6 %; amount shifted 26.6 → 38.3 % of the
+levy; poorest fifth's total change −13.5 → −3.7 %. Paris ring: industrial bills
+−31 %; "other" (garage and sports plots) +67 %, but only 1.4 % of today's tax.
+Income group totals: Paris −20.1 … +14.9 %, Lyon −18.7 … +13.6 %. **Key caveat:**
+the industrial cut, and the households' smaller gains around Lyon, are
+exaggerated by today's-tax baseline, which still shares the TFPB produit by
+floor area with no category weights. Industrial rental values under art. 1499
+CGI were halved in 2021, and RVLLP tariffs for warehouses and retail boxes are
+low per m², so the baseline overstates what they pay today. The recommendation,
+shared by the Gemini review, is not to publish these distributional figures until the baseline
+carries category weights (next PR). Evidence:
+`docs/research/nonres-valuation-2025.md` §2–5 and
+`docs/research/nonres_costs_calc.py`.
+
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
 - Every source present for every commune: cadastre, 5 years of DVF, buildings, zoning, IRIS.
@@ -165,13 +220,14 @@ the fichiers fonciers' exemption codes would verify actual use.
 
 ## A. Decisions only you can make (economics / framing)
 
-- [ ] **A1. How to present Paris.** The cap issue is resolved: land share 74.2 %,
-  with 3.2 % of built parcels at the 85 % cap, so the Paris split is measured
+- [ ] **A1. How to present Paris.** The cap issue is resolved: land share 75.8 %,
+  with 5.6 % of built parcels at the 85 % cap, so the Paris split is measured
   parcel by parcel rather than set by the bound, and raising the cap is no longer
-  needed. It is still above the 40–65 % plausibility band (as are 25 other
-  communes: 22 dear communes of the Paris inner ring, La Rochelle,
-  Fleurieu-sur-Saône and Collonges-au-Mont-d'Or). The result is strongly
-  progressive (group totals: poorest income quintile −20.0 %, richest +16.1 %).
+  needed. It is above 65 %, as are 47 other communes (mostly the inner ring next
+  to Paris, plus La Rochelle, Fleurieu-sur-Saône, Collonges-au-Mont-d'Or,
+  Feyzin); 40–65 % is now presented as a metro-wide reference, not a
+  per-commune test. The result is strongly progressive (group totals: poorest
+  income quintile −20.1 %, richest +14.9 %).
   *Recommendation:* publish with the usual ±10 pt band, and note that the main
   remaining uncertainty is the habitable ÷ gross ratio behind the costs
   (`cost_net_to_gross`; ±0.05 moves building value about ±7 %).
@@ -260,7 +316,8 @@ the fichiers fonciers' exemption codes would verify actual use.
   (null for all published communes) because the INSEE page gives counts, not a
   percentage. Its comparator is also degenerate in dense cities (Lyon shows 99.9 %
   "under-built").
-- [ ] **C5.** Non-residential valuation: offices, shops and industry still borrow the residential €/m² and the housing construction cost (La Défense: Courbevoie, Puteaux, Paris 8e; the low-land-share communes Vaujours, Limeil-Brévannes, Périgny, Villepinte). First step done on branch `nonres-storeys` (storey counts by building type), second on branch `rural-exemption` (farm buildings exempt under CGI 1382 6°); per-type costs with replacement-cost valuation for sheds are next.
+- [x] **C5.** Non-residential valuation. Done in three stacked steps: storey counts by building type (`nonres-storeys`), farm buildings exempt under CGI 1382 6° (`rural-exemption`), per-type costs, lives and floors with replacement-cost valuation for shed-type parcels (`nonres-valuation`, do not merge alone). Remaining: offices still take the residential price surface (a DVF business-premises price surface is the follow-up).
+- [ ] **C11.** Category weights in today's-tax baseline (**next**, needed before `nonres-valuation` can be published). Floor-area sharing with no weights overstates what warehouses and factories pay today (art. 1499 industrial values halved in 2021; low RVLLP tariffs per m² for warehouses and retail boxes). Check whether the DGFiP REI produits split by category at commune level.
 - [ ] **C6.** Cache housekeeping: add `--refresh` and record the download date in each payload's provenance (security review, info).
 - [ ] **C7.** Add an aggregate-only guard to the public register writer (security review, low). The register is now 692 KB; consider splitting out the ring members.
 - [ ] **C9.** DPE energy class as a building-condition signal for effective age

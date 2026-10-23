@@ -57,22 +57,76 @@ parcelle (`estimate.improvement_value`) :
 surface_plancher  = emprise_m2 × niveaux       (niveaux imputés selon le type si absent)
 surface_habitable = net_to_gross[type] × surface_plancher     (appartements 0,64, maisons 0,61)
 coût[type]        = house_cost_eur_m2 pour les maisons s'il est fixé, sinon coût_construction_€m2
+                    × ratio_coût[type de bâtiment]        (1 pour le logement ; tableau ci-dessous)
 coût_hab          = coût[type] ÷ cost_net_to_gross[type]          (appartements 0,71, maisons 0,82)
 âge               = année_référence − année_construction
 q                 = prix hédonique médian €/m² des parcelles bâties de l'IRIS
                     ÷ coût_construction_€m2   (médiane communale si l'IRIS n'en a pas)
-w                 = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp)
+w                 = borne((q − 1,2) / (2,5 − 1,2), 0, 1)        (dep_q_ramp ; logement seul)
 âge_effectif      = w × min(âge, 30) + (1 − w) × âge            (dep_maintained_age_cap)
-dépréciation      = borne(1 − (1 − dep_floor) × âge_effectif / dep_years,  min = dep_floor)
+dépréciation      = borne(1 − (1 − plancher[tb]) × âge_effectif / durée[tb],  min = plancher[tb])
 valeur_bâti       = surface_habitable × coût_hab × dépréciation
 valeur_marché     = €/m² hédonique × surface_habitable          (§3.3)
 ```
 
-`année_construction` provient du DPE (§3.2) ; `coût_construction_€m2`,
-`house_cost_eur_m2`, `dep_years`, `dep_floor` sont en config par commune (§4) ;
-`type` est le `type_local` dominant de la parcelle (les types autres
-qu'appartement et maison prennent les ratios des appartements et le coût
-communal).
+`année_construction` provient du DPE pour le logement (§3.2) ;
+`coût_construction_€m2`, `house_cost_eur_m2`, `dep_years`, `dep_floor` sont en
+config par commune (§4) ; `type` est le `type_local` dominant de la parcelle
+(les types autres qu'appartement et maison prennent les ratios de surface des
+appartements) ; `tb` est le type de chaque bâtiment (ci-dessous), dont la durée
+et le plancher sont `dep_years` et `dep_floor` pour le logement. Les parcelles
+évaluées au coût de remplacement déprécié (CRD : hangars et assimilés, §3.4) ne
+rencontrent jamais de prix DVF : leur valeur bâtie reste calculée sur la
+surface plancher du modèle au coût par m² brut, sans conversion en surface
+habitable.
+
+*Types de bâtiments non résidentiels* (`estimate.building_type`,
+`config.BUILDING_TYPES`). Chaque bâtiment BD TOPO est typé d'après son usage et
+sa nature. Le coût de chaque type est un ratio au coût du logement collectif de
+la commune (`construction_cost_eur_m2`), et chaque type a sa propre durée de
+vie économique et son propre plancher de dépréciation :
+
+| Type | Règle BD TOPO | Ratio de coût | €/m², petite couronne | Durée | Plancher | Valorisation |
+|---|---|---|---|---|---|---|
+| Hangar (logistique, industrie) | nature « Industriel, agricole ou commercial » (IAC), sauf ligne ci-dessous | 0,250 | 600 | 40 ans | 15 % | CRD, foncier d'activité |
+| Atelier | usage Industriel, autres natures | 0,354 | 850 | 40 ans | 15 % | CRD, foncier d'activité |
+| Grande surface (« boîte ») | IAC × « Commercial et services » | 0,467 | 1 120 | 40 ans | 15 % | CRD, foncier d'activité |
+| Bureaux | autres natures × « Commercial et services » | 0,825 | 1 980 | 60 ans | 20 % | résiduel |
+| Hangar agricole | usage Agricole (s'il n'est pas exonéré, §3.5) | 0,073 | 175 | 30 ans | 10 % | CRD, foncier d'activité |
+| Serre | nature Serre (si non exonérée) | 0,081 | 195 | 25 ans | 10 % | CRD, foncier d'activité |
+| Salle de sport | usage Sportif | 1,033 | 2 480 | 50 ans | 20 % | CRD, terrain à bâtir |
+| Annexe (garage, remise) | usage Annexe | 0,227 | 545 | 50 ans | 20 % | CRD, terrain à bâtir |
+| Culte | usage Religieux | 1 | 2 400 | 80 ans | 25 % | résiduel |
+| Logement | tout le reste | 1 | 2 400 | 80 ans | 25 % | résiduel |
+
+Les ratios viennent d'un guide de coûts commercial qui couvre tous les types sur
+une même base (Quostra, € de janvier 2026, recoupé sur des chiffres de
+logistique, de bâtiments agricoles, de serres et de garages). Le coût de chaque
+type dans le guide, passé par les coefficients géographiques, les honoraires et
+l'indice BT01, est divisé par la ligne « logement social » du même guide passée
+par la même chaîne. Le type garde ainsi la proportion du guide au logement mais
+hérite du niveau de logement du modèle, plus bas et fondé sur des données
+officielles (`docs/research/construction-costs-2025.md`) ; les chiffres bruts
+du guide sont 15 à 30 % plus élevés. **Les types professionnels sont hors
+TVA**, car les entreprises la récupèrent : le guide RICS sur le coût de
+remplacement déprécié n'ajoute la TVA « que lorsqu'elle est irrécupérable ».
+Les salles de sport sont de fait hors TVA aussi, les communes la récupérant par
+le FCTVA. **Les annexes sont TTC**, comme la maison qu'elles servent. L'ancrage
+reposant sur un seul guide ramené à notre niveau de logement, les ratios sont à
+±25 %. Durées et planchers sont des choix raisonnés, encadrés par les durées
+d'usage fiscales (20 à 50 ans), les durées par composant (gros œuvre 50 à 80
+ans) et celle des vitrages de serre (20 à 30 ans). Les planchers sont inférieurs
+aux 25 % du logement car les hangars subissent une obsolescence fonctionnelle
+(hauteur libre, charge au sol, nombre de quais) que l'entretien ne corrige pas.
+Sources : `docs/research/nonres-valuation-2025.md` §2–3 et
+`docs/research/nonres_costs_calc.py`.
+
+*Âge des bâtiments non résidentiels.* Le DPE diagnostique des logements : ses
+années et la médiane communale DPE ne datent plus que le logement. Un bâtiment
+non résidentiel garde son année BD TOPO s'il en a une ; sinon il est pris à
+**mi-vie** (coefficient (1 + plancher) ÷ 2, soit 0,575 pour un hangar), et non à
+l'âge médian des logements. La règle du bâti entretenu ci-dessous est une règle
+du marché du logement et laisse le non-résidentiel à son âge.
 
 *Base surface habitable.* Les prix DVF sont exprimés par m² de surface habitable
 (`surface_reelle_bati`), alors que `surface_plancher` est l'emprise BD TOPO ×
@@ -149,7 +203,8 @@ la tranche `periode_construction` du DPE, mappée à une année médiane de tran
 (`avant 1948`→1930, `1948-1974`→1961, … `après 2021`→2022), jointe spatialement
 aux parcelles (médiane par parcelle). Les parcelles sans point DPE prennent
 l'**année médiane communale pondérée par les logements** en repli, afin que l'âge
-ne dégénère jamais en « inconnu ».
+ne dégénère jamais en « inconnu ». Les deux ne valent que pour le logement ; les
+bâtiments non résidentiels sans année propre sont pris à mi-vie (§3.1).
 
 **3.3 Valeur de marché** — une hédonique log-linéaire volontairement simple sur
 DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log €/m²,
@@ -183,6 +238,7 @@ référentiel :
 | Parcelle | Valeur du terrain |
 |---|---|
 | **Bâtie** | `marché − bâti` (résiduel), plancher à la valeur agricole €/m², part foncière bornée à [0,15 ; 0,85] (chaque écrêtement flaggé dans `lv_flag`) |
+| **Bâtie, plus grand bâtiment de type hangar** (CRD) | €/m² terrain à bâtir × `activity_land_ratio` (types professionnels) ou × 1 (salles de sport, annexes) × surface, plancher à la valeur agricole €/m² ; hors zone urbaine, seule une cour de 3 × la surface plancher prend ce prix. Valeur de marché = terrain + bâti déprécié ; ni prix résidentiel ni bornage (`lv_flag` `built_drc`) |
 | **Constructible vacante** (zone U/AUc) | €/m² terrain à bâtir DVF × surface (médiane cellule si ≥ 8 ventes, sinon médiane communale, sinon repli national EPTB) |
 | **Constructible différée** (AU/AUs) | idem × `au_strict_factor` (urbanisation différée) |
 | **Agricole / naturelle** (zone A/N) | €/m² départemental SAFER × surface |
@@ -191,6 +247,43 @@ Seules les lignes DVF codées *terrains à bâtir* sont utilisées pour les prix
 constructible — le brut `valeur_fonciere/surface_terrain` est contaminé pour les
 autres natures de culture car les mutations regroupent bâti et plusieurs
 parcelles.
+
+**Coût de remplacement déprécié pour les parcelles de type hangar.** Entrepôts,
+ateliers, grandes surfaces, hangars agricoles, serres, salles de sport et
+parcelles de garages se vendent rarement seuls, et le €/m² résidentiel du
+résiduel ne dit rien d'eux. Les parcelles dont le **plus grand bâtiment** (en
+surface plancher) est de l'un de ces types sont donc évaluées au coût de
+remplacement déprécié (CRD, *méthode sol + construction*), la méthode de
+référence pour les biens sans marché actif (RICS, *Depreciated replacement cost
+method of valuation for financial reporting*, 2026, §3.1–3.2, consulté). Le
+bâti vaut son coût déprécié (§3.1). Le terrain est valorisé au €/m² local des
+terrains à bâtir de la parcelle (le même prix de carreau ou de commune que le
+constructible vacant), multiplié par `activity_land_ratio` pour les types
+professionnels : **0,45** par défaut et autour de Paris, **0,35** pour Lyon,
+Villeurbanne et la couronne lyonnaise. Ces ratios viennent des ventes de
+terrains nus DVF 2023–24, classées selon l'occupation du sol (MOS 2021 en
+Île-de-France, périmètres des zones d'activités de la Métropole autour de
+Lyon) : foncier d'activité contre foncier résidentiel, 381 contre 658 €/m² en
+Seine-Saint-Denis (0,58, n = 23), 282 contre 771 dans le Val-de-Marne (0,37,
+n = 20) et 0,29 à 0,40 dans la Métropole de Lyon (n = 80). Le RICS valorise lui
+aussi le terrain d'un CRD à son usage dominant, non à un usage alternatif
+(§7.12–7.14). Les salles de sport et les annexes gardent le plein prix du
+terrain à bâtir (× 1,0) : une parcelle de garages est entourée de maisons. La
+valeur de marché est terrain + bâti, sans prix résidentiel ni bornage. Le ratio
+est publié dans la provenance de chaque fichier (`activity_land_ratio`).
+
+*Cours hors zone urbaine.* Un hangar sur une parcelle de taille agricole en zone
+A ou N, ou hors PLU, ferait sinon payer tout le champ comme terrain à bâtir : la
+revue de sécurité a trouvé une parcelle agricole de 10 ha évaluée à 16 M€. Là,
+seule une cour de **3 × la surface plancher** (`DRC_CURTILAGE_FACTOR` ; les
+parcelles logistiques font environ 2 à 2,5 fois l'emprise, choix raisonné)
+prend le prix du terrain à bâtir ; le reste est valorisé comme terre agricole
+(€/m² SAFER).
+
+*Les bureaux* restent au résiduel sur la surface de prix résidentielle, à leur
+propre coût (0,825 × le coût du logement) : bureaux et commerces se vendent, et
+une surface de prix DVF des locaux professionnels est la meilleure cible (§6,
+point 7). Les lieux de culte restent au résiduel au coût du logement.
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
 (`estimate.current_tax`) sur les **parcelles bâties uniquement** au prorata d'un
@@ -295,7 +388,7 @@ l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
 par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−18,6 à −20,3 %, dernier +12,5 à +13,6 %).
+−19,3 à −21,5 %, dernier +11,6 à +11,9 %).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -325,18 +418,28 @@ parcelles bâties étaient à la borne de 0,85 et le chiffre de 84,9 % était fi
 la borne. La règle du bâti entretenu (§3.1) valorise ces immeubles à un âge
 effectif de 30 ans, ce qui ramenait Paris à 83,3 % avec 34,8 % des parcelles
 bâties encore à la borne. Avec les deux termes du résiduel en surface habitable et
-les coûts recalés (§3.1, §4), Paris ressort à **74,2 %** avec 3,2 % des parcelles
-bâties à la borne (0,4 % avant que les maisons aient leur propre coût, plus
-bas) : sa part foncière est mesurée, non fixée par la borne. Aucune commune n'a
-plus de la moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le
-plus (25,0 %), et le contrôle `land_share_clip` du preflight ne signale aucune
-commune. Lyon est à 57,8 %, la couronne parisienne à 62,2 % et la couronne
-lyonnaise à 53,0 %. Sur les 188 communes modélisées, 26 dépassent la bande de
-vraisemblance 40–65 % (138 avant la base surface habitable) et 2 sont en dessous
-(Limeil-Brévannes 38,0 %, Vaujours 39,0 %).
+les coûts recalés et la valorisation du non-résidentiel par type (§3.1, §3.4,
+§4), Paris ressort à **75,8 %** avec 5,6 % des parcelles bâties à la borne : sa
+part foncière est mesurée, non fixée par la borne. Aucune commune n'a plus de la
+moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le plus
+(25,3 %), et le contrôle `land_share_clip` du preflight ne signale aucune
+commune. Lyon est à 60,0 %, la couronne parisienne à 65,3 % et la couronne
+lyonnaise à 55,4 %. Sur les 188 communes modélisées, 48 dépassent 65 % et 1 est
+sous 40 % (Cahors 38,6 %).
 Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
 la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
+
+*La fourchette de référence 40–65 %.* C'est un repère à l'échelle d'une
+métropole (les comptes de patrimoine de l'INSEE placent le terrain à environ 45
+à 50 % de la valeur de l'immobilier bâti au niveau national), non un test que
+chaque commune devrait passer. Les communes limitrophes de Paris (elle-même à
+76 %) se situent naturellement entre 65 et 75 %, et le terrain fait 65 à 75 %
+de la valeur dans les quartiers de bureaux de premier rang (revue Gemini). La
+plupart des 48 communes au-dessus de 65 % sont des communes de petite couronne
+limitrophes de Paris (Puteaux 71,0 %, Saint-Cloud 76,8 %, Clichy 74,8 %,
+Courbevoie, Nanterre, Montreuil, Pantin…) ; le WARN du registre hors de la
+fourchette invite à regarder, il ne signale pas un échec.
 
 *Coût des maisons.* Le coût propre aux maisons déplace les parts foncières dans
 le sens attendu : à la hausse autour de Paris, où une maison coûte désormais
@@ -383,6 +486,48 @@ de 65 %. Quelques parcelles publiques dont les seuls bâtiments étaient ruraux
 deviennent non bâties et rejoignent le foncier public exonéré (couronne
 parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 →
 21 585).
+
+*Valorisation du non-résidentiel.* Coûts, durées et planchers par type (§3.1) et
+évaluation au CRD des parcelles de type hangar (§3.4) relèvent les parts
+foncières partout, surtout dans les communes d'entrepôts :
+
+| Part foncière (terrain ÷ total), % | Avant | Après |
+|---|---|---|
+| Paris | 74,2 | 75,8 (5,6 % des parcelles bâties à la borne) |
+| Lyon | 57,8 | 60,0 |
+| Couronne parisienne | 62,2 | 65,3 |
+| Couronne lyonnaise | 53,0 | 55,4 |
+| Santeny | 40,8 | 52,1 |
+| Vaujours | 39,0 | 49,8 |
+| Tremblay-en-France | 47,6 | 58,3 |
+| Villepinte | 42,8 | 49,5 |
+| Périgny | 47,9 | 50,1 |
+| Limeil-Brévannes | 38,0 | 41,7 |
+
+Les communes sous 40 % passent de 2 à 1 : Cahors, 41,2 → 38,6 %. La baisse
+tient presque entièrement au foncier commercial (197 M€ → 83 M€) : ses zones
+commerciales de périphérie prennent désormais le prix local du terrain à bâtir
+(médiane 38 €/m², 41 ventes) au lieu d'un résiduel sur le prix des
+appartements, et une petite ville au foncier bon marché peut plausiblement se
+situer sous la fourchette métropolitaine. Valoriser le foncier commercial au
+plein prix du terrain à bâtir plutôt qu'au ratio d'activité ne porte Cahors
+qu'à 39,0 %. Celles au-dessus de 65 % passent de 26 à 48, surtout des communes de
+petite couronne limitrophes de Paris (voir la fourchette de référence
+ci-dessus). Gemini (gemini-4-argon) juge ces niveaux plausibles. Dans la
+couronne lyonnaise, la valeur du foncier industriel passe de 8,6 à 3,8 Md€ et
+celle des bâtiments industriels de 8,5 à 2,6 Md€. Totaux par catégorie : cotes
+industrielles −3,5 → −55 %, commerciales −7 → −17 %, maisons −1 → +6 % ; le
+montant déplacé passe de 26,6 à 38,3 % du produit, et la variation totale du
+cinquième le plus modeste de −13,5 à −3,7 %. Dans la couronne parisienne, les
+cotes industrielles baissent de 31 % ; la catégorie « autre » (parcelles de
+garages et de sport) monte de 67 %, mais ne porte que 1,4 % de la taxe actuelle.
+Le gradient de revenu parisien bouge peu (totaux par groupe −20,1 … +14,9 % ;
+Lyon −18,7 … +13,6 %). **La baisse industrielle, et les gains plus faibles des
+ménages autour de Lyon, sont exagérés par la base de la taxe actuelle** (§6,
+point 1) : elle répartit toujours le produit TFPB à la surface plancher, sans
+pondération par catégorie, ce qui surestime ce que paient aujourd'hui entrepôts
+et usines. Ces chiffres distributifs ne devraient pas être publiés tant que la
+base ne porte pas de pondérations par catégorie, prochaine étape proposée.
 
 ## 4. Paramètres et hypothèses clés
 
@@ -434,6 +579,17 @@ parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 �
   appliquée à l'âge effectif ; plafond bâti entretenu 30 ans
   (`dep_maintained_age_cap`), rampe q ∈ [1,2 ; 2,5] (`dep_q_ramp`). Ce sont des
   choix raisonnés éclairés par la littérature (§3.1), non des paramètres estimés.
+- **Types de bâtiments non résidentiels** (`config.BUILDING_TYPES`, §3.1) :
+  ratio au coût communal, durée et plancher par type : hangar 0,25, atelier
+  0,354 et grande surface 0,467 (40 ans, 15 %) ; bureaux 0,825 (60 ans, 20 %) ;
+  hangar agricole 0,073 (30 ans, 10 %) ; serre 0,081 (25 ans, 10 %) ; salle de
+  sport 1,033 et annexe 0,227 (50 ans, 20 %). Types professionnels hors TVA,
+  annexes TTC. Ratios à ±25 % ; durées et planchers sont des choix raisonnés.
+- **Ratio du foncier d'activité** (`activity_land_ratio`, §3.4) : foncier
+  professionnel des parcelles au CRD en part du €/m² local des terrains à
+  bâtir : 0,45 par défaut et autour de Paris, 0,35 pour Lyon, Villeurbanne et
+  la couronne lyonnaise (DVF ouvert, n ≈ 20 à 80). **Facteur de cour**
+  (`DRC_CURTILAGE_FACTOR`) : 3 × la surface plancher hors zone urbaine.
 - **Bornes de part foncière** : [0,15 ; 0,85] — contrainte de conception, pas une
   mesure. Là où la plupart des parcelles atteignaient la borne haute (Paris, Lyon),
   les causes identifiées étaient la surdépréciation du bâti ancien entretenu et
@@ -464,13 +620,14 @@ parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 �
 - **Part foncière descendante** — terrain total ÷ valeur immobilière bâtie totale
   doit avoisiner les comptes de patrimoine INSEE (~45–50 % de terrain). Cahors
   atteignait ~53 % après la correction d'année de construction par DPE (contre
-  85 % dégénéré auparavant — voir §6) et se situe à 40,7 % en base surface
-  habitable.
+  85 % dégénéré auparavant — voir §6) et se situe à 38,6 % avec la valorisation
+  du non-résidentiel par type. La fourchette 40–65 % est un repère
+  métropolitain, non un test par commune (§3.7).
 - **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
   du prélèvement (Cahors 0,3 %) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
-  progressif (totaux de groupe : quintile le plus pauvre −15,8 %, le plus aisé
-  +14,9 %).
+  progressif (totaux de groupe : quintile le plus pauvre −15,4 %, le plus aisé
+  +13,6 %).
 - **Tests** — `test_units.py` (tests unitaires hors-ligne de la logique pure) et
   `test_synthetic.py` (bout-en-bout via le vrai solveur).
 
@@ -478,11 +635,24 @@ parisienne 41 711 → 41 807 parcelles exonérées, couronne lyonnaise 21 515 �
 
 Classées par impact sur les résultats publiés (catégorie/quintile).
 
-1. **Taxe actuelle (maillon porteur).** Le proxy de VLC est la seule surface
-   plancher ; il ignore la catégorie cadastrale et les coefficients de
-   pondération de surface. Il déforme la répartition de la taxe *actuelle* entre
-   bâtis : lire la **variation**, pas le montant de départ. Résolu uniquement par
-   la VLC réelle par parcelle (Fichiers fonciers).
+1. **Taxe actuelle (maillon porteur ; bloque la publication des résultats du
+   non-résidentiel).** Le proxy de VLC est la seule surface plancher ; il ignore
+   la catégorie cadastrale et les coefficients de pondération de surface. Il
+   déforme la répartition de la taxe *actuelle* entre bâtis : lire la
+   **variation**, pas le montant de départ. Le non-résidentiel étant désormais
+   évalué à son propre coût et à son propre prix du terrain, bien plus bas
+   (§3.1, §3.4), l'erreur ne se compense plus : répartir le produit à la surface
+   plancher sans pondération par catégorie **surestime ce que paient
+   aujourd'hui entrepôts et usines**. Les valeurs locatives industrielles
+   (méthode comptable, art. 1499 CGI) ont été divisées par deux en 2021, et les
+   tarifs RVLLP de 2017 pour les entrepôts et les grandes surfaces sont bas au
+   m². La baisse industrielle (couronne lyonnaise −55 %, couronne parisienne
+   −31 %) et les gains plus faibles des ménages autour de Lyon sont donc
+   exagérés. La recommandation, que partage la revue Gemini, est de ne pas
+   publier les chiffres distributifs de cette étape tant que la base ne porte
+   pas de pondérations par catégorie (prochaine étape proposée ; produits REI
+   de la DGFiP par catégorie s'ils existent). Seule la VLC réelle par parcelle
+   (Fichiers fonciers) le résoudrait entièrement.
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
    Atténué par le bornage [0,15 ; 0,85] et l'agrégation, et rendu visible par la
@@ -492,8 +662,10 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
    indépendant de la qualité des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*
-   diagnostiqués → biais de sélection) ; le repli médian communal applique une
-   médiane résidentielle au non-résidentiel / non diagnostiqué. Tranche→année par
+   diagnostiqués → biais de sélection) ; le repli médian communal s'applique au
+   logement non diagnostiqué. Les bâtiments non résidentiels sans année BD TOPO
+   sont pris à mi-vie, hypothèse neutre et non mesure (le jeu DPE tertiaire n'a
+   pas été examiné). Tranche→année par
    point médian (atténué pour l'ancien d'avant 1948, qui touche le plancher de
    dépréciation). Nette amélioration sur la base dégénérée antérieure, mais
    généralisation à documenter.
@@ -507,8 +679,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    restante est `cost_net_to_gross` (habitable ÷ vraie surface brute), le maillon
    le moins sourcé : ±0,05 déplace la valeur bâti d'environ ±7 %, qui se reporte
    sur le résiduel foncier. Le `net_to_gross` mesuré ne fixe que les niveaux en
-   euros. Les autres communes du panel gardent des coûts pilotes non calés. Le
-   non-résidentiel prend les ratios des appartements (et leur €/m², point 7). Les
+   euros. Les autres communes du panel gardent des coûts pilotes non calés. Les
+   coûts du non-résidentiel sont des ratios au coût du logement tirés d'un seul
+   guide commercial (point 7). Les
    erreurs de nombre de niveaux BD TOPO sont la principale source de dispersion de
    la surface à la parcelle ; quand le nombre manque, il est imputé selon le type
    de bâtiment (§3.1), un choix raisonné testé sur six communes, et la hauteur de
@@ -518,7 +691,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
    de Paris (95,5 % à la borne), de Lyon et de 53 autres communes. Aucune commune
    n'a désormais plus de la moitié de ses parcelles bâties à une borne ;
-   Neuilly-sur-Seine en a le plus au plafond (25,0 %), Paris 3,2 % (§3.7). Le
+   Neuilly-sur-Seine en a le plus au plafond (25,3 %), Paris 5,6 % (§3.7). Le
    contrôle `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).
@@ -530,18 +703,33 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 6. **Nuance de zonage** : tout AU est traité constructible avec une décote
    forfaitaire ; les `AU fermées` mériteraient une décote plus forte et les
    pastilles `Nh/Ah` sont sous-évaluées.
-7. **Valeur de marché du non-résidentiel** : emprunte la surface €/m²
-   résidentielle et les ratios de surface des appartements, et sa valeur bâtie le
-   coût du logement ; les locaux professionnels (révision 2017) nécessitent une
-   strate dédiée. Les bâtiments ruraux exonérés au titre de l'art. 1382 6° du CGI
-   sont désormais exclus (§3.5), via un indicateur d'usage et de zonage. La règle des niveaux (§3.1) a supprimé l'erreur la plus
-   lourde, des hangars comptés sur plusieurs niveaux, et la part industrielle ou
-   commerciale de la valeur bâtie des communes basses a reculé (Santeny industriel
-   51 → 33 %, Vaujours industriel 56 → 30 %, Villepinte commercial — le parc des
-   expositions — 45 → 21 %, Périgny « autre » 50 → 44 %). Les prix et coûts du
-   non-résidentiel restent le prochain levier pour les communes en bord de bande ;
-   les deux encore en dessous (Limeil-Brévannes, Vaujours) ont aussi beaucoup
-   d'immeubles et de maisons dans leur valeur bâtie (§3.7).
+7. **Valorisation du non-résidentiel.** Les niveaux sont imputés selon le type
+   (§3.1), les bâtiments agricoles exonérés au titre de l'art. 1382 6° du CGI
+   sont exclus (§3.5), chaque type de bâtiment a son coût, sa durée et son
+   plancher (§3.1), et les parcelles de type hangar sont évaluées au coût de
+   remplacement déprécié (§3.4). Restent :
+   - **Les coûts** reposent sur un seul guide commercial ramené à notre niveau
+     de logement, aucun document primaire (Moniteur, Untec, Chambre
+     d'agriculture) n'ayant été accessible : ±25 %. Durées et planchers sont des
+     choix raisonnés.
+   - **Les bureaux** prennent toujours la surface de prix résidentielle et les
+     ratios de surface des appartements, à leur propre coût. Une surface de prix
+     DVF des locaux professionnels (par tranche de taille, écrêtée) est la
+     meilleure cible ; les locaux professionnels (révision 2017) nécessitent une
+     strate dédiée.
+   - **Parcelles mixtes.** Le plus grand bâtiment de la parcelle décide de la
+     méthode : une parcelle dominée par un hangar est évaluée entièrement au
+     coût (y compris une maison qui s'y trouverait), une parcelle dominée par du
+     logement ou des bureaux entièrement au résiduel (un hangar s'y trouvant
+     gardant son propre coût).
+   - **Le ratio du foncier d'activité** (0,45 / 0,35) repose sur n ≈ 20 à 80
+     ventes par an et par territoire, classées par l'occupation du sol actuelle
+     (MOS) ou les périmètres de zones d'activités, non par le zonage. C'est un a
+     priori, pas une mesure. Le terrain d'un CRD à son usage dominant est un
+     plancher pour une LVT, qui vise l'usage autorisé ; les deux coïncident dans
+     les zones d'activités.
+   - **Les cours** hors zone urbaine (3 × la surface plancher) sont un choix
+     raisonné.
 8. **Revenus (Filosofi)** : millésime 2021 ; l'INSEE a publié en mai 2026 un
    millésime « Filosofi 2 » 2023 avec indicateurs IRIS (rupture méthodologique) —
    2021 est conservé en attendant évaluation. Communes ≥ 5 000 habitants
@@ -556,7 +744,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     espaces publics ouverts classés urbains (PLU de Paris *UV* : parcs,
     cimetières, terrains de sport ; PLU-H de Lyon *USP* : services publics) et le
     foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
-    terrains à bâtir. `audit_land.py <commune>` chiffre, par libellé de zone, la
+    terrains à bâtir (les hangars bâtis y prennent le ratio du foncier
+    d'activité, §3.4). `audit_land.py <commune>` chiffre, par libellé de zone, la
     part de l'impôt qu'il porte.
 11. **Les exonérations ne sont que partiellement modélisées.** Le foncier public
     manifestement exonéré est repéré (§3.5), mais prudemment : les locaux publics en

@@ -8,7 +8,7 @@
       "benchmark": "Vacance des logements (INSEE)",
       "independence": "independent",
       "external_value_pct": null,
-      "model_comparable_pct": 67.1,
+      "model_comparable_pct": 70.3,
       "model_comparable_label": "part sous-bâtie/vacante de la base (valeur)",
       "status": "non disponible",
       "note": "Corrélation directionnelle entre communes (vacance INSEE vs foncier sous-utilisé), pas une égalité par commune."
@@ -16,7 +16,7 @@
     {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
-      "model_land_share_pct": 55.0,
+      "model_land_share_pct": 56.5,
       "band": [
         40.0,
         65.0

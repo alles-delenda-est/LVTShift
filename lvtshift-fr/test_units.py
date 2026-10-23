@@ -632,6 +632,99 @@ def test_tab_comparables_deflated_with_house_index():
     assert abs(flat["eur_m2_land"].median() - 20.0) < 1e-9
 
 
+def test_building_type_from_usage_and_nature():
+    iac = "Industriel, agricole ou commercial"
+    b = pd.DataFrame({
+        "usage": ["Résidentiel", "Industriel", "Industriel", "Commercial et services",
+                  "Commercial et services", "Agricole", "Commercial et services",
+                  "Sportif", "Annexe", "Religieux", "Indifférencié", None],
+        "nature": ["Indifférenciée", iac, "Indifférenciée", iac, "Indifférenciée",
+                   "Indifférenciée", "Serre", "Indifférenciée", "Indifférenciée",
+                   "Eglise", iac, None]})
+    assert list(estimate.building_type(b)) == [
+        "residential", "shed", "workshop", "retail_box", "office", "agri_shed",
+        "greenhouse", "sports", "annex", "religious", "shed", "residential"]
+    from config import BUILDING_TYPES
+    for t, (ratio, life, floor, valuation, land) in BUILDING_TYPES.items():
+        assert 0 < ratio <= 1.5 and valuation in ("residual", "drc")
+        assert (life is None) == (floor is None) and (life is None or (life > 0 and 0 < floor < 1))
+        assert (valuation == "drc") == (land in ("activity", "residential"))
+
+
+def test_nonresidential_cost_life_and_mid_life_age():
+    from config import BUILDING_TYPES
+    iac = "Industriel, agricole ou commercial"
+    ratio, life, floor = BUILDING_TYPES["shed"][:3]
+    # a new shed: its own cost ratio, one level
+    new = estimate.improvement_value(pd.DataFrame([_bld(
+        usage="Industriel", nature=iac, n_levels=np.nan, height_m=14.0,
+        year_built=2025.0)]), CFG)
+    assert abs(new["improvement_value"].iloc[0] - 100 * 1650 * ratio) < 1e-6
+    assert new["valuation"].iloc[0] == "drc" and new["drc_land"].iloc[0] == "activity"
+    # unknown year: mid-life, not the dwellings' median age
+    b = pd.DataFrame([_bld(idpar="H", year_built=1900.0),
+                      _bld(idpar="S", usage="Industriel", nature=iac, n_levels=1.0,
+                           year_built=np.nan)])
+    out = estimate.improvement_value(b, CFG).set_index("idpar")
+    dep = 1 - (1 - floor) * 0.5
+    assert abs(out.loc["S", "improvement_value"] - 100 * 1650 * ratio * dep) < 1e-6
+    # the maintained-stock rule is for housing only
+    w = pd.Series({"H": 1.0, "S": 1.0})
+    old = pd.DataFrame([_bld(idpar="S", usage="Industriel", nature=iac, n_levels=1.0,
+                             year_built=1960.0)])
+    a = estimate.improvement_value(old, CFG)["improvement_value"].iloc[0]
+    m = estimate.improvement_value(old, CFG, maint_weight=w)["improvement_value"].iloc[0]
+    assert a == m == 100 * 1650 * ratio * floor
+    # the dominant building (by floor area) sets the parcel's valuation
+    mixed = pd.DataFrame([_bld(idpar="M", footprint_m2=50.0),
+                          _bld(idpar="M", usage="Industriel", nature=iac, footprint_m2=400.0,
+                               n_levels=1.0)])
+    assert estimate.improvement_value(mixed, CFG)["valuation"].iloc[0] == "drc"
+
+
+def test_drc_parcels_value_land_at_local_price_not_residual():
+    p = pd.DataFrame({
+        "idpar": ["R", "S", "G"],
+        "land_type": ["built"] * 3,
+        "parcel_area_m2": [1000.0, 1000.0, 1000.0],
+        "floor_area_m2": [500.0, 500.0, 50.0],
+        "market_value": [2_000_000.0, 2_000_000.0, 2_000_000.0],   # flat price, unused for DRC
+        "improvement_value": [800_000.0, 300_000.0, 20_000.0],
+        "constructible_eur_m2": [600.0, 600.0, 600.0],
+        "ag_eur_m2": [1.0, 1.0, 1.0],
+        "valuation": ["residual", "drc", "drc"],
+        "drc_land": [None, "activity", "residential"],
+    })
+    out = estimate.land_value_residual(p, CFG).set_index("idpar")
+    assert out.loc["R", "land_value"] == 1_200_000.0 and out.loc["R", "lv_flag"] == "built_residual"
+    land = 600.0 * CFG.activity_land_ratio * 1000
+    assert abs(out.loc["S", "land_value"] - land) < 1e-6
+    assert out.loc["S", "improvement_value"] == 300_000.0
+    assert abs(out.loc["S", "market_value"] - (land + 300_000.0)) < 1e-6
+    assert out.loc["S", "lv_flag"] == "built_drc"
+    assert out.loc["G", "land_value"] == 600_000.0           # garage plot: residential land
+    # never below the dirt value
+    p2 = p.assign(constructible_eur_m2=0.0, ag_eur_m2=5.0)
+    assert estimate.land_value_residual(p2, CFG).set_index("idpar").loc["S", "land_value"] == 5000.0
+    # DRC buildings skip the habitable-area restatement
+    h = estimate.habitable_basis(p.assign(type_local="Appartement"), CFG).set_index("idpar")
+    assert h.loc["S", "improvement_value"] == 300_000.0
+    assert h.loc["R", "improvement_value"] != 800_000.0
+    import dataclasses
+    # a shed on a 10 ha farmland parcel: only its yard is building land
+    farm = p.assign(zone_typ=["U", "A", "U"], parcel_area_m2=[1000.0, 100_000.0, 1000.0])
+    o = estimate.land_value_residual(farm, CFG).set_index("idpar")
+    yard = 3.0 * 500.0
+    assert abs(o.loc["S", "land_value"]
+               - (600.0 * CFG.activity_land_ratio * yard + 1.0 * (100_000 - yard))) < 1e-6
+    # urban zoning: the whole plot
+    urban = p.assign(zone_typ="U", parcel_area_m2=[1000.0, 100_000.0, 1000.0])
+    assert abs(estimate.land_value_residual(urban, CFG).set_index("idpar").loc["S", "land_value"]
+               - 600.0 * CFG.activity_land_ratio * 100_000) < 1e-6
+    for bad in (0.0, 0.01, 1.5, float("nan"), True, "0.4"):
+        _assert_raises(ValueError, dataclasses.replace, CFG, activity_land_ratio=bad)
+
+
 # ------------------------------------------------------------------ #
 
 if __name__ == "__main__":
