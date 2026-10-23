@@ -48,8 +48,12 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   business land, building at depreciated cost). Building-less parcels are
   classified by legal constructibility (GPU zoning) and priced against
   terrain-à-bâtir comparables or SAFER farmland.
-- **current tax** = the commune's real REI foncier-bâti produit spread by a floor-
-  area proxy over taxable built parcels. Public property obviously exempt under
+- **current tax** = the commune's real REI foncier-bâti produit, split between
+  industrial establishments, professional premises and housing in the
+  commune's official proportions (rebuilt from REI aggregates: the State's
+  compensation for the 2021 industrial halving, and the CFE professional base
+  scaled to the national total), then by floor area within each group; shops
+  below flats count as professional. Public property obviously exempt under
   CGI 1382-1° (DGFiP *personnes morales* files, conservative ownership rule) and
   farm buildings under CGI 1382 6° (BD TOPO agricultural use, greenhouses, sheds
   in farmland zones) bear nothing today and nothing under the LVT.
@@ -97,13 +101,17 @@ land-share band, so error propagates visibly rather than silently.
   counted 828 000 m² of floor on a 165 000 m² footprint), farm greenhouses taxed
   and valued as housing, and every shed priced at the flat price and the housing
   cost. Fixed in turn, they lift Santeny 36 → 52 % and Vaujours 36 → 50 %.
-- **Fixing one side of a comparison exposes the other.** Once industrial land is
-  valued at business-land prices it is worth far less (Lyon ring €8.6bn → €3.8bn),
-  so industry's share of the LVT falls; but today's tax is still shared by floor
-  area, which overstates what warehouses pay now (industrial values were halved
-  in 2021). The apparent −55 % industrial cut and the smaller household gains are
-  largely the baseline's error, not the reform's. The baseline is now the
-  load-bearing weak link for the distributional results.
+- **The baseline error ran the other way from the one we expected.** Once
+  industrial land was valued at business-land prices (Lyon ring €8.6bn → €3.8bn),
+  industry's LVT share fell, and we and Gemini read the −55 % industrial cut as
+  a floor-area baseline overstating what factories pay today. Calibrating the
+  baseline to official REI shares showed the opposite: business pays *more* per
+  m² than housing (fixed plant in art. 1499 values; professional premises on
+  2013 rents vs housing on 1970 values), so the cut deepens (−63 %) and the
+  Lyon ring's poorest fifth goes from −3.7 % to +0.8 %. Taxing plant moves this
+  only 1–3 points: in an industrial corridor the LVT genuinely shifts tax from
+  capital-heavy industry on cheap land to households. Expectations, including
+  a reviewer's, are hypotheses to test against data.
 - **Changing a variable's units silently retunes every rule calibrated on it.**
   Restating the depreciation trigger per habitable m² halved Lyon's maintained
   weight before it was caught; the trigger keeps its calibrated basis. Check
@@ -139,12 +147,18 @@ land-share band, so error propagates visibly rather than silently.
   uncertainty** (0.71 flats, 0.82 houses): ±0.05 moves building value about ±7 %.
   The flats figure traces to the cost research's surface-utile conversion; the
   houses figure is a desk estimate.
-- **The current-tax baseline needs category weights before distributional
-  results are quoted.** It spreads the produit by floor area, so a warehouse m²
-  pays like a flat m². Industrial (art. 1499, halved in 2021) and RVLLP retail and
-  storage values are far lower per m². Weights calibrated on REI or DGFiP totals
-  are the next step; the per-parcel VLC in the Fichiers fonciers is the real fix.
-  HLM (art. 1384 A) and QPV abatements are not yet modelled either.
+- **The professional-premises share of today's tax is now the load-bearing
+  uncertainty.** The open proxy (CFE base) misses vacant premises and non-CFE
+  occupiers and captures ~40 % nationally; it is scaled ×2.5 to the Cour des
+  comptes total. At the raw proxy (×1.0) every household quintile gains 10–15
+  points more (Paris −27.6/+3.9 vs −17.4/+18.9). New bills are the same either
+  way; only the starting point moves. One national multiplier cannot fit every
+  commune; the per-parcel VLC in the Fichiers fonciers is the real fix. HLM
+  (art. 1384 A) and QPV abatements are not yet modelled either.
+- **Whether a reform should tax industrial plant is a policy choice.** Today's
+  industrial base includes fixed installations; the modelled LVT taxes only the
+  shed. Estimated from REI, adding plant moves industrial bills by 1–3 points
+  (Marcy-l'Étoile up to 14).
 - **Non-residential costs rest on one commercial guide** scaled to our housing
   level (±25 %), the business-land ratio on 20–80 sales per area, and offices
   still read the residential price surface, which overstates distressed suburban

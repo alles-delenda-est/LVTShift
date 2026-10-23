@@ -37,6 +37,7 @@ française.
 | Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | édition 2025 (marché 2024) | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
+| Répartition de la taxe actuelle | REI (DGFiP), via OFGL `rei` : `E11` (base TFPB), `WC75` (compensation de la division par deux des valeurs industrielles en 2021), `T29`, `T29_1`, `X503` (bases brutes de CFE) ; taux de TFPB 2020 d'OFGL `base-fiscale-simplifiee` | API Opendatasoft par `idcom` | REI 2025 ; taux 2020 | parts industrielle / professionnelle / logement de la base TFPB, par commune (§3.5) |
 | Géométrie IRIS | Contours IRIS (IGN) | WFS `STATISTICALUNITS.IRIS:contours_iris` | courant | rattachement parcelle → IRIS pour le revenu |
 | Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 (voir §6.8) | analyse distributive (quintiles) |
 | Foncier public exonéré | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | zips annuels via le catalogue data.economie.gouv.fr | situation 2025 | repérer le foncier public manifestement exonéré de TFPB (§3.5) |
@@ -163,9 +164,9 @@ constructions légères (`construction_legere`) et les usages Annexe, Agricole,
 Industriel, Sportif et Religieux ; **les autres bâtiments « Commercial et
 services »** 1 niveau sous 7 m, sinon hauteur ÷ 3,5 m ; **le logement** hauteur
 ÷ 3 m comme avant (2,65 m par niveau mesurés). Les nombres connus sont conservés.
-La surface plancher répartit aussi la TFPB actuelle (§3.5) : la correction abaisse
-la valeur bâtie du non-résidentiel et retire aux entrepôts une partie de la taxe
-d'aujourd'hui. Sources : `docs/research/nonres-valuation-2025.md` §1 et
+La surface plancher répartit aussi la TFPB actuelle au sein de chaque groupe de
+locaux (§3.5) : la correction abaisse la valeur bâtie du non-résidentiel et
+modifie la répartition de la taxe d'aujourd'hui entre bâtiments. Sources : `docs/research/nonres-valuation-2025.md` §1 et
 `docs/research/nonres_probes/`.
 
 *Bâti entretenu (âge effectif).* Là où les prix du quartier dépassent largement le
@@ -286,12 +287,78 @@ une surface de prix DVF des locaux professionnels est la meilleure cible (§6,
 point 7). Les lieux de culte restent au résiduel au coût du logement.
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
-(`estimate.current_tax`) sur les **parcelles bâties uniquement** au prorata d'un
-proxy de VLC = surface plancher. La TFPB est un impôt sur le bâti ; les parcelles
-non bâties portent **0 €** (elles relèvent de la TFPNB, hors périmètre). **Aucun
-calage sur la valeur de marché** (la VLC 1970 est régressive vs marché ; un calage
-dégraderait la fidélité à la base actuelle) ; une variante pondérée par catégorie
-n'existe qu'en sensibilité étiquetée.
+(`estimate.current_tax`) sur les **parcelles bâties uniquement**. La TFPB est un
+impôt sur le bâti ; les parcelles non bâties portent **0 €** (elles relèvent de
+la TFPNB, hors périmètre). **Aucun calage sur la valeur de marché** : la VLC 1970
+est régressive par rapport au marché, et un tel calage rendrait la base de
+départ moins fidèle à la taxe actuelle.
+
+*Calage par groupe de locaux.* Au sein du bâti, le produit est calé, commune par
+commune, sur sa répartition officielle REI 2025 entre trois groupes de locaux
+(`config.BASELINE_MODEL` ; sources dans
+`docs/research/tfpb-baseline-calibration.md` §2, §3 et §9). Aucune source
+ouverte ne publie la base TFPB d'une commune par catégorie :
+`ingest.fetch_rei_baseline_split` la reconstitue à partir de deux lignes du
+REI :
+
+| Groupe | Base TFPB reconstituée | Contrôle |
+|---|---|---|
+| Établissements industriels (art. 1499 CGI) | `WC75` ÷ (taux TFPB 2020 commune + département). `WC75` est la compensation versée par l'État pour la division par deux des valeurs industrielles en 2021 ; la loi (LFI 2021, art. 29 III A 2) la fixe à la perte de base × le taux 2020, et la base perdue égale la base restante. Les communes de la Métropole de Lyon prennent le taux 2014 du Rhône (11,03 %), comme le prévoit l'article ; Paris n'a pas de ligne départementale | Appliquée à toute la France, la méthode donne 5,7 % de la base TFPB, exactement le chiffre de la Cour des comptes (*Les taxes foncières*, 2023). La ligne industrielle de la CFE (`X503`) concorde dans un rapport de 0,6 à 1,13 |
+| Locaux professionnels (RVLLP, art. 1498) | 0,5 × la base brute de CFE des locaux professionnels (`T29_1`, à défaut `T29 − X503`), × **2,5**. Le 0,5 est l'abattement de 50 % de la TFPB (art. 1388 CGI), qui vaut pour toute propriété bâtie ; la CFE retient la valeur locative entière | La CFE est un impôt d'occupant : les locaux vacants et les occupants hors CFE en sortent. Au niveau national, l'indicateur brut donne 8,6 % de la base contre 22 % pour la Cour. Le facteur 2,5 le cale sur ce chiffre national ; l'indicateur brut (× 1,0) est la borne basse |
+| Logement et autres | le reste de la base (`E11`) | — |
+
+Un seul taux de TFPB s'applique à toutes les catégories d'une commune : la part
+de chaque groupe dans la base est donc aussi sa part du produit (au lissage RVLLP
+près, moins de 0,1 %). Les deux points de droit ont été vérifiés sur Légifrance
+après qu'une revue par IA (Gemini) a affirmé que l'abattement de 50 % ne vise que
+le logement et que WC75 repose sur un taux 2017 : les deux affirmations étaient
+fausses. Sa remarque selon laquelle l'indicateur CFE sous-compte était juste, et
+le facteur 2,5 en découle.
+
+*Application des parts* (`estimate.baseline_floor`,
+`estimate.calibrated_weights`, `run_pipeline._baseline_weights`) :
+- **La surface plancher est regroupée** selon l'usage BD TOPO. Industriel =
+  usage Industriel. Professionnel = Commercial et services, Sportif, et le
+  rez-de-chaussée des immeubles résidentiels dont l'usage secondaire
+  (`usage_2`) est commercial : commerces en pied d'immeuble, présents sur 45 %
+  des immeubles résidentiels des arrondissements parisiens échantillonnés, 5 % à
+  Villeurbanne et moins de 1 % à Villepinte. Logement = le reste. Les parcelles
+  exonérées sont écartées.
+- **Le produit est partagé** entre les groupes selon les parts cibles, puis à
+  la surface plancher au sein de chaque groupe. Chaque groupe reçoit ainsi une
+  taxe au m² rapportée à celle du logement.
+- **L'industriel rejoint le professionnel** là où il paierait moins au m² que
+  les locaux professionnels : ces hangars sont imposés comme locaux
+  professionnels (entrepôts), non comme établissements industriels. C'est le
+  cas à Villepinte et Santeny, à environ 0,42–0,46 × le logement au m².
+- **Plafonds.** Les pondérations au m² sont plafonnées à 5 × le logement. Là où
+  les parts industrielle et professionnelle dépassent ensemble 75 %, elles sont
+  ramenées à 75 %, le facteur national pouvant déborder dans les communes très
+  tertiaires ou industrielles (Rungis 77 %, Marcy-l'Étoile 84 %, Vaujours 93 %).
+- **Repli.** Si les données REI manquent ou sont malformées, la répartition
+  revient à la seule surface plancher, avec une note. Les 188 communes
+  modélisées sont toutes calées.
+- **Publication.** La méthode, les parts cibles et les parts obtenues figurent
+  dans la provenance de chaque fichier publié (`current_tax_baseline`).
+  `run_commune.py --baseline floor` reproduit l'ancienne base à la surface
+  plancher, en sensibilité.
+
+Exemples de pondérations au m², rapportées au logement : Saint-Fons industriel
+1,30, professionnel 0,91 ; Rungis 1,71 (industriel fondu dans le
+professionnel) ; Vaujours et Marcy-l'Étoile au plafond de 5. Les parts cibles
+de Paris sont de 1,4 % (industriel) et 24,9 % (professionnel) ; celles de Lyon
+de 1,6 % et 27,2 %.
+
+*Les entreprises paient plus au m² que ne le supposait la surface plancher.* On
+s'attendait à ce que la base à la surface plancher surestime ce que paie
+l'industrie aujourd'hui. Les parts officielles montrent l'inverse, pour deux
+raisons. Les valeurs industrielles de l'art. 1499 incluent l'outillage fixe, pas
+seulement le bâtiment. Les locaux professionnels ont été réévalués sur les
+loyers de 2013 (révision RVLLP de 2017), alors que le logement repose toujours
+sur les valeurs de 1970. La taxe actuelle des entreprises est donc plus élevée
+que ne le suggérait la surface plancher, et la réforme déplace davantage de
+charge des entreprises vers les ménages que ne le montrait la base à la surface
+plancher (§3.7).
 
 **Foncier public exonéré** (`exemptions.py`, spec 0003). L'art. 1382-1° du CGI
 exonère les propriétés de l'État, des régions, des départements, des communes, de
@@ -388,7 +455,10 @@ l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
 par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−19,3 à −21,5 %, dernier +11,6 à +11,9 %).
+−17,1 à −19,1 %, dernier +15,6 à +15,8 %). La bande laisse la base de la taxe
+actuelle inchangée. L'incertitude propre à cette base, le facteur appliqué aux
+locaux professionnels (§3.5), déplace les résultats des ménages bien plus que la
+bande ; elle est publiée à part, sous forme de borne basse (§6, point 1).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -399,9 +469,9 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +4,8 % alors que le groupe paie
-−8,1 % et son ménage type −10,1 %, car les grands immeubles, où vivent la plupart
-de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
+parcelle médiane du quintile le plus pauvre paie +7,6 % alors que le groupe paie
+−6,3 % et son ménage type −6,1 % (base centrale), car les grands immeubles, où
+vivent la plupart de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
 surface de plancher brute ÷ 85 m²), soit 5 à 11 % des parcelles résidentielles à
@@ -522,12 +592,70 @@ cinquième le plus modeste de −13,5 à −3,7 %. Dans la couronne parisienne, 
 cotes industrielles baissent de 31 % ; la catégorie « autre » (parcelles de
 garages et de sport) monte de 67 %, mais ne porte que 1,4 % de la taxe actuelle.
 Le gradient de revenu parisien bouge peu (totaux par groupe −20,1 … +14,9 % ;
-Lyon −18,7 … +13,6 %). **La baisse industrielle, et les gains plus faibles des
-ménages autour de Lyon, sont exagérés par la base de la taxe actuelle** (§6,
-point 1) : elle répartit toujours le produit TFPB à la surface plancher, sans
-pondération par catégorie, ce qui surestime ce que paient aujourd'hui entrepôts
-et usines. Ces chiffres distributifs ne devraient pas être publiés tant que la
-base ne porte pas de pondérations par catégorie, prochaine étape proposée.
+Lyon −18,7 … +13,6 %). Ces chiffres reposaient encore sur la base à la surface
+plancher ; la base calée ci-dessous la remplace.
+
+*Base calée.* Caler la taxe actuelle sur la répartition REI de chaque commune
+(§3.5) ne change aucune part foncière (Paris 75,8 %, Lyon 60,0 %, couronne
+parisienne 65,3 %, couronne lyonnaise 55,4 %) ni aucune nouvelle cotisation :
+seul le point de départ bouge. « Avant » est la base à la surface plancher ;
+« centrale » applique le facteur 2,5 à l'indicateur professionnel ; « borne
+basse » prend l'indicateur brut (× 1,0).
+
+| | Avant (surface plancher) | Centrale (× 2,5) | Borne basse (× 1,0) |
+|---|---|---|---|
+| Paris, totaux par groupe de revenu Q1 … Q5, % | −20,1 −11,2 −4,2 +5,7 +14,9 | −17,4 −8,3 −1,3 +8,9 +18,9 | −27,6 −18,8 −12,1 −2,9 +3,9 |
+| Lyon | −18,7 −8,5 −0,8 +3,2 +13,6 | −14,0 −3,5 +4,4 +8,5 +18,9 | −27,7 −18,2 −10,8 −7,0 +3,5 |
+| Couronne parisienne | −9,1 −5,0 −0,6 −2,7 +1,1 | −7,4 −3,0 +2,0 −1,1 +5,5 | −21,8 −16,9 −12,1 −12,6 −9,0 |
+| Couronne lyonnaise | −3,7 +0,8 +5,0 −1,3 −4,7 | +0,8 +2,8 +10,7 +4,9 −1,1 | −15,8 −11,4 −7,7 −12,1 −14,2 |
+| Montant déplacé, % du produit : Paris / Lyon / couronne parisienne / couronne lyonnaise | 19,2 / 20,4 / 28,1 / 38,3 | 19,6 / 20,9 / 30,4 / 43,0 | 30,2 / 30,9 / 36,7 / 40,6 |
+| Part des parcelles qui paient plus, % : même ordre | 50,2 / 70,8 / 68,6 / 69,3 | 52,8 / 74,6 / 70,8 / 74,6 | 42,5 / 51,5 / 56,1 / 58,4 |
+
+Par catégorie, cas central :
+- **Couronne lyonnaise.** La part de l'industrie dans la taxe actuelle passe de
+  10,0 à 11,9 %, celle du commerce de 15,0 à 16,6 %. Cotisations sous la LVT :
+  industrielles −63 %, commerciales −24 %, maisons +13 %.
+- **Couronne parisienne.** La part de l'industrie passe de 5,3 à 5,8 %.
+  Cotisations : industrielles −36 %, commerciales −15 %, maisons +18 %.
+
+Borne basse : dans la couronne lyonnaise, les cotisations commerciales
+augmentent de 47 %, les industrielles baissent de 42 % et les maisons de 6 % ;
+dans la couronne parisienne, commerce +77 %, industrie +1 %, maisons +1 %.
+
+**Le facteur professionnel est désormais l'incertitude porteuse.** Il déplace
+les résultats des ménages de 10 à 15 points (premier quintile parisien −17,4 %
+en central contre −27,6 % en borne basse ; couronne lyonnaise +0,8 % contre
+−15,8 %). Dans le cas central, le gradient progressif de Paris et de Lyon tient
+et se raidit en haut, et les ménages des couronnes gagnent moins qu'avec la base
+à la surface plancher. En borne basse, tous les groupes de revenu des couronnes
+paient moins, et seul le quintile le plus aisé de Paris et de Lyon paie plus.
+Le facteur 2,5 est la valeur la mieux étayée, l'indicateur brut ne captant
+qu'environ 40 % de la base professionnelle nationale, mais un multiplicateur
+national unique ne peut convenir à toutes les communes (§6, point 1).
+
+**Constat de politique publique.** Dans le couloir chimique et industriel
+lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
+central (cotisations industrielles de Saint-Fons −60 %, de Marcy-l'Étoile
+−90 %).
+
+*Outillage.* Les valeurs de l'art. 1499 incluent l'outillage fixe, alors que la
+valeur bâtie du modèle pour une parcelle industrielle ne compte que le hangar.
+La LVT modélisée exonère donc implicitement l'outillage ; le taxer ou non dans
+une réforme est un choix politique. Une estimation de premier ordre
+(`docs/research/plant_effect.py`) ajoute à la base bâtie le coût réévalué de
+l'outillage (base industrielle ÷ 0,03, brut ou × 0,5 pour la dépréciation, moins
+la valeur bâtie du modèle) et résout de nouveau le 4:1 commune par commune :
+
+| Cotisations industrielles vs aujourd'hui | Hangar seul (publié) | Avec outillage, déprécié | Avec outillage, brut |
+|---|---|---|---|
+| Couronne lyonnaise | −63 % | −62 % | −60 % |
+| Couronne parisienne | −36 % | −36 % | −33 % |
+| Marcy-l'Étoile | −90 % | −84 % | −76 % |
+| Saint-Fons | −60 % | −59 % | −53 % |
+
+La baisse industrielle tient donc avant tout au déplacement vers le sol : un
+foncier industriel bon marché face à une base actuelle chargée en capital.
+L'exonération de l'outillage n'en est qu'une part mineure.
 
 ## 4. Paramètres et hypothèses clés
 
@@ -605,6 +733,11 @@ base ne porte pas de pondérations par catégorie, prochaine étape proposée.
   matériel).
 - **Repli terrain à bâtir EPTB** : 99 €/m² (national).
 - **Décote AU** (`au_strict_factor`) : 0,55. **Shrinkage hédonique** k = 8.
+- **Base de la taxe actuelle** (`config.BASELINE_MODEL`, §3.5) : REI 2025,
+  taux de TFPB 2020 (Métropole de Lyon : taux 2014 du Rhône, 11,03 %) ;
+  indicateur professionnel 0,5 × base brute de CFE (art. 1388 CGI) × **2,5**
+  (central ; 1,0 = borne basse) ; pondérations au m² plafonnées à 5 × le
+  logement ; parts industrielle + professionnelle plafonnées à 75 %.
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
   existantes et la part laissée de côté : dans le 92/93/94 il n'y a pas de strate
@@ -626,8 +759,12 @@ base ne porte pas de pondérations par catégorie, prochaine étape proposée.
 - **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
   du prélèvement (Cahors 0,3 %) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
-  progressif (totaux de groupe : quintile le plus pauvre −15,4 %, le plus aisé
-  +13,6 %).
+  progressif (totaux de groupe, base centrale : quintile le plus pauvre
+  −12,2 %, le plus aisé +17,9 %).
+- **Répartition de la taxe actuelle** — la reconstitution industrielle (WC75 ÷
+  taux 2020), appliquée à toutes les communes de France, donne 5,7 % de la base
+  TFPB, exactement le chiffre de la Cour des comptes ; la ligne industrielle de
+  la CFE concorde commune par commune dans un rapport de 0,6 à 1,13 (§3.5).
 - **Tests** — `test_units.py` (tests unitaires hors-ligne de la logique pure) et
   `test_synthetic.py` (bout-en-bout via le vrai solveur).
 
@@ -635,24 +772,38 @@ base ne porte pas de pondérations par catégorie, prochaine étape proposée.
 
 Classées par impact sur les résultats publiés (catégorie/quintile).
 
-1. **Taxe actuelle (maillon porteur ; bloque la publication des résultats du
-   non-résidentiel).** Le proxy de VLC est la seule surface plancher ; il ignore
-   la catégorie cadastrale et les coefficients de pondération de surface. Il
-   déforme la répartition de la taxe *actuelle* entre bâtis : lire la
-   **variation**, pas le montant de départ. Le non-résidentiel étant désormais
-   évalué à son propre coût et à son propre prix du terrain, bien plus bas
-   (§3.1, §3.4), l'erreur ne se compense plus : répartir le produit à la surface
-   plancher sans pondération par catégorie **surestime ce que paient
-   aujourd'hui entrepôts et usines**. Les valeurs locatives industrielles
-   (méthode comptable, art. 1499 CGI) ont été divisées par deux en 2021, et les
-   tarifs RVLLP de 2017 pour les entrepôts et les grandes surfaces sont bas au
-   m². La baisse industrielle (couronne lyonnaise −55 %, couronne parisienne
-   −31 %) et les gains plus faibles des ménages autour de Lyon sont donc
-   exagérés. La recommandation, que partage la revue Gemini, est de ne pas
-   publier les chiffres distributifs de cette étape tant que la base ne porte
-   pas de pondérations par catégorie (prochaine étape proposée ; produits REI
-   de la DGFiP par catégorie s'ils existent). Seule la VLC réelle par parcelle
-   (Fichiers fonciers) le résoudrait entièrement.
+1. **Base de la taxe actuelle : le facteur des locaux professionnels (porteur
+   pour tout chiffre distributif), et l'outillage.**
+   - **Le facteur professionnel.** Les parts industrielle et professionnelle de
+     la taxe actuelle de chaque commune viennent de son REI (§3.5). La part
+     industrielle est quasi exacte. La part professionnelle est un indicateur
+     CFE multiplié par un facteur national unique, 2,5, car l'indicateur brut ne
+     capte qu'environ 40 % de la base professionnelle nationale (8,6 % contre
+     22 % pour la Cour des comptes). Passer de 2,5 à l'indicateur brut (1,0)
+     déplace les résultats des ménages de 10 à 15 points : le premier quintile
+     parisien passe de −17,4 à −27,6 %, celui de la couronne lyonnaise de +0,8 à
+     −15,8 %, et les cotisations commerciales de la couronne lyonnaise de −24 %
+     à +47 % (§3.7). Les nouvelles cotisations sont identiques dans les deux
+     cas ; seul le point de départ bouge. 2,5 est la valeur la mieux étayée,
+     mais le sous-comptage n'est sûrement pas uniforme : il devrait être plus
+     fort là où beaucoup de locaux sont vacants ou occupés par des organismes
+     publics et des associations, comme à Paris. **Toujours présenter côte à
+     côte le cas central et la borne basse.** Les valeurs professionnelles par
+     commune (Fichiers fonciers) sont la vraie solution.
+   - **Au sein de chaque groupe**, la taxe actuelle reste répartie à la surface
+     plancher, qui ignore la catégorie cadastrale et les coefficients de
+     pondération de surface : lire la **variation**, pas le montant de départ,
+     et ne jamais publier de montants par parcelle. L'usage BD TOPO décide du
+     groupe ; un commerce non enregistré en usage secondaire est imposé comme
+     du logement.
+   - **L'outillage.** Les valeurs industrielles de l'art. 1499 incluent
+     l'outillage fixe, mais la valeur bâtie du modèle pour les parcelles
+     industrielles ne compte que le hangar : la LVT modélisée exonère donc
+     implicitement l'outillage. Le taxer ou non dans une réforme est un choix
+     politique. Une estimation de premier ordre montre qu'il ne pèse que pour
+     une part mineure dans la baisse industrielle (couronne lyonnaise −63 % →
+     −62 % déprécié ou −60 % brut ; §3.7) : elle vient avant tout du foncier
+     industriel bon marché.
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
    Atténué par le bornage [0,15 ; 0,85] et l'agrégation, et rendu visible par la
@@ -777,8 +928,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 ## 7. L'argument d'accès aux Fichiers fonciers
 
 Chaque compromis lié aux données ouvertes correspond à un champ précis des
-Fichiers fonciers (CEREMA/DGFiP) qui le résoudrait : le proxy de VLC par surface
-→ la VLC réelle par parcelle ; les surfaces bâti estimées → les surfaces déclarées
+Fichiers fonciers (CEREMA/DGFiP) qui le résoudrait : le proxy de VLC (surface
+plancher calée sur les parts REI par groupe, avec un facteur professionnel
+national) → la VLC réelle par parcelle ; les surfaces bâti estimées → les surfaces déclarées
 par local ; l'année de construction inférée par DPE → l'année exacte ;
 l'appariement spatial bâtiment↔parcelle → les liens MAJIC natifs ; l'absence de
 typologie de propriétaires / vacance / exonérations → ces champs directement. Le
@@ -798,7 +950,8 @@ python run_commune.py <commune>          # exécution réelle ; CSV + graphiques
 Communes : `villeurbanne`, `roubaix`, `cahors`, `figeac`, `montreuil`,
 `grenoble`, `annemasse`, `sete`, `larochelle`, `paris`, `lyon` (et chaque commune
 des couronnes, par clé ASCII, p. ex. `boulogne-billancourt`). Options :
-`--layers` (strates REI), `--no-dpe` (année BD TOPO seule, pour la comparaison de
+`--layers` (strates REI), `--baseline floor` (taxe actuelle à la seule surface
+plancher, sensibilité d'avant le calage), `--no-dpe` (année BD TOPO seule, pour la comparaison de
 dépréciation), `--no-report` (CSV seul), `--cache-dir` (réutilise les
 téléchargements ; reprise possible). Territoires :
 

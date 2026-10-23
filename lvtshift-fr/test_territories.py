@@ -184,7 +184,7 @@ def test_territory_payload_shape(tmp_path, monkeypatch):
     monkeypatch.setitem(config.TERRITORIES, "test-ring", t)
     for k in ("ma", "mb", "mc"):
         monkeypatch.setitem(config.COMMUNES, k, config.CommuneConfig(
-            "99" + str(len(k)), k.upper(), "99", key=k))
+            f"990{len(k):02d}", k.upper(), "99", key=k))
     for k, seed in (("ma", 3), ("mb", 4)):      # mc deliberately has no output
         f = _member_frame(seed, 120, 2e6, 1.5)
         f["new_tax"] = f["current_tax"] * 1.0

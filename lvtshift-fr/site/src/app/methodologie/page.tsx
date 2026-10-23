@@ -523,28 +523,82 @@ export default function MethodologiePage() {
           Limites et réserves honnêtes
         </h3>
         <div className="space-y-7 max-w-3xl">
-          {/* Today's-tax baseline and non-residential results */}
-          <div className="border-l-4 border-rouge pl-5">
+          {/* Today's-tax baseline: calibrated by tax group, with a range */}
+          <div className="border-l-4 border-lisere pl-5">
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
-              Taxe actuelle — entrepôts et usines surtaxés dans la base de départ
+              Taxe actuelle — calée sur les comptes officiels de chaque commune
             </h4>
+            <p className="font-body text-sm text-encre leading-relaxed mb-3">
+              Pour savoir qui gagne et qui perd, il faut d&apos;abord savoir
+              qui paie quoi aujourd&apos;hui. Le montant total de la taxe
+              foncière de chaque commune est connu exactement, mais pas sa
+              répartition entre logements, bureaux, commerces et usines : les
+              valeurs locatives par local ne sont pas ouvertes. Le modèle
+              reconstitue donc, pour chaque commune, la part de la taxe payée
+              par trois groupes, à partir du recensement officiel des impôts
+              locaux (REI, DGFiP) :
+            </p>
+            <ul className="font-body text-sm text-encre leading-relaxed list-disc pl-5 space-y-1.5 mb-3">
+              <li>
+                <strong>les établissements industriels</strong>, à partir de la
+                compensation que l&apos;État verse aux communes depuis la
+                division par deux de leurs valeurs en 2021 (loi de finances
+                pour 2021, art. 29). Appliquée à toute la France, cette méthode
+                retrouve exactement la part publiée par la Cour des comptes
+                (5,7&nbsp;%) ;
+              </li>
+              <li>
+                <strong>les locaux professionnels</strong> (bureaux, commerces,
+                entrepôts), à partir de leur base de cotisation foncière des
+                entreprises (CFE). La CFE n&apos;est payée que par les
+                occupants : les locaux vides et certains occupants, comme les
+                administrations, en sont absents. Brute, elle ne retrouve
+                qu&apos;environ 40&nbsp;% de la part nationale des locaux
+                professionnels mesurée par la Cour des comptes ; le modèle la
+                multiplie donc par 2,5 ;
+              </li>
+              <li>
+                <strong>les logements et le reste</strong>, qui paient le solde.
+              </li>
+            </ul>
+            <p className="font-body text-sm text-encre leading-relaxed mb-3">
+              Chaque groupe paie sa part, répartie ensuite entre ses bâtiments
+              selon leur surface de plancher. Le résultat contredit ce que
+              l&apos;on attendait : au m², les entreprises paient aujourd&apos;hui
+              plus que les logements. Les valeurs industrielles comprennent
+              les machines et installations fixes, et les locaux
+              professionnels ont été réévalués sur les loyers de 2013, alors
+              que les logements restent évalués sur ceux de 1970. La réforme
+              déplace donc davantage la charge des entreprises vers les
+              ménages. Dans le couloir chimique et industriel lyonnais, dans le
+              cas central, elle fait baisser l&apos;impôt de l&apos;industrie
+              et monter celui des ménages.
+            </p>
+            <p className="font-body text-sm text-encre leading-relaxed mb-3">
+              <strong>
+                Le facteur de 2,5 est aujourd&apos;hui la principale source
+                d&apos;incertitude sur les résultats par revenu.
+              </strong>{" "}
+              Sans lui (borne basse), la taxe actuelle des locaux
+              professionnels est plus faible, et les ménages paraissent plus
+              gagnants de 10 à 15 points : à Paris, le cinquième le plus
+              modeste voit son impôt baisser de 17&nbsp;% dans le cas central,
+              de 28&nbsp;% en borne basse ; dans la couronne lyonnaise, il
+              augmente de 1&nbsp;% dans le cas central et baisse de 16&nbsp;%
+              en borne basse. Les nouvelles cotisations sont les mêmes dans les
+              deux cas : seul le point de départ change. Le facteur 2,5 est le
+              mieux étayé, mais un multiplicateur national unique ne peut
+              convenir à chaque commune. Seuls les Fichiers fonciers, qui
+              donnent la valeur réelle de chaque local, trancheraient.
+            </p>
             <p className="font-body text-sm text-encre leading-relaxed">
-              Faute d&apos;accès aux valeurs locatives réelles, la taxe
-              foncière d&apos;aujourd&apos;hui est répartie entre les parcelles
-              bâties au prorata de leur surface de plancher, sans distinguer
-              logements, commerces et locaux industriels. Or les valeurs
-              locatives des établissements industriels ont été divisées par
-              deux en 2021, et les tarifs des entrepôts et grandes surfaces
-              sont bas au m². La base de départ attribue donc aux entrepôts
-              et aux usines une taxe actuelle trop élevée. Depuis que leurs
-              bâtiments et leur terrain sont évalués à leur propre valeur, plus
-              basse, cette erreur ne se compense plus : la baisse simulée de
-              leur cotisation (environ −55&nbsp;% dans la couronne lyonnaise,
-              −31&nbsp;% dans la couronne parisienne) est exagérée, et les
-              gains des ménages autour de Lyon sont sous-estimés.
-              Les résultats par catégorie et par revenu de cette étape sont à
-              lire comme provisoires ; une base pondérée par catégorie de
-              local est la prochaine étape.
+              <strong>Les machines.</strong> La LVT modélisée ne taxe que le
+              bâtiment d&apos;une usine, pas ses installations fixes, que la
+              taxe actuelle inclut : elle les exonère donc implicitement. Les
+              taxer ou non est un choix politique. Le calcul montre que ce
+              point pèse peu : dans la couronne lyonnaise, la baisse de
+              l&apos;impôt industriel passerait de 63&nbsp;% à 60–62&nbsp;%.
+              Elle tient surtout à un foncier industriel bon marché.
             </p>
           </div>
 
@@ -611,9 +665,9 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+4,8&nbsp;%), alors que ce groupe paie
-              8,1&nbsp;% de moins au total et que son ménage type paie
-              10,1&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              plus pauvre en hausse (+7,6&nbsp;%), alors que ce groupe paie
+              6,3&nbsp;% de moins au total et que son ménage type paie
+              6,1&nbsp;% de moins : les grands immeubles, où vit la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.

@@ -78,7 +78,8 @@ def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
 def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
         out_dir: str = "output", make_report: bool = True, cfg=CFG,
-        deflator: dict | None = None) -> pd.DataFrame:
+        deflator: dict | None = None,
+        baseline_split: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
@@ -87,7 +88,10 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
        make_report: also write the PNG charts (needs matplotlib); set False
        for a CSV-only run.
        deflator: optional {type_local: {year: factor}} (estimate.deflator_factors)
-       bringing DVF prices to cfg.reference_year euros before the hedonic fit."""
+       bringing DVF prices to cfg.reference_year euros before the hedonic fit.
+       baseline_split: optional {'industrial': s, 'professional': s} shares of
+       the commune's TFPB base (ingest.fetch_rei_baseline_split); when given,
+       today's tax is calibrated by tax group, otherwise shared by floor area."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
@@ -106,7 +110,16 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p = estimate.habitable_basis(p, cfg)
     p = estimate.market_value(p, surface, cfg.net_to_gross)
     p = estimate.land_value_residual(p, cfg)
-    p = estimate.current_tax(p, commune_tfpb_produit)
+    stale = Path(out_dir) / f"{slug_of(cfg)}.baseline.json"
+    if stale.exists():          # never pair a new export with an old sidecar
+        stale.unlink()
+    baseline = _baseline_weights(p, buildings, baseline_split, cfg)
+    if baseline["weights"]:
+        p = p.merge(baseline.pop("floor"), on="idpar", how="left")
+    else:
+        baseline.pop("floor", None)
+    p = estimate.current_tax(p, commune_tfpb_produit,
+                             bucket_weights=baseline["weights"])
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
@@ -161,9 +174,70 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 
     _write_households(p, buildings, out_dir, name)
+    _write_baseline(p, baseline, out_dir, name)
     if make_report:
         _write_report(out, out_dir, cfg)
     return out
+
+
+def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
+                      split: dict | None, cfg) -> dict:
+    """Per-m² weights of the current-tax groups (estimate.calibrated_weights)
+    over taxable built parcels, or no weights (plain floor area) when the
+    REI split is missing or fails the sanity bound."""
+    from config import BASELINE_MODEL as M
+    out = {"method": "floor_area", "weights": None, "targets": split, "note": ""}
+    if split is None:
+        out["note"] = "REI split unavailable"
+        return out
+    if not (0 <= split["industrial"] <= 1 and 0 <= split["professional"] <= 1):
+        out["note"] = f"invalid split {split}"
+        print(f"[{cfg.name}] baseline: {out['note']}; floor-area baseline kept")
+        return out
+    # business-heavy communes (Rungis, Vaujours…): the national professional
+    # scale can overshoot, so both shares are scaled down to the ceiling
+    targeted = split["industrial"] + split["professional"]
+    cap_note = ""
+    if targeted > M["max_targeted_share"]:
+        k = M["max_targeted_share"] / targeted
+        split = {**split, "industrial": split["industrial"] * k,
+                 "professional": split["professional"] * k}
+        cap_note = f"industrial + professional {targeted:.0%} scaled to {M['max_targeted_share']:.0%}; "
+    out["targets"] = split
+    floor = estimate.baseline_floor(buildings)
+    q = p[["idpar", "floor_area_m2"]].merge(floor, on="idpar", how="left")
+    taxable = q["floor_area_m2"].fillna(0).to_numpy() > 0
+    if "is_exempt_public" in p.columns:
+        taxable &= ~p["is_exempt_public"].fillna(False).astype(bool).to_numpy()
+    totals = {k: float(q.loc[taxable, f"floor_{k}"].fillna(0).sum())
+              for k in estimate.BUCKETS}
+    w, note = estimate.calibrated_weights(totals, split, M["max_weight_ratio"])
+    note = cap_note + note
+    out.update(method="calibrated", weights=w, note=note, floor=floor,
+               floor_totals=totals)
+    print(f"[{cfg.name}] baseline weights per m² vs housing: industrial "
+          f"{w['industrial']:.2f}, professional {w['professional']:.2f} ({note})")
+    return out
+
+
+def _write_baseline(p: pd.DataFrame, baseline: dict, out_dir: str, name: str) -> None:
+    """Sidecar recording how today's tax was shared (commune-level figures
+    only), for the payload provenance and the docs."""
+    import json
+    rec = {k: baseline.get(k) for k in ("method", "targets", "weights", "note")}
+    if baseline.get("weights"):
+        tax = p["current_tax"]
+        tot = float(tax.sum())
+        shares = {}
+        for k in estimate.BUCKETS:
+            f = p[f"floor_{k}"].fillna(0.0)
+            wf = sum(p[f"floor_{j}"].fillna(0.0) * baseline["weights"][j]
+                     for j in estimate.BUCKETS)
+            part = (tax * (f * baseline["weights"][k] / wf.where(wf > 0))).fillna(0.0)
+            shares[k] = round(float(part.sum()) / tot, 4) if tot > 0 else None
+        rec["achieved"] = shares
+    (Path(out_dir) / f"{name}.baseline.json").write_text(
+        json.dumps(rec, allow_nan=False) + "\n", encoding="utf-8")
 
 
 # Gross floor area per dwelling used when BD TOPO gives a residential parcel no

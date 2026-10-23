@@ -245,6 +245,9 @@ def main():
     ap.add_argument("--no-deflator", action="store_true",
                     help="don't deflate DVF prices to the reference year "
                          "(for the before/after comparison)")
+    ap.add_argument("--baseline", choices=("calibrated", "floor"), default="calibrated",
+                    help="today's tax: calibrated to the commune's REI split by tax "
+                         "group (default), or shared by plain floor area (sensitivity)")
     ap.add_argument("--cache-dir", default=None,
                     help="cache raw downloads here (resumable batch runs); "
                          "default: env LVTFR_CACHE_DIR, else no cache")
@@ -263,9 +266,17 @@ def main():
         cfg, tuple(args.layers), use_dpe=not args.no_dpe,
         use_exemptions=not args.no_exemptions, deflator=deflator)
 
+    split = None
+    if args.baseline == "calibrated":
+        try:
+            split = ingest.fetch_rei_baseline_split(cfg)
+        except ingest.IngestUnavailable as exc:
+            print(f"  [{cfg.name}] baseline split unavailable ({exc}); "
+                  f"today's tax shared by floor area")
+
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
-                 deflator=deflator)
+                 deflator=deflator, baseline_split=split)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")

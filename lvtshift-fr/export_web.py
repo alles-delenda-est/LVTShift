@@ -8,6 +8,7 @@ solver. Never emits per-parcel rows. See docs/superpowers/specs/
 """
 
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -429,10 +430,58 @@ def assert_aggregate_only(payload: dict) -> None:
     assert not IRIS_CODE_RE.search(blob), "an IRIS code leaked into payload"
 
 
+def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
+    """How the run shared today's tax (run_pipeline sidecar): method, and the
+    commune-level target and achieved shares by tax group. Older runs without
+    the sidecar report the floor-area method. Scalars only."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.baseline.json"
+    if not path.exists():
+        return {"method": "floor_area"}
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(rec, dict):
+        raise ValueError(f"{path}: baseline sidecar must be an object")
+    method = rec.get("method")
+    if method not in ("calibrated", "floor_area"):
+        raise ValueError(f"{path}: unknown baseline method {method!r}")
+
+    def share(d, k):
+        v = d.get(k) if isinstance(d, dict) else None
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            return None
+        v = float(v)
+        return round(v, 4) if math.isfinite(v) and 0 <= v <= 1 else None
+
+    out = {"method": method}
+    for k in ("industrial", "professional"):
+        out[f"target_{k}_share"] = share(rec.get("targets"), k)
+        out[f"achieved_{k}_share"] = share(rec.get("achieved"), k)
+    # where industrial m² would pay less than professional m² the two groups
+    # are one (warehouses taxed as professional premises): only their combined
+    # share is meaningful, so report it as professional and say so
+    merged = "industrial merged into professional" in str(rec.get("note", ""))
+    out["industrial_merged_into_professional"] = merged
+    if merged:
+        for kind in ("target", "achieved"):
+            i, p = out[f"{kind}_industrial_share"], out[f"{kind}_professional_share"]
+            out[f"{kind}_professional_share"] = (round(i + p, 4)
+                                                 if i is not None and p is not None else None)
+            out[f"{kind}_industrial_share"] = None
+    return out
+
+
+def _territory_baseline(present: list, out_dir: str) -> dict:
+    """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'."""
+    n = sum(load_baseline(k, out_dir)["method"] == "calibrated" for k in present)
+    method = ("calibrated" if n == len(present) else "floor_area" if n == 0 else "mixed")
+    return {"method": method, "members_calibrated": n}
+
+
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     from config import COMMUNES
     cfg = COMMUNES[commune_key]
     df = load_parcels(commune_key, out_dir)
+    baseline = load_baseline(commune_key, out_dir)
     return {
         "commune_key": commune_key,
         "kind": "commune",
@@ -450,6 +499,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
             "activity_land_ratio": getattr(cfg, "activity_land_ratio", None),
+            "current_tax_baseline": baseline,
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
@@ -606,6 +656,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
+            "current_tax_baseline": _territory_baseline(present, out_dir),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "

@@ -94,8 +94,12 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    d'activité (ventes DVF de terrains d'activité), × 1 pour le sport et les
    annexes ; hors zone urbaine, seule une cour de 3 × la surface plancher prend
    ce prix. Les bureaux restent au résiduel, à leur propre coût.
-4. **Taxe actuelle** : produit TFPB communal réel (REI) distribué au prorata
-   d'un proxy de VLC (surface plancher). *Maillon faible assumé.* Le foncier
+4. **Taxe actuelle** : produit TFPB communal réel (REI), calé commune par
+   commune sur sa répartition REI 2025 entre établissements industriels
+   (compensation WC75 ÷ taux 2020), locaux professionnels (base brute de CFE
+   × 0,5 × 2,5) et logement, puis réparti à la surface plancher au sein de
+   chaque groupe (usage BD TOPO). `--baseline floor` garde l'ancienne
+   répartition à la seule surface plancher. *Maillon faible assumé.* Le foncier
    public manifestement exonéré (art. 1382-1° CGI) et les bâtiments agricoles
    (art. 1382 6° : serres, granges, silos, repérés par l'usage BD TOPO et le
    zonage A/N) sont exclus, aujourd'hui comme sous la LVT ; une parcelle qui ne
@@ -119,7 +123,7 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 
 | Limitation de la démo | Variable FF qui la résout |
 |---|---|
-| VLC approximée par la surface plancher | VLC réelle par parcelle/local |
+| VLC approximée par la surface plancher, calée sur les parts REI par groupe (facteur professionnel national) | VLC réelle par parcelle/local |
 | Surfaces bâti estimées (BD TOPO) | surfaces déclarées par local |
 | Année de construction inférée (DPE) | année de construction exacte par local |
 | Pas de typologie de propriétaires | table propriétaires (HLM, SCI, personnes physiques…) |
@@ -170,25 +174,33 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
-- **Ne pas publier les chiffres distributifs de la valorisation du
-  non-résidentiel en l'état.** La taxe actuelle est répartie à la surface
-  plancher sans pondération par catégorie, ce qui surestime ce que paient
-  aujourd'hui entrepôts et usines (valeurs locatives industrielles divisées
-  par deux en 2021, tarifs RVLLP bas au m² pour les entrepôts et grandes
-  surfaces). Avec un bâti non résidentiel désormais évalué bien plus bas, la
-  baisse des cotes industrielles (couronne lyonnaise −55 %, couronne
-  parisienne −31 %) et les gains plus faibles des ménages autour de Lyon sont
-  exagérés. Prochaine étape : une base pondérée par catégorie.
-- **Taxe actuelle (maillon porteur désormais).** La TFPB est un impôt sur le
-  **bâti** : les parcelles non bâties portent désormais **zéro** taxe actuelle
+- **Toujours publier côte à côte le cas central et la borne basse.** La part
+  des locaux professionnels dans la taxe actuelle est un indicateur CFE
+  multiplié par un facteur national (2,5, cas central) ; l'indicateur brut
+  (× 1,0) est la borne basse. Ce facteur déplace les résultats des ménages de
+  10 à 15 points : premier quintile de revenu à Paris −17,4 % (central) contre
+  −27,6 % (borne basse), couronne lyonnaise +0,8 % contre −15,8 %. Les
+  nouvelles cotisations sont identiques ; seul le point de départ bouge. Un
+  facteur national unique ne peut convenir à toutes les communes ; les
+  Fichiers fonciers le remplaceraient par les vraies valeurs.
+- **Constat inverse de l'attendu.** Les entreprises paient aujourd'hui plus au
+  m² que ne le supposait la surface plancher (valeurs industrielles incluant
+  l'outillage, locaux professionnels réévalués sur les loyers de 2013 quand le
+  logement reste sur 1970) : la réforme déplace donc davantage de charge des
+  entreprises vers les ménages. Dans le couloir chimique et industriel
+  lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
+  central. La LVT modélisée exonère implicitement l'outillage industriel (seul
+  le hangar compte dans la valeur bâtie) ; c'est un choix politique, de poids
+  mineur dans la baisse industrielle.
+- **Taxe actuelle (maillon porteur).** La TFPB est un impôt sur le
+  **bâti** : les parcelles non bâties portent **zéro** taxe actuelle
   (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT
-  positive. *Reste faible* la répartition du produit **entre parcelles bâties**
-  au prorata de la seule surface plancher : elle ignore la catégorie cadastrale
-  et les coefficients de pondération de surface (principaux moteurs de la VLC).
+  positive. Au sein de chaque groupe de locaux (industriel, professionnel,
+  logement), le produit reste réparti à la seule surface plancher, qui ignore
+  la catégorie cadastrale et les coefficients de pondération de surface.
   Choix assumé : **pas** de calage sur la valeur de marché (la VLC 1970 est
-  régressive vs marché, un tel calage dégraderait la fidélité au système actuel) ;
-  une variante pondérée par catégorie n'est offerte qu'en **sensibilité**. Ne
-  jamais publier de montants de taxe actuelle à la parcelle.
+  régressive vs marché, un tel calage dégraderait la fidélité au système
+  actuel). Ne jamais publier de montants de taxe actuelle à la parcelle.
 - **Nuance de zonage AU et Nh/Ah** (revue Gemini) : tout AU est traité
   constructible avec une décote forfaitaire (AU/AUs) ; les AU *fermées* mériteraient
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
@@ -232,19 +244,16 @@ export CSV seul : `run(..., make_report=False)`.
   à notre niveau de logement (±25 %), le ratio du foncier d'activité sur
   n ≈ 20 à 80 ventes, et les bureaux restent valorisés au prix résidentiel.
   Sur une parcelle mixte, le plus grand bâtiment décide de la méthode.
-- Le proxy VLC (surface plancher) est le **maillon faible porteur** : il
-  ignore la catégorie cadastrale et les coefficients de pondération de
-  surface, deux des principaux déterminants de la VLC de 1970. Il déforme la
-  distribution parcellaire de la taxe actuelle — **ne jamais publier de
-  montants par parcelle**. Même agrégés (catégorie, quintile), les montants
-  de la taxe *actuelle* restent indicatifs et doivent être recoupés avec les
-  données REI par catégorie : la robustesse des agrégats vaut d'abord pour le
-  volet LVT, pas pour la base de départ.
+- Même agrégés (catégorie, quintile), les montants de la taxe *actuelle*
+  restent indicatifs : seules les parts industrielle et professionnelle de
+  chaque commune sont calées sur le REI. La robustesse des agrégats vaut
+  d'abord pour le volet LVT, pas pour la base de départ.
 - DVF exclut Alsace-Moselle et Mayotte ; les bâtiments viennent de BD TOPO V3
   (emprise + attributs dérivés MAJIC, flag d'appariement fichiers fonciers
   conservé), l'appariement bâtiment ↔ parcelle se fait par intersection pondérée.
 - Locaux professionnels : la révision 2017 des valeurs locatives change le
-  poids relatif résidentiel/professionnel ; à traiter par strate.
+  poids relatif résidentiel/professionnel ; la base calée en tient compte au
+  niveau de la commune, pas au sein de chaque groupe.
 - Année de construction (DPE) : la période est issue des DPE (logements
   **diagnostiqués** uniquement — biais de sélection), mappée à l'année médiane de
   la tranche ; pour les logements sans DPE on retombe sur l'**année médiane
