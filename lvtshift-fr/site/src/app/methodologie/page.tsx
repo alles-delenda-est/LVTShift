@@ -608,17 +608,25 @@ export default function MethodologiePage() {
               valeur du bâti sont toutes deux calculées sur la surface
               habitable, estimée à 64&nbsp;% (appartements) et 61&nbsp;%
               (maisons) de la surface emprise × étages, ratios mesurés sur 35
-              communes. Le maillon le moins sûr est le rapport entre surface
+              communes. Quand la BD TOPO ne donne pas le nombre
+              d&apos;étages, il est déduit du type de bâtiment : un seul
+              niveau, quelle que soit la hauteur, pour les hangars,
+              entrepôts et grandes surfaces, les serres, les annexes, les
+              constructions légères et les bâtiments agricoles, sportifs ou
+              religieux ; la
+              hauteur divisée par 3,5&nbsp;m pour les autres bâtiments
+              commerciaux de plus de 7&nbsp;m ; la hauteur divisée par
+              3&nbsp;m pour le logement. Le maillon le moins sûr est le rapport entre surface
               habitable et surface brute sous-jacent aux coûts : un écart de
               0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
               reporte sur le résiduel foncier. Le registre signale en WARN les
               communes dont la part foncière imputée sort de la bande
-              40–65&nbsp;% (24 au-dessus et 4 en dessous sur 188, dont Paris
+              40–65&nbsp;% (26 au-dessus et 2 en dessous sur 188, dont Paris
               et La Rochelle dans le panel) : cela peut traduire un marché
-              foncier très tendu autant qu&apos;un bâti sous-évalué. À
-              Santeny, Vaujours ou Villepinte, la part basse tient surtout
-              aux locaux industriels et commerciaux, valorisés comme du
-              logement. La bande
+              foncier très tendu autant qu&apos;un bâti sous-évalué. Les
+              locaux industriels et commerciaux restent valorisés au prix et
+              au coût du logement, ce qui pèse encore sur la part foncière de
+              communes comme Vaujours ou Villepinte. La bande
               de sensibilité ±&thinsp;10 points encadre cette incertitude dans
               tous les résultats publiés : chiffres clés, catégories de bien
               et quintiles de revenu, où elle apparaît en traits fins autour

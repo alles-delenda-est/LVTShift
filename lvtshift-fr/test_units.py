@@ -233,6 +233,43 @@ def test_improvement_value_imputes_missing_levels():
     assert out["imp_quality"].iloc[0] == "imputed_levels"
 
 
+def test_missing_levels_by_building_type():
+    iac = "Industriel, agricole ou commercial"
+    rows = [  # (usage, nature, light, height) -> expected levels
+        (("Industriel", iac, False, 14.0), 1.0),            # warehouse: not 5 storeys
+        (("Commercial et services", iac, False, 16.0), 1.0),  # exhibition hall
+        (("Agricole", "Serre", False, 4.0), 1.0),
+        (("Résidentiel", "Indifférenciée", True, 6.0), 1.0),  # light structure
+        (("Sportif", "Indifférenciée", False, 9.0), 1.0),
+        (("Annexe", "Indifférenciée", False, 3.0), 1.0),
+        (("Commercial et services", "Indifférenciée", False, 5.5), 1.0),   # shop
+        (("Commercial et services", "Indifférenciée", False, 21.0), 6.0),  # offices
+        (("Résidentiel", "Indifférenciée", False, 15.0), 5.0),             # housing
+        (("Résidentiel", "Indifférenciée", False, np.nan), 1.0),
+        (("Résidentiel", "Indifférenciée", False, 0.0), 1.0),               # 0 = unknown
+    ]
+    b = pd.DataFrame([dict(usage=u, nature=n, construction_legere=l, height_m=h)
+                      for (u, n, l, h), _ in rows])
+    assert list(estimate.impute_levels(b)) == [e for _, e in rows]
+    # known counts are kept, and a zero count is treated as missing
+    known = pd.DataFrame([_bld(n_levels=3.0, height_m=14.0, usage="Industriel", nature=iac),
+                          _bld(idpar="Q", n_levels=0.0, height_m=14.0, usage="Industriel",
+                               nature=iac)])
+    out = estimate.improvement_value(known, CFG).set_index("idpar")
+    assert out.loc["P", "floor_area_m2"] == 300.0 and out.loc["Q", "floor_area_m2"] == 100.0
+    # frames without the new columns fall back to height ÷ 3 m
+    s = pd.DataFrame({"usage": ["Résidentiel"] * 3, "height_m": [9.0] * 3,
+                      "construction_legere": ["false", "true", None]})
+    assert list(estimate.impute_levels(s)) == [3.0, 1.0, 3.0]   # "false" is not True
+    huge = pd.DataFrame({"usage": ["Commercial et services", "Résidentiel", "Résidentiel"],
+                         "height_m": [1e9, float("inf"), 330.0]})
+    assert list(estimate.impute_levels(huge)) == [1.0, 1.0, 100.0]   # corrupt -> unknown; cap
+    txt = estimate.improvement_value(pd.DataFrame([_bld(n_levels="2")]), CFG)
+    assert txt["floor_area_m2"].iloc[0] == 200.0
+    legacy = pd.DataFrame({"height_m": [9.0, np.nan]})
+    assert list(estimate.impute_levels(legacy)) == [3.0, 1.0]
+
+
 def test_newer_building_depreciates_less():
     # the construction-year fix matters because year drives building value,
     # which drives the residual land value

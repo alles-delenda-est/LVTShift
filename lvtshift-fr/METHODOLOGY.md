@@ -48,7 +48,7 @@ square (a transparent hedonic fixed effect, not an admin geography).
 the parcel (`estimate.improvement_value`):
 
 ```
-floor_area     = footprint_m2 × storeys          (storeys imputed from height/3 if missing)
+floor_area     = footprint_m2 × storeys          (storeys imputed by building type if missing)
 habitable_area = net_to_gross[type] × floor_area            (flats 0.64, houses 0.61)
 cost[type]     = house_cost_eur_m2 for houses where set, else construction_cost_eur_m2
 cost_hab       = cost[type] ÷ cost_net_to_gross[type]             (flats 0.71, houses 0.82)
@@ -83,6 +83,24 @@ land share is then 1 − cost_hab × depreciation ÷ price per m²: it depends o
 `cost_net_to_gross`, not on the measured `net_to_gross`, which only sets the euro
 levels. Evidence: `docs/research/net-to-gross-measurement.md` and
 `docs/research/construction-costs-2025.md`.
+
+*Missing storey counts.* BD TOPO's `nombre_d_etages` comes from the fichiers
+fonciers and is never filled for annexes, light structures or buildings that
+could not be matched to them; a zero count is treated as missing too. Dividing
+the height by 3 m, as the model first did, turns a 14 m single-storey warehouse
+into 5 storeys: the Villepinte exhibition hall (165 000 m² of footprint) became
+828 000 m² of floor. In six sample communes (Villepinte, Vaujours, Santeny,
+Périgny, Rungis, Corbas) the count is missing on 42–56 % of sheds, 90 % of the
+area of sheds with a known count is single-storey, and the old rule inflated
+shed floor area 2.0–2.7×. `estimate.impute_levels` now imputes by type: **1
+level whatever the height** for shed-type natures (« Industriel, agricole ou
+commercial », Serre, Silo), light structures (`construction_legere`) and the
+usages Annexe, Agricole, Industriel, Sportif and Religieux; **other « Commercial
+et services » buildings** 1 level below 7 m, else height ÷ 3.5 m; **housing**
+height ÷ 3 m as before (measured 2.65 m per storey). Known counts are kept. Floor
+area also allocates today's TFPB (§3.5), so the fix lowers non-residential
+building values and moves part of today's tax off warehouses. Evidence:
+`docs/research/nonres-valuation-2025.md` §1 and `docs/research/nonres_probes/`.
 
 *Maintained stock (effective age).* Where neighbourhood prices are far above
 rebuild cost, owners keep renovating, so years since construction stop measuring
@@ -250,10 +268,10 @@ With both sides of the residual on habitable area and the calibrated costs
 bound (0.4 % before houses got their own, lower cost): its land share is
 measured, not set by the cap. No commune has more than half its built parcels at
 the cap; Neuilly-sur-Seine has the most (25.0 %), and the preflight
-`land_share_clip` check warns nowhere. Lyon is at 57.8 %, the Paris ring 61.7 %
-and the Lyon ring 52.6 %. Across the 188 modelled communes, 24 lie above the
-40–65 % plausibility band (138 before the habitable-area basis) and 4 below
-(Vaujours 35.7 %, Santeny 36.2 %, Limeil-Brévannes 37.4 %, Villepinte 39.4 %).
+`land_share_clip` check warns nowhere. Lyon is at 57.8 %, the Paris ring 62.2 %
+and the Lyon ring 53.0 %. Across the 188 modelled communes, 26 lie above the
+40–65 % plausibility band (138 before the habitable-area basis) and 2 below
+(Limeil-Brévannes 38.0 %, Vaujours 39.0 %).
 `headline.built_at_cap_pct` records the share of built parcels at the bound,
 and the site labels the land share "plafonnée" when it is ≥ 50 %.
 
@@ -271,6 +289,19 @@ only partly lifts the low outer-ring communes (Santeny 33.2 →
 37.4 → 39.4 %, Périgny 38.2 → 40.3 %): houses are only 18–36 % of their building
 value, which is dominated by industrial and commercial parcels valued at the
 housing cost and the flat price (§6, item 7).
+
+*Storey counts.* The type-based storey rule (§3.1) leaves Paris (74.2 %) and Lyon
+(57.8 %) unchanged and lifts the rings (Paris ring 61.7 → 62.2 %, Lyon ring
+52.6 → 53.0 %), most of all the warehouse and retail communes of the outer ring
+(Santeny 36.2 → 40.4 %, Vaujours 35.7 → 39.0 %, Villepinte 39.4 → 42.8 %,
+Tremblay-en-France 44.0 → 47.6 %, Périgny 40.3 → 41.8 %, Limeil-Brévannes
+37.4 → 38.0 %). Communes below the band fall from 4 to 2; those above it rise
+from 24 to 26 (Clamart and Collonges-au-Mont-d'Or cross 65 % by a fraction of a
+point). Because today's tax is also shared out by floor area, warehouses now
+carry less of it, and the amount shifted rises in the rings (Paris ring 20.6 →
+21.7 % of the levy, Lyon ring 23.9 → 26.4 %). The income gradient is unchanged
+in direction (Paris group totals: poorest fifth −19.8 → −20.0 %, richest
++16.2 → +16.1 %).
 
 ## 4. Key parameters and assumptions
 
@@ -384,7 +415,9 @@ Ranked by how much they move published (category/quintile) results.
    `net_to_gross` sets euro levels only. The other panel communes keep
    uncalibrated pilot costs. Non-residential parcels take the flat ratios (and
    the flat €/m², item 7). BD TOPO storey miscounts are the main source of
-   parcel-level scatter in floor area.
+   parcel-level scatter in floor area; where the count is missing it is imputed
+   by building type (§3.1), a judgement tested on six communes, and the 3.5 m
+   storey height for tall commercial buildings has no primary source.
 5. **Land-share clip**: when most built parcels sit at a bound, the land share is
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
@@ -402,11 +435,15 @@ Ranked by how much they move published (category/quintile) results.
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
 7. **Non-residential market value** borrows the residential €/m² surface and the
    flat area ratios, and its building value the housing cost; professionnels
-   (2017 VLC revision) need a separate stratum. This is now the main lever on the
-   communes below the plausibility band: industrial and commercial parcels
-   dominate their building value (Santeny 51 % industrial, Vaujours 56 %
-   industrial, Villepinte 45 % commercial — the exhibition centre — and Périgny
-   50 % "other"), which is why the house cost only partly lifted them (§3.7).
+   (2017 VLC revision) need a separate stratum. Rural buildings exempt under CGI
+   art. 1382 6° are still taxed. The storey rule (§3.1) removed the largest
+   error, sheds counted as multi-storey, and the industrial and commercial
+   shares of building value in the low communes fell (Santeny industrial 51 →
+   33 %, Vaujours industrial 56 → 30 %, Villepinte commercial — the exhibition
+   centre — 45 → 21 %, Périgny "other" 50 → 44 %). Non-residential prices and
+   costs remain the next lever on the communes at the edge of the band; the two
+   still below it (Limeil-Brévannes, Vaujours) also have large blocks of flats
+   and houses in their building value (§3.7).
 8. **Income (Filosofi)**: 2021 vintage; INSEE published a « Filosofi 2 » 2023
    vintage with IRIS indicators in May 2026 (methodological break) — 2021 is
    retained pending evaluation. Communes ≥5 000 inhabitants only, some IRIS
