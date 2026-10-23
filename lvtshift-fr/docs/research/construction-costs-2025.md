@@ -206,6 +206,7 @@ Basis: 2025 €, per m² of BD TOPO gross floor area (footprint × storeys), bui
 3. **Social housing is a proxy for the private stock.** It is a reasonable "modern equivalent asset" (Gemini: neutral to slightly high, because social landlords build to hold). It will understate the cost of prime or listed stock, where a stone-for-stone replica would cost far more. Valuation practice uses the modern equivalent, not a replica.
 4. **Regional gradient uncertainty.** SISAL (IdF +40 %), Arcadis (≈+2 %) and EPTB (IdF *cheapest*) disagree. My Lyon/Marseille premia are judgement calls, and the PACA MOD sample (1 246 dwellings, 79 % VEFA) is thin.
 5. **Houses.** Lyon-ring and some inner-ring communes have many houses. For those the right anchor is EPTB per m² SDP [S7][S8]: IdF 1 863, ARA 2 066, Rhône 2 127, Bouches-du-Rhône 2 027 (TTC, incl. builder margin, mostly excl. architect). Multiplied by SDP/GEA for houses (~0.85–0.90, judgement), that gives ≈1 600–1 900 per m² GEA. A per-type cost would be better than a single commune value.
+   *Superseded on houses by `house-costs-2025.md` (October 2026), which adds finishing, fees and plot uplifts and is now the model's `house_cost_eur_m2`.*
 6. **Vintage.** The latest open bâtiment split is 2022. 2023–24 cost growth is taken from BT01 and Éclairages. The CDC data show a sharp 2024 jump in all-in costs (IdF +10 %), mostly land/VEFA composition.
 
 ---

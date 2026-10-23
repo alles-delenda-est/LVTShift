@@ -8,7 +8,7 @@
       "benchmark": "Vacance des logements (INSEE)",
       "independence": "independent",
       "external_value_pct": null,
-      "model_comparable_pct": 99.8,
+      "model_comparable_pct": 95.7,
       "model_comparable_label": "part sous-bâtie/vacante de la base (valeur)",
       "status": "non disponible",
       "note": "Corrélation directionnelle entre communes (vacance INSEE vs foncier sous-utilisé), pas une égalité par commune."
@@ -16,7 +16,7 @@
     {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
-      "model_land_share_pct": 83.5,
+      "model_land_share_pct": 65.6,
       "band": [
         40.0,
         65.0
@@ -28,11 +28,11 @@
     {
       "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",
       "independence": "data-quality",
-      "cadastre_built_share_pct": 89.4,
-      "model_built_share_pct": 80.4,
-      "n_parcels_cadastre": 29108,
-      "n_buildings_cadastre": 44969,
-      "gap_pt": 9.0,
+      "cadastre_built_share_pct": 89.3,
+      "model_built_share_pct": 84.6,
+      "n_parcels_cadastre": 29209,
+      "n_buildings_cadastre": 45029,
+      "gap_pt": 4.7,
       "status": "ok",
       "note": "Accord entre deux cartes du bâti d'agences différentes ; contrôle qualité de l'entrée 'bâti', pas de la valorisation."
     }

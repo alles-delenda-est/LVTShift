@@ -8,14 +8,14 @@ extra-muros* (the 57 other communes of the Métropole). Every commune in a ring 
 modelled on its **own** taxe foncière total and stays revenue-neutral on its own;
 the ring figures are aggregates of those 179 separate runs, not a metropolitan tax.
 
-**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis and calibrated costs, branch `habitable-area-costs`)**
+**Headline numbers (central scenario, 4:1 split-rate; maintained-stock depreciation rule, local price deflator, exempt public property, habitable-area basis, calibrated costs and house costs, branch `house-costs`)**
 
 | | Parcels | TFPB held neutral | Land share | Built parcels at 85 % cap | Amount shifted | Share paying more |
 |---|---|---|---|---|---|---|
-| Paris | 75,091 | €1,840.9 M | 74.0 % | 0.4 % | 17.4 % | 51.9 % |
-| Lyon | 31,023 | €362.9 M | 58.6 % | 0.0 % | 16.4 % | 69.4 % |
-| Paris extra-muros (122) | 566,538 | €3,569.3 M | 60.6 % | 0.1 % | 19.9 % | 66.8 % |
-| Lyon extra-muros (57) | 224,911 | €528.2 M | 55.4 % | 0.0 % | 24.3 % | 66.1 % |
+| Paris | 75,091 | €1,840.9 M | 74.2 % | 3.2 % | 17.5 % | 51.5 % |
+| Lyon | 31,023 | €362.9 M | 57.8 % | 0.0 % | 16.3 % | 69.1 % |
+| Paris extra-muros (122) | 566,538 | €3,569.3 M | 61.7 % | 0.2 % | 20.6 % | 69.4 % |
+| Lyon extra-muros (57) | 224,911 | €528.2 M | 52.6 % | 0.0 % | 23.9 % | 62.0 % |
 
 **About the land share.** The first version of this branch depreciated every
 building by age alone, down to 25 % of rebuild cost. That treated maintained
@@ -70,6 +70,36 @@ and is slightly steeper (Paris group totals: poorest fifth −17.6 → −20.0 %
 +14.7 → +16.3 %). Evidence: `docs/research/construction-costs-2025.md` and
 `docs/research/net-to-gross-measurement.md`.
 
+**House costs.** The calibrated costs are for collective social housing, and
+every building type took them. Houses (parcels whose dominant building is a
+*maison*) now have their own cost, `house_cost_eur_m2`, on the same basis (per
+true-gross m², 2025 €, turnkey, building only, fees and VAT in, developer margin
+out), anchored on the SDES survey of new individual houses (EPTB 2024, € per m²
+of surface de plancher: Île-de-France 1,863, Rhône 2,127), indexed to 2025,
+uplifted for finishing works, fees and a tight-plot premium, and converted to
+habitable area: Paris 2,300 (commune cost 2,650), inner ring 2,100 (2,400), Lyon
+and Villeurbanne 2,400 (2,000), Lyon ring 2,250 (1,850) €/m². Houses are cheaper
+than flats around Paris but dearer around Lyon, the opposite of the
+collective-housing gradient, probably because EPTB's Île-de-France sample is mostly
+outer-département catalogue houses while Rhône new builds are more bespoke
+(unverified); a cautious Lyon-ring alternative is about 2,080. Pilot communes
+elsewhere keep one cost; the maintained-stock trigger keeps the commune cost.
+Before → after: Paris land share 74.0 → 74.2 % (parcels at the cap 0.4 → 3.2 %),
+Lyon 58.6 → 57.8 %, Paris ring 60.6 → 61.7 %, Lyon ring 55.4 → 52.6 %, Montreuil
+62.5 → 63.7 %, Villeurbanne 54.2 → 52.5 %. Communes above the 40–65 % band 21 →
+24 (Les Lilas, Vanves, Meudon, Puteaux and Malakoff just over 65; Sceaux 66.3 %,
+Marnes-la-Coquette 67.3 %; four Monts-d'Or communes fell back inside), below
+5 → 4. Neuilly-sur-Seine now has 25.0 % of its built parcels at the cap. Paris
+group totals: poorest fifth −20.0 → −19.8 %, richest +16.3 → +16.2 %. **Key
+finding:** the low outer-ring communes rise only partly (Santeny 33.2 → 36.2 %,
+Vaujours 34.3 → 35.7 %, Limeil-Brévannes 35.1 → 37.4 %, Villepinte 37.4 →
+39.4 %, Périgny 38.2 → 40.3 %): houses are only 18–36 % of their building value,
+and industrial and commercial parcels valued at the housing cost and the flat
+price dominate (Santeny 51 % industrial, Vaujours 56 % industrial, Villepinte
+45 % commercial — the exhibition centre). Non-residential valuation (C5) is the
+next lever; Gemini agreed it is the bigger one. Evidence:
+`docs/research/house-costs-2025.md`.
+
 **Verified.**
 - Revenue-neutral to the euro in all 181 new runs (max deviation 0.0000 %).
 - Every source present for every commune: cadastre, 5 years of DVF, buildings, zoning, IRIS.
@@ -82,12 +112,13 @@ and is slightly steeper (Paris group totals: poorest fifth −17.6 → −20.0 %
 
 ## A. Decisions only you can make (economics / framing)
 
-- [ ] **A1. How to present Paris.** The cap issue is resolved: land share 74.0 %,
-  with 0.4 % of built parcels at the 85 % cap, so the Paris split is measured
+- [ ] **A1. How to present Paris.** The cap issue is resolved: land share 74.2 %,
+  with 3.2 % of built parcels at the 85 % cap, so the Paris split is measured
   parcel by parcel rather than set by the bound, and raising the cap is no longer
-  needed. It is still above the 40–65 % plausibility band (as are 20 other
-  communes, mostly dear communes of the Paris inner ring and the Monts d'Or). The result is strongly
-  progressive (group totals: poorest income quintile −20.0 %, richest +16.3 %).
+  needed. It is still above the 40–65 % plausibility band (as are 23 other
+  communes: 21 dear communes of the Paris inner ring, La Rochelle and
+  Fleurieu-sur-Saône). The result is strongly progressive (group totals: poorest
+  income quintile −19.8 %, richest +16.2 %).
   *Recommendation:* publish with the usual ±10 pt band, and note that the main
   remaining uncertainty is the habitable ÷ gross ratio behind the costs
   (`cost_net_to_gross`; ±0.05 moves building value about ±7 %).
@@ -106,7 +137,10 @@ and is slightly steeper (Paris group totals: poorest fifth −17.6 → −20.0 %
   developer margin excluded), calibrated on DHUP/SISAL social-housing costs
   (Paris 2,650, inner ring 2,400, Lyon and Villeurbanne 2,000, Lyon ring 1,850),
   converted to a cost per habitable m² with `cost_net_to_gross` (flats 0.71,
-  houses 0.82). See "Habitable-area basis and calibrated costs" above.
+  houses 0.82). See "Habitable-area basis and calibrated costs" above. Houses
+  take their own EPTB-based cost on branch `house-costs` (Paris 2,300, inner
+  ring 2,100, Lyon and Villeurbanne 2,400, Lyon ring 2,250); see "House costs"
+  above. Still to confirm: the Lyon house level, or the cautious alternative.
 - [ ] **A5. Public open space and industrial land priced as building land.**
   Building-less parcels in urban zones take the residential plot price. The
   aggregate effect is small (Paris 0.9 % of the levy, rings 3.6 % / 6.2 %), but it
@@ -173,7 +207,7 @@ and is slightly steeper (Paris group totals: poorest fifth −17.6 → −20.0 %
   (null for all published communes) because the INSEE page gives counts, not a
   percentage. Its comparator is also degenerate in dense cities (Lyon shows 99.9 %
   "under-built").
-- [ ] **C5.** Offices and La Défense: non-residential value still borrows the residential €/m² (Courbevoie, Puteaux, Paris 8e).
+- [ ] **C5.** Non-residential valuation: offices, shops and industry still borrow the residential €/m² and the housing construction cost (La Défense: Courbevoie, Puteaux, Paris 8e; the low-land-share communes Santeny, Vaujours, Villepinte, Périgny). The next lever after the house costs.
 - [ ] **C6.** Cache housekeeping: add `--refresh` and record the download date in each payload's provenance (security review, info).
 - [ ] **C7.** Add an aggregate-only guard to the public register writer (security review, low). The register is now 692 KB; consider splitting out the ring members.
 - [ ] **C9.** DPE energy class as a building-condition signal for effective age

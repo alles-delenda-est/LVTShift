@@ -419,6 +419,31 @@ def test_habitable_basis_makes_land_share_independent_of_measured_ratio():
     assert abs(shares[1][0] - (1 - 1650 / CFG.cost_net_to_gross["Appartement"] / 4000)) < 1e-9
 
 
+def test_house_cost_applies_to_houses_only():
+    import dataclasses
+    p = pd.DataFrame({"type_local": ["Appartement", "Maison", "Local"],
+                      "floor_area_m2": [1000.0, 150.0, 400.0],
+                      "improvement_value": [1000.0 * 1650, 150.0 * 1650, 400.0 * 1650]})
+    base = estimate.habitable_basis(p, CFG)
+    assert CFG.house_cost_eur_m2 is None and CFG.house_cost == 1650.0
+    cheap = dataclasses.replace(CFG, house_cost_eur_m2=1320.0)
+    h = estimate.habitable_basis(p, cheap)
+    assert abs(h["improvement_value"].iloc[1] - 0.8 * base["improvement_value"].iloc[1]) < 1e-6
+    assert np.allclose(h["improvement_value"].iloc[[0, 2]], base["improvement_value"].iloc[[0, 2]])
+    assert np.allclose(h["habitable_area_m2"], base["habitable_area_m2"])
+    # the maintained-stock rule keeps its calibrated basis (the commune cost)
+    surface = pd.DataFrame({"cell": ["a"], "type_local": ["Maison"], "eur_m2": [3300.0]})
+    parcels = pd.DataFrame({"idpar": ["P"], "cell": ["a"], "type_local": ["Maison"]})
+    assert np.allclose(estimate.maintenance_weight(parcels, surface, CFG),
+                       estimate.maintenance_weight(parcels, surface, cheap))
+    assert type(dataclasses.replace(CFG, house_cost_eur_m2=np.int64(1500)).house_cost_eur_m2) is float
+    s = p.assign(type_local=pd.Series(["Appartement", "Maison", pd.NA], dtype="string"))
+    assert np.isfinite(estimate.habitable_basis(s, cheap)["improvement_value"]).all()
+    for bad in (0.0, -1.0, float("nan"), float("inf"), True, "1500", 1e308):
+        _assert_raises(ValueError, dataclasses.replace, CFG, house_cost_eur_m2=bad)
+    _assert_raises(ValueError, dataclasses.replace, CFG, construction_cost_eur_m2=0.0)
+
+
 # ------------------------------------------------------------------ #
 # commune slate completion
 # ------------------------------------------------------------------ #

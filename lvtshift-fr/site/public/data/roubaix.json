@@ -456,6 +456,7 @@
   ],
   "provenance": {
     "construction_cost_eur_m2": 1750.0,
+    "house_cost_eur_m2": null,
     "land_share_bounds": [
       0.15,
       0.85

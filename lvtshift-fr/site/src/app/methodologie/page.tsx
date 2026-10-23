@@ -528,11 +528,11 @@ export default function MethodologiePage() {
               la règle de l&apos;âge effectif décrite plus haut, une valeur de
               marché et une valeur du bâti calculées toutes deux sur la surface
               habitable, et des coûts de construction recalés, la part
-              foncière de Paris ressort à 74,0&nbsp;%, avec 0,4&nbsp;% des
+              foncière de Paris ressort à 74,2&nbsp;%, avec 3,2&nbsp;% des
               parcelles bâties au plafond : elle est désormais mesurée.
               Aucune commune n&apos;a plus de la moitié de ses parcelles
               bâties au plafond (Neuilly-sur-Seine en a le plus,
-              18,3&nbsp;%). Lyon est à 58,6&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              25,0&nbsp;%). Lyon est à 57,8&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
               l&apos;indice Notaires-INSEE le plus local (appartements
               parisiens, départements de petite couronne, agglomération
               lyonnaise…), ce qui retire le pic de 2021–2022.
@@ -551,9 +551,9 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+10,7&nbsp;%), alors que ce groupe paie
-              7,9&nbsp;% de moins au total et que son ménage type paie
-              11,8&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              plus pauvre en hausse (+4,8&nbsp;%), alors que ce groupe paie
+              8,1&nbsp;% de moins au total et que son ménage type paie
+              10,1&nbsp;% de moins : les grands immeubles, où vit la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
@@ -591,7 +591,17 @@ export default function MethodologiePage() {
               bâtiment des logements sociaux neufs publié par le ministère
               (DHUP/SISAL), ramené en euros 2025 par l&apos;indice BT01 :
               bâtiment seul, par m² de surface brute, honoraires et TVA
-              compris. Les autres communes du panel gardent des valeurs
+              compris. Ce coût étant celui du logement collectif, les maisons
+              de ces territoires ont leur propre coût, tiré de l&apos;enquête
+              du SDES sur le prix des maisons individuelles neuves (EPTB
+              2024) : 2&thinsp;300&thinsp;€/m² à Paris, 2&thinsp;100 en
+              petite couronne, 2&thinsp;400 à Lyon et Villeurbanne,
+              2&thinsp;250 dans la couronne lyonnaise. Une maison y coûte donc
+              moins cher à reconstruire qu&apos;un appartement autour de
+              Paris, mais plus cher autour de Lyon, où les maisons neuves de
+              l&apos;enquête sont probablement plus souvent construites sur
+              mesure : les chiffres lyonnais sont les plus fragiles. Les
+              autres communes du panel gardent un coût unique, aux valeurs
               pilotes (de 1&thinsp;600&thinsp;€/m² à Figeac à
               1&thinsp;900&thinsp;€/m² à Grenoble et Annemasse). Les prix
               DVF étant exprimés au m² habitable, la valeur de marché et la
@@ -603,9 +613,12 @@ export default function MethodologiePage() {
               0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
               reporte sur le résiduel foncier. Le registre signale en WARN les
               communes dont la part foncière imputée sort de la bande
-              40–65&nbsp;% (21 au-dessus et 5 en dessous sur 188, dont Paris
+              40–65&nbsp;% (24 au-dessus et 4 en dessous sur 188, dont Paris
               et La Rochelle dans le panel) : cela peut traduire un marché
-              foncier très tendu autant qu&apos;un bâti sous-évalué. La bande
+              foncier très tendu autant qu&apos;un bâti sous-évalué. À
+              Santeny, Vaujours ou Villepinte, la part basse tient surtout
+              aux locaux industriels et commerciaux, valorisés comme du
+              logement. La bande
               de sensibilité ±&thinsp;10 points encadre cette incertitude dans
               tous les résultats publiés : chiffres clés, catégories de bien
               et quintiles de revenu, où elle apparaît en traits fins autour

@@ -24,6 +24,7 @@ NET_TO_GROSS_DEFAULT = {"Appartement": 0.64, "Maison": 0.61}
 # Houses: habitable ÷ gross external ≈ 0.82 (desk estimate: SDP ÷ gross
 # 0.85-0.90 × habitable ÷ SDP ≈ 0.93-0.95).
 COST_NET_TO_GROSS_DEFAULT = {"Appartement": 0.71, "Maison": 0.82}
+COST_MAX_EUR_M2 = 20_000.0            # catches unit typos (e.g. € per ft², k€)
 AREA_RATIO_TYPES = frozenset({"Appartement", "Maison"})
 AREA_RATIO_BOUNDS = (0.3, 1.0)        # plausible habitable ÷ gross range
 
@@ -66,6 +67,13 @@ class CommuneConfig:
     # storeys), building only (hors foncier, hors VRD), fees and 20 % VAT
     # included. See the calibration note above the commune list.
     construction_cost_eur_m2: float = 1900.0
+    # Optional cost for houses (type_local 'Maison'), on the same basis as
+    # construction_cost_eur_m2 (per true-gross m², turnkey, fees and VAT in).
+    # construction_cost_eur_m2 is calibrated on collective housing; houses are
+    # priced on the EPTB new-house survey instead (cheaper per m² around Paris,
+    # dearer around Lyon). None keeps the one commune cost for every type (the
+    # pilot communes, whose costs are already house-based).
+    house_cost_eur_m2: float | None = None
     # Both sides of the residual are put on habitable area (METHODOLOGY §3.1):
     # habitable = net_to_gross[type] × the model's floor area; market value =
     # DVF €/m² (habitable) × habitable area; building value = cost per
@@ -108,6 +116,21 @@ class CommuneConfig:
         self.net_to_gross = check_area_ratios(self.net_to_gross, "net_to_gross")
         self.cost_net_to_gross = check_area_ratios(self.cost_net_to_gross,
                                                    "cost_net_to_gross")
+        for name in ("construction_cost_eur_m2", "house_cost_eur_m2"):
+            v = getattr(self, name)
+            if v is None and name == "house_cost_eur_m2":
+                continue
+            if isinstance(v, (bool, str)) or not isinstance(v, numbers.Real) \
+                    or not (math.isfinite(v) and 0 < v <= COST_MAX_EUR_M2):
+                raise ValueError(f"{name} must be a number in (0, {COST_MAX_EUR_M2:g}], "
+                                 f"got {v!r}")
+            setattr(self, name, float(v))     # plain float: JSON-safe export
+
+    @property
+    def house_cost(self) -> float:
+        """Cost per true-gross m² applied to houses (falls back to the commune cost)."""
+        return float(self.construction_cost_eur_m2 if self.house_cost_eur_m2 is None
+                     else self.house_cost_eur_m2)
 
     @property
     def data_codes(self) -> tuple:
@@ -209,7 +232,10 @@ DATA_SOURCES = {
 # logements aidés » 2021-22 building-only cost of new social housing, indexed
 # to 2025 with INSEE BT01 and converted to gross area (METHODOLOGY §3.1):
 # central values, plausible ranges Paris 2 350-3 100, inner ring 2 150-2 700,
-# Lyon 1 750-2 300, Lyon ring 1 600-2 100. The other panel communes keep their
+# Lyon 1 750-2 300, Lyon ring 1 600-2 100. Houses in those areas take their own
+# house_cost_eur_m2, on the EPTB new-house survey (docs/research/house-costs-2025.md):
+# Paris 2 300, inner ring 2 100, Lyon 2 400, Lyon ring 2 250 per true-gross m².
+# The other panel communes keep their
 # pilot values on the SDES house-cost survey (EPTB) gradient. A ±15 % move
 # flows linearly into improvement value: a first-order sensitivity, reported
 # alongside the land-share band.
@@ -225,13 +251,15 @@ ANNEMASSE = CommuneConfig("74012", "Annemasse", "74", construction_cost_eur_m2=1
 # no per-arrondissement FB produit. Villeurbanne is the dense, fiscally
 # autonomous inner-ring commune of the Lyon core.
 VILLEURBANNE = CommuneConfig(       # dense inner-Lyon-core commune (Rhône)
-    "69266", "Villeurbanne", "69", construction_cost_eur_m2=2000.0)
+    "69266", "Villeurbanne", "69", construction_cost_eur_m2=2000.0,
+    house_cost_eur_m2=2400.0)
 ROUBAIX = CommuneConfig(            # post-industrial Nord metro, high vacancy
     "59512", "Roubaix", "59", construction_cost_eur_m2=1750.0)
 CAHORS = CommuneConfig(             # le Lot préfecture, small rural town
     "46042", "Cahors", "46", construction_cost_eur_m2=1650.0)
 MONTREUIL = CommuneConfig(          # Île-de-France inner suburb (Seine-St-Denis)
-    "93048", "Montreuil", "93", construction_cost_eur_m2=2400.0)
+    "93048", "Montreuil", "93", construction_cost_eur_m2=2400.0,
+    house_cost_eur_m2=2100.0)
 FIGEAC = CommuneConfig(             # second town of le Lot, deep-rural contrast
     "46102", "Figeac", "46", construction_cost_eur_m2=1600.0)
 SETE = CommuneConfig(               # Méditerranée — port/tourist, second homes
@@ -245,10 +273,10 @@ MULHOUSE = CommuneConfig(           # Est/Rhin — Alsatian post-industrial, vac
 # live under the arrondissement codes. Construction costs: see the
 # calibration note above.
 PARIS = CommuneConfig(
-    "75056", "Paris", "75", construction_cost_eur_m2=2650.0,
+    "75056", "Paris", "75", construction_cost_eur_m2=2650.0, house_cost_eur_m2=2300.0,
     sub_codes=tuple(f"751{n:02d}" for n in range(1, 21)), key="paris")
 LYON = CommuneConfig(
-    "69123", "Lyon", "69", construction_cost_eur_m2=2000.0,
+    "69123", "Lyon", "69", construction_cost_eur_m2=2000.0, house_cost_eur_m2=2400.0,
     sub_codes=tuple(f"6938{n}" for n in range(1, 10)), key="lyon")
 
 # Registry for the CLI / run_commune driver (--commune <key>)
@@ -278,6 +306,9 @@ SITE_COMMUNES = tuple(COMMUNES)
 # Construction cost by territory (calibration note above; the Paris ring
 # shares Montreuil's value).
 TERRITORY_COST_EUR_M2 = {"paris-extra-muros": 2400.0, "lyon-extra-muros": 1850.0}
+# House cost by territory (docs/research/house-costs-2025.md): EPTB 2024 per m²
+# SDP, indexed, finishing/fees/plot uplifts, ÷ 0.90 habitable/SDP, × 0.82.
+TERRITORY_HOUSE_COST_EUR_M2 = {"paris-extra-muros": 2100.0, "lyon-extra-muros": 2250.0}
 
 
 def commune_key(name: str) -> str:
@@ -306,7 +337,8 @@ def _territory_members(rows, territory: str) -> list:
             raise ValueError(f"commune key collision: {key} ({insee})")
         COMMUNES[key] = CommuneConfig(
             insee, name, dep, key=key,
-            construction_cost_eur_m2=TERRITORY_COST_EUR_M2[territory])
+            construction_cost_eur_m2=TERRITORY_COST_EUR_M2[territory],
+            house_cost_eur_m2=TERRITORY_HOUSE_COST_EUR_M2[territory])
         keys.append(key)
     return keys
 

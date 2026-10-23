@@ -448,6 +448,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "by_improvement_ratio": build_buckets(df),
         "provenance": {
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
+            "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
@@ -566,7 +567,8 @@ def build_by_income_quintile_within(df: pd.DataFrame):
 
 
 def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:
-    from config import COMMUNES, TERRITORIES, TERRITORY_COST_EUR_M2
+    from config import (COMMUNES, TERRITORIES, TERRITORY_COST_EUR_M2,
+                        TERRITORY_HOUSE_COST_EUR_M2)
     t = TERRITORIES[territory_key]
     df, present, missing = load_territory(territory_key, out_dir)
     ratios = {COMMUNES[k].split_rate_ratio for k in present}
@@ -601,11 +603,15 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         },
         "provenance": {
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
+            "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "
                      "constantes sur son propre produit de TFPB (pas de taux "
-                     "métropolitain unique). Agrégats uniquement."),
+                     "métropolitain unique). Les coûts indiqués sont ceux du "
+                     "territoire ; les communes du panel qui en sont membres "
+                     "(Montreuil, Villeurbanne) gardent les leurs. "
+                     "Agrégats uniquement."),
         },
         "currency": "EUR",
     }
