@@ -92,9 +92,22 @@ degenerates to "unknown".
 (`estimate.fit_hedonic` / `market_value`): cell×type median of log €/m², shrunk
 toward the commune-type median (pseudo-count k = 8), × parcel floor area. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
-1st/99th percentile. The five pooled years enter at **nominal** prices — the
-`fit_hedonic(deflator=…)` hook exists but no Notaires-INSEE index is wired in
-yet (see §6, item 10).
+1st/99th percentile. The five pooled years are first brought to 2025 euros
+(next paragraph).
+
+**Price deflator.** The five DVF years span a cycle (prices up to 2022, then a
+correction), and by very different amounts by place, so each sale is first brought
+to `reference_year` (2025) euros: factor(Y) = annual mean of the area's
+Notaires-INSEE index in 2025 ÷ its mean in Y (`estimate.deflator_factors`,
+`config.PRICE_INDEX_IDBANKS`, fetched live from the INSEE BDM). The most local
+series INSEE publishes is used: Paris flats; flats and houses separately for
+Hauts-de-Seine, Seine-Saint-Denis and Val-de-Marne; the Lyon, Marseille and Lille
+agglomerations; regions (Auvergne-Rhône-Alpes, PACA, Nord-Pas-de-Calais); Province
+elsewhere. Where an agglomeration publishes one dwelling type only, that series is
+used for both types: pairing a local flats series with a regional houses series
+would move houses against flats by the city-vs-region gap. Terrain-à-bâtir prices
+are deflated with the area's house series. A 2022 Paris sale is scaled by 0.907,
+a Lyon one by 0.865, a provincial flat by 0.996.
 
 **3.4 Land value — classify then price** (`estimate.land_value_residual` →
 `_land_value_classified`). Building-less parcels are classified by GPU zoning;
@@ -152,18 +165,18 @@ quintile (and, on the rings, the within-commune quintiles), using the same quint
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
 treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (poorest fifth −17.6 to −18.5 %, richest +11.1 to +11.7 %).
+barely moves (poorest fifth −17.6 to −18.6 %, richest +11.4 to +12.3 %).
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
 sat at the 0.85 bound (Lyon 59.8 %; 55 communes flagged) and the 84.9 % headline
 was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
-30-year effective age: Paris now comes out at **83.9 %**, with 47.6 % of built
+30-year effective age: Paris now comes out at **83.3 %**, with 34.8 % of built
 parcels still at the bound. That residue is genuine, not an artefact: at Paris
 prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
 expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 72.0 % with no parcel at the bound; across the panel the
+bound). Lyon falls to 70.5 % with no parcel at the bound; across the panel the
 `land_share_clip` warnings fall from 55 to 1. No write-down at all would give
 63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
 built parcels at the bound, and the site labels the land share "plafonnée" when it
@@ -237,7 +250,7 @@ Ranked by how much they move published (category/quintile) results.
    an assumption, not a result, and the parcel-level variation in building value is
    erased. Before the maintained-stock rule this was Paris (95.5 % at the bound),
    Lyon and 53 other communes; it is now Neuilly-sur-Seine only, with Paris at
-   47.6 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
+   34.8 % (§3.7). The preflight `land_share_clip` check flags it. The effective-age
    cap (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a
    sensitivity on them is open (THEORY.md).
    Publish the unclipped distribution alongside (the pre-clip share is kept as
@@ -264,14 +277,7 @@ Ranked by how much they move published (category/quintile) results.
     PLU-H *USP* public-service land) and vacant *industrial-zone* land (*UEi*)
     take the residential terrain-à-bâtir €/m². `audit_land.py <commune>`
     quantifies the levy this land carries per zoning label.
-11. **Nominal price pooling (2021–2025).** DVF sales enter the hedonic and the
-    terrain-à-bâtir price base at nominal prices; the Notaires-INSEE index
-    moved ~+7–8 % (2021), ~+5–6 % (2022), ~−2 % (2023), ~−1 % (2024) — an
-    ~8–10-point swing inside the pooled window, so cells whose sales cluster
-    early get systematically different price levels than cells clustering
-    late (spatially structured error, flagged by the project's founding
-    review). The `deflator` hook in `fit_hedonic` awaits the cited index.
-12. **Surface concept mismatch (gross vs habitable).** `floor_area` =
+11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
     footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
     multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²
     estimated on DVF `surface_reelle_bati` (habitable). Both value levels are
@@ -279,7 +285,7 @@ Ranked by how much they move published (category/quintile) results.
     inherits the bias; the top-down §5 check partially absorbs it (numerator
     and denominator inflated together), euro levels on charts do not. Flagged
     by the founding review (PR #1); needs a documented gross→habitable factor.
-13. **Exemptions are not modelled.** The REI produit is net of exemptions (new
+12. **Exemptions are not modelled.** The REI produit is net of exemptions (new
     social housing under CGI art. 1384 A, the QPV abatement), and public
     buildings (mairies, schools, hospitals), religious buildings and permanently
     exempt farm buildings (CGI art. 1382) are TFPB-exempt in reality. Here they
@@ -289,12 +295,12 @@ Ranked by how much they move published (category/quintile) results.
     published category bars and every percentage change. Upstream's
     `exemption_flag_col` is supported and unused; BD TOPO `usage_1`/`nature`
     attributes could flag the obvious cases.
-14. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
+13. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural
     houses) — a spatially structured upward bias the percentile trim does not
     remove (see `ingest.fetch_dvf` docstring).
-15. **Raw-data caching is opt-in.** `run_commune --cache-dir` (or
+14. **Raw-data caching is opt-in.** `run_commune --cache-dir` (or
     `LVTFR_CACHE_DIR`) caches raw downloads by URL hash, so batch runs are
     resumable; without it every run re-downloads from live endpoints that
     occasionally move (config.py's warning). There is no manifest (source, URL,

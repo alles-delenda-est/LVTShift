@@ -417,6 +417,82 @@ def test_maintenance_weight_ignores_unbuilt_parcels():
     assert (w == 0.0).all(), w.to_dict()
 
 
+def test_price_index_parses_full_years_only():
+    def series(obs, idbank="010567012", freq="T"):
+        return (f'<x><Series IDBANK="{idbank}" FREQ="{freq}">' + obs
+                + "</Series></x>").encode()
+    full = "".join(f'<Obs TIME_PERIOD="2024-Q{q}" OBS_VALUE="{100 + q}" OBS_STATUS="A"/>'
+                   for q in (1, 2, 3, 4))
+    xml = series(full + '<Obs OBS_VALUE="130" TIME_PERIOD="2025-Q1"/>')  # order varies
+    orig = ingest._get
+    try:
+        ingest._get = lambda url, *a, **k: xml
+        avg = ingest.fetch_price_index_annual("010567012")
+        _assert_raises(ValueError, ingest.fetch_price_index_annual, "0105670&x")
+        for bad in (b"<message:Error>no data</message:Error>",            # error body
+                    series(full, idbank="010567058"),                      # wrong series
+                    series(full, freq="A"),                                # not quarterly
+                    series(full + '<Obs TIME_PERIOD="2024-Q1" OBS_VALUE="1"/>'),  # dup
+                    series('<Obs TIME_PERIOD="2024-Q1" OBS_VALUE="0"/>'),  # non-positive
+                    b"<Obs " * 20_000):                                    # hostile
+            ingest._get = lambda url, *a, _b=bad, **k: _b
+            _assert_raises(ValueError, ingest.fetch_price_index_annual, "010567012")
+    finally:
+        ingest._get = orig
+    assert avg == {2024: 102.5}, avg          # 2025 has one quarter: excluded
+
+
+def test_deflator_factors_and_application():
+    import dataclasses
+    from config import COMMUNES, price_index_geography
+    cfg = dataclasses.replace(COMMUNES["paris"], dvf_years=(2022, 2024),
+                              reference_year=2025)
+    seen = []
+
+    def fake(idbank, start):
+        seen.append(idbank)
+        return {2022: 110.0, 2024: 100.0, 2025: 99.0}
+    f = estimate.deflator_factors(cfg, fetch=fake)
+    assert abs(f["Appartement"][2022] - 0.9) < 1e-12 and abs(f["Maison"][2024] - 0.99) < 1e-12
+    assert seen == ["010567012"]       # Paris: one flats series serves both types
+    # a missing year must fail loudly, never deflate some years only
+    _assert_raises(ValueError, estimate.deflator_factors, cfg,
+                   fetch=lambda i, start: {2022: 1.0, 2025: 1.0})
+    _assert_raises(ValueError, estimate.deflator_factors, cfg,      # implausible
+                   fetch=lambda i, start: {2022: 400.0, 2024: 100.0, 2025: 99.0})
+    # geography: most local series first
+    assert price_index_geography(COMMUNES["montreuil"]) == "d93"
+    assert price_index_geography(COMMUNES["villeurbanne"]) == "agglo_lyon"
+    assert price_index_geography(COMMUNES["saint-priest"]) == "agglo_lyon"
+    # keyed on the INSEE code, so a copy without its registry key still matches
+    import dataclasses
+    assert price_index_geography(
+        dataclasses.replace(COMMUNES["saint-priest"], key="")) == "agglo_lyon"
+    assert price_index_geography(COMMUNES["grenoble"]) == "auvergne_rhone_alpes"
+    assert price_index_geography(COMMUNES["roubaix"]) == "agglo_lille"
+    assert price_index_geography(COMMUNES["cahors"]) == "province"
+    # by type and year in the hedonic; unknown year untouched
+    dvf = pd.DataFrame({"price": [100_000.0] * 3, "floor_area_m2": [50.0] * 3,
+                        "type_local": ["Appartement", "Maison", "Maison"],
+                        "year": [2022, 2024, 2019], "cell": ["A"] * 3})
+    _s, d = estimate.fit_hedonic(dvf, deflator=f)
+    assert list(d["price"].round(6)) == [90_000.0, 99_000.0, 100_000.0]
+    _s, d = estimate.fit_hedonic(dvf, deflator={2022: 0.5})   # legacy flat form
+    assert list(d["price"]) == [50_000.0, 100_000.0, 100_000.0]
+
+
+def test_tab_comparables_deflated_with_house_index():
+    rows = [{"id_mutation": f"m{i}", "valeur_fonciere": 40_000.0,
+             "surface_terrain": 1000.0, "nature_culture": "terrains a bâtir",
+             "latitude": 44.4, "longitude": 1.4,
+             "date_mutation": "2022-06-01"} for i in range(21)]
+    out = ingest.tab_comparables(CFG, pd.DataFrame(rows),
+                                 deflator={"Maison": {2022: 0.9}, "Appartement": {2022: 0.5}})
+    assert abs(out["eur_m2_land"].median() - 36.0) < 1e-9
+    flat = ingest.tab_comparables(CFG, pd.DataFrame(rows), deflator={2022: 0.5})
+    assert abs(flat["eur_m2_land"].median() - 20.0) < 1e-9
+
+
 # ------------------------------------------------------------------ #
 
 if __name__ == "__main__":

@@ -103,9 +103,24 @@ ne dégénère jamais en « inconnu ».
 DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log €/m²,
 rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 8),
 × surface plancher de la parcelle. DVF est nettoyé aux mutations `Vente`, agrégé à
-la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées entrent
-en prix **nominaux** — le crochet `fit_hedonic(deflator=…)` existe mais aucun
-indice Notaires-INSEE n'est encore branché (voir §6, point 10).
+la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées sont d'abord
+ramenées en euros 2025 (paragraphe suivant).
+
+**Déflateur de prix.** Les cinq années DVF couvrent un cycle (hausse jusqu'en 2022,
+puis correction), d'ampleur très variable selon les lieux : chaque vente est donc
+d'abord ramenée en euros de `reference_year` (2025) : facteur(A) = moyenne annuelle
+2025 de l'indice Notaires-INSEE du territoire ÷ sa moyenne de l'année A
+(`estimate.deflator_factors`, `config.PRICE_INDEX_IDBANKS`, lu en direct sur la BDM
+de l'INSEE). On retient la série la plus locale publiée : appartements à Paris ;
+appartements et maisons séparément pour les Hauts-de-Seine, la Seine-Saint-Denis et
+le Val-de-Marne ; agglomérations de Lyon, Marseille et Lille ; régions
+(Auvergne-Rhône-Alpes, PACA, Nord-Pas-de-Calais) ; Province ailleurs. Quand une
+agglomération ne publie qu'un type de logement, cette série sert aux deux types :
+associer une série locale d'appartements à une série régionale de maisons
+déplacerait les maisons par rapport aux appartements de l'écart ville/région. Les
+prix des terrains à bâtir sont déflatés par la série maisons du territoire. Une
+vente parisienne de 2022 est multipliée par 0,907, une lyonnaise par 0,865, un
+appartement de province par 0,996.
 
 **3.4 Valeur du terrain — classer puis valoriser**
 (`estimate.land_value_residual` → `_land_value_classified`). Les parcelles non
@@ -170,8 +185,8 @@ quintiles classés dans chaque commune), avec les mêmes bornes de quintile que
 l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
 n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
-par quintile bouge à peine (premier quintile −17,6 à −18,5 %, dernier +11,1 à
-+11,7 %).
+par quintile bouge à peine (premier quintile −17,6 à −18,6 %, dernier +11,4 à
++12,3 %).
 
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
@@ -179,11 +194,11 @@ continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m
 parcelles bâties étaient à la borne de 0,85 (Lyon 59,8 % ; 55 communes signalées)
 et le chiffre de 84,9 % était fixé par la borne. La règle du bâti entretenu (§3.1)
 valorise ces immeubles à un âge effectif de 30 ans : Paris ressort désormais à
-**83,9 %**, avec 47,6 % des parcelles bâties encore à la borne. Ce reliquat est réel,
+**83,3 %**, avec 34,8 % des parcelles bâties encore à la borne. Ce reliquat est réel,
 pas un artefact : aux prix parisiens, même un bâti valorisé à 72 % de son coût de
 reconstruction laisse un foncier supérieur à 85 % dans les rues chères
 (Neuilly-sur-Seine est la seule commune encore à plus de moitié à la borne). Lyon
-passe à 72,0 %, sans parcelle à la borne ; sur le panel, les alertes
+passe à 70,5 %, sans parcelle à la borne ; sur le panel, les alertes
 `land_share_clip` passent de 55 à 1. Sans aucune décote, Paris serait à 63–79 %
 (borne basse). Le champ `headline.built_at_cap_pct` enregistre la part des
 parcelles bâties à la borne, et le site qualifie la part foncière de « plafonnée »
@@ -264,7 +279,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    borne, la part foncière est une hypothèse, pas un résultat, et la variation du
    bâti entre parcelles disparaît. Avant la règle du bâti entretenu, c'était le cas
    de Paris (95,5 % à la borne), de Lyon et de 53 autres communes ; c'est désormais
-   le seul cas de Neuilly-sur-Seine, Paris étant à 47,6 % (§3.7). Le contrôle
+   le seul cas de Neuilly-sur-Seine, Paris étant à 34,8 % (§3.7). Le contrôle
    `land_share_clip` du preflight le signale. Le plafond d'âge effectif (30 ans) et
    la rampe (q 1,2–2,5) sont des choix raisonnés ; publier une sensibilité sur ces
    paramètres reste à faire (THEORY.md).
@@ -295,15 +310,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
     terrains à bâtir. `audit_land.py <commune>` chiffre, par libellé de zone, la
     part de l'impôt qu'il porte.
-11. **Pool de prix nominaux (2021–2025).** Les ventes DVF entrent dans
-    l'hédonique et dans la base de prix terrain-à-bâtir en prix nominaux ;
-    l'indice Notaires-INSEE a bougé de ~+7–8 % (2021), ~+5–6 % (2022), ~−2 %
-    (2023), ~−1 % (2024) — un balancement de ~8–10 points dans la fenêtre, donc
-    les cellules dont les ventes se concentrent tôt ont des niveaux de prix
-    systématiquement différents de celles qui vendent tard (erreur spatialement
-    structurée, signalée par la revue fondatrice du projet). Le crochet
-    `deflator` de `fit_hedonic` attend l'indice cité.
-12. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
+11. **Discordance de concept de surface (brut vs habitable).** `surface_plancher`
     = emprise × niveaux est une surface brute murs compris (type SHOB), mais elle
     multiplie un coût de construction exprimé en €/m² SHON et un €/m² hédonique
     estimé sur la `surface_reelle_bati` DVF (habitable). Les deux niveaux de
@@ -312,7 +319,7 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (numérateur et dénominateur gonflés ensemble), pas les niveaux en euros des
     graphiques. Signalé par la revue fondatrice (PR #1) ; nécessite un facteur
     brut→habitable documenté.
-13. **Les exonérations ne sont pas modélisées.** Le produit REI est net
+12. **Les exonérations ne sont pas modélisées.** Le produit REI est net
     d'exonérations (logement social neuf, art. 1384 A CGI ; abattement QPV), et
     les bâtiments publics (mairies, écoles, hôpitaux), les édifices religieux et
     les bâtiments ruraux exonérés en permanence (CGI art. 1382) sont exonérés de
@@ -323,13 +330,13 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     catégorie publiées comme chaque pourcentage. Le `exemption_flag_col` de
     l'amont est géré et inutilisé ; les attributs BD TOPO `usage_1`/`nature`
     permettraient de flagger les cas évidents.
-14. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
+13. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes
     sont fréquentes (maisons rurales) — un biais haussier spatialement structuré
     que l'écrêtage par centiles ne corrige pas (voir la docstring de
     `ingest.fetch_dvf`).
-15. **Cache des données brutes optionnel.** `run_commune --cache-dir` (ou
+14. **Cache des données brutes optionnel.** `run_commune --cache-dir` (ou
     `LVTFR_CACHE_DIR`) met en cache les téléchargements bruts par empreinte
     d'URL, ce qui rend les lots reprenables ; sans lui, chaque exécution
     re-télécharge depuis des endpoints vivants qui bougent parfois

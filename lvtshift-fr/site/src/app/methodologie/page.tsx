@@ -512,10 +512,14 @@ export default function MethodologiePage() {
               parisiennes atteignaient alors le plafond de 85&nbsp;% : le
               partage terrain/bâti était fixé par la borne, pas mesuré. Avec
               la règle de l&apos;âge effectif décrite plus haut, la part
-              foncière de Paris ressort à 83,9&nbsp;%, et 47,6&nbsp;% des
+              foncière de Paris ressort à 83,3&nbsp;%, et 34,8&nbsp;% des
               parcelles restent au plafond : aux prix parisiens, le foncier
               dépasse réellement 85&nbsp;% de la valeur dans les rues les plus
-              chères. Lyon passe à 72,0&nbsp;%, sans parcelle au plafond.
+              chères. Lyon passe à 70,5&nbsp;%, sans parcelle au plafond.
+              Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              l&apos;indice Notaires-INSEE le plus local (appartements
+              parisiens, départements de petite couronne, agglomération
+              lyonnaise…), ce qui retire le pic de 2021–2022.
             </p>
           </div>
 
