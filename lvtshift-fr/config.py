@@ -518,9 +518,13 @@ BASELINE_MODEL = {
     "rates_year": 2020,
     "rhone_2014_fb_rate": 11.03,         # Métropole de Lyon communes (art. 29 III A 2)
     "pro_cfe_factor": 0.5,               # TFPB base = VL × 50 % (CGI 1388); CFE = VL
-    "pro_undercount_scale": 1.0,
+    # The CFE proxy captures ~40 % of the professional TFPB base nationally
+    # (8.6 % vs the Cour des comptes' 22 % of receipts, Les taxes foncières,
+    # 2023): vacancy and non-CFE occupiers. Central 2.5 calibrates it to the
+    # national figure; 1.0 (raw proxy) is the lower bound, reported in the docs.
+    "pro_undercount_scale": 2.5,
     "max_weight_ratio": 5.0,             # per-m² tax vs housing, industrial and pro
-    "max_targeted_share": 0.6,           # sanity bound on industrial + pro
+    "max_targeted_share": 0.75,          # sanity bound on industrial + pro
 }
 
 LAND_MODEL = {

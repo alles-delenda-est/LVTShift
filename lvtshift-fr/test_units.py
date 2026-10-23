@@ -720,7 +720,8 @@ def test_rei_baseline_split(monkeypatch=None):
     try:
         s = ingest.fetch_rei_baseline_split(CFG)
         assert abs(s["industrial"] - 0.1) < 1e-12          # 30 000 / 30 % / 1 M
-        assert abs(s["professional"] - 0.2) < 1e-12        # 0.5 × (500k − 100k) / 1 M
+        from config import BASELINE_MODEL as M
+        assert abs(s["professional"] - 0.2 * M["pro_undercount_scale"]) < 1e-12   # 0.5 × 400k / 1 M × scale
         assert s["pro_source"] == "T29-X503"
         import dataclasses
         lyon = dataclasses.replace(CFG, departement="69")   # Rhône 2014 rate, not 10 %
