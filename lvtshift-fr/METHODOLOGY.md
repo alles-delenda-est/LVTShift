@@ -454,8 +454,12 @@ in the warehouse communes:
 | Périgny | 47.9 | 50.1 |
 | Limeil-Brévannes | 38.0 | 41.7 |
 
-Communes below 40 % fall from 2 to 1 (Cahors, 41.2 → 38.6 %, not yet
-investigated); those above 65 % rise from 26 to 48, mostly inner-ring communes
+Communes below 40 % fall from 2 to 1: Cahors, 41.2 → 38.6 %. Almost all of
+the fall is commercial land (€197M → €83M): its edge-of-town retail sites now
+take the town's building-plot price (median €38/m², 41 sales) instead of a
+residual off flat prices, and a cheap-land small town is plausibly below the
+metro-wide range. Pricing retail land at the full plot price rather than the
+business-land ratio only moves Cahors to 39.0 %. Those above 65 % rise from 26 to 48, mostly inner-ring communes
 next to Paris (see the reference range above). Gemini (gemini-4-argon) judges
 these levels plausible. In the Lyon ring industrial land value falls from €8.6bn
 to €3.8bn and industrial buildings from €8.5bn to €2.6bn. Category totals

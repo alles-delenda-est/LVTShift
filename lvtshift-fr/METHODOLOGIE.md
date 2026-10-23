@@ -503,8 +503,14 @@ foncières partout, surtout dans les communes d'entrepôts :
 | Périgny | 47,9 | 50,1 |
 | Limeil-Brévannes | 38,0 | 41,7 |
 
-Les communes sous 40 % passent de 2 à 1 (Cahors, 41,2 → 38,6 %, cause non
-encore examinée) ; celles au-dessus de 65 % de 26 à 48, surtout des communes de
+Les communes sous 40 % passent de 2 à 1 : Cahors, 41,2 → 38,6 %. La baisse
+tient presque entièrement au foncier commercial (197 M€ → 83 M€) : ses zones
+commerciales de périphérie prennent désormais le prix local du terrain à bâtir
+(médiane 38 €/m², 41 ventes) au lieu d'un résiduel sur le prix des
+appartements, et une petite ville au foncier bon marché peut plausiblement se
+situer sous la fourchette métropolitaine. Valoriser le foncier commercial au
+plein prix du terrain à bâtir plutôt qu'au ratio d'activité ne porte Cahors
+qu'à 39,0 %. Celles au-dessus de 65 % passent de 26 à 48, surtout des communes de
 petite couronne limitrophes de Paris (voir la fourchette de référence
 ci-dessus). Gemini (gemini-4-argon) juge ces niveaux plausibles. Dans la
 couronne lyonnaise, la valeur du foncier industriel passe de 8,6 à 3,8 Md€ et
