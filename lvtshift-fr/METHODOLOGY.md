@@ -866,7 +866,10 @@ exact construction year; the spatial building↔parcel join → native MAJIC lin
 no owner typology / vacancy / exemptions → those fields directly. The pilot goes
 this far on open data; the *acte d'engagement* turns each row into exact
 administrative data at zero marginal cost to the partner. **The demo is the
-argument for access.**
+argument for access.** A ready-to-complete request dossier, with the
+limitation→field table, is in `docs/access/fichiers-fonciers-dossier.md`; the
+open steps (choosing the eligible host structure, signing) are the project
+lead's.
 
 ## 8. Reproducibility
 
