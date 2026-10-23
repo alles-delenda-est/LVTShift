@@ -4,6 +4,7 @@
   "installCommand": "cd lvtshift-fr/site && npm ci",
   "buildCommand": "cd lvtshift-fr/site && npm run build",
   "outputDirectory": "lvtshift-fr/site/out",
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
