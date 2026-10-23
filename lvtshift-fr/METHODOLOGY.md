@@ -35,6 +35,7 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
 | Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 (see §6.8) | distributional (quintile) analysis |
+| Exempt public property | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | yearly zips via the data.economie.gouv.fr catalog | situation 2025 | flag obviously TFPB-exempt public property (§3.5) |
 
 All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`.
 
@@ -131,6 +132,29 @@ TFPNB, out of scope). No market-value tilt (the 1970 VLC is regressive vs market
 so a tilt would worsen baseline fidelity); a category-weighted variant exists as
 a labelled sensitivity only.
 
+**Exempt public property** (`exemptions.py`, spec 0003). CGI art. 1382-1° exempts
+the property of the State, regions, départements, communes, their groupings and
+public scientific / teaching / assistance bodies when it serves a public purpose
+and yields no income. The DGFiP « personnes morales » files list every right a
+legal person holds on each parcel and building unit, with the holder's INSEE legal
+form (98.4 % of their parcel ids match the cadastre). They carry no exemption code
+and no use, so ownership is a proxy and the rule errs towards under-flagging: a
+parcel is exempt only when **every** holder of a right on its land and on every
+building unit is a qualifying public body with full ownership, on its own territory
+(a commune's or département's property elsewhere is only partly exempt, BOFIP
+BOI-IF-TFB-10-50-10-10 §90/§250), with no condominium syndic, no lease (emphytéose,
+bail à construction, AOT…), no dismemberment and no private or housing manager
+(units of network operators such as ENEDIS substations, held in full ownership,
+are ignored). Public land with **no**
+building unit recorded is exempt only where the model also sees no building
+(parks, woods, cemeteries); a building there (a concession such as the Stade de
+France) stays taxable until corroborated. Exempt parcels bear no share of today's
+produit and are left out of the LVT base, so the same levy falls on the taxable
+parcels. In Paris this flags 3,098 parcels (1,362 built) carrying €91.6 M (5.0 %) of
+the produit the baseline used to spread onto them. Owner names are read only to
+recognise utilities and housing managers and are never stored or published.
+`--no-exemptions` reproduces the unflagged run.
+
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
 Output is written by `save_standard_export`; euro charts by `charts_fr`
@@ -176,7 +200,7 @@ was set by the cap. The maintained-stock rule (§3.1) values such buildings at a
 parcels still at the bound. That residue is genuine, not an artefact: at Paris
 prices even a building valued at 72 % of rebuild cost leaves land above 85 % on
 expensive streets (Neuilly-sur-Seine is the one commune still above half at the
-bound). Lyon falls to 70.5 % with no parcel at the bound; across the panel the
+bound). Lyon falls to 70.4 % with no parcel at the bound; across the panel the
 `land_share_clip` warnings fall from 55 to 1. No write-down at all would give
 63–79 % for Paris, a lower bound. `headline.built_at_cap_pct` records the share of
 built parcels at the bound, and the site labels the land share "plafonnée" when it
@@ -277,7 +301,18 @@ Ranked by how much they move published (category/quintile) results.
     PLU-H *USP* public-service land) and vacant *industrial-zone* land (*UEi*)
     take the residential terrain-à-bâtir €/m². `audit_land.py <commune>`
     quantifies the levy this land carries per zoning label.
-11. **Surface concept mismatch (gross vs habitable).** `floor_area` =
+11. **Exemptions are only partly modelled.** Obviously exempt public property is
+    flagged (§3.5), but deliberately conservatively: public units inside
+    condominiums or under leases, worship buildings owned by associations,
+    private non-profit schools and hospitals, the Assemblée and Sénat (unusual
+    legal forms), out-of-territory partial exemptions and public buildings with
+    no unit recorded stay taxable. Temporary exemptions (new social housing under
+    CGI art. 1384 A, the QPV abatement) are not identifiable from open data, so
+    the baseline still overstates today's bill on exempt HLM and understates it
+    elsewhere (material in 93).
+    Farm buildings (CGI art. 1382 6°: greenhouses, barns) are not yet exempted
+    either.
+12. **Surface concept mismatch (gross vs habitable).** `floor_area` =
     footprint × storeys is a gross, walls-included (SHOB-like) surface, but it
     multiplies both a construction cost stated in €/m² SHON and a hedonic €/m²
     estimated on DVF `surface_reelle_bati` (habitable). Both value levels are
@@ -285,16 +320,6 @@ Ranked by how much they move published (category/quintile) results.
     inherits the bias; the top-down §5 check partially absorbs it (numerator
     and denominator inflated together), euro levels on charts do not. Flagged
     by the founding review (PR #1); needs a documented gross→habitable factor.
-12. **Exemptions are not modelled.** The REI produit is net of exemptions (new
-    social housing under CGI art. 1384 A, the QPV abatement), and public
-    buildings (mairies, schools, hospitals), religious buildings and permanently
-    exempt farm buildings (CGI art. 1382) are TFPB-exempt in reality. Here they
-    both absorb a share of today's produit (via their floor area) and pay the
-    modelled LVT — overstating today's bill on exempt HLM and public property,
-    deflating everyone else's (material in 93 and Paris), and moving the
-    published category bars and every percentage change. Upstream's
-    `exemption_flag_col` is supported and unused; BD TOPO `usage_1`/`nature`
-    attributes could flag the obvious cases.
 13. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural

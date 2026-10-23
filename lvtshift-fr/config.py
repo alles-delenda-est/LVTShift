@@ -113,6 +113,11 @@ DATA_SOURCES = {
     # (destinataire Commune / GFP). See ingest.fetch_rei_tfpb_produit.
     "ofgl_rei": "https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei/records",
 
+    # DGFiP « Fichiers des locaux et des parcelles des personnes morales »
+    # (Licence Ouverte 2.0, annual). Catalog of yearly zip attachments; ids change
+    # every vintage, so exemptions._attachments() matches them by pattern.
+    "pm_catalog": ("https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
+                   "fichiers-des-locaux-et-des-parcelles-des-personnes-morales/attachments"),
     # Notaires-INSEE « indice des prix des logements anciens » (IPLA), quarterly,
     # base 100 = 2015, série brute, via the INSEE BDM SDMX API (no key). One
     # series per idbank; see PRICE_INDEX_IDBANKS for the geography mapping.
@@ -254,10 +259,6 @@ TERRITORIES = {
 
 # Keys of the Métropole de Lyon communes (price-index geography).
 LYON_METROPOLE_KEYS = frozenset(TERRITORIES["lyon-extra-muros"]["members"])
-# INSEE codes of the whole Métropole (Lyon, Villeurbanne and the ring): matching
-# on the code, not the registry key, holds for any config of these communes.
-LYON_METROPOLE_INSEE = frozenset(
-    {"69123", "69266"} | {COMMUNES[k].insee_code for k in LYON_METROPOLE_KEYS})
 
 
 # ------------------------------------------------------------------ #
@@ -396,3 +397,10 @@ def slug_of(cfg) -> str:
 def data_codes_of(cfg) -> tuple:
     """Data INSEE codes for any config-like object (see CommuneConfig.data_codes)."""
     return getattr(cfg, "data_codes", None) or (cfg.insee_code,)
+
+
+# INSEE codes of the Métropole de Lyon (Lyon, Villeurbanne and the 57-commune
+# ring): where the Métropole's own property counts as on its territory
+# (exemptions._in_territory).
+LYON_METROPOLE_INSEE = frozenset(
+    {"69123", "69266"} | {COMMUNES[k].insee_code for k in LYON_METROPOLE_KEYS})

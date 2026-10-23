@@ -45,6 +45,7 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Année de construction | **DPE logements existants** (ADEME) | période de construction → dépréciation (BD TOPO `date_d_apparition` peu fiable/souvent nulle) |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
+| Foncier public exonéré | fichiers DGFiP des **personnes morales** (locaux et parcelles) | repérer le foncier public manifestement exonéré de TFPB (règle prudente) |
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties |
 | Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
 | Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
@@ -94,7 +95,7 @@ statistiques ethniques. L'analyse d'équité se fait sur le revenu (Filosofi).
 | Année de construction inférée (DPE) | année de construction exacte par local |
 | Pas de typologie de propriétaires | table propriétaires (HLM, SCI, personnes physiques…) |
 | Pas de vacance | indicateur de vacance 5 ans glissants |
-| Exonérations ignorées | champs d'exonération par local |
+| Exonérations approchées par la propriété publique (règle prudente), exonérations temporaires ignorées | champs d'exonération par local |
 | Appariement bâtiment-parcelle approximatif | liens MAJIC natifs |
 
 **C'est l'argument d'accès** : la démo va jusqu'ici sur données ouvertes ;
@@ -167,12 +168,11 @@ export CSV seul : `run(..., make_report=False)`.
   un reliquat réel aux prix parisiens) et seule Neuilly-sur-Seine reste signalée.
   La part avant bornage est conservée (colonne `land_share_raw`) pour publier
   la distribution non bornée.
-- **Exonérations TFPB non modélisées** : bâtiments publics (mairies, écoles,
-  hôpitaux), édifices religieux et bâtiments agricoles exonérés en permanence
-  (CGI art. 1382) absorbent ici une part du produit actuel **et** paient la
-  LVT simulée, ce qui déforme les barres par catégorie et la base de départ de
-  tous les pourcentages. Le solveur amont accepte un `exemption_flag_col`,
-  pas encore utilisé.
+- **Exonérations TFPB partiellement modélisées** : le foncier public
+  manifestement exonéré est repéré (règle prudente, voir plus haut) ; les
+  édifices religieux associatifs, les bâtiments agricoles (CGI art. 1382 6°) et
+  les exonérations temporaires (HLM neufs, abattement QPV) absorbent encore une
+  part du produit actuel **et** paient la LVT simulée.
 - **Surfaces brutes × prix habitables** : la surface plancher (emprise ×
   niveaux, type SHOB) multiplie un coût €/m² SHON et un €/m² hédonique estimé
   sur la surface réelle bâtie DVF — niveaux de valeur surestimés (~10–25 %

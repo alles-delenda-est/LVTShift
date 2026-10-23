@@ -54,8 +54,13 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
             f"No model output for {commune_key} at {path}; "
             f"run `python run_commune.py {commune_key}` first.")
     df = pd.read_csv(path)
+    n_exempt = 0
     if "is_fully_exempt" in df.columns:
-        df = df[~df["is_fully_exempt"].fillna(False).astype(bool)].copy()
+        exempt = df["is_fully_exempt"].fillna(False).astype(bool)
+        n_exempt = int(exempt.sum())
+        df = df[~exempt].copy()
+    # count only (never which parcels): disclosed in the payload provenance
+    df.attrs["exempt_parcels"] = n_exempt
     return df
 
 
@@ -355,6 +360,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "provenance": {
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "land_share_bounds": list(cfg.land_share_bounds),
+            "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
                      "catégorie/quintile, jamais à la parcelle."),
         },
@@ -370,7 +376,7 @@ def load_territory(territory_key: str, out_dir: str = "output"):
     with no output is reported as missing — never imputed.
     """
     from config import TERRITORIES
-    frames, present, missing = [], [], []
+    frames, present, missing, n_exempt = [], [], [], 0
     for key in TERRITORIES[territory_key]["members"]:
         try:
             df = load_parcels(key, out_dir)
@@ -379,9 +385,12 @@ def load_territory(territory_key: str, out_dir: str = "output"):
             continue
         frames.append(df.assign(_commune=key))
         present.append(key)
+        n_exempt += df.attrs.get("exempt_parcels", 0)
     if not frames:
         raise FileNotFoundError(f"no member outputs for territory {territory_key}")
-    return pd.concat(frames, ignore_index=True), present, missing
+    out = pd.concat(frames, ignore_index=True)
+    out.attrs["exempt_parcels"] = n_exempt
+    return out, present, missing
 
 
 def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
@@ -516,6 +525,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         },
         "provenance": {
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
+            "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "
                      "constantes sur son propre produit de TFPB (pas de taux "
