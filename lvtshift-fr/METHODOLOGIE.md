@@ -503,7 +503,7 @@ moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le plus
 (25,3 %), et le contrôle `land_share_clip` du preflight ne signale aucune
 commune. Lyon est à 60,0 %, la couronne parisienne à 65,3 % et la couronne
 lyonnaise à 55,4 %. Sur les 188 communes modélisées, 48 dépassent 65 % et 1 est
-sous 40 % (Cahors 38,6 %).
+sous 40 % (Cahors 38,0 %).
 Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
 la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
@@ -582,7 +582,7 @@ foncières partout, surtout dans les communes d'entrepôts :
 | Périgny | 47,9 | 50,1 |
 | Limeil-Brévannes | 38,0 | 41,7 |
 
-Les communes sous 40 % passent de 2 à 1 : Cahors, 41,2 → 38,6 %. La baisse
+Les communes sous 40 % passent de 2 à 1 : Cahors, 41,2 → 38,0 %. La baisse
 tient presque entièrement au foncier commercial (197 M€ → 83 M€) : ses zones
 commerciales de périphérie prennent désormais le prix local du terrain à bâtir
 (médiane 38 €/m², 41 ventes) au lieu d'un résiduel sur le prix des
@@ -614,10 +614,10 @@ basse » prend l'indicateur brut (× 1,0).
 |---|---|---|---|
 | Paris, totaux par groupe de revenu Q1 … Q5, % | −20,1 −11,2 −4,2 +5,7 +14,9 | −17,4 −8,3 −1,3 +8,9 +18,9 | −27,6 −18,8 −12,1 −2,9 +3,9 |
 | Lyon | −18,7 −8,5 −0,8 +3,2 +13,6 | −14,0 −3,5 +4,4 +8,5 +18,9 | −27,7 −18,2 −10,8 −7,0 +3,5 |
-| Couronne parisienne | −9,1 −5,0 −0,6 −2,7 +1,1 | −7,4 −3,0 +2,0 −1,1 +5,5 | −21,8 −16,9 −12,1 −12,6 −9,0 |
-| Couronne lyonnaise | −3,7 +0,8 +5,0 −1,3 −4,7 | +0,8 +2,8 +10,7 +4,9 −1,1 | −15,8 −11,4 −7,7 −12,1 −14,2 |
-| Montant déplacé, % du produit : Paris / Lyon / couronne parisienne / couronne lyonnaise | 19,2 / 20,4 / 28,1 / 38,3 | 19,6 / 20,9 / 30,4 / 43,0 | 30,2 / 30,9 / 36,7 / 40,6 |
-| Part des parcelles qui paient plus, % : même ordre | 50,2 / 70,8 / 68,6 / 69,3 | 52,8 / 74,6 / 70,8 / 74,6 | 42,5 / 51,5 / 56,1 / 58,4 |
+| Couronne parisienne | −9,1 −5,0 −0,6 −2,7 +1,1 | −7,4 −3,0 +2,0 −1,1 +5,5 | −21,9 −16,9 −12,1 −12,6 −9,0 |
+| Couronne lyonnaise | −3,7 +0,8 +5,0 −1,3 −4,7 | +0,6 +2,8 +10,7 +4,9 −1,1 | −15,9 −11,4 −7,7 −12,1 −14,2 |
+| Montant déplacé, % du produit : Paris / Lyon / couronne parisienne / couronne lyonnaise | 19,2 / 20,4 / 28,1 / 38,3 | 19,6 / 20,9 / 30,4 / 43,1 | 30,2 / 30,9 / 36,7 / 40,7 |
+| Part des parcelles qui paient plus, % : même ordre | 50,2 / 70,8 / 68,6 / 69,3 | 52,8 / 74,6 / 70,9 / 74,6 | 42,5 / 51,5 / 56,2 / 58,4 |
 
 Par catégorie, cas central :
 - **Couronne lyonnaise.** La part de l'industrie dans la taxe actuelle passe de
@@ -645,8 +645,8 @@ publiés devraient les reproduire.
 
 **Le facteur professionnel est désormais l'incertitude porteuse.** Il déplace
 les résultats des ménages de 10 à 15 points (premier quintile parisien −17,4 %
-en central contre −27,6 % en borne basse ; couronne lyonnaise +0,8 % contre
-−15,8 %). Dans le cas central, le gradient progressif de Paris et de Lyon tient
+en central contre −27,6 % en borne basse ; couronne lyonnaise +0,6 % contre
+−15,9 %). Dans le cas central, le gradient progressif de Paris et de Lyon tient
 et se raidit en haut, et les ménages des couronnes gagnent moins qu'avec la base
 à la surface plancher. En borne basse, tous les groupes de revenu des couronnes
 paient moins, et seul le quintile le plus aisé de Paris et de Lyon paie plus.
@@ -676,10 +676,11 @@ pour la dépréciation, moins la valeur bâtie du modèle) et résout de nouveau
 | Couronne lyonnaise | −63 % | −62 % | −60 % |
 | Couronne parisienne | −36 % | −36 % | −33 % |
 | Marcy-l'Étoile | −90 % | −84 % | −76 % |
-| Saint-Fons | −60 % | −59 % | −53 % |
+| Saint-Fons | −60 % | −59 % | −52 % |
 
 Taxer l'outillage ne déplacerait les cotisations industrielles que de 1 à
-3 points dans les couronnes (jusqu'à 14 à Marcy-l'Étoile). La baisse
+3 points à l'échelle de chaque couronne, davantage dans une commune industrielle
+isolée (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 au coût brut). La baisse
 industrielle tient avant tout au déplacement vers le sol : un foncier
 industriel bon marché face à une base actuelle chargée en capital.
 
@@ -780,7 +781,7 @@ industriel bon marché face à une base actuelle chargée en capital.
 - **Part foncière descendante** — terrain total ÷ valeur immobilière bâtie totale
   doit avoisiner les comptes de patrimoine INSEE (~45–50 % de terrain). Cahors
   atteignait ~53 % après la correction d'année de construction par DPE (contre
-  85 % dégénéré auparavant — voir §6) et se situe à 38,6 % avec la valorisation
+  85 % dégénéré auparavant — voir §6) et se situe à 38,0 % avec la valorisation
   du non-résidentiel par type. La fourchette 40–65 % est un repère
   métropolitain, non un test par commune (§3.7).
 - **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
@@ -808,8 +809,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      capte qu'environ 40 % de la base professionnelle nationale (8,6 % contre
      22 % pour la Cour des comptes). Passer de 2,5 à l'indicateur brut (1,0)
      déplace les résultats des ménages de 10 à 15 points : le premier quintile
-     parisien passe de −17,4 à −27,6 %, celui de la couronne lyonnaise de +0,8 à
-     −15,8 %, et les cotisations commerciales de la couronne lyonnaise de −24 %
+     parisien passe de −17,4 à −27,6 %, celui de la couronne lyonnaise de +0,6 à
+     −15,9 %, et les cotisations commerciales de la couronne lyonnaise de −24 %
      à +47 % (§3.7). Les nouvelles cotisations sont identiques dans les deux
      cas ; seul le point de départ bouge. 2,5 est la valeur la mieux étayée,
      mais le sous-comptage n'est sûrement pas uniforme : il devrait être plus
@@ -832,7 +833,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      l'outillage et la valeur bâtie du modèle ne compte que le hangar : le
      modèle suit donc ce choix. Taxer l'outillage ne déplacerait les
      cotisations industrielles que de 1 à 3 points (couronne lyonnaise −63 % →
-     −62 % déprécié ou −60 % brut ; jusqu'à 14 à Marcy-l'Étoile) : la baisse
+     −62 % déprécié ou −60 % brut ; jusqu'à 14 points dans une commune
+     industrielle isolée) : la baisse
      vient avant tout du foncier industriel bon marché.
 2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
    le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.

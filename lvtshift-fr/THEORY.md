@@ -108,8 +108,8 @@ land-share band, so error propagates visibly rather than silently.
   baseline to official REI shares showed the opposite: business pays *more* per
   m² than housing (fixed plant in art. 1499 values; professional premises on
   2013 rents vs housing on 1970 values), so the cut deepens (−63 %) and the
-  Lyon ring's poorest fifth goes from −3.7 % to +0.8 %. Taxing plant moves this
-  only 1–3 points: in an industrial corridor the LVT genuinely shifts tax from
+  Lyon ring's poorest fifth goes from −3.7 % to +0.6 %. Taxing plant moves this
+  only 1–3 points across a ring (up to 14 in a single industrial commune): in an industrial corridor the LVT genuinely shifts tax from
   capital-heavy industry on cheap land to households. Expectations, including
   a reviewer's, are hypotheses to test against data.
 - **Changing a variable's units silently retunes every rule calibrated on it.**
@@ -158,7 +158,9 @@ land-share band, so error propagates visibly rather than silently.
 - **Whether a reform should tax industrial plant is a policy choice.** Today's
   industrial base includes fixed installations; the modelled LVT taxes only the
   shed. Estimated from REI, adding plant moves industrial bills by 1–3 points
-  (Marcy-l'Étoile up to 14).
+  across a ring, more in single industrial communes (Saint-Fons 8,
+  Tremblay-en-France 12, Marcy-l'Étoile 14 at gross cost). The project lead
+  has decided the reform taxes land and buildings, not plant.
 - **Non-residential costs rest on one commercial guide** scaled to our housing
   level (±25 %), the business-land ratio on 20–80 sales per area, and offices
   still read the residential price surface, which overstates distressed suburban

@@ -14,14 +14,14 @@ the ring figures are aggregates of those 179 separate runs, not a metropolitan t
 |---|---|---|---|---|---|---|
 | Paris | 75,090 | €1,840.9 M | 75.8 % | 5.6 % | 19.6 % | 52.8 % |
 | Lyon | 31,022 | €362.9 M | 60.0 % | 0.8 % | 20.9 % | 74.6 % |
-| Paris extra-muros (122) | 566,442 | €3,569.3 M | 65.3 % | 1.8 % | 30.4 % | 70.8 % |
-| Lyon extra-muros (57) | 224,841 | €528.2 M | 55.4 % | 1.2 % | 43.0 % | 74.6 % |
+| Paris extra-muros (122) | 566,442 | €3,569.3 M | 65.3 % | 1.8 % | 30.4 % | 70.9 % |
+| Lyon extra-muros (57) | 224,841 | €528.2 M | 55.4 % | 1.2 % | 43.1 % | 74.6 % |
 
 **Publish distributional figures only with the low bound beside them.** The
 professional-premises scale in today's-tax baseline (central 2.5, low bound 1.0)
 moves household results by 10–15 points; the new bills are the same in both
 cases. Low-bound amount shifted: Paris 30.2 %, Lyon 30.9 %, Paris ring 36.7 %,
-Lyon ring 40.6 %; share paying more 42.5 / 51.5 / 56.1 / 58.4 %. See
+Lyon ring 40.7 %; share paying more 42.5 / 51.5 / 56.2 / 58.4 %. See
 "Calibrated current-tax baseline" below. The site now shows both side by side
 on every results page (C12).
 
@@ -189,7 +189,7 @@ cost. The business-land ratio is published in the payload provenance
 at the cap), Lyon 57.8 → 60.0 %, Paris ring 62.2 → 65.3 %, Lyon ring 53.0 →
 55.4 %, Santeny 40.8 → 52.1 %, Vaujours 39.0 → 49.8 %, Tremblay-en-France 47.6 →
 58.3 %, Villepinte 42.8 → 49.5 %, Périgny 47.9 → 50.1 %, Limeil-Brévannes 38.0 →
-41.7 %. Below 40 %: 2 → 1 (Cahors 38.6 %). Above 65 %: 26 → 48, mostly
+41.7 %. Below 40 %: 2 → 1 (Cahors 38.0 %). Above 65 %: 26 → 48, mostly
 inner-ring communes next to Paris (Puteaux 71.0 %, Saint-Cloud 76.8 %, Clichy
 74.8 %, Courbevoie, Nanterre, Montreuil, Pantin…). Gemini (gemini-4-argon)
 judges these plausible: 40–65 % is a metro-wide reference, not a per-commune
@@ -252,10 +252,10 @@ baseline suggested. Land shares are unchanged.
 |---|---|---|---|
 | Paris income totals Q1..Q5 | −20.1 −11.2 −4.2 +5.7 +14.9 | −17.4 −8.3 −1.3 +8.9 +18.9 | −27.6 −18.8 −12.1 −2.9 +3.9 |
 | Lyon | −18.7 −8.5 −0.8 +3.2 +13.6 | −14.0 −3.5 +4.4 +8.5 +18.9 | −27.7 −18.2 −10.8 −7.0 +3.5 |
-| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.8 −16.9 −12.1 −12.6 −9.0 |
-| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.8 +2.8 +10.7 +4.9 −1.1 | −15.8 −11.4 −7.7 −12.1 −14.2 |
-| Amount shifted (% of levy): Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.0 | 30.2 / 30.9 / 36.7 / 40.6 |
-| Share paying more: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.8 / 74.6 | 42.5 / 51.5 / 56.1 / 58.4 |
+| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.9 −16.9 −12.1 −12.6 −9.0 |
+| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.6 +2.8 +10.7 +4.9 −1.1 | −15.9 −11.4 −7.7 −12.1 −14.2 |
+| Amount shifted (% of levy): Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.1 | 30.2 / 30.9 / 36.7 / 40.7 |
+| Share paying more: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.9 / 74.6 | 42.5 / 51.5 / 56.2 / 58.4 |
 
 By category, central: Lyon ring industrial share of today's tax 10.0 → 11.9 %,
 commercial 15.0 → 16.6 %; bills industrial −63 %, commercial −24 %, houses
@@ -278,8 +278,9 @@ art. 1499 values include plant, so no code changes. A first-order estimate
 (`docs/research/plant_effect.py`) shows the decision barely matters: it adds
 the plant's revalued cost to the improvement base and re-solves 4:1. Industrial bills, shed only → with plant
 depreciated / gross: Lyon ring −63 → −62 / −60 %, Paris ring −36 → −36 / −33 %,
-Marcy-l'Étoile −90 → −84 / −76 %, Saint-Fons −60 → −59 / −53 %: 1–3 points in
-the rings, up to 14 in Marcy-l'Étoile. Industry's cut
+Marcy-l'Étoile −90 → −84 / −76 %, Saint-Fons −60 → −59 / −52 %,
+Tremblay-en-France −49 → −45 / −37 %: 1–3 points across each ring, up to 14 in a
+single industrial commune. Industry's cut
 is overwhelmingly the land shift (cheap industrial land against today's
 capital-heavy base). **Policy finding:** in the Lyon chemical and industrial
 corridor, the LVT shifts tax from industry to households under the central
@@ -313,8 +314,8 @@ baseline.
   tax (central 2.5 vs low bound 1.0).
 - [ ] **A2. Income quintiles for the rings.** Ranked across the whole ring, Lyon
   extra-muros looks flat to *regressive* (group totals, central baseline: poorest
-  +0.8 %, richest −1.1 %; median residential parcel +19 % → −1 %). Ranked within
-  each commune it is *progressive* (group totals −6.5 % → +9.9 %): the pooled view mixes in rich-vs-poor
+  +0.6 %, richest −1.1 %; median residential parcel +19 % → −1 %). Ranked within
+  each commune it is *progressive* (group totals −6.6 % → +9.9 %): the pooled view mixes in rich-vs-poor
   commune differences the reform does not touch. The site now shows both, with an
   explanation. Confirm you are happy with that framing, or prefer within-commune only.
 - [ ] **A3. Syndicate layer (Métropole de Lyon).** 45 ring communes have a
@@ -376,7 +377,8 @@ baseline.
   industrial plant (installations counted in today's art. 1499 values). This
   follows land-value-tax theory, which avoids penalising capital investment.
   No code change: the model already values only the shed. Taxing plant would
-  move industrial bills by only 1–3 points (Marcy-l'Étoile up to 14). Docs
+  move industrial bills by only 1–3 points across each ring, more in single
+  industrial communes (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 at gross cost). Docs
   (METHODOLOGY/METHODOLOGIE §3.7 and §6, README, méthodologie page) now state
   it as a design decision, not an open question.
 

@@ -179,7 +179,7 @@ export CSV seul : `run(..., make_report=False)`.
   multiplié par un facteur national (2,5, cas central) ; l'indicateur brut
   (× 1,0) est la borne basse. Ce facteur déplace les résultats des ménages de
   10 à 15 points : premier quintile de revenu à Paris −17,4 % (central) contre
-  −27,6 % (borne basse), couronne lyonnaise +0,8 % contre −15,8 %. Les
+  −27,6 % (borne basse), couronne lyonnaise +0,6 % contre −15,9 %. Les
   nouvelles cotisations sont identiques ; seul le point de départ bouge. Le
   site affiche désormais les deux côte à côte sur chaque page de résultats
   (tableau « Incertitude sur la taxe actuelle des locaux professionnels »,
@@ -198,8 +198,9 @@ export CSV seul : `run(..., make_report=False)`.
   décision du responsable du projet, conforme à la théorie de la taxe
   foncière sur le sol, qui évite de pénaliser l'investissement. Le modèle ne
   compte déjà que le hangar dans la valeur bâtie. Taxer l'outillage ne
-  déplacerait les cotisations industrielles que de 1 à 3 points (jusqu'à 14 à
-  Marcy-l'Étoile).
+  déplacerait les cotisations industrielles que de 1 à 3 points à l'échelle
+  de chaque couronne, davantage dans une commune industrielle isolée
+  (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 au coût brut).
 - **Taxe actuelle (maillon porteur).** La TFPB est un impôt sur le
   **bâti** : les parcelles non bâties portent **zéro** taxe actuelle
   (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT

@@ -452,7 +452,7 @@ measured, not set by the cap. No commune has more than half its built parcels at
 the cap; Neuilly-sur-Seine has the most (25.3 %), and the preflight
 `land_share_clip` check warns nowhere. Lyon is at 60.0 %, the Paris ring 65.3 %
 and the Lyon ring 55.4 %. Across the 188 modelled communes, 48 lie above 65 %
-and 1 below 40 % (Cahors 38.6 %).
+and 1 below 40 % (Cahors 38.0 %).
 `headline.built_at_cap_pct` records the share of built parcels at the bound,
 and the site labels the land share "plafonnée" when it is ≥ 50 %.
 
@@ -523,7 +523,7 @@ in the warehouse communes:
 | Périgny | 47.9 | 50.1 |
 | Limeil-Brévannes | 38.0 | 41.7 |
 
-Communes below 40 % fall from 2 to 1: Cahors, 41.2 → 38.6 %. Almost all of
+Communes below 40 % fall from 2 to 1: Cahors, 41.2 → 38.0 %. Almost all of
 the fall is commercial land (€197M → €83M): its edge-of-town retail sites now
 take the town's building-plot price (median €38/m², 41 sales) instead of a
 residual off flat prices, and a cheap-land small town is plausibly below the
@@ -550,10 +550,10 @@ proxy by 2.5; "low bound" uses the raw proxy (× 1.0).
 |---|---|---|---|
 | Paris, income group totals Q1 … Q5, % | −20.1 −11.2 −4.2 +5.7 +14.9 | −17.4 −8.3 −1.3 +8.9 +18.9 | −27.6 −18.8 −12.1 −2.9 +3.9 |
 | Lyon | −18.7 −8.5 −0.8 +3.2 +13.6 | −14.0 −3.5 +4.4 +8.5 +18.9 | −27.7 −18.2 −10.8 −7.0 +3.5 |
-| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.8 −16.9 −12.1 −12.6 −9.0 |
-| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.8 +2.8 +10.7 +4.9 −1.1 | −15.8 −11.4 −7.7 −12.1 −14.2 |
-| Amount shifted, % of levy: Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.0 | 30.2 / 30.9 / 36.7 / 40.6 |
-| Share of parcels paying more, %: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.8 / 74.6 | 42.5 / 51.5 / 56.1 / 58.4 |
+| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.9 −16.9 −12.1 −12.6 −9.0 |
+| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.6 +2.8 +10.7 +4.9 −1.1 | −15.9 −11.4 −7.7 −12.1 −14.2 |
+| Amount shifted, % of levy: Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.1 | 30.2 / 30.9 / 36.7 / 40.7 |
+| Share of parcels paying more, %: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.9 / 74.6 | 42.5 / 51.5 / 56.2 / 58.4 |
 
 By category, central case:
 - **Lyon ring.** Industry's share of today's tax rises from 10.0 to 11.9 %, and
@@ -579,7 +579,7 @@ scratch run of the same code; the published payloads should reproduce them.
 
 **The professional scale is now the load-bearing uncertainty.** It moves the
 household results by 10–15 points (Paris's poorest fifth −17.4 % central against
-−27.6 % low; the Lyon ring's +0.8 % against −15.8 %). Under the central case
+−27.6 % low; the Lyon ring's +0.6 % against −15.9 %). Under the central case
 the progressive gradient in Paris and Lyon holds and steepens at the top, and
 the rings' households gain less than on the floor-area baseline. Under the low
 bound every ring income group pays less, and only the richest fifth in Paris and
@@ -607,10 +607,10 @@ the model's building value) and re-solves the 4:1 split per commune:
 | Lyon ring | −63 % | −62 % | −60 % |
 | Paris ring | −36 % | −36 % | −33 % |
 | Marcy-l'Étoile | −90 % | −84 % | −76 % |
-| Saint-Fons | −60 % | −59 % | −53 % |
+| Saint-Fons | −60 % | −59 % | −52 % |
 
-Taxing plant would move industrial bills by only 1–3 points in the rings
-(Marcy-l'Étoile up to 14). Industry's cut is overwhelmingly the land shift:
+Taxing plant would move industrial bills by only 1–3 points across each
+ring, more in single industrial communes (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 at gross cost). Industry's cut is overwhelmingly the land shift:
 cheap industrial land set against today's capital-heavy tax base.
 
 ## 4. Key parameters and assumptions
@@ -701,7 +701,7 @@ cheap industrial land set against today's capital-heavy tax base.
 - **Top-down land share** — total land ÷ total built real-estate value should sit
   near INSEE comptes de patrimoine (~45–50 % land). Cahors came to ~53 % after
   the DPE construction-year fix (it was a degenerate 85 % before — see §6) and
-  is at 38.6 % with the per-type non-residential valuation. The 40–65 % range
+  is at 38.0 % with the per-type non-residential valuation. The 40–65 % range
   is a metro-wide reference, not a per-commune test (§3.7).
 - **Sign checks** — agricultural/natural land bears a negligible share of the
   levy (Cahors 0.3 %); under-used constructible land pays *more* (the LVT
@@ -727,7 +727,7 @@ Ranked by how much they move published (category/quintile) results.
      of the professional base nationally (8.6 % against the Cour des comptes'
      22 %). Moving from 2.5 to the raw proxy (1.0) moves household results by
      10–15 points: Paris's poorest fifth goes from −17.4 to −27.6 %, the Lyon
-     ring's from +0.8 to −15.8 %, and in the Lyon ring commercial bills go from
+     ring's from +0.6 to −15.9 %, and in the Lyon ring commercial bills go from
      −24 % to +47 % (§3.7). The reform's new bills are the same in both cases;
      only the starting point moves. 2.5 is the better-supported value, but the
      undercount is surely not uniform: it should be larger where many premises
@@ -747,7 +747,8 @@ Ranked by how much they move published (category/quintile) results.
      values include plant and the model's improvement value counts only the
      shed, so the model matches the decision. Taxing plant would move
      industrial bills by only 1–3 points (Lyon ring −63 % → −62 % depreciated
-     or −60 % gross; Marcy-l'Étoile up to 14): the cut comes overwhelmingly
+     or −60 % gross; up to 14 points in single industrial communes): the cut
+     comes overwhelmingly
      from cheap industrial land.
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of

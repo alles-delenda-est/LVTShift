@@ -599,8 +599,10 @@ export default function MethodologiePage() {
               taxe le sol et les bâtiments, pas les machines et installations
               fixes des usines, pour ne pas pénaliser l&apos;investissement.
               Ce choix pèse peu : les taxer ne déplacerait l&apos;impôt
-              industriel que de 1 à 3 points (dans la couronne lyonnaise, la
-              baisse passerait de 63&nbsp;% à 60–62&nbsp;%). Elle tient
+              industriel que de 1 à 3 points à l&apos;échelle d&apos;une
+              couronne (dans la couronne lyonnaise, la baisse passerait de
+              63&nbsp;% à 60–62&nbsp;%), jusqu&apos;à 14 points dans une
+              commune très industrielle. Elle tient
               surtout à un foncier industriel bon marché.
             </p>
           </div>
