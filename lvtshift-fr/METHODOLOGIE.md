@@ -132,12 +132,8 @@ DVF (`estimate.fit_hedonic` / `market_value`) : médiane cellule×type du log �
 rétrécie (shrinkage) vers la médiane communale par type (pseudo-effectif k = 8),
 × surface habitable de la parcelle (`net_to_gross` × surface plancher, §3.1), la
 base sur laquelle les prix DVF sont exprimés. DVF est nettoyé aux mutations `Vente`, agrégé à
-la mutation, le €/m² écrêté aux 1er/99e centiles.
-   Publier la distribution non bornée à côté (la part avant bornage est conservée
-   dans la colonne `land_share_raw`). Précédence quand plancher agricole et
-   bornage se contredisent : le plancher (une observation de marché) l'emporte ;
-   ces parcelles sont flaggées `built_floored_ag` et leur part terrain peut
-   légitimement dépasser les bornes.
+la mutation, le €/m² écrêté aux 1er/99e centiles. Les cinq années poolées sont d'abord
+ramenées en euros 2025 (paragraphe suivant).
 
 **Déflateur de prix.** Les cinq années DVF couvrent un cycle (hausse jusqu'en 2022,
 puis correction), d'ampleur très variable selon les lieux : chaque vente est donc
