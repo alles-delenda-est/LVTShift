@@ -30,11 +30,11 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Buildings | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, commune bbox | current | footprint, storeys, height, dwellings, usage, FF-match flag |
 | Construction era | DPE logements existants (ADEME) | data-fair API by `code_insee_ban` | since 07/2021 | depreciation (period band → year) |
 | Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels |
-| Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2024 | non-constructible land €/m² |
+| Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2025 edition (2024 sales) | non-constructible land €/m² |
 | Building-plot fallback | EPTB (SDES) | national figure (config) | 2023 | constructible €/m² when local comparables are thin |
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
-| Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 | distributional (quintile) analysis |
+| Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 (see §6.8) | distributional (quintile) analysis |
 | Exempt public property | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | yearly zips via the data.economie.gouv.fr catalog | situation 2025 | flag obviously TFPB-exempt public property (§3.5) |
 
 All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`.
@@ -118,7 +118,8 @@ degenerates to "unknown".
 toward the commune-type median (pseudo-count k = 8), × the parcel's habitable
 area (`net_to_gross` × floor area, §3.1), the basis DVF prices are quoted on. DVF is
 cleaned to `Vente` mutations, aggregated to the mutation, €/m² trimmed at the
-1st/99th percentile.
+1st/99th percentile. The five pooled years are first brought to 2025 euros
+(next paragraph).
 
 **Price deflator.** The five DVF years span a cycle (prices up to 2022, then a
 correction), and by very different amounts by place, so each sale is first brought
@@ -321,9 +322,11 @@ Ranked by how much they move published (category/quintile) results.
    the starting bill. Resolved only by per-parcel VLC (Fichiers Fonciers).
 2. **Residual amplification.** Built-parcel land = market − building, so building
    errors are amplified in the land residual where buildings are a large share of
-   value. Mitigated by the [0.15, 0.85] clip, aggregation, and the sensitivity
-   band. Vacant land does **not** use the residual, so the LVT headline (under-used
-   land pays more) is unaffected by building-data quality.
+   value. Mitigated by the [0.15, 0.85] clip and aggregation, and made visible
+   by the land-share ±10 pt sensitivity band published with every commune's
+   headline figures (`headline_sensitivity`, re-solved revenue-neutral at each
+   end). Vacant land does **not** use the residual, so the LVT headline
+   (under-used land pays more) is unaffected by building-data quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies a residential median to
    non-residential / never-diagnosed parcels. Era→year uses band midpoints
@@ -348,12 +351,22 @@ Ranked by how much they move published (category/quintile) results.
    (§3.7). The preflight `land_share_clip` check flags it. The effective-age cap
    (30 years) and ramp (q 1.2–2.5) are judgement calls; publishing a sensitivity
    on them is open (THEORY.md).
+   Publish the unclipped distribution alongside (the pre-clip share is kept as
+   `land_share_raw` in the parcel frame). Precedence when the agricultural floor
+   and the clip conflict: the floor (a market observation) wins; such parcels are
+   flagged `built_floored_ag` and their land share may legitimately exceed the
+   bounds.
 6. **Zoning nuance**: all AU treated constructible with a flat discount; `AU
    fermée` deserves a steeper cut and `Nh/Ah` pastilles are undervalued.
 7. **Non-residential market value** borrows the residential €/m² surface and the
    flat area ratios; professionnels (2017 VLC revision) need a separate stratum.
-8. **Income (Filosofi)**: 2021 (last vintage), communes ≥5 000 inhabitants only,
-   some IRIS statistically suppressed.
+8. **Income (Filosofi)**: 2021 vintage; INSEE published a « Filosofi 2 » 2023
+   vintage with IRIS indicators in May 2026 (methodological break) — 2021 is
+   retained pending evaluation. Communes ≥5 000 inhabitants only, some IRIS
+   statistically suppressed. Quintiles additionally need ≥5 income-distinct
+   IRIS: a commune with one or two IRIS (e.g. Figeac, though ≥5 000) silently
+   loses its income charts (upstream skips the chart when quantile bins
+   collapse).
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are
    modelled as whole communes from their arrondissements (§3.7); Marseille could
    be added the same way.
@@ -371,6 +384,19 @@ Ranked by how much they move published (category/quintile) results.
     CGI art. 1384 A, the QPV abatement) are not identifiable from open data, so
     the baseline still overstates today's bill on exempt HLM and understates it
     elsewhere (material in 93).
+    Farm buildings (CGI art. 1382 6°: greenhouses, barns) are not yet exempted
+    either.
+12. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
+    the commune keep their value in the mutation price but are excluded from
+    the floor-area sum, overstating €/m² where annexes are common (rural
+    houses) — a spatially structured upward bias the percentile trim does not
+    remove (see `ingest.fetch_dvf` docstring).
+13. **Raw-data caching is opt-in.** `run_commune --cache-dir` (or
+    `LVTFR_CACHE_DIR`) caches raw downloads by URL hash, so batch runs are
+    resumable; without it every run re-downloads from live endpoints that
+    occasionally move (config.py's warning). There is no manifest (source, URL,
+    fetch date, hash) yet, so runs are reproducible as commands rather than as
+    data.
 
 ## 7. The Fichiers Fonciers access argument
 
