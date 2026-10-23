@@ -179,19 +179,28 @@ export CSV seul : `run(..., make_report=False)`.
   multiplié par un facteur national (2,5, cas central) ; l'indicateur brut
   (× 1,0) est la borne basse. Ce facteur déplace les résultats des ménages de
   10 à 15 points : premier quintile de revenu à Paris −17,4 % (central) contre
-  −27,6 % (borne basse), couronne lyonnaise +0,8 % contre −15,8 %. Les
-  nouvelles cotisations sont identiques ; seul le point de départ bouge. Un
-  facteur national unique ne peut convenir à toutes les communes ; les
-  Fichiers fonciers le remplaceraient par les vraies valeurs.
+  −27,6 % (borne basse), couronne lyonnaise +0,6 % contre −15,9 %. Les
+  nouvelles cotisations sont identiques ; seul le point de départ bouge. Le
+  site affiche désormais les deux côte à côte sur chaque page de résultats
+  (tableau « Incertitude sur la taxe actuelle des locaux professionnels »,
+  champ `baseline_sensitivity` des fichiers publiés). Un facteur national
+  unique ne peut convenir à toutes les communes ; les Fichiers fonciers le
+  remplaceraient par les vraies valeurs.
 - **Constat inverse de l'attendu.** Les entreprises paient aujourd'hui plus au
   m² que ne le supposait la surface plancher (valeurs industrielles incluant
   l'outillage, locaux professionnels réévalués sur les loyers de 2013 quand le
   logement reste sur 1970) : la réforme déplace donc davantage de charge des
   entreprises vers les ménages. Dans le couloir chimique et industriel
   lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
-  central. La LVT modélisée exonère implicitement l'outillage industriel (seul
-  le hangar compte dans la valeur bâtie) ; c'est un choix politique, de poids
-  mineur dans la baisse industrielle.
+  central.
+- **Outillage industriel hors champ, par choix.** La réforme modélisée taxe le
+  sol, et le bâti au taux réduit, mais pas l'outillage industriel fixe :
+  décision du responsable du projet, conforme à la théorie de la taxe
+  foncière sur le sol, qui évite de pénaliser l'investissement. Le modèle ne
+  compte déjà que le hangar dans la valeur bâtie. Taxer l'outillage ne
+  déplacerait les cotisations industrielles que de 1 à 3 points à l'échelle
+  de chaque couronne, davantage dans une commune industrielle isolée
+  (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 au coût brut).
 - **Taxe actuelle (maillon porteur).** La TFPB est un impôt sur le
   **bâti** : les parcelles non bâties portent **zéro** taxe actuelle
   (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT

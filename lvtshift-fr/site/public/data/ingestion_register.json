@@ -86,10 +86,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 61.5 % (bande 40–65 %).",
+          "message": "Part foncière 61.2 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 61.5
+            "land_share_pct": 61.2
           }
         },
         {
@@ -406,10 +406,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 41.9 % (bande 40–65 %).",
+          "message": "Part foncière 41.3 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 41.9
+            "land_share_pct": 41.3
           }
         },
         {
@@ -511,10 +511,10 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 38.6 % (bande 40–65 %).",
+          "message": "Part foncière 38.0 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
-            "land_share_pct": 38.6
+            "land_share_pct": 38.0
           }
         },
         {
@@ -720,20 +720,20 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 45.4 % (bande 40–65 %).",
+          "message": "Part foncière 45.1 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
-            "land_share_pct": 45.4
+            "land_share_pct": 45.1
           }
         },
         {
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.6 % au plafond (85%), 2.7 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0.5 % au plafond (85%), 2.7 % au plancher (15%).",
           "adaptation": null,
           "detail": {
-            "at_cap_pct": 0.6,
+            "at_cap_pct": 0.5,
             "at_floor_pct": 2.7
           }
         }
@@ -835,10 +835,10 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.8 % au plafond (85%), 0.5 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0.7 % au plafond (85%), 0.5 % au plancher (15%).",
           "adaptation": null,
           "detail": {
-            "at_cap_pct": 0.8,
+            "at_cap_pct": 0.7,
             "at_floor_pct": 0.5
           }
         }
@@ -3404,10 +3404,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 0.8 % au plafond (85%), 0.4 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 0.6 % au plafond (85%), 0.4 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 0.8,
+              "at_cap_pct": 0.6,
               "at_floor_pct": 0.4
             }
           }
@@ -4346,10 +4346,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.4 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.3 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.4,
+              "at_cap_pct": 1.3,
               "at_floor_pct": 0.0
             }
           }
@@ -4450,10 +4450,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.5 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.4 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.5,
+              "at_cap_pct": 2.4,
               "at_floor_pct": 0.0
             }
           }
@@ -4960,10 +4960,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 46.2 % (bande 40–65 %).",
+            "message": "Part foncière 46.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 46.2
+              "land_share_pct": 46.1
             }
           },
           {
@@ -5171,10 +5171,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 60.2 % (bande 40–65 %).",
+            "message": "Part foncière 60.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 60.2
+              "land_share_pct": 60.1
             }
           },
           {
@@ -5587,10 +5587,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 57.3 % (bande 40–65 %).",
+            "message": "Part foncière 57.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 57.3
+              "land_share_pct": 57.1
             }
           },
           {
@@ -5795,10 +5795,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 45.6 % (bande 40–65 %).",
+            "message": "Part foncière 44.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 45.6
+              "land_share_pct": 44.1
             }
           },
           {
@@ -6003,10 +6003,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 54.4 % (bande 40–65 %).",
+            "message": "Part foncière 54.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 54.4
+              "land_share_pct": 54.3
             }
           },
           {
@@ -6211,10 +6211,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 44.9 % (bande 40–65 %).",
+            "message": "Part foncière 44.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 44.9
+              "land_share_pct": 44.6
             }
           },
           {
@@ -6315,10 +6315,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 53.3 % (bande 40–65 %).",
+            "message": "Part foncière 53.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 53.3
+              "land_share_pct": 53.1
             }
           },
           {
@@ -6419,10 +6419,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 57.9 % (bande 40–65 %).",
+            "message": "Part foncière 57.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 57.9
+              "land_share_pct": 57.8
             }
           },
           {
@@ -6939,10 +6939,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 60.1 % (bande 40–65 %).",
+            "message": "Part foncière 60.0 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 60.1
+              "land_share_pct": 60.0
             }
           },
           {
@@ -7147,20 +7147,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 54.2 % (bande 40–65 %).",
+            "message": "Part foncière 54.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 54.2
+              "land_share_pct": 54.1
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.5 % au plafond (85%), 0.4 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.4 % au plafond (85%), 0.4 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.5,
+              "at_cap_pct": 1.4,
               "at_floor_pct": 0.4
             }
           }
@@ -7563,10 +7563,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 57.7 % (bande 40–65 %).",
+            "message": "Part foncière 57.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 57.7
+              "land_share_pct": 57.6
             }
           },
           {
@@ -8291,10 +8291,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 51.4 % (bande 40–65 %).",
+            "message": "Part foncière 50.9 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 51.4
+              "land_share_pct": 50.9
             }
           },
           {
@@ -8395,10 +8395,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 57.2 % (bande 40–65 %).",
+            "message": "Part foncière 56.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 57.2
+              "land_share_pct": 56.8
             }
           },
           {
@@ -8499,20 +8499,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 58.3 % (bande 40–65 %).",
+            "message": "Part foncière 58.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 58.3
+              "land_share_pct": 58.2
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 0.9 % au plafond (85%), 0.9 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 0.8 % au plafond (85%), 0.9 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 0.9,
+              "at_cap_pct": 0.8,
               "at_floor_pct": 0.9
             }
           }
@@ -8613,10 +8613,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.3 % au plafond (85%), 0.1 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.1 % au plafond (85%), 0.1 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.3,
+              "at_cap_pct": 1.1,
               "at_floor_pct": 0.1
             }
           }
@@ -8811,10 +8811,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 49.5 % (bande 40–65 %).",
+            "message": "Part foncière 49.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 49.5
+              "land_share_pct": 49.3
             }
           },
           {
@@ -8915,10 +8915,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 46.4 % (bande 40–65 %).",
+            "message": "Part foncière 46.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 46.4
+              "land_share_pct": 46.3
             }
           },
           {
@@ -9334,20 +9334,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 49.6 % (bande 40–65 %).",
+            "message": "Part foncière 49.4 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 49.6
+              "land_share_pct": 49.4
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.7 % au plafond (85%), 1.1 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.6 % au plafond (85%), 1.1 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.7,
+              "at_cap_pct": 1.6,
               "at_floor_pct": 1.1
             }
           }
@@ -9441,20 +9441,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 69.5 % (bande 40–65 %).",
+            "message": "Part foncière 69.6 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 69.5
+              "land_share_pct": 69.6
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 3.1 % au plafond (85%), 0.2 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 3.0 % au plafond (85%), 0.2 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 3.1,
+              "at_cap_pct": 3.0,
               "at_floor_pct": 0.2
             }
           }
@@ -10499,10 +10499,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 52.2 % (bande 40–65 %).",
+            "message": "Part foncière 52.1 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 52.2
+              "land_share_pct": 52.1
             }
           },
           {
@@ -11129,10 +11129,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 41.7 % (bande 40–65 %).",
+            "message": "Part foncière 41.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 41.7
+              "land_share_pct": 41.6
             }
           },
           {
@@ -11353,10 +11353,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.1 % au plafond (85%), 0.1 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.0 % au plafond (85%), 0.1 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.1,
+              "at_cap_pct": 2.0,
               "at_floor_pct": 0.1
             }
           }
@@ -11674,10 +11674,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.0 % au plafond (85%), 0.2 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 0.9 % au plafond (85%), 0.2 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.0,
+              "at_cap_pct": 0.9,
               "at_floor_pct": 0.2
             }
           }
@@ -12417,10 +12417,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 0.7 % au plafond (85%), 2.1 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 0.6 % au plafond (85%), 2.1 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 0.7,
+              "at_cap_pct": 0.6,
               "at_floor_pct": 2.1
             }
           }
@@ -12836,10 +12836,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.1 % au plafond (85%), 0.2 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.0 % au plafond (85%), 0.2 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.1,
+              "at_cap_pct": 2.0,
               "at_floor_pct": 0.2
             }
           }
@@ -13157,10 +13157,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.4 % au plafond (85%), 0.6 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.3 % au plafond (85%), 0.6 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.4,
+              "at_cap_pct": 2.3,
               "at_floor_pct": 0.6
             }
           }
@@ -13569,10 +13569,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 52.3 % (bande 40–65 %).",
+            "message": "Part foncière 52.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 52.3
+              "land_share_pct": 52.2
             }
           },
           {
@@ -14102,10 +14102,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 52.0 % (bande 40–65 %).",
+            "message": "Part foncière 51.9 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 52.0
+              "land_share_pct": 51.9
             }
           },
           {
@@ -15189,10 +15189,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.5 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.4 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.5,
+              "at_cap_pct": 1.4,
               "at_floor_pct": 0.0
             }
           }
@@ -15729,10 +15729,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.2 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.1 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.2,
+              "at_cap_pct": 1.1,
               "at_floor_pct": 0.0
             }
           }
@@ -15827,10 +15827,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 42.6 % (bande 40–65 %).",
+            "message": "Part foncière 42.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 42.6
+              "land_share_pct": 42.2
             }
           },
           {
@@ -15935,10 +15935,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 52.0 % (bande 40–65 %).",
+            "message": "Part foncière 51.9 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 52.0
+              "land_share_pct": 51.9
             }
           },
           {
@@ -16377,10 +16377,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.3 % au plafond (85%), 0.1 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.2 % au plafond (85%), 0.1 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.3,
+              "at_cap_pct": 1.2,
               "at_floor_pct": 0.1
             }
           }
@@ -17339,10 +17339,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 46.6 % (bande 40–65 %).",
+            "message": "Part foncière 45.8 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 46.6
+              "land_share_pct": 45.8
             }
           },
           {
@@ -18203,10 +18203,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 50.8 % (bande 40–65 %).",
+            "message": "Part foncière 50.5 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 50.8
+              "land_share_pct": 50.5
             }
           },
           {
@@ -18311,10 +18311,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 47.8 % (bande 40–65 %).",
+            "message": "Part foncière 47.6 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 47.8
+              "land_share_pct": 47.6
             }
           },
           {
@@ -18635,20 +18635,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 59.8 % (bande 40–65 %).",
+            "message": "Part foncière 59.7 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 59.8
+              "land_share_pct": 59.7
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 2.1 % au plafond (85%), 0.4 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 2.0 % au plafond (85%), 0.4 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 2.1,
+              "at_cap_pct": 2.0,
               "at_floor_pct": 0.4
             }
           }
@@ -18851,10 +18851,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "WARN",
-            "message": "Part foncière 65.6 % (bande 40–65 %).",
+            "message": "Part foncière 65.4 % (bande 40–65 %).",
             "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
             "detail": {
-              "land_share_pct": 65.6
+              "land_share_pct": 65.4
             }
           },
           {
@@ -19401,10 +19401,10 @@
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.1 % au plafond (85%), 0.0 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.0 % au plafond (85%), 0.0 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.1,
+              "at_cap_pct": 1.0,
               "at_floor_pct": 0.0
             }
           }
@@ -19499,20 +19499,20 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 53.4 % (bande 40–65 %).",
+            "message": "Part foncière 53.3 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 53.4
+              "land_share_pct": 53.3
             }
           },
           {
             "check": "land_share_clip",
             "category": "validation",
             "severity": "OK",
-            "message": "Parcelles bâties à la borne de part foncière : 1.3 % au plafond (85%), 0.5 % au plancher (15%).",
+            "message": "Parcelles bâties à la borne de part foncière : 1.2 % au plafond (85%), 0.5 % au plancher (15%).",
             "adaptation": null,
             "detail": {
-              "at_cap_pct": 1.3,
+              "at_cap_pct": 1.2,
               "at_floor_pct": 0.5
             }
           }
@@ -19607,10 +19607,10 @@
             "check": "land_share_band",
             "category": "validation",
             "severity": "OK",
-            "message": "Part foncière 52.3 % (bande 40–65 %).",
+            "message": "Part foncière 52.2 % (bande 40–65 %).",
             "adaptation": null,
             "detail": {
-              "land_share_pct": 52.3
+              "land_share_pct": 52.2
             }
           },
           {

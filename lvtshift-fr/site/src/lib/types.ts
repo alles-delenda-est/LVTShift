@@ -27,6 +27,12 @@ export interface SensitivityLeg {
   by_income_quintile_within?: BandQuintileRow[] | null;
 }
 export interface Sensitivity { delta_pt: number; base: SensitivityLeg; low: SensitivityLeg; high: SensitivityLeg; }
+/** Central vs lower-bound share of professional premises in today's tax: the
+ *  LVT bills are identical, only today's tax (and so every change) differs. */
+export interface BaselineSensitivity {
+  pro_scale_central: number; pro_scale_low: number;
+  central: SensitivityLeg; low: SensitivityLeg;
+}
 export interface CategoryRow {
   category: string; label_fr: string; parcels: number; share_of_parcels_pct: number | null;
   median_change_pct: number | null; median_change_eur: number; count_paying_more: number;
@@ -61,6 +67,8 @@ export interface Commune {
   name: string; departement: string;
   reference_year: number | null; model_type: string; headline: Headline;
   headline_sensitivity: Sensitivity; by_category: CategoryRow[];
+  /** Absent in older payloads and in runs without a calibrated baseline. */
+  baseline_sensitivity?: BaselineSensitivity | null;
   by_income_quintile: QuintileRow[] | null; by_improvement_ratio: BucketRow[];
   provenance: {
     construction_cost_eur_m2: number | null; land_share_bounds: number[]; note: string;

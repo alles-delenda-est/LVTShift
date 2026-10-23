@@ -16,7 +16,7 @@
     {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
-      "model_land_share_pct": 38.6,
+      "model_land_share_pct": 38.0,
       "band": [
         40.0,
         65.0

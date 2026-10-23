@@ -120,6 +120,11 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         baseline.pop("floor", None)
     p = estimate.current_tax(p, commune_tfpb_produit,
                              bucket_weights=baseline["weights"])
+    # lower-bound baseline for the published sensitivity (new bills unchanged)
+    w_low = baseline.get("weights_low")
+    p["current_tax_low"] = (estimate.current_tax(p, commune_tfpb_produit,
+                                                 bucket_weights=w_low)["current_tax"]
+                            if w_low else p["current_tax"])
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
 
@@ -194,16 +199,6 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
         out["note"] = f"invalid split {split}"
         print(f"[{cfg.name}] baseline: {out['note']}; floor-area baseline kept")
         return out
-    # business-heavy communes (Rungis, Vaujours…): the national professional
-    # scale can overshoot, so both shares are scaled down to the ceiling
-    targeted = split["industrial"] + split["professional"]
-    cap_note = ""
-    if targeted > M["max_targeted_share"]:
-        k = M["max_targeted_share"] / targeted
-        split = {**split, "industrial": split["industrial"] * k,
-                 "professional": split["professional"] * k}
-        cap_note = f"industrial + professional {targeted:.0%} scaled to {M['max_targeted_share']:.0%}; "
-    out["targets"] = split
     floor = estimate.baseline_floor(buildings)
     q = p[["idpar", "floor_area_m2"]].merge(floor, on="idpar", how="left")
     taxable = q["floor_area_m2"].fillna(0).to_numpy() > 0
@@ -211,13 +206,34 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
         taxable &= ~p["is_exempt_public"].fillna(False).astype(bool).to_numpy()
     totals = {k: float(q.loc[taxable, f"floor_{k}"].fillna(0).sum())
               for k in estimate.BUCKETS}
-    w, note = estimate.calibrated_weights(totals, split, M["max_weight_ratio"])
-    note = cap_note + note
+    split, w, note = _weights_for(split, "professional", totals, M)
     out.update(method="calibrated", weights=w, note=note, floor=floor,
-               floor_totals=totals)
+               floor_totals=totals, targets=split)
+    # lower bound of the professional share (raw CFE proxy), published as a
+    # sensitivity: same groups and rules, only the professional target differs
+    if split.get("professional_low") is not None:
+        _s, out["weights_low"], _n = _weights_for(split, "professional_low", totals, M)
     print(f"[{cfg.name}] baseline weights per m² vs housing: industrial "
           f"{w['industrial']:.2f}, professional {w['professional']:.2f} ({note})")
     return out
+
+
+def _weights_for(split: dict, pro_key: str, totals: dict, M: dict) -> tuple:
+    """Calibrated weights for one professional target (pro_key). Business-heavy
+    communes (Rungis, Vaujours…) whose industrial + professional share exceeds
+    the ceiling are scaled down to it. Returns (split, weights, note)."""
+    target = {"industrial": split["industrial"], "professional": split[pro_key]}
+    targeted = target["industrial"] + target["professional"]
+    cap_note = ""
+    if targeted > M["max_targeted_share"]:
+        k = M["max_targeted_share"] / targeted
+        target = {key: v * k for key, v in target.items()}
+        cap_note = (f"industrial + professional {targeted:.0%} scaled to "
+                    f"{M['max_targeted_share']:.0%}; ")
+    w, note = estimate.calibrated_weights(totals, target, M["max_weight_ratio"])
+    if pro_key == "professional":
+        split = {**split, **target}
+    return split, w, cap_note + note
 
 
 def _write_baseline(p: pd.DataFrame, baseline: dict, out_dir: str, name: str) -> None:
@@ -283,6 +299,9 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
     import json
     side = dwellings_per_parcel(p, buildings)
     side.insert(0, "new_tax", p["new_tax"].values)
+    # today's tax at the lower-bound professional share (baseline sensitivity)
+    if "current_tax_low" in p.columns:
+        side["current_tax_low"] = p["current_tax_low"].values
     side.to_csv(Path(out_dir) / f"{name}.households.csv", index=False)
     # tie the sidecar to the exact export it belongs to (new_tax alone repeats
     # across parcels, so it cannot prove the rows line up)
