@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * CategoryImpactBars — horizontal diverging bars showing median_change_pct
@@ -19,6 +19,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  ErrorBar,
   XAxis,
   YAxis,
   Tooltip,
@@ -26,8 +27,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import type { CategoryRow } from "@/lib/types";
+import type { BandCategoryRow, CategoryRow } from "@/lib/types";
 import { pct, signedPct, eurosExact } from "@/lib/format";
+import { bandSpan, byKey } from "@/lib/band";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 
 /* ── extended row ─────────────────────────────────────────────────── */
@@ -35,6 +37,10 @@ import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./the
 interface ProcessedRow extends CategoryRow {
   barValue: number;   // median_change_pct ?? 0
   isNull: boolean;
+  /** ±10 pt land-share band: whisker [below, above] and its ends */
+  err: [number, number] | null;
+  bandLo: number | null;
+  bandHi: number | null;
 }
 
 /* ── tooltip ──────────────────────────────────────────────────────── */
@@ -67,6 +73,12 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
         {absEur}
       </p>
       <p>Paie davantage&nbsp;: {pct(row.share_paying_more_pct)}</p>
+      {row.bandLo !== null && row.bandHi !== null && (
+        <p style={{ color: GRIS_PALE }}>
+          Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedPct(row.bandLo)}{" "}
+          à {signedPct(row.bandHi)}
+        </p>
+      )}
     </div>
   );
 }
@@ -124,18 +136,36 @@ function makeLabelRenderer(data: ProcessedRow[]) {
 
 export interface CategoryImpactBarsProps {
   byCategory: CategoryRow[];
+  /** Low / high legs of the ±10 pt land-share band (optional). */
+  band?: {
+    low?: BandCategoryRow[] | null;
+    high?: BandCategoryRow[] | null;
+  };
 }
 
 export default function CategoryImpactBars({
   byCategory,
+  band,
 }: CategoryImpactBarsProps) {
+  const low = byKey(band?.low, "category");
+  const high = byKey(band?.high, "category");
   /* Sort: most positive → least positive → negative; null rows last */
   const sortedData: ProcessedRow[] = [...byCategory]
-    .map((row) => ({
-      ...row,
-      barValue: row.median_change_pct ?? 0,
-      isNull: row.median_change_pct === null,
-    }))
+    .map((row) => {
+      const span = bandSpan(
+        row.median_change_pct,
+        low.get(row.category)?.median_change_pct,
+        high.get(row.category)?.median_change_pct,
+      );
+      return {
+        ...row,
+        barValue: row.median_change_pct ?? 0,
+        isNull: row.median_change_pct === null,
+        err: span?.err ?? null,
+        bandLo: span?.lo ?? null,
+        bandHi: span?.hi ?? null,
+      };
+    })
     .sort((a, b) => {
       if (a.isNull && !b.isNull) return 1;
       if (!a.isNull && b.isNull) return -1;
@@ -143,7 +173,9 @@ export default function CategoryImpactBars({
     });
 
   /* Symmetric domain with 10 % headroom for labels */
-  const nonNull = sortedData.filter((r) => !r.isNull).map((r) => r.barValue);
+  const nonNull = sortedData
+    .filter((r) => !r.isNull)
+    .flatMap((r) => [r.barValue, r.bandLo ?? r.barValue, r.bandHi ?? r.barValue]);
   const minVal = nonNull.length ? Math.min(...nonNull) : -10;
   const maxVal = nonNull.length ? Math.max(...nonNull) : 10;
   const absMax = Math.max(Math.abs(minVal), Math.abs(maxVal), 5);
@@ -199,6 +231,13 @@ export default function CategoryImpactBars({
           {sortedData.map((entry, idx) => (
             <Cell key={`cat-cell-${idx}`} fill={cellFill(entry)} />
           ))}
+          <ErrorBar
+            dataKey="err"
+            direction="x"
+            width={6}
+            stroke={ENCRE}
+            strokeWidth={1}
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
