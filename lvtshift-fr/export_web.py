@@ -91,7 +91,15 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
         raise ValueError(
             f"{side_path.name} does not match {path.name}; "
             f"re-run `python run_commune.py {commune_key}`")
-    return df.assign(n_dwellings=side["n_dwellings"].to_numpy(float))
+    df = df.assign(n_dwellings=side["n_dwellings"].to_numpy(float))
+    if "current_tax_low" in side.columns:
+        low = side["current_tax_low"].to_numpy(float)
+        if not np.isfinite(low).all() or abs(low.sum() - df["current_tax"].sum()) > \
+                max(1.0, 1e-6 * abs(df["current_tax"].sum())):
+            raise ValueError(f"{side_path.name}: lower-bound current tax is not "
+                             f"revenue-neutral with {path.name}")
+        df = df.assign(current_tax_low=low)
+    return df
 
 
 def weighted_median(values, weights):
@@ -346,6 +354,29 @@ def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
     return _sensitivity_summary(df, chg, target_share, current_revenue)
 
 
+def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False) -> dict | None:
+    """Central vs lower-bound baseline (professional premises' share of today's
+    tax at the raw CFE proxy). The LVT bills are identical; only today's tax,
+    and so every change, differs. None when the run carries no lower bound."""
+    if "current_tax_low" not in df.columns:
+        return None
+    from config import BASELINE_MODEL as M
+    revenue = float(df["current_tax"].sum())
+    land = float(df["taxable_land_value"].sum())
+    base = land + float(df["taxable_improvement_value"].sum())
+    share = land / base if base else 0.0
+    new = df["new_tax"].to_numpy(dtype=float)
+    low = df.assign(current_tax=df["current_tax_low"])
+    return {
+        "pro_scale_central": M["pro_undercount_scale"],
+        "pro_scale_low": M["pro_undercount_scale_low"],
+        "central": _sensitivity_summary(
+            df, new - df["current_tax"].to_numpy(dtype=float), share, revenue, within),
+        "low": _sensitivity_summary(
+            low, new - df["current_tax_low"].to_numpy(dtype=float), share, revenue, within),
+    }
+
+
 def build_headline_sensitivity(df: pd.DataFrame, ratio: float, delta_pt: float = 10.0) -> dict:
     current_revenue = float(df["current_tax"].sum())
     land = float(df["taxable_land_value"].sum())
@@ -368,6 +399,7 @@ ALLOWED_TOP_KEYS = {
     "by_income_quintile", "by_improvement_ratio", "provenance", "currency",
     "kind", "members", "coverage",
     "by_income_quintile_within", "by_income_quintile_within_coverage_pct",
+    "baseline_sensitivity",
 }
 HEADLINE_KEYS = {
     "parcels_modeled", "tax_base_eur", "land_base_eur", "improvement_base_eur",
@@ -407,6 +439,21 @@ def assert_aggregate_only(payload: dict) -> None:
                 assert set(r) <= QUINTILE_KEYS, f"unexpected quintile keys: {set(r) - QUINTILE_KEYS}"
                 assert all(v is None or isinstance(v, (str, int, float)) for v in r.values()), \
                     "non-scalar value in a quintile row"
+    bs = payload.get("baseline_sensitivity")
+    if bs is not None:
+        assert set(bs) <= {"pro_scale_central", "pro_scale_low", "central", "low"}, \
+            f"unexpected baseline_sensitivity keys: {set(bs)}"
+        for leg in ("central", "low"):
+            g = bs.get(leg) or {}
+            assert set(g) <= SENSITIVITY_LEG_KEYS, \
+                f"unexpected baseline leg keys: {set(g) - SENSITIVITY_LEG_KEYS}"
+            assert len(g.get("by_category") or []) <= 10
+            rows = [(r, BAND_CATEGORY_KEYS) for r in g.get("by_category") or []]
+            for k in ("by_income_quintile", "by_income_quintile_within"):
+                assert len(g.get(k) or []) <= 5
+                rows += [(r, BAND_QUINTILE_KEYS) for r in g.get(k) or []]
+            for r, keys in rows:
+                assert set(r) <= set(keys), f"unexpected baseline row keys: {set(r) - set(keys)}"
     sens = payload.get("headline_sensitivity") or {}
     assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
@@ -495,6 +542,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "by_category": build_by_category(df),
         "by_income_quintile": build_by_income_quintile(df),
         "by_improvement_ratio": build_buckets(df),
+        "baseline_sensitivity": build_baseline_sensitivity(df),
         "provenance": {
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
@@ -646,6 +694,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         "by_income_quintile_within": within,
         "by_income_quintile_within_coverage_pct": within_cov,
         "by_improvement_ratio": build_buckets(df),
+        "baseline_sensitivity": build_baseline_sensitivity(df, within=True),
         "members": members,
         "coverage": {
             "members_total": len(t["members"]),

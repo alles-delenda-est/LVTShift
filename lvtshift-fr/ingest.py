@@ -742,9 +742,11 @@ def _rei_baseline_split(cfg) -> dict:
     else:
         raise IngestUnavailable("REI", f"no CFE base (T29) {year} for {cfg.insee_code}")
     pro = M["pro_cfe_factor"] * cfe_pro * M["pro_undercount_scale"]
+    pro_low = M["pro_cfe_factor"] * cfe_pro * M["pro_undercount_scale_low"]
     out = {"industrial": industrial / e11, "professional": pro / e11,
+           "professional_low": pro_low / e11,
            "year": int(year), "pro_source": src}
-    if not (0 <= out["industrial"] <= 1 and 0 <= out["professional"] <= 1):
+    if not all(0 <= out[k] <= 1 for k in ("industrial", "professional", "professional_low")):
         raise IngestUnavailable("REI", f"implausible baseline split for {cfg.insee_code}: {out}")
     print(f"  [{cfg.name}] TFPB base {year}: industrial {100 * out['industrial']:.1f}%, "
           f"professional {100 * out['professional']:.1f}% ({src})")

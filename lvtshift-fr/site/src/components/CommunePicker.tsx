@@ -17,6 +17,7 @@ import { useState } from "react";
 import type { Commune } from "@/lib/types";
 import HeadlineCards from "@/components/charts/HeadlineCards";
 import SensitivityBand from "@/components/charts/SensitivityBand";
+import BaselineRange from "@/components/charts/BaselineRange";
 import WinLoseSplit from "@/components/charts/WinLoseSplit";
 import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
@@ -178,6 +179,31 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             </h3>
             <SensitivityBand sensitivity={commune.headline_sensitivity} />
           </section>
+
+          {/* 2b. Uncertainty about today's tax on professional premises */}
+          {commune.baseline_sensitivity && (
+            <section aria-labelledby="section-taxe-actuelle">
+              <h3
+                id="section-taxe-actuelle"
+                className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
+              >
+                Incertitude sur la taxe actuelle des locaux professionnels
+              </h3>
+              <p className="text-sm text-encre font-body mb-3 max-w-3xl leading-relaxed">
+                Les données ouvertes sous-estiment la part des bureaux et
+                commerces dans la taxe foncière d&apos;aujourd&apos;hui (locaux
+                vacants, locaux loués par des organismes publics). L&apos;estimation
+                centrale la recale sur le total national de la Cour des comptes ;
+                l&apos;hypothèse plancher garde le chiffre brut. Les montants
+                payés après la réforme sont identiques dans les deux colonnes :
+                seul le point de départ change.
+              </p>
+              <BaselineRange
+                baseline={commune.baseline_sensitivity}
+                withinCommune={commune.kind === "territory"}
+              />
+            </section>
+          )}
 
           {/* 3. Win/lose split by category */}
           <section aria-labelledby="section-gagnants">

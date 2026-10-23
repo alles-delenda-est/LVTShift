@@ -531,6 +531,7 @@ BASELINE_MODEL = {
     # 2023): vacancy and non-CFE occupiers. Central 2.5 calibrates it to the
     # national figure; 1.0 (raw proxy) is the lower bound, reported in the docs.
     "pro_undercount_scale": 2.5,
+    "pro_undercount_scale_low": 1.0,     # published lower bound (raw proxy)
     "max_weight_ratio": 5.0,             # per-m² tax vs housing, industrial and pro
     "max_targeted_share": 0.75,          # sanity bound on industrial + pro
 }

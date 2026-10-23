@@ -315,3 +315,48 @@ def test_guard_rejects_nested_values_in_quintile_rows():
     payload = {"by_income_quintile": [{"quintile": 1, "dwellings": [1, 2, 3]}]}
     with pytest.raises(AssertionError):
         ew.assert_aggregate_only(payload)
+
+
+def test_baseline_sensitivity_changes_only_todays_tax():
+    df = _toy_df()
+    assert ew.build_baseline_sensitivity(df) is None          # no lower bound in the run
+    # lower bound: less professional tax today, same total (revenue-neutral)
+    low = df.assign(current_tax_low=[1200.0, 50.0, 1600.0, 1000.0])
+    b = ew.build_baseline_sensitivity(low)
+    assert b["pro_scale_central"] > b["pro_scale_low"]
+    central = ew._sensitivity_summary(df, (df.new_tax - df.current_tax).to_numpy(), 0.0, 3850.0)
+    assert b["central"]["share_paying_more_pct"] == central["share_paying_more_pct"]
+    # lower professional tax today: the commercial parcel now pays more
+    # (1 600 -> 1 900), the house gains more (1 200 -> 900)
+    assert b["low"]["share_paying_more_pct"] == 50.0           # vacant + commercial
+    payload = {"baseline_sensitivity": b}
+    ew.assert_aggregate_only(payload)
+    json.dumps(payload, allow_nan=False)
+    bad = {"baseline_sensitivity": {**b, "parcels": [1, 2]}}
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(bad)
+    leak = {"baseline_sensitivity": {**b, "low": {**b["low"], "idpar": "x"}}}
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only(leak)
+
+
+def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
+    import config
+    import hashlib
+    df = _toy_df()
+    df.to_csv(tmp_path / "x.csv", index=False)
+
+    class _Cfg:
+        insee_code, name, departement = "00000", "X", "00"
+    monkeypatch.setitem(config.COMMUNES, "x", _Cfg())
+    sha = hashlib.sha256((tmp_path / "x.csv").read_bytes()).hexdigest()
+    (tmp_path / "x.households.meta.json").write_text(json.dumps({"export_sha256": sha}))
+    side = pd.DataFrame({"new_tax": df["new_tax"], "n_dwellings": [1.0, 0.0, 0.0, 12.0],
+                         "current_tax_low": [1200.0, 50.0, 1600.0, 1000.0]})
+    side.to_csv(tmp_path / "x.households.csv", index=False)
+    out = ew.load_parcels("x", out_dir=str(tmp_path))
+    assert list(out["current_tax_low"]) == [1200.0, 50.0, 1600.0, 1000.0]
+    side.assign(current_tax_low=[1200.0, 50.0, 1600.0, 9000.0]).to_csv(
+        tmp_path / "x.households.csv", index=False)
+    with pytest.raises(ValueError):
+        ew.load_parcels("x", out_dir=str(tmp_path))
