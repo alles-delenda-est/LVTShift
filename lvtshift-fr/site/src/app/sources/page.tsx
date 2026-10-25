@@ -98,58 +98,66 @@ export default function SourcesPage() {
           {/* CPO 2023 */}
           <div className="border-l-2 border-lisere pl-5">
             <p className="font-display text-base font-medium text-encre mb-1">
-              Conseil des prélèvements obligatoires (CPO), décembre 2023
+              Conseil des prélèvements obligatoires (CPO),{" "}
+              <em>Pour une fiscalité du logement plus cohérente</em>, 18 décembre 2023
             </p>
             <p className="font-body text-sm text-gris leading-relaxed">
-              Le CPO recommande dans ce rapport de rebaser la taxe foncière
-              sur les valeurs de marché et de déplacer une partie de la charge
-              fiscale des droits de mutation à titre onéreux (DMTO) vers
-              l&apos;impôt récurrent sur la propriété. Il constitue le point
-              d&apos;appui institutionnel principal pour le cadrage de la
-              réforme proposée ici.
-            </p>
-            <p className="font-body text-xs text-gris mt-1.5 italic">
-              Note : le titre précis du rapport n&apos;a pas pu être vérifié
-              de façon indépendante dans les sources disponibles ; la citation
-              est donc conservatrice (corps + mois + année) conformément à
-              notre politique de précision bibliographique.
+              Le CPO recommande de réviser les valeurs locatives cadastrales,
+              base de la taxe foncière, pour qu&apos;elles reflètent mieux la
+              valeur des biens (la base actuelle sous-évalue les biens des
+              communes les plus riches, ce qui rend l&apos;impôt régressif), et
+              de transférer les droits de mutation à titre onéreux (DMTO) vers
+              la taxe foncière sans perte de recettes pour les collectivités :
+              taxer la détention plutôt que l&apos;acquisition.
             </p>
           </div>
 
           {/* Trannoy & Wasmer 2022 */}
           <div className="border-l-2 border-lisere pl-5">
             <p className="font-display text-base font-medium text-encre mb-1">
-              Trannoy, A. &amp; Wasmer, E. (2022)
+              Trannoy, A. &amp; Wasmer, É. (2022),{" "}
+              <em>
+                Le grand retour de la terre dans les patrimoines (et pourquoi
+                c&apos;est une bonne nouvelle&nbsp;!)
+              </em>
+              , Odile Jacob
             </p>
             <p className="font-body text-sm text-gris leading-relaxed">
-              Travaux académiques présentant le cas en faveur d&apos;une
-              taxation de la valeur foncière en France, avec une estimation de
-              la richesse foncière française à environ 7&thinsp;000 milliards
-              d&apos;euros — soit environ six années de revenu national.
-              Régulièrement cités dans les débats du CPO, du CAE et de France
-              Stratégie comme le travail de référence francophone sur
-              l&apos;assiette foncière.
-            </p>
-            <p className="font-body text-xs text-gris mt-1.5 italic">
-              Note : le titre précis n&apos;a pas pu être vérifié de façon
-              indépendante dans les sources disponibles ; citation
-              conservatrice (auteurs + année).
+              Plaidoyer en faveur d&apos;une taxation de la valeur foncière en
+              France. Les auteurs estiment que la valeur cumulée des terres
+              représente environ trois fois le PIB (2019).
             </p>
           </div>
 
-          {/* Supporting framing */}
+          {/* Bonnet, Bono, Chapelle & Wasmer 2014 */}
           <div className="border-l-2 border-lisere pl-5">
             <p className="font-display text-base font-medium text-encre mb-1">
-              Bonnet, O., Bono, P.-H., Chapelle, G. &amp; Wasmer, E.
+              Bonnet, O., Bono, P.-H., Chapelle, G. &amp; Wasmer, É. (2014),{" "}
+              <em>
+                Does housing capital contribute to inequality? A comment on
+                Thomas Piketty&apos;s Capital in the 21st Century
+              </em>
+              , Sciences Po
             </p>
             <p className="font-body text-sm text-gris leading-relaxed">
-              Travaux de l&apos;équipe de Sciences Po montrant que la
-              divergence entre rendement du capital et croissance (
-              <em>r &gt; g</em> au sens de Piketty) provient massivement de
-              l&apos;appréciation des <strong>terrains</strong> et non du
-              capital productif. Cités dans les pagers de campagne pour
-              ancrer la réforme dans la littérature sur les inégalités
-              patrimoniales.
+              Les auteurs montrent que la hausse du rapport entre patrimoine et
+              revenu mise en avant par Piketty tient pour l&apos;essentiel à la
+              hausse des prix du logement ; mesuré par les loyers, ce rapport est
+              stable ou en légère hausse dans la plupart des pays étudiés.
+            </p>
+          </div>
+
+          {/* Knoll, Schularick & Steger 2017 */}
+          <div className="border-l-2 border-lisere pl-5">
+            <p className="font-display text-base font-medium text-encre mb-1">
+              Knoll, K., Schularick, M. &amp; Steger, T. (2017), « No Price Like
+              Home: Global House Prices, 1870–2012 »,{" "}
+              <em>American Economic Review</em>, 107(2)
+            </p>
+            <p className="font-body text-sm text-gris leading-relaxed">
+              Sur quatorze pays avancés, environ 80&nbsp;% de la hausse des prix
+              immobiliers depuis la Seconde Guerre mondiale s&apos;explique par
+              celle des prix des terrains, non par le coût de construction.
             </p>
           </div>
         </div>
@@ -164,9 +172,7 @@ export default function SourcesPage() {
           Toutes les données utilisées dans la modélisation sont sous{" "}
           <strong>Licence Ouverte&nbsp;/ Etalab</strong>. Les URL et millésimes
           exacts sont configurés dans le code source (
-          <code className="text-xs font-mono bg-lisere px-1">
-            config.DATA_SOURCES
-          </code>
+          <a href="https://github.com/alles-delenda-est/LVTShift/blob/main/lvtshift-fr/config.py" className="font-mono text-xs underline underline-offset-2 hover:text-marine">config.py</a>, <code className="text-xs font-mono">DATA_SOURCES</code>
           ) et reproductibles par toute partie. Les jeux de données
           individuels ne sont jamais publiés ; seuls des agrégats par
           catégorie de bien et par quintile de revenu sont diffusés.
@@ -240,7 +246,7 @@ export default function SourcesPage() {
           DHUP/SISAL</strong> pour le coût des autres bâtiments sur ces
           mêmes territoires. Ces valeurs sont des paramètres de
           configuration explicites, documentés dans{" "}
-          <code className="font-mono bg-lisere px-1">config.py</code> et
+          <a href="https://github.com/alles-delenda-est/LVTShift/blob/main/lvtshift-fr/config.py" className="font-mono text-xs underline underline-offset-2 hover:text-marine">config.py</a> et
           modifiables par commune.
         </p>
 
@@ -253,9 +259,7 @@ export default function SourcesPage() {
             foncier d&apos;activité reposent sur les sources suivantes,
             consultées en octobre 2026. Les ratios qui en sont tirés sont des
             paramètres de configuration, documentés dans la note de recherche{" "}
-            <code className="text-xs font-mono bg-lisere px-1">
-              docs/research/nonres-valuation-2025.md
-            </code>
+            <a href="https://github.com/alles-delenda-est/LVTShift/blob/main/lvtshift-fr/docs/research/nonres-valuation-2025.md" className="font-mono text-xs underline underline-offset-2 hover:text-marine">nonres-valuation-2025.md</a>
             .
           </p>
           <ul className="font-body text-sm text-encre leading-relaxed space-y-2 list-disc pl-5">
@@ -344,9 +348,7 @@ export default function SourcesPage() {
             logements sont reconstituées commune par commune à partir des
             sources suivantes, consultées en octobre 2026. La méthode est
             documentée dans la note de recherche{" "}
-            <code className="text-xs font-mono bg-lisere px-1">
-              docs/research/tfpb-baseline-calibration.md
-            </code>
+            <a href="https://github.com/alles-delenda-est/LVTShift/blob/main/lvtshift-fr/docs/research/tfpb-baseline-calibration.md" className="font-mono text-xs underline underline-offset-2 hover:text-marine">tfpb-baseline-calibration.md</a>
             .
           </p>
           <ul className="font-body text-sm text-encre leading-relaxed space-y-2 list-disc pl-5">

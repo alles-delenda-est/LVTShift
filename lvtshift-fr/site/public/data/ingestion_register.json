@@ -40,7 +40,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 189,047,707 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 189 047 707 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -57,7 +57,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 12,895 parcelles.",
+          "message": "Exécuté : 12 895 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -65,7 +65,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -75,7 +75,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (65 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (65 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -86,7 +86,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 61.2 % (bande 40–65 %).",
+          "message": "Part foncière 61,2 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 61.2
@@ -96,7 +96,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 6.9 % au plafond (85%), 3.1 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 6,9 % au plafond (85 %), 3,1 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 6.9,
@@ -145,7 +145,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 23,048,511 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 23 048 511 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -162,7 +162,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 5,204 parcelles.",
+          "message": "Exécuté : 5 204 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -170,7 +170,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -180,7 +180,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (10 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (10 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -191,7 +191,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 54.6 % (bande 40–65 %).",
+          "message": "Part foncière 54,6 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 54.6
@@ -201,7 +201,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 2.6 % au plafond (85%), 0.0 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 2,6 % au plafond (85 %), 0,0 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 2.6,
@@ -250,7 +250,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP', 'Syndicat'] ; modélisé Commune+GFP = 87,188,801 € ; hors périmètre 1.7 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 87 188 801 € ; hors périmètre 1,7 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -270,7 +270,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 10,782 parcelles.",
+          "message": "Exécuté : 10 782 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -278,7 +278,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -288,7 +288,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (45 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (45 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -299,7 +299,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 52.8 % (bande 40–65 %).",
+          "message": "Part foncière 52,8 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 52.8
@@ -309,7 +309,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.3 % au plafond (85%), 1.7 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,3 % au plafond (85 %), 1,7 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.3,
@@ -358,7 +358,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "WARN",
-          "message": "REI FB 2025 : couches ['Commune', 'Syndicat'] ; modélisé Commune+GFP = 37,738,326 € ; hors périmètre 5.3 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 37 738 326 € ; hors périmètre 5,3 % du produit FB total.",
           "adaptation": "Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.",
           "detail": {
             "year": "2025",
@@ -377,7 +377,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 33,992 parcelles.",
+          "message": "Exécuté : 33 992 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -385,7 +385,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -395,7 +395,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (34 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (34 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -406,7 +406,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 41.3 % (bande 40–65 %).",
+          "message": "Part foncière 41,3 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 41.3
@@ -416,7 +416,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.6 % au plafond (85%), 3.8 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 3,8 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.6,
@@ -465,7 +465,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 22,690,869 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 22 690 869 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -482,7 +482,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 21,906 parcelles.",
+          "message": "Exécuté : 21 906 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -490,7 +490,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -500,7 +500,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "WARN",
-          "message": "Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (9 valeurs distinctes).",
+          "message": "Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).",
           "adaptation": "Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.",
           "detail": {
             "quintile_bins": 0,
@@ -511,7 +511,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 38.0 % (bande 40–65 %).",
+          "message": "Part foncière 38,0 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
             "land_share_pct": 38.0
@@ -521,7 +521,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.2 % au plafond (85%), 8.7 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 8,7 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.2,
@@ -570,7 +570,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune'] ; modélisé Commune+GFP = 101,780,897 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune ; modélisé Commune+GFP = 101 780 897 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -586,7 +586,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 14,218 parcelles.",
+          "message": "Exécuté : 14 218 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -594,7 +594,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -604,7 +604,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (40 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (40 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -615,7 +615,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 66.6 % (bande 40–65 %).",
+          "message": "Part foncière 66,6 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
             "land_share_pct": 66.6
@@ -625,7 +625,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 2.2 % au plafond (85%), 0.0 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 2,2 % au plafond (85 %), 0,0 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 2.2,
@@ -674,7 +674,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 10,022,009 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 10 022 009 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -691,7 +691,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 12,877 parcelles.",
+          "message": "Exécuté : 12 877 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -699,7 +699,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -709,7 +709,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "WARN",
-          "message": "Quintiles de revenu : 0/5 bins — revenu IRIS trop peu varié (4 valeurs distinctes).",
+          "message": "Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).",
           "adaptation": "Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.",
           "detail": {
             "quintile_bins": 0,
@@ -720,7 +720,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 45.1 % (bande 40–65 %).",
+          "message": "Part foncière 45,1 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 45.1
@@ -730,7 +730,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.5 % au plafond (85%), 2.7 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,5 % au plafond (85 %), 2,7 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.5,
@@ -779,7 +779,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 47,431,792 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 47 431 792 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -796,7 +796,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 11,300 parcelles.",
+          "message": "Exécuté : 11 300 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -804,7 +804,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -814,7 +814,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (17 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (17 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -825,7 +825,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 56.5 % (bande 40–65 %).",
+          "message": "Part foncière 56,5 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 56.5
@@ -835,7 +835,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.7 % au plafond (85%), 0.5 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,7 % au plafond (85 %), 0,5 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.7,
@@ -884,7 +884,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 73,238,295 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 73 238 295 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -901,7 +901,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 29,209 parcelles.",
+          "message": "Exécuté : 29 209 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -909,7 +909,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -919,7 +919,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (29 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (29 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -930,7 +930,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 69.8 % (bande 40–65 %).",
+          "message": "Part foncière 69,8 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
             "land_share_pct": 69.8
@@ -940,7 +940,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 2.2 % au plafond (85%), 0.0 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 2,2 % au plafond (85 %), 0,0 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 2.2,
@@ -991,7 +991,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP'] ; modélisé Commune+GFP = 61,665,015 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 61 665 015 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -1054,7 +1054,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune'] ; modélisé Commune+GFP = 1,840,896,539 € ; hors périmètre 0.0 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune ; modélisé Commune+GFP = 1 840 896 539 € ; hors périmètre 0,0 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -1070,7 +1070,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 78,189 parcelles.",
+          "message": "Exécuté : 78 189 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -1078,7 +1078,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -1088,7 +1088,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (754 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (754 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -1099,7 +1099,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "WARN",
-          "message": "Part foncière 75.8 % (bande 40–65 %).",
+          "message": "Part foncière 75,8 % (bande 40–65 %).",
           "adaptation": "Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.",
           "detail": {
             "land_share_pct": 75.8
@@ -1109,7 +1109,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 5.6 % au plafond (85%), 0.0 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 5,6 % au plafond (85 %), 0,0 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 5.6,
@@ -1158,7 +1158,7 @@
           "check": "rei_layers",
           "category": "source",
           "severity": "OK",
-          "message": "REI FB 2025 : couches ['Commune', 'GFP', 'Syndicat'] ; modélisé Commune+GFP = 362,922,188 € ; hors périmètre 0.4 % du produit FB total.",
+          "message": "REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 362 922 188 € ; hors périmètre 0,4 % du produit FB total.",
           "adaptation": null,
           "detail": {
             "year": "2025",
@@ -1178,7 +1178,7 @@
           "check": "model_ran",
           "category": "run",
           "severity": "OK",
-          "message": "Exécuté : 34,142 parcelles.",
+          "message": "Exécuté : 34 142 parcelles.",
           "adaptation": null,
           "detail": {}
         },
@@ -1186,7 +1186,7 @@
           "check": "revenue_neutrality",
           "category": "validation",
           "severity": "OK",
-          "message": "Neutralité des recettes : écart 0.00 %.",
+          "message": "Neutralité des recettes : écart 0,00 %.",
           "adaptation": null,
           "detail": {
             "deviation_pct": 0.0
@@ -1196,7 +1196,7 @@
           "check": "income_quintiles",
           "category": "validation",
           "severity": "OK",
-          "message": "Quintiles de revenu : 5/5 bins produits (160 revenus IRIS distincts).",
+          "message": "Quintiles de revenu : 5/5 groupes produits (160 revenus IRIS distincts).",
           "adaptation": null,
           "detail": {
             "quintile_bins": 5,
@@ -1207,7 +1207,7 @@
           "check": "land_share_band",
           "category": "validation",
           "severity": "OK",
-          "message": "Part foncière 60.0 % (bande 40–65 %).",
+          "message": "Part foncière 60,0 % (bande 40–65 %).",
           "adaptation": null,
           "detail": {
             "land_share_pct": 60.0
@@ -1217,7 +1217,7 @@
           "check": "land_share_clip",
           "category": "validation",
           "severity": "OK",
-          "message": "Parcelles bâties à la borne de part foncière : 0.8 % au plafond (85%), 0.3 % au plancher (15%).",
+          "message": "Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,3 % au plancher (15 %).",
           "adaptation": null,
           "detail": {
             "at_cap_pct": 0.8,
