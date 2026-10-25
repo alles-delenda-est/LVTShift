@@ -14,7 +14,7 @@
       ],
       "within_band": false,
       "status": "flag",
-      "note": "Ancrage INSEE comptes de patrimoine ~45–50 % national ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
+      "note": "Ancrage INSEE (patrimoine économique national, fin 2023) : terrains bâtis ≈ 51 % de la valeur terrains + logements, 44 % pour les seuls ménages ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
     },
     {
       "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",

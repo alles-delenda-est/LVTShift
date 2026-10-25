@@ -41,8 +41,12 @@ def land_share_band_check(land_share_pct: float, band=(40.0, 65.0)) -> dict:
         "band": [lo, hi],
         "within_band": (land_share_pct is not None) and (lo <= land_share_pct <= hi),
         "status": "ok" if (land_share_pct is not None and lo <= land_share_pct <= hi) else "flag",
-        "note": ("Ancrage INSEE comptes de patrimoine ~45–50 % national ; "
-                 "bande élargie (cœurs denses plus haut). Pas de cible par commune."),
+        # INSEE Première n° 2028 (Dec 2024), end-2023 balance sheet: built land
+        # 6 346 Md€ vs dwellings 6 018 Md€ (whole economy) -> 51 %; households
+        # 3 829 vs 4 847 Md€ -> 44 %.
+        "note": ("Ancrage INSEE (patrimoine économique national, fin 2023) : terrains "
+                 "bâtis ≈ 51 % de la valeur terrains + logements, 44 % pour les seuls "
+                 "ménages ; bande élargie (cœurs denses plus haut). Pas de cible par commune."),
     }
 
 

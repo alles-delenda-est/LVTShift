@@ -49,7 +49,7 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties ; repérage des bâtiments agricoles exonérés (zones A/N) |
 | Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
 | Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
-| Ancrage part terrain | comptes de patrimoine INSEE (~45-50 %) | contrôle descendant |
+| Ancrage part terrain | patrimoine national INSEE (44–51 % fin 2023) | contrôle descendant |
 
 ## Méthode, en bref
 

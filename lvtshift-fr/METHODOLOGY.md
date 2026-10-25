@@ -456,8 +456,9 @@ and 1 below 40 % (Cahors 38.0 %).
 `headline.built_at_cap_pct` records the share of built parcels at the bound,
 and the site labels the land share "plafonnée" when it is ≥ 50 %.
 
-*The 40–65 % reference range.* It is a metro-wide benchmark (INSEE's comptes
-de patrimoine put land at about 45–50 % of built real estate nationally), not a
+*The 40–65 % reference range.* It is a metro-wide benchmark (INSEE's national
+balance sheet puts built land at 51 % of land + dwellings at end-2023, 44 % for
+households alone), not a
 test each commune must pass. Communes contiguous to Paris (itself 76 %)
 naturally sit at 65–75 %, and land is 65–75 % of value in prime office
 districts (Gemini review). Most of the 48 communes above 65 % are inner-ring
@@ -699,7 +700,7 @@ cheap industrial land set against today's capital-heavy tax base.
 - **Revenue neutrality** — exact by construction; verified to the euro on every
   real run (Cahors €22,690,869; Montreuil €101,780,897).
 - **Top-down land share** — total land ÷ total built real-estate value should sit
-  near INSEE comptes de patrimoine (~45–50 % land). Cahors came to ~53 % after
+  near INSEE's national balance sheet (44–51 % land at end-2023). Cahors came to ~53 % after
   the DPE construction-year fix (it was a degenerate 85 % before — see §6) and
   is at 38.0 % with the per-type non-residential valuation. The 40–65 % range
   is a metro-wide reference, not a per-commune test (§3.7).
