@@ -33,3 +33,10 @@ export function signedPct(n: number | null): string {
   const sign = n > 0 ? "+" : n < 0 ? "−" : ""; // U+2212 true minus
   return `${sign}${frNum(Math.abs(n), 1)}${NBSP}%`;
 }
+
+/** Axis ticks: round values without a trailing ",0" ("+20 %", "−40 %"). */
+export function signedPctAxis(n: number): string {
+  if (!Number.isInteger(n)) return signedPct(n);
+  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
+  return `${sign}${frNum(Math.abs(n), 0)}${NBSP}%`;
+}

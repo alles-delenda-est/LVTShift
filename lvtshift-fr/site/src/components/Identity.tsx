@@ -1,7 +1,7 @@
 export default function Identity() {
   return (
     <div className="border-t-4 border-rouge bg-creme">
-      <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div className="max-w-6xl mx-auto px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1 sm:gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-gris mb-1.5">
             Analyse de politique fiscale
