@@ -42,9 +42,9 @@ def test_validate_commune_degrades_gracefully(tmp_path):
     class _Cfg:
         insee_code, name, departement = "00000", "X", "00"
 
-    # both network inputs unavailable -> reported "non disponible", no raise
+    # network input unavailable -> reported "non disponible", no raise
     out = ve.validate_commune("x", df, _Cfg(), cache_dir=str(tmp_path),
-                              data_dir=str(tmp_path), insee_vacancy=None, cadastre=None)
+                              data_dir=str(tmp_path), cadastre=None)
     statuses = {c["benchmark"]: c["status"] for c in out["checks"]}
     assert any(s == "non disponible" for s in statuses.values())
     # land-share band is computable offline -> always present

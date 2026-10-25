@@ -24,7 +24,7 @@ export default function ResultatsPage() {
           Sélectionnez une commune pour explorer les effets simulés d&apos;une
           réforme de la taxe foncière vers une taxation de la valeur des
           terrains, à recettes constantes. Les résultats sont exprimés en
-          variation médiane et en proportion de propriétaires concernés.
+          variation médiane et en proportion de parcelles concernées.
         </p>
       </div>
       <CommunePicker communes={communes} />

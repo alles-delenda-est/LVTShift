@@ -3,6 +3,7 @@
  * central and the lower-bound share of professional premises in today's tax.
  */
 import type { BaselineSensitivity, BandQuintileRow } from "@/lib/types";
+import { shiftedPct } from "@/lib/shift";
 
 export type RangeFormat = "pct" | "signed";
 
@@ -34,10 +35,10 @@ export function baselineRangeRows(
 ): RangeRow[] {
   const rows: RangeRow[] = [
     {
-      label: "Transfert brut",
-      sublabel: "% du prélèvement total",
-      central: b.central.gross_pct_of_levy,
-      low: b.low.gross_pct_of_levy,
+      label: "Part de l'impôt qui change de payeur",
+      sublabel: "somme des hausses, % du produit",
+      central: shiftedPct(b.central.net_pct_of_levy, b.central.gross_pct_of_levy),
+      low: shiftedPct(b.low.net_pct_of_levy, b.low.gross_pct_of_levy),
       format: "pct",
     },
     {

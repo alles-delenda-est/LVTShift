@@ -19,7 +19,7 @@ const b: BaselineSensitivity = {
     ],
   }),
   low: leg({
-    gross_pct_of_levy: 30, share_paying_more_pct: 42,
+    gross_pct_of_levy: 30, net_pct_of_levy: 15, share_paying_more_pct: 42,
     by_income_quintile: [
       { quintile: 1, median_change_pct: 0, median_change_pct_residential: 0, total_change_pct: -27.6 },
       { quintile: 5, median_change_pct: 0, median_change_pct_residential: 0, total_change_pct: 3.9 },
@@ -30,7 +30,8 @@ const b: BaselineSensitivity = {
 describe("baselineRangeRows", () => {
   it("pairs central and lower-bound figures, headline rows first", () => {
     const rows = baselineRangeRows(b);
-    expect(rows[0]).toMatchObject({ label: "Transfert brut", central: 20, low: 30 });
+    // net (sum of increases) when published, else half the gross figure
+    expect(rows[0]).toMatchObject({ label: "Part de l'impôt qui change de payeur", central: 10, low: 15 });
     expect(rows[1]).toMatchObject({ central: 50, low: 42 });
     const q1 = rows.find((r) => r.label === "20 % les plus modestes");
     expect(q1).toMatchObject({ central: -17.4, low: -27.6, format: "signed" });

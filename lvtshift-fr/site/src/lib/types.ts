@@ -56,6 +56,8 @@ export interface MemberRow {
   commune_key: string; name: string; insee: string; parcels_modeled: number;
   neutral_levy_eur: number; land_share_pct: number | null;
   gross_pct_of_levy: number | null; share_paying_more_pct: number | null;
+  /** Sum of increases as % of the levy (absent in older payloads). */
+  net_pct_of_levy?: number | null;
 }
 export interface Coverage {
   members_total: number; members_modeled: number; members_missing: string[];

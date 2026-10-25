@@ -18,7 +18,7 @@ function indepLabel(ind: string): string {
 
 /** Best comparable percentage for the given check, regardless of field name. */
 function comparableValue(c: ValidationCheck): string {
-  // Check 1 (vacance): standard field
+  // Checks carrying the standard comparable field
   if (c.model_comparable_pct != null) {
     return pct(c.model_comparable_pct);
   }

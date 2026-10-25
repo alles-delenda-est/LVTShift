@@ -13,6 +13,7 @@
 
 import type { Sensitivity, SensitivityLeg } from "@/lib/types";
 import { pct, signedPct } from "@/lib/format";
+import { shiftedPct } from "@/lib/shift";
 import { MARINE, CREME, ENCRE, GRIS, LISERE } from "./theme";
 
 const BG_BASE = "#e8edf5"; // light marine tint for the "base" column
@@ -162,11 +163,11 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
         </thead>
 
         <tbody>
-          {/* Row: Transfert brut */}
+          {/* Row: share of the levy that changes payer (net, not gross) */}
           <tr>
             <th scope="row" style={{ ...cell, background: CREME }}>
-              <span style={labelStyle}>Transfert brut</span>
-              <span style={subLabelStyle}>% du prélèvement total</span>
+              <span style={labelStyle}>Part de l&apos;impôt qui change de payeur</span>
+              <span style={subLabelStyle}>somme des hausses, % du produit</span>
             </th>
             {scenarios.map(({ key, leg, isBase }) => (
               <td
@@ -174,7 +175,7 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
                 style={{ ...cell, background: isBase ? BG_BASE : CREME }}
               >
                 <span style={valueStyle(isBase)}>
-                  {pct(leg.gross_pct_of_levy)}
+                  {pct(shiftedPct(leg.net_pct_of_levy, leg.gross_pct_of_levy))}
                 </span>
               </td>
             ))}
