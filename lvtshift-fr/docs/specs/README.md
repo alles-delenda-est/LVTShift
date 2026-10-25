@@ -12,7 +12,7 @@ is now being delivered as its own PR (status below). Scope: `lvtshift-fr/` (Patr
 | 0002 | [Wire the ±10 pt sensitivity band into the pipeline](0002-wire-sensitivity-band.md) | P0 (HIGH) | F9 (on main via #14) | Partly done — headline band on the site; per-category and per-quintile band being built in `export_web.py` |
 | 0003 | [Flag TFPB-exempt stock](0003-flag-tfpb-exempt-stock.md) | P1 (HIGH) | — | In progress — also evaluating the DGFiP « Fichiers des locaux et des parcelles des personnes morales » for public owners |
 | 0004 | [Add CI](0004-add-ci.md) | P1 | — | In progress |
-| 0005 | [Three equal-yield replacement scenarios](0005-replacement-scenarios.md) | P0 | #37–#40 | Draft for decision (D1–D8) |
+| 0005 | [Three equal-yield replacement scenarios](0005-replacement-scenarios.md) | P0 | #37–#40 | Draft — D1–D4 decided, D5–D8 open |
 
 **Design & strategic decisions** (the non-code choices around these specs) live
 in [STRATEGY.md](STRATEGY.md): the Fichiers Fonciers access campaign, upstream

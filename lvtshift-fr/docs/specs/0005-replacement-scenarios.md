@@ -1,6 +1,6 @@
 # Spec 0005 — Three equal-yield replacement scenarios
 
-**Status:** Draft for decision · **Priority:** P0 (changes what the site models) ·
+**Status:** Draft — D1–D4 decided 2026-10-25, D5–D8 open · **Priority:** P0 (changes what the site models) ·
 **Source:** Patrick, 2026-10-25 · **Est. effort:** several PRs over 3–5 working
 sessions, plus pipeline reruns on a machine with data access
 
@@ -176,14 +176,14 @@ sandbox does not have: they run on Patrick's machine (`PYTHONUTF8=1` on Windows)
 or in a CI job with network access. Economic parameter choices (r, turnover,
 effective rates, DMTO incidence range) go through the usual Gemini review.
 
-## 8. Decisions needed
+## 8. Decisions
 
-| # | Question | Recommendation |
+| # | Question | Decision / recommendation |
 |---|---|---|
-| D1 | Reference year for cyclical yields (DMTO, gains) | Average of the last 5 available years, latest year shown as a sensitivity |
-| D2 | Include the 17,2 % social levies on gains and rents? (they fund Sécurité sociale, so the LVT would partly fund the PLFSS) | Include, shown on a separate line, consistent with the budget simulator's PLF+PLFSS scope |
-| D3 | IS on companies' real-estate gains and rents: no public figure found | Exclude for now and say so; revisit if a source turns up |
-| D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | Aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
+| D1 | Reference year for cyclical yields (DMTO, gains) | **Decided:** average of the last 5 available years; latest year shown as a sensitivity |
+| D2 | Include the 17,2 % social levies on gains and rents? (they fund Sécurité sociale, so the LVT would partly fund the PLFSS) | **Decided:** include, on a separate line, consistent with the budget simulator's PLF+PLFSS scope |
+| D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
+| D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
 | D5 | Land base outside the panel | INSEE national accounts, with a published consistency check |
 | D6 | Agricultural and natural land in the national and departmental tiers | Include in the base at SAFER values but show the effect on farm land separately |
 | D7 | Furnished lets (BIC/LMNP) in "rental income" | Include if a yield source is found; otherwise flag as missing |
