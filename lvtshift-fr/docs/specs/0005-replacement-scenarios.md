@@ -9,15 +9,15 @@ sessions, plus pipeline reruns on a machine with data access
 ## 1. Problem
 
 The site models one reform: the TFPB moved onto land value, revenue-neutral
-inside each commune. Patrick's proposal is wider: a land value tax replacing
+inside each commune. This spec is to expand that scope to model a land value tax replacing
 existing property taxes **one for one, at equal yield** ("au rendement égal").
-He wants it shown as three nested scenarios:
+we have the following potential nested scenarios:
 
 | # | LVT replaces | Adds to the previous scenario |
 |---|---|---|
 | **S1** | Taxe foncière (TFPB + TFPNB) + DMTO | (base) |
-| **S2** | S1 + IFI + IR/IS on real-estate capital gains | the taxes on holding wealth and on gains |
-| **S3** | S2 + IR/IS on rental income | the taxes on rental income |
+| **S2** | S1 + IR/IS on real-estate capital gains with optional inclusion of LFI (user-exposed toggle) | the taxes on holding wealth and on gains, with and without  LFI |
+| **S3** | S2 + IR/IS on rental income | the taxes on rental income, preserving LFI optionality |
 
 For each scenario the site must show: the yield to be replaced (by tax, sourced),
 the LVT rate that raises it, who pays more or less, and the effect on land values.
@@ -42,12 +42,14 @@ commune totals.
 **Land values move, and not equally across scenarios.** Answering Patrick's
 2026-10-25 question: what drives the land price is the tax attached to the land.
 An equal-yield swap lowers land values whenever it moves tax onto land:
-- TF building share → land: lowers land values (offset by lower tax on buildings).
+- TF building share → land: lowers land values (offset by lower tax on buildings) but does not lower property values.
 - DMTO → recurrent land tax: roughly neutral in aggregate, because DMTO is already
   capitalised into prices; only timing changes. The incidence of the DMTO paid on
-  the building share is uncertain and should be shown as a range.
+  the building share is uncertain and should be shown as an assumption.
 - IFI, IR/IS on gains and rents → land: lowers land values. These taxes fall on
-  some owners or on income; the replacement falls on every plot.
+  some owners or on income; the replacement falls on every plot. Effect is partly mitigated by the greater available income for household, some of which should cascade through to rent.
+
+For each change, the approximate boost (or if ever relevant, reduction in) GDP growth should be displayed with a link to a research note on a separate page.
 
 The model is static (values unchanged), so the site shows an **indicative
 capitalisation** per scenario (§4.5) rather than claiming values hold.
@@ -55,7 +57,7 @@ capitalisation** per scenario (§4.5) rather than claiming values hold.
 ## 3. Yields to replace
 
 Sources disagree by scope (housing only vs all real estate) and year. Starting
-figures, all to be re-verified live per CLAUDE.md before coding against them:
+figures, all to be re-verified live per CLAUDE.md, with the additional use of adversarial agents and Gemini Argon review before coding against them:
 
 | Tax | Yield | Year | Source | Scope note |
 |---|---|---|---|---|
@@ -77,7 +79,7 @@ would lower these rates.
 
 Rule for the build: one table `yields.py` (value, year, source URL, scope, status
 verified/estimated), one research note `docs/research/yields-2026.md` explaining
-each reconciliation, and the site displays the same table.
+each reconciliation, and the site displays the same table. The first major element on the page should be a graphical representation for pedagogical purposes.
 
 ## 4. Method
 
@@ -94,14 +96,10 @@ Each modelled parcel's new bill = land value × (local + departmental + national
 
 ### 4.2 Land base outside the panel
 The panel is 188 communes; départements and France are not modelled parcel by
-parcel. Options (D5):
-- **(a) INSEE national accounts** for the national base (6 346 Md€ built land,
+parcel. This is overcome by using **INSEE national accounts** for the national base (6 346 Md€ built land,
   plus non-built land from the same accounts), scaled to départements by DVF price
-  levels; with a consistency check: panel land values against INSEE's land/housing
+  levels; with a published consistency check: panel land values against INSEE's land/housing
   ratios.
-- **(b) Extrapolate the panel** (not representative: urban-heavy).
-
-Recommendation: (a), with the check published.
 
 ### 4.3 Exclusions
 Exempt public land stays exempt (spec 0003). Agricultural and natural land: D6.
@@ -122,7 +120,7 @@ a quality flag on the site.
 Consequence to state on the site: S3 moves tax from landlords onto
 owner-occupiers (who pay no tax on the rent they don't pay themselves). The
 distribution must be shown **by tenure** (owner-occupier, private landlord,
-social landlord), not only by property type and income quintile.
+social landlord), not only by property type and income quintile. Also need to take into account very high elasticity of rents (see eg studies of French "APLs" and rent assistance more broadly).
 
 ### 4.5 Capitalisation (indicative)
 Per scenario: Δ = change in the annual tax attached to land, nationally and per
