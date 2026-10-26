@@ -62,7 +62,9 @@ export default function HeadlineCards({
       id: "paysmore",
       label: "Proportion qui paie davantage",
       value: pct(sharePayingMorePct),
-      note: "des propriétaires concernés",
+      // It counts parcels, not owners or households: one parcel can hold a
+      // house or a 200-flat building (see the quintile chart's caption).
+      note: "des parcelles (une copropriété compte pour une)",
       accent: true,
     },
   ];

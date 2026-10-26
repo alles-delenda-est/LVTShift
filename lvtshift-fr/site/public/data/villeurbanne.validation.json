@@ -5,15 +5,6 @@
   "departement": "69",
   "checks": [
     {
-      "benchmark": "Vacance des logements (INSEE)",
-      "independence": "independent",
-      "external_value_pct": null,
-      "model_comparable_pct": 69.8,
-      "model_comparable_label": "part sous-bâtie/vacante de la base (valeur)",
-      "status": "non disponible",
-      "note": "Corrélation directionnelle entre communes (vacance INSEE vs foncier sous-utilisé), pas une égalité par commune."
-    },
-    {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
       "model_land_share_pct": 52.8,
@@ -23,7 +14,7 @@
       ],
       "within_band": true,
       "status": "ok",
-      "note": "Ancrage INSEE comptes de patrimoine ~45–50 % national ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
+      "note": "Ancrage INSEE (patrimoine économique national, fin 2023) : terrains bâtis ≈ 51 % de la valeur terrains + logements, 44 % pour les seuls ménages ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
     },
     {
       "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",

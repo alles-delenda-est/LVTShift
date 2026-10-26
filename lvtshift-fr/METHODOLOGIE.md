@@ -509,8 +509,8 @@ la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
 
 *La fourchette de référence 40–65 %.* C'est un repère à l'échelle d'une
-métropole (les comptes de patrimoine de l'INSEE placent le terrain à environ 45
-à 50 % de la valeur de l'immobilier bâti au niveau national), non un test que
+métropole (le patrimoine national de l'INSEE place les terrains bâtis à 51 % de
+la valeur terrains + logements fin 2023, 44 % pour les seuls ménages), non un test que
 chaque commune devrait passer. Les communes limitrophes de Paris (elle-même à
 76 %) se situent naturellement entre 65 et 75 %, et le terrain fait 65 à 75 %
 de la valeur dans les quartiers de bureaux de premier rang (revue Gemini). La
@@ -779,7 +779,7 @@ industriel bon marché face à une base actuelle chargée en capital.
 - **Neutralité budgétaire** — exacte par construction ; vérifiée à l'euro sur
   chaque exécution réelle (Cahors 22 690 869 € ; Montreuil 101 780 897 €).
 - **Part foncière descendante** — terrain total ÷ valeur immobilière bâtie totale
-  doit avoisiner les comptes de patrimoine INSEE (~45–50 % de terrain). Cahors
+  doit avoisiner le patrimoine national de l'INSEE (44–51 % de terrain fin 2023). Cahors
   atteignait ~53 % après la correction d'année de construction par DPE (contre
   85 % dégénéré auparavant — voir §6) et se situe à 38,0 % avec la valorisation
   du non-résidentiel par type. La fourchette 40–65 % est un repère

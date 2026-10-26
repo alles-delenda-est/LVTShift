@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { loadIndex } from "@/lib/data";
+import { loadCommune, loadIndex } from "@/lib/data";
 import { pct } from "@/lib/format";
+import { panelLandShares } from "@/lib/panel";
 
 export default function Home() {
   const { communes } = loadIndex();
@@ -12,11 +13,14 @@ export default function Home() {
   const totalParcels = communes.reduce(
     (sum, c) => sum + (c.parcels_unique ?? c.parcels_modeled), 0);
 
-  const landShares = communes
-    .map((c) => c.land_share_pct)
-    .filter((x): x is number => x !== null);
+  // Over every modelled commune, territory members included (not just the
+  // selector entries).
+  const landShares = [...panelLandShares(communes, loadCommune).values()];
   const landShareMin = Math.min(...landShares);
   const landShareMax = Math.max(...landShares);
+  // What the results page actually lets you open one by one.
+  const singles = communes.filter((c) => c.kind !== "territory").length;
+  const rings = communes.length - singles;
 
   return (
     <div>
@@ -124,8 +128,8 @@ export default function Home() {
                 {pct(landShareMin)} à {pct(landShareMax)}
               </p>
               <p className="text-sm text-gris mt-2 leading-snug">
-                fourchette de la part du sol dans la base taxable, selon la
-                commune
+                fourchette de la part du sol dans la base taxable, sur
+                les {landShares.length} communes
               </p>
             </div>
           </div>
@@ -193,13 +197,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10">
           <div className="flex-1">
             <h3 className="font-display text-lg font-medium text-marine mb-1">
-              Explorer les résultats commune par commune
+              Explorer les résultats
             </h3>
             <p className="text-sm text-gris">
-              {totalCommunes} communes &middot;{" "}
-              {totalParcels.toLocaleString("fr-FR")} parcelles &middot;
-              modélisation détaillée par catégorie de bien et par quintile de
-              revenu.
+              {singles} communes et {rings} couronnes détaillées par catégorie
+              de bien et par quintile de revenu &middot; {totalCommunes}{" "}
+              communes et {totalParcels.toLocaleString("fr-FR")} parcelles
+              modélisées au total.
             </p>
           </div>
           <Link

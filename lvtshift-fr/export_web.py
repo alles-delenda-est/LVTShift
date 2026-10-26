@@ -428,7 +428,7 @@ SENSITIVITY_LEG_KEYS = {
 }
 MEMBER_KEYS = {
     "commune_key", "name", "insee", "parcels_modeled", "neutral_levy_eur",
-    "land_share_pct", "gross_pct_of_levy", "share_paying_more_pct",
+    "land_share_pct", "gross_pct_of_levy", "net_pct_of_levy", "share_paying_more_pct",
 }
 PARCEL_ID_RE = re.compile(r"\b\d[\dAB]\d{3}[0-9]{3}[0-9A-Z]{2}\d{4}\b")
 IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
@@ -656,6 +656,7 @@ def _member_row(key: str, sub: pd.DataFrame) -> dict:
         "neutral_levy_eur": h["neutral_levy_eur"],
         "land_share_pct": h["land_share_pct"],
         "gross_pct_of_levy": h["gross_pct_of_levy"],
+        "net_pct_of_levy": h["net_pct_of_levy"],
         "share_paying_more_pct": _pct(int((sub["tax_change"] > 0).sum()), len(sub)),
     }
 

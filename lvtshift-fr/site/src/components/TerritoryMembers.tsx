@@ -10,6 +10,7 @@
 
 import type { Coverage, MemberRow } from "@/lib/types";
 import { euros, pct } from "@/lib/format";
+import { shiftedPct } from "@/lib/shift";
 
 export interface TerritoryMembersProps {
   members: MemberRow[];
@@ -47,7 +48,7 @@ export default function TerritoryMembers({ members, coverage }: TerritoryMembers
               <th scope="col" className="px-3 py-2">Commune</th>
               <th scope="col" className="px-3 py-2 text-right">Produit TFPB</th>
               <th scope="col" className="px-3 py-2 text-right">Part foncière</th>
-              <th scope="col" className="px-3 py-2 text-right">Montant déplacé</th>
+              <th scope="col" className="px-3 py-2 text-right">Change de payeur</th>
               <th scope="col" className="px-3 py-2 text-right">Paient davantage</th>
             </tr>
           </thead>
@@ -59,7 +60,7 @@ export default function TerritoryMembers({ members, coverage }: TerritoryMembers
                 </th>
                 <td className="px-3 py-1.5 text-right tabular-nums">{euros(m.neutral_levy_eur)}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{pct(m.land_share_pct)}</td>
-                <td className="px-3 py-1.5 text-right tabular-nums">{pct(m.gross_pct_of_levy)}</td>
+                <td className="px-3 py-1.5 text-right tabular-nums">{pct(shiftedPct(m.net_pct_of_levy, m.gross_pct_of_levy))}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{pct(m.share_paying_more_pct)}</td>
               </tr>
             ))}
@@ -67,9 +68,9 @@ export default function TerritoryMembers({ members, coverage }: TerritoryMembers
         </table>
       </div>
       <p className="text-xs text-gris italic mt-2 font-body">
-        « Montant déplacé » : somme des hausses et des baisses, en % du produit
-        de la commune. « Paient davantage » : part des parcelles dont la
-        cotisation augmenterait.
+        « Change de payeur » : somme des hausses, en % du produit de la commune
+        (à recettes constantes, les baisses font le même montant). « Paient
+        davantage » : part des parcelles dont la cotisation augmenterait.
       </p>
     </div>
   );
