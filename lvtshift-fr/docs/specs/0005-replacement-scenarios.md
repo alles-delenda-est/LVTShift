@@ -1,6 +1,6 @@
 # Spec 0005 — Three equal-yield replacement scenarios
 
-**Status:** Draft — D1–D4 decided 2026-10-25, D5–D8 open · **Priority:** P0 (changes what the site models) ·
+**Status:** Draft — all decisions taken (D1–D4 2026-10-25, D5–D8 2026-10-26) · **Priority:** P0 (changes what the site models) ·
 **Source:** Patrick, 2026-10-25 · **Est. effort:** several PRs over 3–5 working
 sessions, plus pipeline reruns on a machine with data access
 
@@ -16,8 +16,8 @@ we have the following potential nested scenarios:
 | # | LVT replaces | Adds to the previous scenario |
 |---|---|---|
 | **S1** | Taxe foncière (TFPB + TFPNB) + DMTO | (base) |
-| **S2** | S1 + IR/IS on real-estate capital gains with optional inclusion of LFI (user-exposed toggle) | the taxes on holding wealth and on gains, with and without  LFI |
-| **S3** | S2 + IR/IS on rental income | the taxes on rental income, preserving LFI optionality |
+| **S2** | S1 + IR/IS on real-estate capital gains with optional inclusion of IFI (user-exposed toggle) | the taxes on holding wealth and on gains, with and without IFI |
+| **S3** | S2 + IR/IS on rental income | the taxes on rental income, preserving IFI optionality |
 
 For each scenario the site must show: the yield to be replaced (by tax, sourced),
 the LVT rate that raises it, who pays more or less, and the effect on land values.
@@ -42,14 +42,24 @@ commune totals.
 **Land values move, and not equally across scenarios.** Answering Patrick's
 2026-10-25 question: what drives the land price is the tax attached to the land.
 An equal-yield swap lowers land values whenever it moves tax onto land:
-- TF building share → land: lowers land values (offset by lower tax on buildings) but does not lower property values.
+- TF building share → land: lowers land values (offset by lower tax on buildings)
+  but does not lower property values **on average**. Per property it does:
+  land-heavy properties (houses on large plots) lose value, building-heavy ones
+  (flats) gain. Modelled per parcel, see §4.5.
 - DMTO → recurrent land tax: roughly neutral in aggregate, because DMTO is already
   capitalised into prices; only timing changes. The incidence of the DMTO paid on
   the building share is uncertain and should be shown as an assumption.
 - IFI, IR/IS on gains and rents → land: lowers land values. These taxes fall on
-  some owners or on income; the replacement falls on every plot. Effect is partly mitigated by the greater available income for household, some of which should cascade through to rent.
+  some owners or on income; the replacement falls on every plot. Partly offset,
+  for rented and traded property, by the capitalisation of the taxes removed
+  (removing IR/PS on rents raises the net return of rented property; removing
+  the tax on gains raises the value of property that is sold). Owner-occupied
+  property gets no offset. Tenants' incomes do not change, so little reaches
+  rents through household income.
 
-For each change, the approximate boost (or if ever relevant, reduction in) GDP growth should be displayed with a link to a research note on a separate page.
+For each change, the expected effect on GDP is **flagged, not modelled** (§4.6):
+direction and, where the literature supports it, a range for the long-run
+*level* of GDP, with a link to a research note on a separate page.
 
 The model is static (values unchanged), so the site shows an **indicative
 capitalisation** per scenario (§4.5) rather than claiming values hold.
@@ -102,7 +112,9 @@ parcel. This is overcome by using **INSEE national accounts** for the national b
   ratios.
 
 ### 4.3 Exclusions
-Exempt public land stays exempt (spec 0003). Agricultural and natural land: D6.
+Exempt public land stays exempt (spec 0003). Agricultural and natural land is in
+the departmental and national base at SAFER values (D6), with the effect on farm
+land shown separately.
 
 ### 4.4 Who pays today, per parcel
 Needed for the distribution charts. Quality differs a lot by tax; each line gets
@@ -120,19 +132,40 @@ a quality flag on the site.
 Consequence to state on the site: S3 moves tax from landlords onto
 owner-occupiers (who pay no tax on the rent they don't pay themselves). The
 distribution must be shown **by tenure** (owner-occupier, private landlord,
-social landlord), not only by property type and income quintile. Also need to take into account very high elasticity of rents (see eg studies of French "APLs" and rent assistance more broadly).
+social landlord), not only by property type and income quintile.
+
+Rent pass-through of the removed taxes on rental income is a **parameter with
+a range**, not an assumption baked in. The French evidence usually cited is
+contested: Fack (CEPREMAP 2005) finds 50–80 % of housing allowances absorbed by
+rents; IGEDD (2019) attributes that mainly to an omitted logarithm and
+composition effects, and its August 2025 report says the effect "remains to be
+assessed". Those studies also measure a demand subsidy to tenants, not a tax on
+landlords. An independent assessment with a recommended range is in
+`docs/research/apl-rent-incidence.md` (in progress).
 
 ### 4.5 Capitalisation (indicative)
 Per scenario: Δ = change in the annual tax attached to land, nationally and per
 commune. Indicative change in land value = −Δ / r, with r = 3 % and 4 % real
-(range shown), and the DMTO incidence range from §2. Labelled as a static upper
-bound: more construction partly offsets it.
+(range shown), and the DMTO incidence stated as an assumption (§2). Labelled as
+a static upper bound: more construction partly offsets it.
 
-### 4.6 Equal yield is static
-"Rendement égal" means equal at today's bases: no behavioural response
-(transactions rise when DMTO goes, construction responds to lower building tax).
-Stated on the site; dynamic effects are out of scope for this spec and belong to
-the budget simulator.
+The same arithmetic per parcel on the change in *total* tax on the property gives
+the indicative change in **property value** (−Δ_property / r), reported by
+property type, tenure and income quintile. It costs nothing beyond the per-parcel
+results already computed, so it is modelled rather than only flagged in text.
+
+### 4.6 Static model, dynamic effects flagged
+"Rendement égal" means equal at today's bases: no behavioural response. The site
+stays static, but each scenario **flags** its expected dynamic effects, each with
+a direction, the mechanism, and a range where the literature gives one:
+- transactions and mobility rise when DMTO goes;
+- construction responds to the lower tax on buildings;
+- GDP: the OECD ranking (Johansson et al. 2008: recurrent property taxes least
+  harmful to growth, then consumption, personal income, corporate taxes) gives
+  the direction; any figure is a long-run level effect, not a growth rate, and
+  must be verified before publication;
+- rents: per the pass-through range in §4.4.
+Quantifying them belongs to the budget simulator, using its elasticities.
 
 ## 5. Site
 
@@ -182,10 +215,10 @@ effective rates, DMTO incidence range) go through the usual Gemini review.
 | D2 | Include the 17,2 % social levies on gains and rents? (they fund Sécurité sociale, so the LVT would partly fund the PLFSS) | **Decided:** include, on a separate line, consistent with the budget simulator's PLF+PLFSS scope |
 | D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
 | D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
-| D5 | Land base outside the panel | INSEE national accounts, with a published consistency check |
-| D6 | Agricultural and natural land in the national and departmental tiers | Include in the base at SAFER values but show the effect on farm land separately |
-| D7 | Furnished lets (BIC/LMNP) in "rental income" | Include if a yield source is found; otherwise flag as missing |
-| D8 | Commune-level DMTO: DVF-based estimate or OFGL accounts | DVF estimate, validated against OFGL where available |
+| D5 | Land base outside the panel | **Decided:** INSEE national accounts, with a published consistency check |
+| D6 | Agricultural and natural land in the national and departmental tiers | **Decided:** include in the base at SAFER values; show the effect on farm land separately |
+| D7 | Furnished lets (BIC/LMNP) in "rental income" | **Decided:** include if a yield source is found; otherwise flag as missing |
+| D8 | Commune-level DMTO: DVF-based estimate or OFGL accounts | **Decided (most accurate per question):** yields from the **accounts** (DGCL by département; communal receipts from OFGL/DGFiP commune accounts, availability to verify live; communes under 5 000 inhabitants receive theirs through the departmental equalisation fund, so their receipts are not their own transactions); **who pays** from **DVF** (transactions are where the tax falls). Fallback for yields where accounts are missing: DVF × the communal rate (1,20 %) |
 
 ## 9. Risks
 
