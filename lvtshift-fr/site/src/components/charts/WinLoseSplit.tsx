@@ -24,6 +24,35 @@ import type { TooltipProps } from "recharts";
 import type { CategoryRow } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
+import { useNarrow } from "./useNarrow";
+
+/** Colour key: the chart previously had none. */
+function Legend() {
+  const swatch = (color: string) => ({
+    display: "inline-block",
+    width: 10,
+    height: 10,
+    background: color,
+    marginRight: 6,
+    verticalAlign: "-1px",
+  });
+  return (
+    <p
+      style={{
+        fontFamily: "var(--font-body)",
+        fontSize: "0.75rem",
+        color: ENCRE,
+        marginBottom: "0.5rem",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "0.25rem 1.25rem",
+      }}
+    >
+      <span><span aria-hidden="true" style={swatch(ROUGE)} />Part des parcelles qui paient davantage</span>
+      <span><span aria-hidden="true" style={swatch(MARINE)} />Paient moins ou autant</span>
+    </p>
+  );
+}
 
 /* ── data shape ─────────────────────────────────────────────────── */
 
@@ -79,6 +108,7 @@ export interface WinLoseSplitProps {
 }
 
 export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
+  const narrow = useNarrow();
   /* Build chart data — sorted most contentious first */
   const data: WinLoseRow[] = [...byCategory]
     .sort(
@@ -104,12 +134,13 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
   const chartHeight = data.length * BAR_HEIGHT + 64;
 
   return (
-    <div>
+    <figure aria-label="Part des parcelles qui paient davantage, par catégorie de bien">
+      <Legend />
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart
           layout="vertical"
           data={data}
-          margin={{ top: 8, right: 72, bottom: 28, left: 8 }}
+          margin={{ top: 8, right: narrow ? 48 : 56, bottom: 28, left: 0 }}
           barSize={20}
           barCategoryGap="30%"
         >
@@ -124,7 +155,7 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
           <YAxis
             type="category"
             dataKey="label_fr"
-            width={200}
+            width={narrow ? 112 : 200}
             tick={TICK}
             axisLine={false}
             tickLine={false}
@@ -140,19 +171,6 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
             name="Paie davantage"
             isAnimationActive={false}
           >
-            <LabelList
-              dataKey="more"
-              position="insideRight"
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(v: any) =>
-                typeof v === "number" && v > 12 ? pct(v) : ""
-              }
-              style={{
-                fill: CREME,
-                fontSize: 10,
-                fontFamily: "var(--font-body)",
-              }}
-            />
           </Bar>
           <Bar
             dataKey="less"
@@ -160,7 +178,22 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
             fill={MARINE}
             name="Paie moins ou pareil"
             isAnimationActive={false}
-          />
+          >
+            {/* Every row gets its value, small shares included (values under
+                12 % used to be hidden inside the red segment). */}
+            <LabelList
+              dataKey="more"
+              position="right"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(v: any) => (typeof v === "number" ? pct(v) : "")}
+              style={{
+                fill: ROUGE,
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "var(--font-body)",
+              }}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
 
@@ -179,6 +212,11 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
           {caption}
         </p>
       )}
-    </div>
+      <figcaption className="sr-only">
+        {data
+          .map((r) => `${r.label_fr} : ${pct(r.share_paying_more_pct)} paient davantage`)
+          .join(" ; ")}
+      </figcaption>
+    </figure>
   );
 }

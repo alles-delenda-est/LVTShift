@@ -7,11 +7,12 @@
  * Colour convention:
  *   positive (pays more)  → rouge  (#b5281e)
  *   negative (pays less)  → green  (#2a6244)
- *   null (no median)      → gris pâle — bar at 0, labelled "n. d."
+ *   null (no median %)    → gris pâle — bar at 0, value shown in euros
  *
- * Null categories (e.g. Terrain nu / non bâti — 100 % pay more but the
- * median is undefined) are kept visible: zero-width bar at the reference
- * line, "n. d." label, and median_change_eur shown in the tooltip.
+ * Null categories (e.g. Terrain nu / non bâti — 100 % pay more, but today's
+ * modelled tax is 0 € so the % change is undefined) are kept visible:
+ * zero-width bar at the reference line, the median change in euros in the
+ * value column, and a footnote saying why.
  */
 
 import { ReactElement } from "react";
@@ -28,9 +29,11 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { BandCategoryRow, CategoryRow } from "@/lib/types";
-import { pct, signedPct, eurosExact } from "@/lib/format";
+import { pct, signedPct, signedPctAxis, eurosExact } from "@/lib/format";
 import { bandSpan, byKey } from "@/lib/band";
+import { symmetricAxis } from "@/lib/axis";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
+import { useNarrow } from "./useNarrow";
 
 /* ── extended row ─────────────────────────────────────────────────── */
 
@@ -83,50 +86,38 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
   );
 }
 
-/* ── custom label renderer ─────────────────────────────────────────
-   Recharts passes label-function props at runtime as
-   { x, y, width, height, value, index, ... }.
-   We capture `data` via closure to look up the original row by index.
+/* ── value column ──────────────────────────────────────────────────
+   Values sit in a fixed column on the right (a second, label-only Y axis)
+   rather than at the bar ends: on phones the end labels ran into the
+   category names and the ±10 pt whiskers. A category whose percentage is
+   undefined (vacant land: today's modelled TFPB is 0 €) shows its median
+   change in euros instead of "n. d.".
 ────────────────────────────────────────────────────────────────────── */
 
-function makeLabelRenderer(data: ProcessedRow[]) {
+function valueText(row: ProcessedRow): string {
+  if (!row.isNull) return signedPct(row.median_change_pct);
+  const sign = row.median_change_eur > 0 ? "+" : row.median_change_eur < 0 ? "−" : "";
+  return `${sign}${eurosExact(Math.abs(row.median_change_eur))}*`;
+}
+
+function makeValueTick(data: ProcessedRow[]) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function BarLabel(props: any): ReactElement | null {
-    const x: number     = props.x     ?? 0;
-    const y: number     = props.y     ?? 0;
-    const width: number = props.width ?? 0;
-    const height: number = props.height ?? 0;
-    const val: number   = props.value ?? 0;
-    const idx: number   = props.index ?? 0;
-
-    const entry = data[idx];
-    if (!entry) return null;
-
-    const label = entry.isNull ? "n. d." : signedPct(entry.median_change_pct);
-
-    // For layout="vertical" (horizontal bars):
-    //   positive bar: x = zero-line pixel, x+width = value pixel (right)
-    //   negative bar: x = value pixel (left),  x+width = zero-line pixel
-    const PADDING = 5;
-    const textX =
-      val > 0
-        ? x + width + PADDING
-        : val < 0
-        ? x - PADDING
-        : x + width + PADDING;
-    const anchor = val < 0 ? "end" : "start";
-
+  return function ValueTick(props: any): ReactElement<SVGElement> {
+    const row = data.find((r) => r.label_fr === props.payload?.value);
+    if (!row) return <g />;
+    const fill = row.isNull ? ENCRE : row.barValue >= 0 ? ROUGE : GREEN;
     return (
       <text
-        x={textX}
-        y={y + height / 2}
-        textAnchor={anchor}
+        x={props.x + 6}
+        y={props.y}
+        textAnchor="start"
         dominantBaseline="central"
-        fontSize={10}
-        fill={ENCRE}
+        fontSize={11}
+        fontWeight={600}
+        fill={fill}
         fontFamily="var(--font-body)"
       >
-        {label}
+        {valueText(row)}
       </text>
     );
   };
@@ -147,6 +138,7 @@ export default function CategoryImpactBars({
   byCategory,
   band,
 }: CategoryImpactBarsProps) {
+  const narrow = useNarrow();
   const low = byKey(band?.low, "category");
   const high = byKey(band?.high, "category");
   /* Sort: most positive → least positive → negative; null rows last */
@@ -172,15 +164,15 @@ export default function CategoryImpactBars({
       return b.barValue - a.barValue;
     });
 
-  /* Symmetric domain with 10 % headroom for labels */
+  /* Symmetric axis on round ticks (labels live in their own column) */
   const nonNull = sortedData
     .filter((r) => !r.isNull)
     .flatMap((r) => [r.barValue, r.bandLo ?? r.barValue, r.bandHi ?? r.barValue]);
   const minVal = nonNull.length ? Math.min(...nonNull) : -10;
   const maxVal = nonNull.length ? Math.max(...nonNull) : 10;
   const absMax = Math.max(Math.abs(minVal), Math.abs(maxVal), 5);
-  const domainPad = absMax * 1.35; // extra headroom for outside labels
-  const domain: [number, number] = [-domainPad, domainPad];
+  const axis = symmetricAxis(absMax, { headroom: 1.05, maxTicksPerSide: narrow ? 2 : 4 });
+  const domain: [number, number] = [-axis.lim, axis.lim];
 
   const cellFill = (entry: ProcessedRow): string => {
     if (entry.isNull) return GRIS_PALE;
@@ -190,21 +182,25 @@ export default function CategoryImpactBars({
   const BAR_HEIGHT = 38;
   const chartHeight = sortedData.length * BAR_HEIGHT + 64;
 
-  const renderLabel = makeLabelRenderer(sortedData);
+  const valueTick = makeValueTick(sortedData);
+  const vacant = sortedData.find((r) => r.isNull);
 
   return (
+    <figure aria-label="Variation médiane de l'impôt par catégorie de bien">
     <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         layout="vertical"
         data={sortedData}
-        margin={{ top: 8, right: 80, bottom: 28, left: 8 }}
+        margin={{ top: 8, right: 4, bottom: 28, left: 0 }}
         barSize={22}
         barCategoryGap="30%"
       >
         <XAxis
           type="number"
           domain={domain}
-          tickFormatter={(v: number) => signedPct(v)}
+          ticks={axis.ticks}
+          interval={0}
+          tickFormatter={signedPctAxis}
           tick={TICK}
           axisLine={{ stroke: LISERE }}
           tickLine={{ stroke: LISERE }}
@@ -212,8 +208,18 @@ export default function CategoryImpactBars({
         <YAxis
           type="category"
           dataKey="label_fr"
-          width={200}
+          width={narrow ? 112 : 200}
           tick={TICK}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          yAxisId="values"
+          orientation="right"
+          type="category"
+          dataKey="label_fr"
+          width={narrow ? 64 : 80}
+          tick={valueTick}
           axisLine={false}
           tickLine={false}
         />
@@ -225,8 +231,6 @@ export default function CategoryImpactBars({
         <Bar
           dataKey="barValue"
           isAnimationActive={false}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          label={renderLabel as any}
         >
           {sortedData.map((entry, idx) => (
             <Cell key={`cat-cell-${idx}`} fill={cellFill(entry)} />
@@ -241,5 +245,17 @@ export default function CategoryImpactBars({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+      <figcaption className="sr-only">
+        {sortedData.map((r) => `${r.label_fr} : ${valueText(r)}`).join(" ; ")}
+      </figcaption>
+      {vacant && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          * {vacant.label_fr}&nbsp;: la taxe actuelle modélisée est de 0&nbsp;€
+          (le non-bâti relève de la TFPNB, hors du périmètre modélisé), donc la
+          variation en pourcentage n&apos;est pas définie. Le chiffre indiqué est
+          la hausse médiane en euros par parcelle.
+        </p>
+      )}
+    </figure>
   );
 }

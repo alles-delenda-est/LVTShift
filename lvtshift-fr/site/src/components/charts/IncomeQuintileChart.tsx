@@ -31,8 +31,9 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { BandQuintileRow, QuintileRow } from "@/lib/types";
-import { euros, signedPct } from "@/lib/format";
+import { euros, signedPct, signedPctAxis } from "@/lib/format";
 import { quintileBars, type QuintileBar } from "@/lib/quintile";
+import { symmetricAxis } from "@/lib/axis";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 
 /* ── tooltip ──────────────────────────────────────────────────────── */
@@ -76,42 +77,43 @@ function makeTooltip(isTotal: boolean) {
   };
 }
 
-/* ── value label outside the end of each bar ─────────────────────── */
+/* ── values under each quintile ─────────────────────────────────────
+   The group figure and the household figure are printed under the Q label
+   instead of next to the bars: placed at the bar end, the group label sat
+   beyond the diamond and read as the diamond's value, and the household
+   figure was not shown at all.
+────────────────────────────────────────────────────────────────────── */
 
-function makeBarLabel(data: QuintileBar[]) {
+function makeQuintileTick(data: QuintileBar[], hasHousehold: boolean) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function QuintileBarLabel(props: any): ReactElement | null {
-    const entry = data[props.index ?? 0];
-    if (!entry || entry.bar == null) return null;
+  return function QuintileTick(props: any): ReactElement<SVGElement> {
+    const row = data.find((r) => r.quintile === props.payload?.value);
     const x: number = props.x ?? 0;
-    const width: number = props.width ?? 0;
     const y: number = props.y ?? 0;
-    const height: number = props.height ?? 0;
-    // Recharts may report a negative bar with a negative height, so take the
-    // rectangle's true top and bottom rather than trusting the sign.
-    const top = Math.min(y, y + height);
-    const bottom = Math.max(y, y + height);
-    const neg = entry.bar < 0;
-    // Clear the whisker and the household diamond when they reach past the
-    // bar's end: convert their overshoot to pixels with the bar's own scale.
-    const reach = [entry.bar, entry.bandLo, entry.bandHi, entry.household]
-      .filter((v): v is number => v != null);
-    const extreme = neg ? Math.min(...reach) : Math.max(...reach);
-    const pxPerUnit = entry.bar !== 0 ? Math.abs(height) / Math.abs(entry.bar) : 0;
-    const overshoot = Math.abs(extreme - entry.bar) * pxPerUnit;
-    const markerPad = entry.household != null ? 7 : 0;
+    const font = { fontFamily: "var(--font-body)", textAnchor: "middle" as const };
     return (
-      <text
-        x={x + width / 2}
-        y={neg ? bottom + overshoot + markerPad + 12 : top - overshoot - markerPad - 6}
-        textAnchor="middle"
-        fontSize={10}
-        fill={neg ? GREEN : ROUGE}
-        fontFamily="var(--font-body)"
-        fontWeight={600}
-      >
-        {signedPct(entry.bar)}
-      </text>
+      <g>
+        <text x={x} y={y + 12} fontSize={11} fill={GRIS} {...font}>
+          Q{props.payload?.value}
+        </text>
+        {row?.bar != null && (
+          <text
+            x={x}
+            y={y + 28}
+            fontSize={11}
+            fontWeight={600}
+            fill={row.bar >= 0 ? ROUGE : GREEN}
+            {...font}
+          >
+            {signedPct(row.bar)}
+          </text>
+        )}
+        {hasHousehold && row?.household != null && (
+          <text x={x} y={y + 43} fontSize={10} fill={ENCRE} {...font}>
+            ◇&#8239;{signedPct(row.household)}
+          </text>
+        )}
+      </g>
     );
   };
 }
@@ -177,12 +179,13 @@ function QuintileCaption({ isTotal, hasHousehold }: { isTotal: boolean; hasHouse
   }
   return (
     <p style={style}>
-      <strong>Barres</strong>&nbsp;: variation de l&apos;impôt payé par
+      <strong>Barres</strong> (chiffre en couleur sous chaque quintile)&nbsp;:
+      variation de l&apos;impôt payé par
       l&apos;ensemble des logements du groupe (total des nouvelles cotisations
       rapporté au total actuel, parcelles résidentielles).
       {hasHousehold && (
         <>
-          {" "}<strong>Losanges</strong>&nbsp;: variation pour le ménage type du
+          {" "}<strong>Losanges</strong> (◇)&nbsp;: variation pour le ménage type du
           groupe — chaque parcelle compte autant de fois qu&apos;elle a de
           logements.
         </>
@@ -216,11 +219,10 @@ export default function IncomeQuintileChart({
   const vals = data.flatMap((r) =>
     [r.bar, r.bandLo, r.bandHi, r.household].filter((v): v is number => v != null),
   );
-  // symmetric axis on a round 5-point step, with headroom for the labels
+  // symmetric axis on round ticks (values are printed under the axis)
   const absMax = Math.max(...vals.map(Math.abs), 5);
-  const lim = Math.ceil((absMax * 1.3) / 5) * 5;
+  const { lim, ticks } = symmetricAxis(absMax, { headroom: 1.1 });
   const domain: [number, number] = [-lim, lim];
-  const ticks = [-lim, -lim / 2, 0, lim / 2, lim];
 
   const incomes = data.map((r) => r.median_income_eur);
   const incomeRange =
@@ -229,37 +231,37 @@ export default function IncomeQuintileChart({
       : null;
 
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={300}>
+    <figure aria-label="Variation de l'impôt par quintile de revenu">
+      <ResponsiveContainer width="100%" height={hasHousehold ? 330 : 315}>
         <ComposedChart
           data={data}
-          margin={{ top: 28, right: 24, bottom: 32, left: 16 }}
+          margin={{ top: 12, right: 8, bottom: 8, left: 0 }}
           barCategoryGap="35%"
         >
           <XAxis
             dataKey="quintile"
-            tickFormatter={(v: number) => `Q${v}`}
-            tick={TICK}
+            tick={makeQuintileTick(data, hasHousehold)}
+            height={hasHousehold ? 52 : 36}
+            interval={0}
             axisLine={{ stroke: LISERE }}
             tickLine={{ stroke: LISERE }}
           />
           <YAxis
             domain={domain}
             ticks={ticks}
-            tickFormatter={(v: number) => signedPct(v)}
+            tickFormatter={signedPctAxis}
+            interval={0}
             tick={TICK}
             axisLine={false}
             tickLine={false}
-            width={48}
+            width={52}
           />
           <Tooltip content={makeTooltip(isTotal)} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
           <ReferenceLine y={0} stroke={ENCRE} strokeWidth={1.5} />
           <Bar
             dataKey="bar"
-            barSize={40}
+            maxBarSize={40}
             isAnimationActive={false}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label={makeBarLabel(data) as any}
           >
             {data.map((entry, idx) => (
               <Cell key={`q-cell-${idx}`} fill={(entry.bar ?? 0) >= 0 ? ROUGE : GREEN} />
@@ -287,6 +289,15 @@ export default function IncomeQuintileChart({
         </p>
       )}
       <QuintileCaption isTotal={isTotal} hasHousehold={hasHousehold} />
-    </div>
+      <figcaption className="sr-only">
+        {data
+          .map(
+            (r) =>
+              `Q${r.quintile} : ${signedPct(r.bar)}` +
+              (r.household != null ? `, ménage type ${signedPct(r.household)}` : ""),
+          )
+          .join(" ; ")}
+      </figcaption>
+    </figure>
   );
 }

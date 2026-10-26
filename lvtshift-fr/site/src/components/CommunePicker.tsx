@@ -13,7 +13,7 @@
  *    already enforces this with its rouge accent treatment.
  */
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { Commune } from "@/lib/types";
 import HeadlineCards from "@/components/charts/HeadlineCards";
 import SensitivityBand from "@/components/charts/SensitivityBand";
@@ -35,6 +35,9 @@ function BandNote() {
   );
 }
 
+/** The query string never changes behind our back (we only replaceState). */
+const subscribeNever = () => () => {};
+
 export interface CommunePickerProps {
   communes: Commune[];
 }
@@ -45,7 +48,26 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
     communes[0]?.commune_key ??
     "";
 
-  const [selectedKey, setSelectedKey] = useState<string>(defaultKey);
+  // Shareable links: /resultats?commune=paris opens on Paris. The page is
+  // statically exported, so the query is read on the client (the server
+  // snapshot is null, which keeps hydration consistent) and written back with
+  // replaceState, so picking a commune adds no history entry.
+  const urlKey = useSyncExternalStore(
+    subscribeNever,
+    () => new URLSearchParams(window.location.search).get("commune"),
+    () => null,
+  );
+  const [pickedKey, setPickedKey] = useState<string | null>(null);
+  const isKnown = (k: string | null): k is string =>
+    k !== null && communes.some((c) => c.commune_key === k);
+  const selectedKey = pickedKey ?? (isKnown(urlKey) ? urlKey : defaultKey);
+
+  const selectCommune = (key: string) => {
+    setPickedKey(key);
+    const url = new URL(window.location.href);
+    url.searchParams.set("commune", key);
+    window.history.replaceState(null, "", url);
+  };
 
   const commune =
     communes.find((c) => c.commune_key === selectedKey) ?? communes[0] ?? null;
@@ -74,20 +96,23 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
         >
           Choisir une commune
         </label>
-        <div className="relative inline-block">
+        {/* Explicit width: a select sized by its longest option overflowed
+            phone screens on some platforms. */}
+        <div className="relative w-full sm:w-[26rem] max-w-full">
           <select
             id="commune-select"
             value={selectedKey}
-            onChange={(e) => setSelectedKey(e.target.value)}
+            onChange={(e) => selectCommune(e.target.value)}
             className="
+              w-full
               border border-lisere bg-creme text-encre
               font-body text-base
               px-4 py-2.5
               pr-10
               appearance-none
               cursor-pointer
+              truncate
               focus:outline-none focus:ring-2 focus:ring-marine/40
-              min-w-[18rem]
             "
           >
             <optgroup label="Communes">

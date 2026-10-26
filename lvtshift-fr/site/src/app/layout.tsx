@@ -21,10 +21,21 @@ const sourceSerif = Source_Serif_4({
   style: ["normal", "italic"],
 });
 
+const DESCRIPTION =
+  "Modélisation d'une réforme de la taxe foncière sur la valeur des terrains en France — Récompenser le travail, décourager la rente.";
+
 export const metadata = {
   title: "Pour une terre productive",
-  description:
-    "Modélisation d'une réforme de la taxe foncière sur la valeur des terrains en France — Récompenser le travail, décourager la rente.",
+  description: DESCRIPTION,
+  // Link previews (messaging apps, social networks) had nothing to show.
+  openGraph: {
+    title: "Pour une terre productive",
+    description: DESCRIPTION,
+    siteName: "Pour une terre productive",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: { card: "summary", title: "Pour une terre productive", description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
