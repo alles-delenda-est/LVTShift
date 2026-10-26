@@ -74,7 +74,7 @@ export default function ScenariosPage() {
         <div className="mt-5 grid gap-4 md:grid-cols-3 max-w-5xl">
           <p className="font-body text-sm text-encre leading-relaxed">
             <strong className="font-semibold">La taxe foncière fait l&apos;essentiel.</strong>{" "}
-            Elle pèse {mdEur(data.taxes.filter((t) => t.key === "tfpb" || t.key === "tfpnb").reduce((s, t) => s + t.reference_meur, 0))}&nbsp;Md€
+            Avec les frais de gestion de l&apos;État, elle pèse {mdEur(data.taxes.filter((t) => familyOf(t.key) === "tf").reduce((s, t) => s + t.reference_meur, 0))}&nbsp;Md€
             ; les scénarios 2 et 3 n&apos;ajoutent au plus que {mdEur(s3ifi.total_meur - s1.total_meur)}&nbsp;Md€.
           </p>
           <p className="font-body text-sm text-encre leading-relaxed">
@@ -182,29 +182,52 @@ export default function ScenariosPage() {
 
       <section aria-labelledby="hors-champ" className="mb-12 max-w-3xl">
         <H3 id="hors-champ">Ce qui n&apos;est pas compté</H3>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Certains prélèvements touchent aussi la propriété mais restent hors
+          des trois scénarios. Les inclure est possible ; chacun est un choix.
+        </p>
         <ul className="font-body text-base text-encre leading-relaxed space-y-2 list-disc pl-5">
+          <li>
+            <strong className="font-semibold">La taxe d&apos;enlèvement des ordures ménagères</strong>{" "}
+            (9,2&nbsp;Md€ en 2025), portée sur le même avis que la taxe
+            foncière mais qui finance un service.
+          </li>
+          <li>
+            <strong className="font-semibold">La cotisation foncière des entreprises</strong>{" "}
+            (8,2&nbsp;Md€), qui frappe l&apos;occupation de locaux par une activité,
+            pas la propriété.
+          </li>
+          <li>
+            <strong className="font-semibold">La taxe d&apos;habitation sur les résidences secondaires</strong>{" "}
+            (2,6&nbsp;Md€ en 2025), payée par l&apos;occupant.
+          </li>
+          <li>
+            <strong className="font-semibold">Les compensations versées par l&apos;État</strong>{" "}
+            pour les locaux exonérés, surtout industriels (environ 2,7&nbsp;Md€) :
+            ce n&apos;est pas un impôt, mais les communes les perdraient si
+            l&apos;exonération disparaissait.
+          </li>
+          <li>
+            <strong className="font-semibold">Les taxes annexes de la taxe foncière</strong>{" "}
+            (syndicats, taxes spéciales d&apos;équipement, GEMAPI, TASA&nbsp;: 0,9&nbsp;Md€),
+            levées par d&apos;autres organismes que la commune.
+          </li>
           <li>
             <strong className="font-semibold">L&apos;impôt sur les sociétés</strong>{" "}
             payé sur les loyers et plus-values des sociétés : aucun chiffre public
-            ne l&apos;isole.
-          </li>
-          <li>
-            <strong className="font-semibold">Les locations meublées</strong>{" "}
-            (bénéfices industriels et commerciaux) : les sources consultées ne
-            les distinguent pas des autres revenus.
-          </li>
-          <li>
-            <strong className="font-semibold">Les taxes annexes à la taxe foncière</strong>{" "}
-            (syndicats, taxes spéciales d&apos;équipement, GEMAPI, TASA) et la
-            taxe d&apos;enlèvement des ordures ménagères, qui paie un service.
+            ne l&apos;isole. Les <strong className="font-semibold">locations meublées</strong>{" "}
+            ne sont pas non plus distinguées dans les sources.
           </li>
         </ul>
+        <p className="font-body text-sm text-gris leading-relaxed mt-3">
+          Montants : DGFiP, REI 2025, via OFGL.
+        </p>
       </section>
 
       <section aria-labelledby="taux" className="mb-4 max-w-3xl">
         <H3 id="taux">D&apos;où vient le taux indicatif</H3>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          L&apos;INSEE estime la valeur des terrains bâtis à{" "}
+          L&apos;INSEE estime provisoirement la valeur des terrains bâtis à{" "}
           {Math.round(base.total_meur / 1000).toLocaleString("fr-FR").replace(/\s/g, " ")}&nbsp;Md€
           fin {base.year}. Les terrains publics (
           {Math.round(base.public_meur / 1000).toLocaleString("fr-FR")}&nbsp;Md€)
@@ -213,10 +236,9 @@ export default function ScenariosPage() {
           Le taux indicatif divise les recettes à remplacer par ce montant.
         </p>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          Deux limites : cette valeur date de fin {base.year}, après une baisse
-          d&apos;un an de 13,7&nbsp;%, alors que les recettes sont de 2025 ou des
-          moyennes ; et les terres agricoles et naturelles n&apos;y figurent pas.
-          Les inclure ferait baisser le taux.
+          Deux limites : le chiffre de {base.year} est provisoire, et les terres
+          agricoles et naturelles n&apos;y figurent pas. Les inclure ferait
+          baisser le taux.
         </p>
         <p className="font-body text-sm text-gris leading-relaxed">
           Source :{" "}

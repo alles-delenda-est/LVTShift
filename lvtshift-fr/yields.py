@@ -18,8 +18,8 @@ Indicative rates divide the yield by INSEE's built-land value net of public
 land. They are national averages, for orientation: the model sets the local
 tier commune by commune (spec 0005 §4.1).
 
-All figures were re-read from the sources on 2026-10-26; see
-docs/research/yields-2026.md for each reconciliation.
+All figures were re-read from the sources on 2026-10-26 and checked again by an
+independent verification pass; see docs/research/yields-2026.md.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional
 
 Tier = Literal["local", "departmental", "national"]
-Budget = Literal["bloc communal", "départements", "État", "Sécurité sociale"]
+Budget = Literal["bloc communal", "départements", "État", "Sécurité sociale et État"]
 Basis = Literal["average", "latest"]
 Status = Literal["verified", "derived", "reported"]
 
@@ -85,33 +85,54 @@ class TaxYield:
         return sum(self.values[y] for y in years) / len(years)
 
 
-# Departmental DMTO "avant péréquation", OFGL comptes des départements
-# (agrégat « DMTO avant péreq. », budget principal), M€.
-_DMTO_DEP = {2021: 16511, 2022: 16776, 2023: 13044, 2024: 11297, 2025: 13669}
+# Departmental DMTO, M€. OFGL's departmental aggregate « DMTO avant péreq. »
+# includes, for Paris, the communal additional tax, which dmto_communes already
+# counts (grand livre, M57 c/73123); it is removed here (OFGL Paris aggregate
+# minus Paris's departmental account c/73121; DGCL BIS 190 gives 289 M€ for
+# 2023). The single authorities of Corse, Martinique and Guyane levy the
+# departmental duty but sit in OFGL's regions dataset; they are added.
+_DMTO_DEP_OFGL = {2021: 16511, 2022: 16776, 2023: 13044, 2024: 11297, 2025: 13669}
+_PARIS_COMMUNAL = {2021: 397, 2022: 392, 2023: 301, 2024: 268, 2025: 320}
+_DMTO_CTU = {2021: 145, 2022: 154, 2023: 139, 2024: 116, 2025: 135}
+_DMTO_DEP = {y: _DMTO_DEP_OFGL[y] - _PARIS_COMMUNAL[y] + _DMTO_CTU[y] for y in _DMTO_DEP_OFGL}
 
-# State collection fee on departmental DMTO (frais d'assiette et de
-# recouvrement, 2,37 % of the departmental duty, paid on top by the buyer).
+# State fees added on top of the local taxes and paid by the taxpayer:
+# 2,37 % on the departmental DMTO (CGI art. 1647 V) and 3 % on the taxe
+# foncière of communes and intercommunalities (CGI art. 1641).
 _FRAIS_ASSIETTE_RATE = 0.0237
+_FRAIS_TF_RATE = 0.03
+_TFPB = {2024: 39113 + 2519, 2025: 40157 + 2619}
+_TFPNB = {2024: 1008 + 189 + 4 + 91 + 4, 2025: 916 + 172 + 4 + 91 + 5}
 
 YIELDS: List[TaxYield] = [
     TaxYield(
         key="tfpb", label_fr="Taxe foncière sur les propriétés bâties",
         scenario="S1", tier="local", budget="bloc communal",
-        values={2024: 39113 + 2519, 2025: 40157 + 2619},
+        values=dict(_TFPB),
         basis="latest", status="verified",
         source="DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », commune + intercommunalité)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
         scope="Toutes les propriétés bâties ; parts commune et intercommunalité (périmètre du modèle). "
-              "Hors syndicats (184 M€), taxes spéciales d'équipement, GEMAPI et TASA (≈ 0,7 Md€, à confirmer) et TEOM.",
+              "Hors syndicats (184 M€), taxes spéciales d'équipement, GEMAPI et TASA (710 M€ en 2025) et TEOM.",
     ),
     TaxYield(
         key="tfpnb", label_fr="Taxe foncière sur les propriétés non bâties",
         scenario="S1", tier="local", budget="bloc communal",
-        values={2024: 1008 + 189 + 4 + 91 + 4, 2025: 916 + 172 + 4 + 91 + 5},
+        values=dict(_TFPNB),
         basis="latest", status="verified",
         source="DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL »)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
         scope="Commune, intercommunalité et taxe additionnelle (TAFNB) ; hors syndicats et chambres d'agriculture.",
+    ),
+    TaxYield(
+        key="tf_etat", label_fr="Taxe foncière — frais de gestion (État)",
+        scenario="S1", tier="national", budget="État",
+        values={y: round(_FRAIS_TF_RATE * (_TFPB[y] + _TFPNB[y])) for y in _TFPB},
+        basis="latest", status="derived",
+        source="CGI art. 1641 : 3 % en sus de la taxe foncière des communes et intercommunalités",
+        url="https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006069577/",
+        scope="Frais d'assiette, de dégrèvement et de non-valeurs ajoutés par l'État à l'avis de taxe foncière.",
+        note="Ordre de grandeur cohérent avec le REI 2025 (2 068 M€ de frais sur l'ensemble de l'avis, TEOM comprise).",
     ),
     TaxYield(
         key="dmto_communes", label_fr="Droits de mutation — part communale",
@@ -132,7 +153,10 @@ YIELDS: List[TaxYield] = [
         basis="average", status="verified",
         source="Comptes des départements, via OFGL (agrégat « DMTO avant péreq. », budget principal)",
         url="https://data.ofgl.fr/explore/dataset/ofgl-base-departements/",
-        scope="Droits départementaux avant péréquation, y compris Paris et la métropole de Lyon.",
+        scope="Droits départementaux avant péréquation, y compris la métropole de Lyon et les collectivités "
+              "uniques de Corse, Martinique et Guyane ; hors part communale de Paris (comptée avec les communes).",
+        note="OFGL comptes des départements moins la part communale de Paris (≈ 335 M€ par an), "
+             "plus les collectivités uniques (OFGL comptes des régions, ≈ 138 M€ par an).",
     ),
     TaxYield(
         key="dmto_etat", label_fr="Droits de mutation — frais d'assiette (État)",
@@ -148,35 +172,40 @@ YIELDS: List[TaxYield] = [
         key="gains_ir", label_fr="Plus-values immobilières — impôt sur le revenu",
         scenario="S2", tier="national", budget="État",
         # IR + surtaxe on large gains + taxes on land made constructible
+        # 2020-2023 (graphiques 9-10): IR + surtax + the two taxes on land made
+        # constructible, listed separately. 2024 (tableau 7): its IR column
+        # already includes them (in 2023 it equals the 9-10 sum to 0,5 M€).
         values={2020: 944 + 78.7 + 2.0 + 24.7, 2021: 1285 + 102.0 + 2.4 + 32.7,
                 2022: 1501 + 138.2 + 2.2 + 36.2, 2023: 1145 + 105.9 + 2.6 + 24.6,
-                2024: 907.6 + 70.0 + 1.5 + 15.9},
+                2024: 907.6},
         basis="average", status="verified",
         source="Cour des comptes, L'imposition des plus-values immobilières des particuliers (25 nov. 2025), données ouvertes, graphiques 9-10 (2020–2023) et tableau 7 (2024)",
         url="https://www.ccomptes.fr/fr/publications/limposition-des-plus-values-immobilieres-des-particuliers",
         scope="Particuliers : IR à 19 %, surtaxe sur les plus-values élevées, taxes sur les terrains devenus constructibles. "
               "Hors impôt sur les sociétés (non publié, décision D3).",
-        note="Rupture de série en 2024 : le tableau 7 donne pour 2023 un montant supérieur de ~10 % à celui des graphiques 9-10.",
+        note="2024 provisoire (tableau 7), dont la colonne IR inclut déjà la surtaxe et les taxes sur les terrains.",
     ),
     TaxYield(
         key="gains_ps", label_fr="Plus-values immobilières — prélèvements sociaux",
-        scenario="S2", tier="national", budget="Sécurité sociale",
+        scenario="S2", tier="national", budget="Sécurité sociale et État",
         values={2020: 2061, 2021: 2702, 2022: 3014, 2023: 2347, 2024: 1924.5},
         basis="average", status="verified",
         source="Cour des comptes (25 nov. 2025), données ouvertes, graphiques 9-10 (2020–2023) et tableau 7 (2024)",
         url="https://www.ccomptes.fr/fr/publications/limposition-des-plus-values-immobilieres-des-particuliers",
-        scope="Prélèvements sociaux (17,2 %) sur les plus-values des particuliers.",
-        note="Même rupture de série en 2024 que la ligne IR.",
+        scope="Prélèvements sociaux (17,2 %, dont 7,5 points de prélèvement de solidarité versés à l'État) sur les plus-values des particuliers.",
+        note="Rupture de série : pour 2023, le tableau 7 donne 2 583 M€ contre 2 347 dans les graphiques 9-10 (+10 %), écart non expliqué. "
+             "Sensibilité de la moyenne : −54 à +317 M€ selon la série retenue.",
     ),
     TaxYield(
         key="ifi", label_fr="Impôt sur la fortune immobilière (IFI)",
         scenario="S2_IFI", tier="national", budget="État",
-        values={2022: 2100, 2023: 1900, 2024: 2200, 2025: 2300},
-        basis="latest", status="reported",
-        source="DGFiP Statistiques n° 23 (2023) ; CPO 2023 (2022) ; DGFiP cité par la presse (2024, 2025)",
-        url="https://www.impots.gouv.fr/dgfip-statistiques-limpot-sur-la-fortune-immobiliere-en-2023",
-        scope="Produit de l'IFI, tous redevables.",
-        note="2024 et 2025 à vérifier sur la publication DGFiP elle-même.",
+        values={2022: 1800, 2023: 1900, 2024: 2200, 2025: 2300},
+        basis="latest", status="verified",
+        source="DGFiP Statistiques n° 15 (2022), n° 23 (2023), n° 33 (2024), n° 45 (2025)",
+        url="https://www.impots.gouv.fr/dgfip-statistiques-limpot-sur-la-fortune-immobiliere-en-2025",
+        scope="Montant des avis d'IFI, tous redevables.",
+        note="Les recettes budgétaires sont plus élevées (2 739 M€ en 2024, 2 965 M€ prévus pour 2025, "
+             "PLF 2026, Voies et moyens, ligne 1406) : écart entre avis et encaissements, non expliqué par la source.",
     ),
     TaxYield(
         key="rents_ir", label_fr="Revenus locatifs — impôt sur le revenu",
@@ -191,12 +220,14 @@ YIELDS: List[TaxYield] = [
     ),
     TaxYield(
         key="rents_ps", label_fr="Revenus locatifs — prélèvements sociaux",
-        scenario="S3", tier="national", budget="Sécurité sociale",
+        scenario="S3", tier="national", budget="Sécurité sociale et État",
         values={2022: 2400},
         basis="latest", status="reported",
         source="CPO, Pour une fiscalité du logement plus cohérente (déc. 2023), p. 23",
         url="https://www.vie-publique.fr/files/rapport/pdf/292676.pdf",
-        scope="Prélèvements sociaux (17,2 %) sur les revenus fonciers.",
+        scope="Prélèvements sociaux (17,2 %, dont 7,5 points versés à l'État) sur les revenus fonciers.",
+        note="Le CPO cite séparément 1,1 Md€ de CSG sur les revenus fonciers ; aucune hypothèse (CSG incluse ou non) "
+             "ne cadre avec un taux de 17,2 %. Ligne CSG non ajoutée tant que le partage n'est pas connu.",
     ),
 ]
 
@@ -211,14 +242,15 @@ SCENARIOS: Dict[str, List[str]] = {
 class LandBase:
     """Taxable land value used for indicative national rates, M€."""
 
-    built_land_total: float = 6_346_000
-    built_land_public: float = 916_000
-    year: int = 2023
-    source: str = "INSEE, Insee Première n° 2028 (déc. 2024), figure 2, comptes nationaux base 2020"
-    url: str = "https://www.insee.fr/fr/statistiques/8305990"
+    built_land_total: float = 7_032_000
+    built_land_public: float = 941_000
+    year: int = 2025
+    source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
+                   "d'actif », données 2025 provisoires (30 juillet 2026)")
+    url: str = "https://www.insee.fr/fr/statistiques/2830290"
     note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré). "
                  "Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE ne les "
-                 "isole pas dans cette publication. Valeur fin 2023, après une baisse de 13,7 % sur un an.")
+                 "isole pas. Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
 
     @property
     def taxable(self) -> float:

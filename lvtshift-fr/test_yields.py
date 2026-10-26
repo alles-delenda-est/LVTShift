@@ -13,7 +13,22 @@ def test_reference_rule_d1():
     # Cyclical taxes: mean of the last five years; others: latest year.
     dep = next(t for t in Y.YIELDS if t.key == "dmto_departements")
     assert dep.reference_years() == [2021, 2022, 2023, 2024, 2025]
-    assert abs(dep.reference() - (16511 + 16776 + 13044 + 11297 + 13669) / 5) < 1e-9
+    assert abs(dep.reference() - (16259 + 16538 + 12882 + 11145 + 13484) / 5) < 1e-9
+
+
+def test_dmto_paris_counted_once():
+    # Paris's communal share leaves the departmental line (it is in dmto_communes);
+    # the single authorities of Corse, Martinique and Guyane join it.
+    for y in Y._DMTO_DEP:
+        assert Y._DMTO_DEP[y] == Y._DMTO_DEP_OFGL[y] - Y._PARIS_COMMUNAL[y] + Y._DMTO_CTU[y]
+
+
+def test_state_fees_on_both_local_taxes():
+    # Counting the State's fee on DMTO but not on the taxe foncière would be inconsistent.
+    keys = {t.key for t in Y.lines_for("S1")}
+    assert {"dmto_etat", "tf_etat"} <= keys
+    tf = next(t for t in Y.YIELDS if t.key == "tf_etat")
+    assert tf.reference() == round(0.03 * (42776 + 1188))
     tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
     assert tfpb.reference_years() == [2025]
     assert tfpb.reference() == 42776
@@ -48,7 +63,7 @@ def test_every_line_is_sourced():
 
 
 def test_indicative_rate_uses_taxable_land():
-    assert Y.LAND_BASE.taxable == 6_346_000 - 916_000
+    assert Y.LAND_BASE.taxable == 7_032_000 - 941_000
     r = Y.indicative_rate_pct("S1")
     assert abs(r - 100 * Y.scenario_total("S1") / Y.LAND_BASE.taxable) < 1e-9
     assert 0.5 < r < 2.0  # sanity: order of magnitude of today's property taxes
