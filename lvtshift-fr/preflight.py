@@ -43,6 +43,12 @@ MIN_DISTINCT_INCOMES = 5
 CLIP_WARN_PCT = 50.0
 
 
+def _fr(x: float, digits: int = 0) -> str:
+    """French number typography for register messages shown on the site:
+    decimal comma, no-break space between thousands (matches site/src/lib/format.ts)."""
+    return f"{x:,.{digits}f}".translate(str.maketrans({",": "\u00a0", ".": ","}))
+
+
 def _chk(name, category, severity, message, adaptation=None, detail=None) -> dict:
     return {
         "check": name, "category": category, "severity": severity,
@@ -224,9 +230,9 @@ def check_rei_layers(cfg, layers=("Commune", "GFP"), fetch=_rei_fb_by_layer) -> 
     sev = OK if kept and share <= REI_EXCLUDED_WARN else WARN
     return _chk(
         "rei_layers", "source", sev,
-        (f"REI FB {year} : couches {sorted(lay)} ; modélisé "
-         f"{'+'.join(layers)} = {kept:,.0f} € ; hors périmètre "
-         f"{share * 100:.1f} % du produit FB total."),
+        (f"REI FB {year} : couches {', '.join(sorted(lay))} ; modélisé "
+         f"{'+'.join(layers)} = {_fr(kept)}\u00a0€ ; hors périmètre "
+         f"{_fr(share * 100, 1)}\u00a0% du produit FB total."),
         adaptation=(None if sev == OK else
                     "Part non modélisée significative : choix de périmètre à "
                     "documenter (syndicats/TSE/GEMAPI) ou à élargir."),
@@ -243,7 +249,7 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
         return [_chk("model_ran", "run", WARN,
                      "Modèle non exécuté (pas de sortie standard).")]
     df = pd.read_csv(path)
-    checks = [_chk("model_ran", "run", OK, f"Exécuté : {len(df):,} parcelles.")]
+    checks = [_chk("model_ran", "run", OK, f"Exécuté : {_fr(len(df))} parcelles.")]
 
     cur = float(df["current_tax"].sum())
     new = float(df["new_tax"].sum())
@@ -251,7 +257,7 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     checks.append(_chk(
         "revenue_neutrality", "validation",
         OK if (dev is not None and dev < 0.01) else WARN,
-        (f"Neutralité des recettes : écart {dev * 100:.2f} %."
+        (f"Neutralité des recettes : écart {_fr(dev * 100, 2)}\u00a0%."
          if dev is not None else "Recettes courantes nulles — à investiguer."),
         detail={"deviation_pct": round(dev * 100, 3) if dev is not None else None}))
 
@@ -267,9 +273,9 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     checks.append(_chk(
         "income_quintiles", "validation",
         OK if nq == 5 else WARN,
-        (f"Quintiles de revenu : 5/5 bins produits ({ninc} revenus IRIS distincts)."
+        (f"Quintiles de revenu : 5/5 groupes produits ({ninc} revenus IRIS distincts)."
          if nq == 5 else
-         f"Quintiles de revenu : {nq}/5 bins — revenu IRIS trop peu varié "
+         f"Quintiles de revenu : {nq}/5 groupes — revenu IRIS trop peu varié "
          f"({ninc} valeurs distinctes)."),
         adaptation=(None if nq == 5 else
                     "Structurel (petite commune / peu d'IRIS) : agrégat quintile "
@@ -283,7 +289,7 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     inband = ls is not None and lo <= ls <= hi
     checks.append(_chk(
         "land_share_band", "validation", OK if inband else WARN,
-        (f"Part foncière {ls:.1f} % (bande {lo:.0f}–{hi:.0f} %)."
+        (f"Part foncière {_fr(ls, 1)}\u00a0% (bande {lo:.0f}–{hi:.0f}\u00a0%)."
          if ls is not None else "Base imposable nulle."),
         adaptation=(None if inband else
                     "Hors bande : cœur très dense ou imputation à confronter au "
@@ -304,8 +310,8 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     bound = max(at_cap, at_floor)
     checks.append(_chk(
         "land_share_clip", "validation", OK if bound <= CLIP_WARN_PCT else WARN,
-        (f"Parcelles bâties à la borne de part foncière : {at_cap:.1f} % au plafond "
-         f"({hi_b:.0%}), {at_floor:.1f} % au plancher ({lo_b:.0%})."),
+        (f"Parcelles bâties à la borne de part foncière : {_fr(at_cap, 1)}\u00a0% au plafond "
+         f"({hi_b * 100:.0f}\u00a0%), {_fr(at_floor, 1)}\u00a0% au plancher ({lo_b * 100:.0f}\u00a0%)."),
         adaptation=(None if bound <= CLIP_WARN_PCT else
                     "La répartition terrain/bâti est fixée par la borne, pas "
                     "mesurée : l'impôt foncier y devient proportionnel à la valeur "
