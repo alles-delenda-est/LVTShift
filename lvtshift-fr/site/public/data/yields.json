@@ -362,6 +362,8 @@
     "total_meur": 7032000,
     "public_meur": 941000,
     "year": 2025,
+    "companies_meur": 1901000,
+    "companies_share": 0.3121,
     "source": "INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type d'actif », données 2025 provisoires (30 juillet 2026)",
     "url": "https://www.insee.fr/fr/statistiques/2830290",
     "note": "Terrains bâtis hors administrations publiques (foncier public exonéré), plus les terres agricoles au prix SAFER × surface (D6). Forêts non incluses. Terrains bâtis fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).",
@@ -393,6 +395,7 @@
         "national": 1788
       },
       "rate_pct": 1.06,
+      "companies_shift_meur": 0,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -416,6 +419,7 @@
         "national": 5465
       },
       "rate_pct": 1.12,
+      "companies_shift_meur": 1147,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -441,6 +445,7 @@
         "national": 7797
       },
       "rate_pct": 1.16,
+      "companies_shift_meur": 1875,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -467,6 +472,7 @@
         "national": 13155
       },
       "rate_pct": 1.24,
+      "companies_shift_meur": 3548,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -495,6 +501,7 @@
         "national": 15487
       },
       "rate_pct": 1.28,
+      "companies_shift_meur": 4275,
       "lines": [
         "tfpb",
         "tfpnb",

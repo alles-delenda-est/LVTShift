@@ -33,6 +33,7 @@ export interface YieldVariant {
   total_constant_meur: number;
   tiers_meur: Record<Tier, number>;
   rate_pct: number;
+  companies_shift_meur: number;
   lines: string[];
 }
 
@@ -45,6 +46,8 @@ export interface YieldsData {
     taxable_meur: number;
     total_meur: number;
     public_meur: number;
+    companies_meur: number;
+    companies_share: number;
     year: number;
     source: string;
     url: string;

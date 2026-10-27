@@ -51,6 +51,12 @@ export default function ScenariosPage() {
   const data = loadYields();
   const s1 = variant(data, "S1", false);
   const s3ifi = variant(data, "S3", true);
+  const shifts = [
+    { label: "Scénario 2", v: variant(data, "S2", false) },
+    { label: "Scénario 2 avec l'IFI", v: variant(data, "S2", true) },
+    { label: "Scénario 3", v: variant(data, "S3", false) },
+    { label: "Scénario 3 avec l'IFI", v: s3ifi },
+  ];
   const local = s1.tiers_meur.local;
   const base = data.land_base;
   const farm = base.farmland;
@@ -119,6 +125,42 @@ export default function ScenariosPage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="societes" className="mb-12 max-w-3xl">
+        <H3 id="societes">Les scénarios 2 et 3 font payer les terrains des sociétés</H3>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Les impôts ajoutés par les scénarios 2 et 3 (impôt sur le revenu et
+          prélèvements sociaux sur les plus-values et les loyers, IFI) ne sont
+          payés que par des particuliers. Les sociétés, elles, paient l&apos;impôt
+          sur les sociétés sur ces revenus, et cet impôt reste en place. Or le
+          taux national qui remplace ces recettes frappe tous les terrains. Les
+          sociétés détiennent {num(base.companies_meur / 1000)}&nbsp;Md€ de terrains
+          bâtis, soit {num(100 * base.companies_share)}&nbsp;% des terrains bâtis
+          imposables : elles paieraient donc environ cette part des recettes
+          ajoutées, sans qu&apos;aucun de leurs impôts ne baisse.
+        </p>
+        <ul className="font-body text-base text-encre leading-relaxed space-y-1 list-disc pl-5 mb-3">
+          {shifts.map(({ label, v }) => (
+            <li key={label}>
+              {label} : environ {mdEur(v.companies_shift_meur)}&nbsp;Md€ par an.
+            </li>
+          ))}
+        </ul>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Une partie de la charge passe donc des particuliers qui louent ou
+          vendent des biens vers les sociétés. Le scénario&nbsp;1 n&apos;en crée pas : sociétés et
+          particuliers paient déjà la taxe foncière et les droits de mutation.
+        </p>
+        <p className="font-body text-sm text-gris leading-relaxed">
+          Ordre de grandeur : la part des sociétés est celle des terrains bâtis
+          (INSEE, fin {base.year}), appliquée aussi aux terres agricoles. Si une
+          partie des terrains classés «&nbsp;sociétés&nbsp;» appartient à des
+          sociétés dont les associés paient l&apos;impôt sur le revenu, ces
+          associés profiteraient aussi de la baisse et le transfert réel serait
+          moindre. Les sociétés peuvent aussi en reporter une partie sur leurs
+          locataires ou leurs actionnaires.
+        </p>
       </section>
 
       <section aria-labelledby="tableau" className="mb-12">

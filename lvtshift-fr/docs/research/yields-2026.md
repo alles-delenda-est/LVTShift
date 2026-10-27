@@ -304,7 +304,14 @@ Caveats:
   individuals' taxes on gains and rents; companies' corporate tax on the same
   income stays (D3). At 31 % of the base, the national lines added by S2–S3
   (11,4 Md€ in S3, 13,7 with IFI) put about 3,5 to 4,3 Md€ a year onto
-  companies' land, to fund cuts for individual landlords and sellers. The site must show this transfer between sectors.
+  companies' land, to fund cuts for individual landlords and sellers.
+  Shown on the site since 27 October (`yields.companies_shift`, exported as
+  `companies_shift_meur`): companies' share of taxable built land (31,2 %),
+  applied to the whole base, times the S2–S3 lines: S2 1 147 M€, S2 + IFI
+  1 875, S3 3 548, S3 + IFI 4 275. Upper estimate on one count: if INSEE puts
+  in S11 some property companies whose partners pay IR, those partners also
+  gain from the cut. Economic incidence (pass-through to tenants or
+  shareholders) is not modelled.
 
 ## Left out, with yields (for decision)
 
@@ -331,7 +338,8 @@ Caveats:
    (+1,0 Md€ on S1, +1,9 on S3).
 4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
    kept out; THRS added to S1).
-5. The transfer onto companies' land in S2–S3 (D3), to show on the site.
+5. The transfer onto companies' land in S2–S3 (D3): shown on the site.
+   Open: how INSEE classifies property companies taxed at IR.
 
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
 

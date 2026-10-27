@@ -126,6 +126,15 @@ def test_every_exported_url_is_https(tmp_path: Path):
     assert found and all(isinstance(u, str) and u.startswith("https://") for u in found)
 
 
+def test_companies_shift_only_from_s2_s3_lines():
+    assert Y.companies_shift("S1") == 0
+    share = Y.LAND_BASE.companies_share
+    assert 0.30 < share < 0.32
+    added = Y.scenario_total("S3", True) - Y.scenario_total("S1")
+    assert abs(Y.companies_shift("S3", True) - share * added) < 1e-6
+    assert Y.companies_shift("S2") < Y.companies_shift("S3") < Y.companies_shift("S3", True)
+
+
 def test_export_round_trip(tmp_path: Path):
     out = tmp_path / "yields.json"
     payload = Y.export_json(out)

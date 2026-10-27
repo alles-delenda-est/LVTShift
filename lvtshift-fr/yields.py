@@ -389,6 +389,9 @@ class LandBase:
 
     built_land_total: float = 7_032_000
     built_land_public: float = 941_000
+    # Non-financial (S11, 1 700,7 Md€) and financial (S12, 200,3 Md€) companies,
+    # INSEE T_8200_2025, row N2111.
+    built_land_companies: float = 1_701_000 + 200_000
     farmland: float = FARMLAND.value
     year: int = 2025
     source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
@@ -405,6 +408,11 @@ class LandBase:
     @property
     def taxable(self) -> float:
         return self.taxable_built + self.farmland
+
+    @property
+    def companies_share(self) -> float:
+        """Companies' share of taxable built land, applied to the whole base."""
+        return self.built_land_companies / self.taxable_built
 
 
 LAND_BASE = LandBase()
@@ -426,6 +434,21 @@ def scenario_total(scenario: str, include_ifi: bool = False) -> float:
 def scenario_total_constant(scenario: str, include_ifi: bool = False) -> float:
     """Total reference yield in CPI_YEAR euros, M€ (D1 sensitivity)."""
     return sum(t.reference_constant() for t in lines_for(scenario, include_ifi))
+
+
+def companies_shift(scenario: str, include_ifi: bool = False,
+                    base: Optional[LandBase] = None) -> float:
+    """Yield moved onto companies' land by S2–S3, M€ a year (D3).
+
+    S2 and S3 replace taxes that only individuals pay (IR and social levies on
+    gains and rents, IFI); companies' corporate tax on the same income stays.
+    The national rate that replaces them falls on all land, so companies pay
+    their share of the base on these lines without any tax of theirs being cut.
+    S1 lines are paid by companies and individuals alike and are left out.
+    """
+    b = base or LAND_BASE
+    added = sum(t.reference() for t in lines_for(scenario, include_ifi) if t.scenario != "S1")
+    return b.companies_share * added
 
 
 def tier_totals(scenario: str, include_ifi: bool = False) -> Dict[str, float]:
@@ -453,6 +476,7 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
                 "total_constant_meur": round(scenario_total_constant(sc, ifi)),
                 "tiers_meur": {k: round(v) for k, v in tier_totals(sc, ifi).items()},
                 "rate_pct": round(indicative_rate_pct(sc, ifi), 2),
+                "companies_shift_meur": round(companies_shift(sc, ifi)),
                 "lines": [t.key for t in lines_for(sc, ifi)],
             })
     payload = {
@@ -470,6 +494,8 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
         "land_base": {
             "taxable_meur": round(LAND_BASE.taxable), "total_meur": LAND_BASE.built_land_total,
             "public_meur": LAND_BASE.built_land_public, "year": LAND_BASE.year,
+            "companies_meur": LAND_BASE.built_land_companies,
+            "companies_share": round(LAND_BASE.companies_share, 4),
             "source": LAND_BASE.source, "url": LAND_BASE.url, "note": LAND_BASE.note,
             "farmland": {
                 "value_meur": round(FARMLAND.value), "low_meur": round(FARMLAND.low),
