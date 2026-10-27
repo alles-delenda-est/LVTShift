@@ -15,7 +15,7 @@ we have the following potential nested scenarios:
 
 | # | LVT replaces | Adds to the previous scenario |
 |---|---|---|
-| **S1** | Taxe foncière (TFPB + TFPNB) + DMTO | (base) |
+| **S1** | Taxe foncière (TFPB + TFPNB) + taxe d'habitation on second homes (added 2026-10-27) + DMTO | (base) |
 | **S2** | S1 + IR/IS on real-estate capital gains with optional inclusion of IFI (user-exposed toggle) | the taxes on holding wealth and on gains, with and without IFI |
 | **S3** | S2 + IR/IS on rental income | the taxes on rental income, preserving IFI optionality |
 

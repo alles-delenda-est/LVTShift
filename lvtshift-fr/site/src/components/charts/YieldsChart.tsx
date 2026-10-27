@@ -37,6 +37,7 @@ import { useNarrow } from "./useNarrow";
 /** Ink for labels drawn inside a segment. */
 const INK_ON: Record<FamilyKey, string> = {
   tf: "#ffffff",
+  thrs: "#ffffff",
   dmto: ENCRE,
   gains: "#ffffff",
   ifi: ENCRE,
@@ -119,7 +120,7 @@ export default function YieldsChart({ data }: { data: YieldsData }) {
         </text>
         {!narrow && (
           <text x={-8} y={11} textAnchor="end" fontSize={11} fill={GRIS} fontFamily="var(--font-body)">
-            {sc === "S1" ? "TF + DMTO" : sc === "S2" ? `+ plus-values${withIfi ? " + IFI" : ""}` : "+ loyers"}
+            {sc === "S1" ? "TF + THRS + DMTO" : sc === "S2" ? `+ plus-values${withIfi ? " + IFI" : ""}` : "+ loyers"}
           </text>
         )}
       </g>

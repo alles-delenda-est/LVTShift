@@ -54,6 +54,7 @@ export interface YieldsData {
 /** Display families: the stacked segments of the chart, in fixed order. */
 export const FAMILIES = [
   { key: "tf", label: "Taxe foncière", taxes: ["tfpb", "tfpnb", "tf_annexes", "tf_etat"] },
+  { key: "thrs", label: "Taxe d'habitation (résidences secondaires)", taxes: ["thrs", "thrs_etat"] },
   { key: "dmto", label: "Droits de mutation", taxes: ["dmto_communes", "dmto_departements", "dmto_etat"] },
   { key: "gains", label: "Impôts sur les plus-values immobilières", taxes: ["gains_ir", "gains_ps"] },
   { key: "ifi", label: "IFI", taxes: ["ifi"] },
@@ -69,6 +70,7 @@ export type FamilyKey = (typeof FAMILIES)[number]["key"];
  */
 export const FAMILY_COLORS: Record<FamilyKey, string> = {
   tf: "#2b4c9b",
+  thrs: "#8e5bb5",
   dmto: "#7a9fe0",
   gains: "#b5281e",
   ifi: "#c98a1e",
@@ -81,7 +83,7 @@ export function familyOf(taxKey: string): FamilyKey | null {
 }
 
 export const SCENARIO_LABELS: Record<ScenarioKey, { short: string; long: string }> = {
-  S1: { short: "Scénario 1", long: "Taxe foncière et droits de mutation" },
+  S1: { short: "Scénario 1", long: "Taxe foncière, taxe d'habitation des résidences secondaires et droits de mutation" },
   S2: { short: "Scénario 2", long: "+ impôts sur les plus-values immobilières" },
   S3: { short: "Scénario 3", long: "+ impôts sur les revenus locatifs" },
 };

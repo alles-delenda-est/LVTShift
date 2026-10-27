@@ -37,6 +37,14 @@ def test_state_fees_on_both_local_taxes():
     assert tfpb.reference() == 42776
 
 
+def test_thrs_in_s1_with_surcharge_and_fee():
+    # THRS counts the zone-tendue surcharge (not in H13THS) and the State's 3 % fee.
+    r = {t.key: t for t in Y.lines_for("S1")}
+    assert abs(r["thrs"].reference() - 2973.6) < 0.05
+    assert r["thrs"].tier == "local" and r["thrs_etat"].tier == "national"
+    assert r["thrs_etat"].reference() == round(0.03 * (1727.42 + 843.14 + 12.10 + 390.92))
+
+
 def test_rents_include_csg():
     # CPO rapport particulier n° 1: IR, PS and CSG are separate lines that add up;
     # CRL and IS (companies) stay out (D3).

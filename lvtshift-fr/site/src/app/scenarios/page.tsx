@@ -80,7 +80,8 @@ export default function ScenariosPage() {
           <p className="font-body text-sm text-encre leading-relaxed">
             <strong className="font-semibold">La part communale ne change pas.</strong>{" "}
             Dans les cinq variantes, {mdEur(local)}&nbsp;Md€ sont levés au niveau
-            de la commune (taxe foncière et droits de mutation communaux) ; ce
+            de la commune (taxe foncière, taxe d&apos;habitation des résidences
+            secondaires et droits de mutation communaux) ; ce
             qui s&apos;ajoute relève des départements et de l&apos;État.
           </p>
           <p className="font-body text-sm text-encre leading-relaxed">
@@ -100,7 +101,7 @@ export default function ScenariosPage() {
             <li key={sc}>
               <strong className="font-semibold">{SCENARIO_LABELS[sc].short} — {SCENARIO_LABELS[sc].long.replace(/^\+ /, "")}.</strong>{" "}
               {sc === "S1" &&
-                "Les deux impôts qui frappent directement la propriété et son achat. Les droits de mutation pénalisent chaque déménagement ; un impôt sur le sol ne dépend pas de la fréquence des ventes."}
+                "Les impôts qui frappent directement la propriété et son achat. La taxe d'habitation sur les résidences secondaires y figure parce qu'elle est, comme la taxe foncière, un impôt local sur un logement, payé le plus souvent par son propriétaire. Les droits de mutation pénalisent chaque déménagement ; un impôt sur le sol ne dépend pas de la fréquence des ventes."}
               {sc === "S2" &&
                 "S'y ajoutent l'impôt sur le revenu et les prélèvements sociaux sur les plus-values immobilières des particuliers : une part de ces gains vient de la hausse du prix du terrain, que l'impôt sur le sol capterait chaque année plutôt qu'à la vente. L'IFI peut y être ajouté : c'est un choix politique plus qu'un calcul, car il frappe aussi les bâtiments."}
               {sc === "S3" &&
@@ -196,10 +197,6 @@ export default function ScenariosPage() {
             <strong className="font-semibold">La cotisation foncière des entreprises</strong>{" "}
             (8,2&nbsp;Md€), qui frappe l&apos;occupation de locaux par une activité,
             pas la propriété.
-          </li>
-          <li>
-            <strong className="font-semibold">La taxe d&apos;habitation sur les résidences secondaires</strong>{" "}
-            (3,0&nbsp;Md€ en 2025 avec la majoration en zone tendue), payée par l&apos;occupant.
           </li>
           <li>
             <strong className="font-semibold">Les compensations versées par l&apos;État</strong>{" "}
