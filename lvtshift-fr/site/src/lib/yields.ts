@@ -53,11 +53,11 @@ export interface YieldsData {
 
 /** Display families: the stacked segments of the chart, in fixed order. */
 export const FAMILIES = [
-  { key: "tf", label: "Taxe foncière", taxes: ["tfpb", "tfpnb", "tf_etat"] },
+  { key: "tf", label: "Taxe foncière", taxes: ["tfpb", "tfpnb", "tf_annexes", "tf_etat"] },
   { key: "dmto", label: "Droits de mutation", taxes: ["dmto_communes", "dmto_departements", "dmto_etat"] },
   { key: "gains", label: "Impôts sur les plus-values immobilières", taxes: ["gains_ir", "gains_ps"] },
   { key: "ifi", label: "IFI", taxes: ["ifi"] },
-  { key: "rents", label: "Impôts sur les revenus locatifs", taxes: ["rents_ir", "rents_ps"] },
+  { key: "rents", label: "Impôts sur les revenus locatifs", taxes: ["rents_ir", "rents_ps", "rents_csg"] },
 ] as const;
 
 export type FamilyKey = (typeof FAMILIES)[number]["key"];

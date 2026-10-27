@@ -3,42 +3,52 @@
 Companion to `yields.py` and spec 0005 §3. Each figure in `yields.py` was read
 on 26 October 2026 from the source named on its line, then re-derived by an
 independent verification pass (same day) that read the primary sources
-separately. This note records the choices that are not visible in the table:
-scope, series breaks, corrections and what is left out.
+separately. On 27 October Gemini (`gemini-4-argon`) reviewed the economic
+choices; every factual claim it made was checked against a primary source
+before anything changed (see the last section). This note records the choices
+that are not visible in the table: scope, series breaks, corrections and what
+is left out.
 
 Status of each line: **verified** (read from the primary source), **derived**
 (computed from primary figures, method stated) or **reported** (a secondary
-source quoting the primary). Reported lines are listed under *Open points*.
+source quoting the primary). No line is "reported" any more.
 
 ## Result
 
 | Scenario | Yield to replace (M€) | Indicative rate, % of taxable built land |
 |---|---:|---:|
-| S1 — TF + DMTO | 63 081 | 1,04 |
-| S2 — + taxes on real-estate gains | 66 757 | 1,10 |
-| S2 + IFI | 69 057 | 1,13 |
-| S3 — + taxes on rental income | 73 357 | 1,20 |
-| S3 + IFI | 75 657 | 1,24 |
+| S1 — TF + DMTO | 64 050 | 1,05 |
+| S2 — + taxes on real-estate gains | 67 727 | 1,11 |
+| S2 + IFI | 70 059 | 1,15 |
+| S3 — + taxes on rental income | 75 417 | 1,24 |
+| S3 + IFI | 77 749 | 1,28 |
 
-S1 is 83–94 % of every variant; the taxe foncière with the State's fee
-(45,3 Md€) is 60–72 %. The choice of scenario changes the national rate by at
-most a fifth; the local tier (TF + communal DMTO, 47,4 Md€) is identical in all
-five.
+S1 is 82–95 % of every variant; the taxe foncière bill with the State's fee
+(46,3 Md€) is 59–72 %. The choice of scenario changes the national rate by at
+most a fifth; the local tier (TF bill + communal DMTO, 48,3 Md€) is identical
+in all five.
 
 Rates are national averages against built land only. They will fall once
-agricultural and natural land is added (D6, not yet sourced) and are not the
-rates the model applies: the local tier is set commune by commune.
+agricultural and natural land is added (D6) and are not the rates the model
+applies: the local tier is set commune by commune.
 
-## Corrections made by the verification pass
+## Changes
 
 | Change | Effect on totals |
 |---|---:|
+| *Verification pass, 26 October* | |
 | Paris's communal DMTO was counted twice (in OFGL's departmental aggregate and in the communal accounts) | −336 M€ |
 | Single authorities of Corse, Martinique and Guyane were missing from departmental DMTO | +138 M€ |
 | State's fee on DMTO recomputed on the corrected base | −5 M€ |
 | State's 3 % fee on the taxe foncière added, for consistency with the fee on DMTO | +1 319 M€ (S1) |
 | 2024 IR on gains counted the surtax and land taxes twice | −18 M€ (S2, S3) |
 | Land base moved to INSEE end-2025 (provisional), after INSEE revised its accounts | rates −11 % |
+| *Gemini review, 27 October (each point verified first)* | |
+| Syndicates, TSE, GEMAPI and TASA on the TF bill added (`tf_annexes`) | +923 M€ (all) |
+| State's fee on them, at the rates of CGI art. 1641 read on Légifrance | +47 M€ (all) |
+| CSG on rental income added (`rents_csg`): it is a separate line, not inside the PS | +1 093 M€ (S3) |
+| Rental IR and PS at the CPO's unrounded figures (4 198, 2 399) | −3 M€ (S3) |
+| IFI at DGFiP's exact figures (2 159 / 2 332 instead of 2 200 / 2 300) | +32 M€ (IFI variants) |
 
 ## Line by line
 
@@ -46,13 +56,8 @@ rates the model applies: the local tier is set commune by commune.
 
 OFGL's REI dataset (DGFiP's *recensement des éléments d'imposition*),
 « MONTANT RÉEL », commune share 40 157 M€ + intercommunal share 2 619 M€.
-
-Scope matches the model (commune + EPCI). Excluded and stated on the page:
-syndicates (184 M€), taxes spéciales d'équipement, GEMAPI and TASA (710 M€ on
-built property in 2025; 923 M€ with the non-built parts and syndicates), and
-the TEOM (9,2 Md€), a charge for a service. DGCL BIS 209 gives about
-43,1 Md€ for all TFPB in 2025, consistent with commune + EPCI + syndicates
-(42 961 M€).
+DGCL BIS 209 gives about 43,1 Md€ for all TFPB in 2025, consistent with
+commune + EPCI + syndicates (42 961 M€).
 
 Why not the CPO's 25,5 Md€ or the compte du logement's 30,5 Md€: both cover
 housing only. A land value tax replaces the tax on all built property,
@@ -64,15 +69,29 @@ REI, FNB commune + EPCI + taxe additionnelle (TAFNB). Falling (1 296 M€ in
 2024). Excludes chambres d'agriculture (345 M€), which belong in S1 only once
 agricultural land is in the base (D6).
 
-### Taxe foncière — State's fee (S1, national) — 1 319 M€, 2025
+### Other levies on the TF bill (S1, local) — 923 M€, 2025
 
-The State adds 3 % to the taxe foncière of communes and intercommunalities for
-assessment, relief and bad debts (CGI art. 1641), paid by the taxpayer. The REI
-records 2 068 M€ of such fees on the whole bill in 2025, TEOM and other levies
-included at higher rates; 3 % of the TF in scope is consistent with that total.
-The rate was not read on Légifrance (blocked from here). The line is included
-because the equivalent fee on DMTO is; counting one and not the other would be
-inconsistent.
+REI « MONTANT RÉEL », built and non-built: syndicates 191 M€ (E23, B23), taxes
+spéciales d'équipement 277 M€ (E53, E53A, B53, B53A; they fund the
+établissements publics fonciers), GEMAPI 397 M€ (E53gGEMAPI, B53gGEMAPI) and
+the Île-de-France TASA 58 M€ (E53TASA). 867 M€ in 2024.
+
+Added after the Gemini review. They are levied on the same base (the cadastral
+rental value) and on the same bill as the taxe foncière, so a reform that
+removes the taxe foncière removes their base too; spec 0005 §2 already places
+syndicates in the local tier. Their budgets are not all communal (TSE and TASA
+fund public agencies), which the line's budget label says.
+
+### Taxe foncière — State's fee (S1, national) — 1 366 M€, 2025
+
+CGI art. 1641, read on Légifrance on 27 October 2026 (version in force since
+21 February 2026): the State adds 3 % to the taxe foncière (2 % for reliefs and
+bad debts, I-A, and 1 % for assessment and collection, II), and also 3 % to
+syndicates' levies and GEMAPI, 8 % to TASA and 9 % to TSE. Paid by the
+taxpayer. The REI records 2 068 M€ of such fees on the whole bill in 2025, TEOM
+(at 8 %) included; the line is consistent with that total. The line is
+included because the equivalent fee on DMTO is; counting one and not the other
+would be inconsistent.
 
 ### DMTO — communes (S1, local) — 3 403 M€, average 2021–2025
 
@@ -103,14 +122,26 @@ Corrected series: 16 259 / 16 538 / 12 882 / 11 145 / 13 484.
 
 The five-year average (D1) sits 4 % above 2025 and 15 % below the 2022 peak.
 Taking the latest year for all DMTO lines instead would lower S1 by 0,84 Md€.
-The average also mixes rate regimes: since April 2025 departments may charge
-up to 5 % (until March 2028), against 4,5 % before.
+
+**The 2025 rate change does not call for an adjustment.** Loi n° 2025-127,
+art. 116 (read on Légifrance) lets departments charge up to 5 % instead of
+4,5 % (CGI art. 1594 D), but only for deeds signed from 1 April 2025 to
+31 March 2028, never for first-time buyers of a main residence, and rates revert
+to their 31 January 2025 level from 1 April 2028. The permanent law is 4,5 %,
+which is what 2021–2024 reflect; 2025 carries nine months of the temporary
+increase.
+
+**Sensitivity: constant euros.** The average is in nominal euros. Restating
+each year in 2025 euros (INSEE CPI, series 001764363) would add 1,01 Md€ to
+S1 (communes +188, départements +804, State's fee +19) and 0,31 Md€ to the
+gains lines (S2, S3). Not applied: it changes decision D1.
 
 ### DMTO — State's fee (S1, national) — 333 M€, derived
 
-CGI art. 1647 V: the State levies 2,37 % on top of the departmental duty
-(2,14 % where the departmental rate is the reduced 0,70 %). Applied at 2,37 % to
-the whole corrected departmental series, a slight overstatement.
+CGI art. 1647 V, read on Légifrance on 27 October 2026 (version in force since
+1 July 2026): the State levies 2,37 % on top of the departmental duty (2,14 %
+where the departmental rate is the reduced 0,70 %). Applied at 2,37 % to the
+whole corrected departmental series, a slight overstatement.
 
 ### Real-estate gains (S2, national) — IR 1 267 M€ + PS 2 410 M€, average 2020–2024
 
@@ -132,6 +163,9 @@ to the choice of series: −54 M€ (all on the G9+10 basis) to +317 M€ (all o
 T7 basis). The Cour's own average over 2017–2023 is 3,5 Md€; ours over 2020–2024
 is 3,7 Md€.
 
+The window is 2020–2024, one year behind DMTO's, because 2025 gains are not
+published; D1 takes the last five *available* years for each tax.
+
 The PS lines are 17,2 % of the gain, of which 7,5 points (prélèvement de
 solidarité) go to the State, not Social Security. The 2026 increase in CSG on
 capital income spares real-estate income and gains according to secondary
@@ -139,37 +173,67 @@ sources; not checked against the LFSS text.
 
 Companies' gains (IS) are excluded: no public figure (D3).
 
-### IFI (S2 toggle, national) — 2 300 M€, 2025
+### IFI (S2 toggle, national) — 2 332 M€, 2025
 
-DGFiP Statistiques n° 15, 23, 33 and 45: 1,8 / 1,9 / 2,2 / 2,3 Md€ for 2022–2025
-(2025: 193 600 households). These are amounts on tax notices. Budget receipts
-are higher: 2 739 M€ in 2024 and 2 965 M€ forecast for 2025 (PLF 2026, Voies et
-moyens, line 1406). The source does not explain the gap; late payments and
-reassessments are a plausible cause, not a confirmed one. Using receipts would
-add 0,4–0,7 Md€ to the IFI variants.
+DGFiP Statistiques n° 15 and 23 (1,8 and 1,9 Md€ for 2022–2023) and n° 45
+(April 2026), table 1: 2 159 M€ (2024) and 2 332 M€ (2025), amounts on tax
+notices.
+
+Budget receipts are higher: 2 739 M€ in 2024 and 2 771 M€ actually collected in
+2025 (DGFiP gross receipts, line 1406; the 2 965 M€ quoted earlier was the PLF
+2026 forecast). DGFiP (Statistiques n° 45) says receipts also include unpaid
+amounts from earlier notices and the yield of tax audits. Line 1406 also
+carries what remains of the old ISF (its 2023 value, 2 354 M€, equals DGFiP's
+"ISF / IFI" series). For 2022 the Cour des comptes (S2023-1489) puts notices at
+1,8 Md€ and IFI receipts at 2,1 Md€, the gap including 197 M€ of supplementary
+declarations and audit results, and about 0,3 Md€ of residual ISF on top.
+Notices measure what current holders pay each year; receipts add catch-up and
+the tail of a tax that no longer exists. Notices stay the reference; receipts
+would add 0,44 Md€ to the IFI variants.
 
 IFI is a tax on net real-estate wealth, buildings included. Replacing it with
 a tax on land shifts its burden from expensive buildings to valuable land; the
 toggle exists because whether to include it is a political choice, not a
 measurement one.
 
-### Rental income (S3, national) — IR 4 200 M€ + PS 2 400 M€, 2022
+### Rental income (S3, national) — IR 4 198 + PS 2 399 + CSG 1 093 M€, 2022
 
 CPO, *Pour une fiscalité du logement plus cohérente* (December 2023), p. 23,
-housing only. The same page lists CSG on property income (1,1 Md€) and the
-contribution sur les revenus locatifs (0,1 Md€), and a total of 8,3 Md€ that its
-own lines do not reach (7,8 Md€). Neither reading of the CSG line fits a 17,2 %
-rate: if PS included CSG, the CSG share would be about 1,3 Md€; if not, about
-2,8. The compte du logement 2024 gives 8,9 Md€ but does not break out these
-lines. Commercial lettings by individuals and furnished lets (BIC, D7) are
-missing. Both lines stay "reported"; S3 could move by about −1,1 to +1,5 Md€.
+and its background study (rapport particulier n° 1, p. 47 and table 28), both
+taken from the compte du logement 2022 (part 6, table 1). Housing only,
+individuals, net of income-tax reductions such as Pinel.
+
+The CPO's total of 8,3 Md€ is the compte du logement line « impositions sur les
+revenus immobiliers », 8 264 M€: IR 4 198 + PS 2 399 + CSG 1 093 + contribution
+sur les revenus locatifs (CRL) 107 + corporate tax (IS) 467. The earlier
+version of this note read the PS and CSG lines as possibly overlapping; the
+background study shows them as separate lines that add up, so CSG is now its
+own line (+1 093 M€). CRL and IS are paid by companies and stay out (D3).
+
+The split between "PS" and "CSG" in the compte du logement is an accounting
+convention (CSG jumps from 87 M€ in 2017 to 1 016 M€ in 2018 while PS barely
+moves); only their sum, 3 492 M€, is reliable.
+
+Still missing:
+- **A recent year.** The compte du logement 2024 gives 8 895 M€ for 2024, same
+  line, no breakdown, and revises 2022 to 8 541 M€. Scaling gives about
+  8,0–8,3 Md€ for the three lines in 2024 (+0,3 to +0,6 Md€); not applied
+  because no breakdown is published.
+- **Furnished lets (BIC, D7).** No official yield. An estimate from the 2022
+  tax-return boxes gives roughly 1,2–1,6 Md€ of IR + PS, assuming a 20–30 %
+  average marginal rate: an order of magnitude, not a source. Under D7 the
+  line stays out and is flagged.
+- **Non-residential lettings by individuals.** Inside declared revenus fonciers
+  (≥ 31 Md€ net for 2022 across all property, DGFiP) but not split out by
+  DGFiP. No figure.
 
 ## Land base
 
 INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand
 type d'actif » (30 July 2026), provisional figures for end-2025: built land
 7 032 Md€, of which general government 941 Md€. Public land is exempt from
-property tax and is removed, leaving 6 091 Md€. End-2024 final: 6 729 Md€, of
+property tax (CGI art. 1382 1°, only when it serves a public purpose and earns
+no income) and is removed, leaving 6 091 Md€. End-2024 final: 6 729 Md€, of
 which 903 public (Insee Première n° 2081).
 
 INSEE revised its accounts in 2026: the 2023 fall in land values is now 8,6 %
@@ -177,37 +241,83 @@ INSEE revised its accounts in 2026: the 2023 fall in land values is now 8,6 %
 end-2023 (6 346 / 916, Insee Première n° 2028); the move to end-2025 lowers
 the indicative rates by about 11 % and aligns the base with the 2025 yields.
 
-Two caveats:
-- **Coverage.** Built land only. Agricultural and natural land (D6) is not
-  isolated in these publications. "Autres actifs non produits" (1 982 Md€ end-
-  2024) contains it among other items and is only an upper bound.
+Of the 6 091 Md€, households and non-profits hold 4 190 Md€ and companies
+1 901 Md€ (non-financial 1 701, financial 200; INSEE T_8200_2025).
+
+Caveats:
+- **Agricultural and natural land (D6).** INSEE does publish it, contrary to
+  what this note said earlier: terrains cultivés (AN.2112) are 902 Md€ at
+  end-2025 (*Comptes de la Nation 2025*, T_8201; companies 710, households 193).
+  Area × SAFER price gives far less: 2025 farmland 26,6 Mha at 5 350–6 460 €/ha
+  plus vineyards gives about 190–270 Md€, and forests (17,5 Mha at 4 950 €/ha,
+  timber included) at most 87 Md€ more. The two differ by a factor of 3 to 4,
+  and no INSEE note explaining its method was found. D6 says SAFER values; the
+  choice changes the national base by 3 % to 15 %.
 - **Public land.** The APU column includes land under roads and networks; the
   commune-level model must exclude the same land, or national and local rates
-  will not reconcile. Legally exempt private property (e.g. recent social
-  housing) remains in the base, so the rate is slightly understated.
+  will not reconcile.
+- **Exempt private land stays in the base.** Recent social housing is exempt
+  from TFPB for 15 to 30 years (CGI art. 1384 A; the 25–30-year terms apply to
+  funding decided before the end of 2026), and HLM housing in priority
+  neighbourhoods has a 30 % abatement for 2025–2030 (art. 1388 bis). The
+  yields exclude what these owners do not pay, while their land is in the
+  base, so the indicative rate is understated by an unmeasured amount.
+- **Companies in S2 and S3.** The national tier charges companies' land
+  (1 901 Md€, 31 % of the base) the national rate, but S2 and S3 remove only
+  individuals' taxes on gains and rents; companies' corporate tax on the same
+  income stays (D3). At 31 % of the base, the national lines added by S2–S3
+  (11,4 Md€ in S3, 13,7 with IFI) put about 3,5 to 4,3 Md€ a year onto
+  companies' land, to fund cuts for individual landlords and sellers. The site must show this transfer between sectors.
 
 ## Left out, with yields (for decision)
 
 | Item | Yield | Natural place | Status here |
 |---|---:|---|---|
-| TSE, GEMAPI, TASA, syndicates on the TF bill | 923 M€ (2025) | S1: same base, same bill | Out (levied by bodies other than the commune); stated |
-| Taxe d'habitation on second homes (THRS) | 2 583 M€ (2025); 3 255 (2024) | Optional S1 toggle | Out; stated |
-| State compensations for exempt property (mostly industrial) | ≈ 2,7 Md€ (2025) | S1, if the exemptions go | Out (not a tax); stated |
+| Taxe d'habitation on second homes (THRS) | 2 583 M€ (2025) + 391 M€ zone-tendue surcharge (MTMAJOTHRS, not inside the 2 583) = 2 974; 3 255 + 436 in 2024 | Optional S1 toggle | Out; stated. State's fee on it: 3 % (CGI art. 1641) |
+| State compensations for exempt property (mostly industrial) | ≈ 2,7 Md€ (2025) | S1, if the exemptions go | Out (not a tax); stated. Since 2026 multiplied by 0,807 (loi 2020-1721, art. 29 III-A-4) |
+| Contribution de sécurité immobilière (0,10 %, CGI art. 881 K) | 745 M€ (2025, provisional); 692 (2024) | S1, paid by the buyer at each sale | Out; stated |
+| Île-de-France office tax (TSBCS, CGI art. 231 ter) | ≈ 0,93 (2023) to 1,0–1,06 Md€ (2025), rebuilt from its beneficiaries | S1 toggle (a tax on floor area, not land) | Out; stated |
 | TEOM | 9 164 M€ (2025) | Out: service charge | Stated |
 | CFE | 8 219 M€ (2025) | Out: tax on business occupancy | Stated |
 | Île-de-France regional DMTO on offices (CGI art. 1599 sexies) | 47 M€ (avg 2021–25) | S1 | Out (no regional tier in the model); small |
 | Chambres d'agriculture | 345 M€ | S1 once agricultural land is in | Out until D6 |
-| Contribution sur les revenus locatifs | ≈ 100 M€ (2022) | S3, mostly companies (D3) | Out |
+| Contribution sur les revenus locatifs | 107 M€ (2022) | S3, mostly companies (D3) | Out |
 | Vacant-dwelling taxes (THLV, TLV) | 124 M€ (THLV 2025) | Out: penalty taxes the LVT supersedes | Out |
-| Contribution de sécurité immobilière, IdF office tax (TSBCS) | not found | S1 / toggle | Unknown |
 
 ## Open points
 
-1. Rental income: settle the CPO's CSG line and its 8,3 vs 7,8 Md€ total;
-   find figures for commercial lettings and furnished lets (D7).
-2. Agricultural and natural land (D6): INSEE detailed account (AN.2112
-   "terrains cultivés") or Agreste price × area.
-3. IFI basis: notices (used) or budget receipts.
-4. DMTO average across the 2025 rate change: keep D1, or weight to current law.
-5. The four inclusion choices above (TSE etc., THRS, compensations, regional DMTO).
-6. CGI art. 1641 (3 %) and 1647 V (2,37 %) to be read on Légifrance.
+1. Rental income: a recent-year breakdown; furnished lets (D7) and
+   non-residential lettings.
+2. Agricultural and natural land (D6): INSEE AN.2112 (902 Md€) or area ×
+   SAFER prices (≈ 190–270 Md€, 280–360 with forests); find INSEE's method
+   before choosing.
+3. D1 in constant euros (+1,0 Md€ on S1).
+4. The inclusion choices above: THRS, compensations, CSI, TSBCS.
+5. The transfer onto companies' land in S2–S3 (D3), to show on the site.
+
+## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
+
+The prompt and full reply are kept outside the repository (session scratch
+folder, `argon/prompt.md` and `argon/gemini_reply.md`). Every factual claim
+was checked against a primary source (Légifrance, DGFiP, INSEE, OFGL, CPO,
+Cour des comptes, Agreste) before anything changed. Points f–g (capitalisation
+and rents) are answered in `dynamic-effects.md` on spec 0005's research-notes
+branch.
+
+| Gemini point | My response |
+|---|---|
+| **a.** Keep the 5-year average; do not scale earlier years to the 5 % cap, which is temporary (LF 2025 art. 116, 1 April 2025 to 31 March 2028). | **Adopted (no change).** Verified on Légifrance; Gemini missed that first-time buyers are excluded and that rates revert in April 2028, which strengthens the point. |
+| **a.** Restate 2020–2024 in 2025 euros (≈ +0,8–1,0 Md€); align the DMTO and gains windows. | **Partly adopted.** Computed with INSEE CPI: +1,01 Md€ on S1, +1,32 on S2–S3. Shown as a sensitivity, not applied: it changes decision D1. Windows **not** aligned: 2025 gains are not published, and D1 takes the last five available years. |
+| **b(i).** Put syndicates, TSE, GEMAPI and TASA (0,9 Md€) in S1: same base, same bill. | **Adopted.** New line `tf_annexes`, 923 M€ (REI 2025, re-queried), plus 47 M€ of State's fee. |
+| **b(ii).** THRS: keep out of core S1, offer as a toggle; THRS carries a 5,4 % State fee; the 391 M€ surcharge may be extra. | **Partly adopted.** Kept out, as before. The **5,4 % is wrong**: art. 1641 gives 3 %. The surcharge is indeed **not** inside the 2 583 M€ (checked by recomputing Paris and Bordeaux): 2 974 M€ with it, now stated. |
+| **b(iii).** Include the State's compensations (≈ 2,7 Md€), codified at "CGI art. 1499-0 A"; otherwise halve industrial land in the base. | **Rejected.** The compensation is State money, not a tax paid by owners: replacing only the tax keeps each commune whole (it still receives the compensation) and equal yield holds for taxpayers. Including it is a decision to end the industrial relief, not a measurement correction. The citation is wrong: the halving is in art. 1499, and the compensation is uncodified (loi 2020-1721, art. 29 III-A). Gemini also missed that it has been cut by a factor of 0,807 since 2026. |
+| **b(iv).** Keep TEOM and CFE out; document CFE prominently. | **Adopted (no change).** Both are already stated on the page. |
+| **b(v).** Include both State fees; art. 1641 = 1 % (I-A) + 2 % (I-B-1); art. 1647 V = 2,37 % / 2,14 %. | **Partly adopted.** Both fees stay in. Art. 1647 V confirmed. The 1641 total of 3 % is right but **Gemini's split is reversed**: 2 % (I-A) + 1 % (II). |
+| **c.** Keep notices (2,3 Md€); the gap to receipts is audits and old ISF, ≈ 0,4–0,6 Md€. | **Adopted, with a corrected explanation.** DGFiP n° 45 attributes the gap to arrears on earlier notices and to tax audits; IFI audits are about 0,1 Md€ a year (Cour des comptes, 2022), and line 1406 also carries ISF residuals. The 2025 receipt is 2 771 M€ collected, not the 2 965 M€ forecast. Notices updated to DGFiP's exact 2 159 / 2 332. |
+| **d.** Removing public land is right (art. 1382 1° requires public use and no income); social-housing land stays in the base and understates rates by 5–8 %. | **Partly adopted.** Art. 1382 1°, 1384 A and 1388 bis verified and stated. Gemini's 5–8 % is unsourced and not used; the bias is stated without a size. |
+| **d.** Agricultural land: INSEE AN.2112 ≈ 170–230 Md€; SAFER ≈ 200–250 Md€; add chambres d'agriculture. | **Partly adopted.** The **INSEE figure is wrong**: AN.2112 is 902 Md€ (T_8201). The SAFER-based order of magnitude holds (≈ 190–270 Md€ for farmland at 2025 prices). The gap between the two is now an open point for D6. Chambres d'agriculture already listed. |
+| **e.** The CSG line (1,1 Md€) is additional to PS; S3 omits it. Net declared revenus fonciers ≈ 20 Md€. Move to the 2024 total (8,9) split 55/45. | **Partly adopted.** CSG confirmed as a separate line in the CPO's background study and added (+1 093 M€). The 8,3 Md€ gap is corporate tax (467 M€), not "minor items". **Rejected:** declared revenus fonciers are ≥ 31 Md€ (DGFiP), and the 55/45 split of the 2024 total has no source. |
+| **e.** LMNP ≈ 0,5–0,8 Md€; non-residential lettings ≈ 0,5–0,8 Md€. | **Rejected as figures.** No source found for either. Our own order of magnitude for LMNP is higher (1,2–1,6 Md€); both stay flagged as missing (D7). |
+| **h.** IS on companies' gains and rents: S2–S3 charge companies' land the national rate while removing only individuals' taxes. | **Adopted as a caveat.** INSEE confirms companies hold 1 901 Md€ of built land (31 % of the base). The transfer is now stated under *Land base*; no yield added (D3). |
+| **h.** TSBCS ≈ 0,95–1,10 Md€; CSI ≈ 0,25–0,30 Md€; add to S1. | **Partly adopted.** TSBCS ≈ 0,93–1,06 Md€, rebuilt from what each beneficiary receives (no official total found). **CSI is 2,5–3 times higher than Gemini said**: 745 M€ (2025), and its rate is in art. 881 K, not 879. Both are now in the *Left out* table, for decision. |
+| **h.** Pinel-type reductions (≈ 1,5–2,0 Md€): is the CPO's IR gross or net? | **Adopted (clarification).** Duflot/Pinel cost 1 469 M€ in 2024 (PLF 2026, Voies et moyens II); the compte du logement's IR is net of them, now stated. |

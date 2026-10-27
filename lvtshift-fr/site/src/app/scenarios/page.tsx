@@ -199,18 +199,19 @@ export default function ScenariosPage() {
           </li>
           <li>
             <strong className="font-semibold">La taxe d&apos;habitation sur les résidences secondaires</strong>{" "}
-            (2,6&nbsp;Md€ en 2025), payée par l&apos;occupant.
+            (3,0&nbsp;Md€ en 2025 avec la majoration en zone tendue), payée par l&apos;occupant.
           </li>
           <li>
             <strong className="font-semibold">Les compensations versées par l&apos;État</strong>{" "}
-            pour les locaux exonérés, surtout industriels (environ 2,7&nbsp;Md€) :
-            ce n&apos;est pas un impôt, mais les communes les perdraient si
-            l&apos;exonération disparaissait.
+            pour les locaux exonérés, surtout industriels (environ 2,7&nbsp;Md€ en
+            2025, réduites depuis 2026) : ce n&apos;est pas un impôt, mais les
+            communes les perdraient si l&apos;exonération disparaissait.
           </li>
           <li>
-            <strong className="font-semibold">Les taxes annexes de la taxe foncière</strong>{" "}
-            (syndicats, taxes spéciales d&apos;équipement, GEMAPI, TASA&nbsp;: 0,9&nbsp;Md€),
-            levées par d&apos;autres organismes que la commune.
+            <strong className="font-semibold">La contribution de sécurité immobilière</strong>{" "}
+            (0,7&nbsp;Md€ en 2025), payée à l&apos;État à chaque vente, et{" "}
+            <strong className="font-semibold">la taxe sur les bureaux en Île-de-France</strong>{" "}
+            (environ 1&nbsp;Md€), qui frappe les surfaces de bureaux, de commerces et de stockage.
           </li>
           <li>
             <strong className="font-semibold">L&apos;impôt sur les sociétés</strong>{" "}

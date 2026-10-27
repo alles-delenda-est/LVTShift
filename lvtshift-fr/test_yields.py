@@ -28,10 +28,20 @@ def test_state_fees_on_both_local_taxes():
     keys = {t.key for t in Y.lines_for("S1")}
     assert {"dmto_etat", "tf_etat"} <= keys
     tf = next(t for t in Y.YIELDS if t.key == "tf_etat")
-    assert tf.reference() == round(0.03 * (42776 + 1188))
+    # CGI art. 1641: 3 % on TF, syndicates and GEMAPI; 8 % on TASA; 9 % on TSE.
+    assert tf.reference() == round(0.03 * (42776 + 1188 + 397.1 + 191.0) + 0.08 * 57.9 + 0.09 * 276.6)
+    annexes = next(t for t in Y.YIELDS if t.key == "tf_annexes")
+    assert annexes.scenario == "S1" and abs(annexes.reference() - 922.6) < 0.05
     tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
     assert tfpb.reference_years() == [2025]
     assert tfpb.reference() == 42776
+
+
+def test_rents_include_csg():
+    # CPO rapport particulier n° 1: IR, PS and CSG are separate lines that add up;
+    # CRL and IS (companies) stay out (D3).
+    s3_only = {t.key: t.reference() for t in Y.YIELDS if t.scenario == "S3"}
+    assert s3_only == {"rents_ir": 4198, "rents_ps": 2399, "rents_csg": 1093}
 
 
 def test_scenarios_are_nested():

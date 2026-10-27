@@ -19,7 +19,9 @@ land. They are national averages, for orientation: the model sets the local
 tier commune by commune (spec 0005 §4.1).
 
 All figures were re-read from the sources on 2026-10-26 and checked again by an
-independent verification pass; see docs/research/yields-2026.md.
+independent verification pass, then reviewed by Gemini (gemini-4-argon) on
+2026-10-27 with each of its claims checked against primary sources; see
+docs/research/yields-2026.md.
 """
 
 from __future__ import annotations
@@ -30,7 +32,8 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional
 
 Tier = Literal["local", "departmental", "national"]
-Budget = Literal["bloc communal", "départements", "État", "Sécurité sociale et État"]
+Budget = Literal["bloc communal", "bloc communal et établissements publics", "départements",
+                 "État", "Sécurité sociale", "Sécurité sociale et État"]
 Basis = Literal["average", "latest"]
 Status = Literal["verified", "derived", "reported"]
 
@@ -96,13 +99,26 @@ _PARIS_COMMUNAL = {2021: 397, 2022: 392, 2023: 301, 2024: 268, 2025: 320}
 _DMTO_CTU = {2021: 145, 2022: 154, 2023: 139, 2024: 116, 2025: 135}
 _DMTO_DEP = {y: _DMTO_DEP_OFGL[y] - _PARIS_COMMUNAL[y] + _DMTO_CTU[y] for y in _DMTO_DEP_OFGL}
 
-# State fees added on top of the local taxes and paid by the taxpayer:
-# 2,37 % on the departmental DMTO (CGI art. 1647 V) and 3 % on the taxe
-# foncière of communes and intercommunalities (CGI art. 1641).
+# State fees added on top of the local taxes and paid by the taxpayer, read on
+# Légifrance on 2026-10-27: 2,37 % on the departmental DMTO (CGI art. 1647 V);
+# on the taxe foncière bill (CGI art. 1641), 3 % on the TF of communes,
+# intercommunalities and syndicates and on GEMAPI, 8 % on TASA, 9 % on TSE.
 _FRAIS_ASSIETTE_RATE = 0.0237
 _FRAIS_TF_RATE = 0.03
+_FRAIS_TASA_RATE = 0.08
+_FRAIS_TSE_RATE = 0.09
 _TFPB = {2024: 39113 + 2519, 2025: 40157 + 2619}
 _TFPNB = {2024: 1008 + 189 + 4 + 91 + 4, 2025: 916 + 172 + 4 + 91 + 5}
+# Other levies on the taxe foncière bill, REI « MONTANT RÉEL », built + non-built:
+# TSE (E53, E53A, B53, B53A), TASA (E53TASA), GEMAPI (E53gGEMAPI, B53gGEMAPI),
+# syndicates (E23, B23).
+_TSE = {2024: 191.2 + 75.4 + 1.3 + 0.4, 2025: 202.7 + 72.4 + 1.2 + 0.3}
+_TASA = {2024: 57.7, 2025: 57.9}
+_GEMAPI = {2024: 340.1 + 18.9, 2025: 376.6 + 20.5}
+_SYNDICATS = {2024: 174.8 + 7.3, 2025: 184.3 + 6.7}
+_TF_ANNEXES = {y: _TSE[y] + _TASA[y] + _GEMAPI[y] + _SYNDICATS[y] for y in _TSE}
+_FRAIS_TF = {y: _FRAIS_TF_RATE * (_TFPB[y] + _TFPNB[y] + _GEMAPI[y] + _SYNDICATS[y])
+             + _FRAIS_TASA_RATE * _TASA[y] + _FRAIS_TSE_RATE * _TSE[y] for y in _TFPB}
 
 YIELDS: List[TaxYield] = [
     TaxYield(
@@ -113,7 +129,7 @@ YIELDS: List[TaxYield] = [
         source="DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », commune + intercommunalité)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
         scope="Toutes les propriétés bâties ; parts commune et intercommunalité (périmètre du modèle). "
-              "Hors syndicats (184 M€), taxes spéciales d'équipement, GEMAPI et TASA (710 M€ en 2025) et TEOM.",
+              "Syndicats, taxes spéciales d'équipement, GEMAPI et TASA : ligne « tf_annexes ». Hors TEOM.",
     ),
     TaxYield(
         key="tfpnb", label_fr="Taxe foncière sur les propriétés non bâties",
@@ -122,17 +138,34 @@ YIELDS: List[TaxYield] = [
         basis="latest", status="verified",
         source="DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL »)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
-        scope="Commune, intercommunalité et taxe additionnelle (TAFNB) ; hors syndicats et chambres d'agriculture.",
+        scope="Commune, intercommunalité et taxe additionnelle (TAFNB) ; syndicats dans « tf_annexes » ; "
+              "hors chambres d'agriculture.",
+    ),
+    TaxYield(
+        key="tf_annexes", label_fr="Taxe foncière — syndicats, TSE, GEMAPI et TASA",
+        scenario="S1", tier="local", budget="bloc communal et établissements publics",
+        values={y: round(v, 1) for y, v in _TF_ANNEXES.items()},
+        basis="latest", status="verified",
+        source="DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », bâti et non bâti)",
+        url="https://data.ofgl.fr/explore/dataset/rei/",
+        scope="Prélevés sur l'avis de taxe foncière, sur la même base : syndicats (191 M€ en 2025), "
+              "taxes spéciales d'équipement (277 M€, établissements publics fonciers), GEMAPI (397 M€) "
+              "et taxe additionnelle spéciale annuelle d'Île-de-France (58 M€).",
+        note="Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; "
+             "la spec 0005 (§ 2) range déjà les syndicats dans le niveau local.",
     ),
     TaxYield(
         key="tf_etat", label_fr="Taxe foncière — frais de gestion (État)",
         scenario="S1", tier="national", budget="État",
-        values={y: round(_FRAIS_TF_RATE * (_TFPB[y] + _TFPNB[y])) for y in _TFPB},
+        values={y: round(v) for y, v in _FRAIS_TF.items()},
         basis="latest", status="derived",
-        source="CGI art. 1641 : 3 % en sus de la taxe foncière des communes et intercommunalités",
-        url="https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006069577/",
-        scope="Frais d'assiette, de dégrèvement et de non-valeurs ajoutés par l'État à l'avis de taxe foncière.",
-        note="Ordre de grandeur cohérent avec le REI 2025 (2 068 M€ de frais sur l'ensemble de l'avis, TEOM comprise).",
+        source="CGI art. 1641 (lu sur Légifrance le 27 oct. 2026) : 3 % (2 % de dégrèvement et non-valeurs, I-A, "
+               "+ 1 % d'assiette et recouvrement, II) sur la taxe foncière, les syndicats et la GEMAPI ; "
+               "8 % sur la TASA ; 9 % sur les TSE",
+        url="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053546093",
+        scope="Frais d'assiette, de dégrèvement et de non-valeurs ajoutés par l'État à l'avis de taxe foncière, "
+              "sur les lignes « tfpb », « tfpnb » et « tf_annexes ».",
+        note="Ordre de grandeur cohérent avec le REI 2025 (2 068 M€ de frais sur l'ensemble de l'avis, TEOM comprise à 8 %).",
     ),
     TaxYield(
         key="dmto_communes", label_fr="Droits de mutation — part communale",
@@ -163,8 +196,9 @@ YIELDS: List[TaxYield] = [
         scenario="S1", tier="national", budget="État",
         values={y: round(v * _FRAIS_ASSIETTE_RATE) for y, v in _DMTO_DEP.items()},
         basis="average", status="derived",
-        source="CGI art. 1647 V : 2,37 % en sus des droits départementaux (2,14 % là où le taux départemental est réduit à 0,70 %)",
-        url="https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006069577/",
+        source="CGI art. 1647 V (lu sur Légifrance le 27 oct. 2026) : 2,37 % en sus des droits départementaux "
+               "(2,14 % là où le taux départemental est réduit à 0,70 %)",
+        url="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000054373998",
         scope="Prélèvement de l'État pour frais d'assiette et de recouvrement, payé par l'acquéreur.",
         note="Calculé au taux de 2,37 % sur l'ensemble des droits départementaux ; légère surestimation pour la part taxée au taux réduit.",
     ),
@@ -199,35 +233,51 @@ YIELDS: List[TaxYield] = [
     TaxYield(
         key="ifi", label_fr="Impôt sur la fortune immobilière (IFI)",
         scenario="S2_IFI", tier="national", budget="État",
-        values={2022: 1800, 2023: 1900, 2024: 2200, 2025: 2300},
+        values={2022: 1800, 2023: 1900, 2024: 2159, 2025: 2332},
         basis="latest", status="verified",
-        source="DGFiP Statistiques n° 15 (2022), n° 23 (2023), n° 33 (2024), n° 45 (2025)",
+        source="DGFiP Statistiques n° 15 (2022), n° 23 (2023) ; n° 45 (avril 2026), tableau 1 (2024–2025)",
         url="https://www.impots.gouv.fr/dgfip-statistiques-limpot-sur-la-fortune-immobiliere-en-2025",
         scope="Montant des avis d'IFI, tous redevables.",
-        note="Les recettes budgétaires sont plus élevées (2 739 M€ en 2024, 2 965 M€ prévus pour 2025, "
-             "PLF 2026, Voies et moyens, ligne 1406) : écart entre avis et encaissements, non expliqué par la source.",
+        note="Les recettes budgétaires sont plus élevées (ligne 1406 : 2 739 M€ en 2024, 2 771 M€ encaissés en 2025). "
+             "Selon la DGFiP (Statistiques n° 45), elles incluent les restes d'avis antérieurs et le produit du contrôle "
+             "fiscal ; la ligne comprend aussi les reliquats d'ISF.",
     ),
     TaxYield(
         key="rents_ir", label_fr="Revenus locatifs — impôt sur le revenu",
         scenario="S3", tier="national", budget="État",
-        values={2022: 4200},
-        basis="latest", status="reported",
-        source="CPO, Pour une fiscalité du logement plus cohérente (déc. 2023), p. 23",
+        values={2022: 4198},
+        basis="latest", status="verified",
+        source="CPO, Pour une fiscalité du logement plus cohérente (déc. 2023), p. 23, et rapport particulier n° 1, p. 47 ; "
+               "compte du logement 2022, partie 6, tableau 1",
         url="https://www.vie-publique.fr/files/rapport/pdf/292676.pdf",
-        scope="IR lié aux revenus locatifs des particuliers. Locations meublées (BIC) non isolées (D7) ; hors IS (D3).",
-        note="CPO p. 23 (année 2022). Le CPO cite aussi la CSG sur revenus fonciers (1,1 Md€) et la contribution sur les revenus locatifs (0,1 Md€), "
-             "et un total de 8,3 Md€ que ses lignes n'atteignent pas (7,8 Md€) ; le compte du logement 2024 donne 8,9 Md€. Périmètre à réconcilier.",
+        scope="IR sur les revenus locatifs de logements des particuliers, net des réductions d'impôt (Pinel, etc.). "
+              "Locations meublées (BIC) non isolées (D7) ; locaux non résidentiels exclus ; hors IS (D3).",
+        note="Le total de 8,3 Md€ du CPO (8 264 M€) est la ligne « impositions sur les revenus immobiliers » du compte "
+             "du logement : IR 4 198 + PS 2 399 + CSG 1 093 + CRL 107 + IS 467. La CRL et l'IS, payés par des sociétés, "
+             "sont exclus (D3). Le compte du logement 2024 donne 8 895 M€ pour 2024, sans détail.",
     ),
     TaxYield(
         key="rents_ps", label_fr="Revenus locatifs — prélèvements sociaux",
         scenario="S3", tier="national", budget="Sécurité sociale et État",
-        values={2022: 2400},
-        basis="latest", status="reported",
-        source="CPO, Pour une fiscalité du logement plus cohérente (déc. 2023), p. 23",
+        values={2022: 2399},
+        basis="latest", status="verified",
+        source="CPO (déc. 2023), rapport particulier n° 1, p. 47 et tableau 28 ; compte du logement 2022, partie 6, tableau 1",
         url="https://www.vie-publique.fr/files/rapport/pdf/292676.pdf",
-        scope="Prélèvements sociaux (17,2 %, dont 7,5 points versés à l'État) sur les revenus fonciers.",
-        note="Le CPO cite séparément 1,1 Md€ de CSG sur les revenus fonciers ; aucune hypothèse (CSG incluse ou non) "
-             "ne cadre avec un taux de 17,2 %. Ligne CSG non ajoutée tant que le partage n'est pas connu.",
+        scope="Prélèvements sociaux sur les revenus locatifs de logements des particuliers, hors CSG (ligne « rents_csg »).",
+        note="Le partage entre « PS » et « CSG » du compte du logement suit une convention comptable (la CSG passe de "
+             "87 M€ en 2017 à 1 016 M€ en 2018) : seule la somme des deux lignes (3 492 M€) est fiable.",
+    ),
+    TaxYield(
+        key="rents_csg", label_fr="Revenus locatifs — CSG",
+        scenario="S3", tier="national", budget="Sécurité sociale",
+        values={2022: 1093},
+        basis="latest", status="verified",
+        source="CPO (déc. 2023), p. 23, et rapport particulier n° 1, p. 47 et tableau 28 ; "
+               "compte du logement 2022, partie 6, tableau 1",
+        url="https://www.vie-publique.fr/files/rapport/pdf/292676.pdf",
+        scope="CSG sur les revenus locatifs de logements des particuliers, en plus de la ligne « rents_ps ».",
+        note="Ajoutée après la revue Gemini du 27 octobre 2026 : le rapport particulier du CPO présente la CSG et les PS "
+             "comme deux lignes qui s'additionnent.",
     ),
 ]
 
@@ -300,7 +350,7 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
                 "lines": [t.key for t in lines_for(sc, ifi)],
             })
     payload = {
-        "as_of": "2026-10-26",
+        "as_of": "2026-10-27",
         "average_years": AVERAGE_YEARS,
         "taxes": [{
             "key": t.key, "label_fr": t.label_fr, "scenario": t.scenario,
