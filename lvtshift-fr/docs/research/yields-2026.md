@@ -297,8 +297,8 @@ Caveats:
 
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
 
-The prompt and full reply are kept outside the repository (session scratch
-folder, `argon/prompt.md` and `argon/gemini_reply.md`). Every factual claim
+The questions, Gemini's full reply and the three verification reports are in
+[`gemini-argon-2026-10-27/`](gemini-argon-2026-10-27/README.md). Every factual claim
 was checked against a primary source (Légifrance, DGFiP, INSEE, OFGL, CPO,
 Cour des comptes, Agreste) before anything changed. Points f–g (capitalisation
 and rents) are answered in `dynamic-effects.md` on spec 0005's research-notes
