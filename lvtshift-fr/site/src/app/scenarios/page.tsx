@@ -131,6 +131,20 @@ export default function ScenariosPage() {
           primaire ; «&nbsp;Calculé&nbsp;» : déduit de chiffres primaires ;
           «&nbsp;À confirmer&nbsp;» : repris d&apos;une source secondaire.
         </p>
+        <p className="font-body text-sm text-gris max-w-3xl leading-relaxed mb-4">
+          Les montants sont en euros de chaque année. Corrigés de l&apos;inflation
+          et exprimés en euros de {data.constant_euros.year}, ils seraient plus
+          élevés de {mdEur(s1.total_constant_meur - s1.total_meur)}&nbsp;Md€ dans le
+          scénario&nbsp;1 et de {mdEur(s3ifi.total_constant_meur - s3ifi.total_meur)}&nbsp;Md€
+          dans le scénario&nbsp;3, surtout parce que la moyenne des droits de
+          mutation et des plus-values remonte à des années où les prix étaient
+          plus bas. Le site retient les euros courants : ce sont les sommes
+          effectivement encaissées. Indice :{" "}
+          <a href={data.constant_euros.url} className="text-marine underline underline-offset-2">
+            {data.constant_euros.source}
+          </a>
+          .
+        </p>
         <div className="overflow-x-auto -mx-6 px-6">
           <table className="w-full min-w-[44rem] font-body text-sm border-collapse">
             <thead>

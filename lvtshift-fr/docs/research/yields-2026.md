@@ -28,6 +28,12 @@ S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
 most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,3 Md€) is
 identical in all five.
 
+**Sensitivity, 2025 euros (D1 stays nominal).** Restating every year with
+the CPI (INSEE, base 2015, idbank 001764363) raises S1 by 1 011 M€ (DMTO),
+S2 by 1 322 M€ (+ gains) and S3 by 1 936 M€ (+ rents, read for 2022), with or
+without IFI (2025 figures). Exported as `total_constant_meur` and stated on the
+site; the headline keeps current euros because they are what was collected.
+
 Rates are national averages against taxable built land plus farmland at SAFER
 prices (D6; forests out). They are not the rates the model applies: the local
 tier is set commune by commune.
@@ -321,7 +327,8 @@ Caveats:
 2. Agricultural land (D6): decided, SAFER price × area. Still open: forests,
    the share of farmland let versus vacant (the midpoint stands in for it), and
    the vine mix by appellation.
-3. D1 in constant euros (+1,0 Md€ on S1).
+3. D1 in constant euros: decided 27 October, shown as a sensitivity only
+   (+1,0 Md€ on S1, +1,9 on S3).
 4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
    kept out; THRS added to S1).
 5. The transfer onto companies' land in S2–S3 (D3), to show on the site.

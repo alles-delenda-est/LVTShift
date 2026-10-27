@@ -1,6 +1,11 @@
 {
   "as_of": "2026-10-27",
   "average_years": 5,
+  "constant_euros": {
+    "year": 2025,
+    "source": "INSEE, indice annuel des prix à la consommation, base 2015, ensemble des ménages, France (idbank 001764363)",
+    "url": "https://www.insee.fr/fr/statistiques/serie/001764363"
+  },
   "taxes": [
     {
       "key": "tfpb",
@@ -381,6 +386,7 @@
       "scenario": "S1",
       "include_ifi": false,
       "total_meur": 67113,
+      "total_constant_meur": 68124,
       "tiers_meur": {
         "local": 51263,
         "departmental": 14062,
@@ -403,6 +409,7 @@
       "scenario": "S2",
       "include_ifi": false,
       "total_meur": 70789,
+      "total_constant_meur": 72111,
       "tiers_meur": {
         "local": 51263,
         "departmental": 14062,
@@ -427,6 +434,7 @@
       "scenario": "S2",
       "include_ifi": true,
       "total_meur": 73121,
+      "total_constant_meur": 74443,
       "tiers_meur": {
         "local": 51263,
         "departmental": 14062,
@@ -452,6 +460,7 @@
       "scenario": "S3",
       "include_ifi": false,
       "total_meur": 78479,
+      "total_constant_meur": 80415,
       "tiers_meur": {
         "local": 51263,
         "departmental": 14062,
@@ -479,6 +488,7 @@
       "scenario": "S3",
       "include_ifi": true,
       "total_meur": 80811,
+      "total_constant_meur": 82747,
       "tiers_meur": {
         "local": 51263,
         "departmental": 14062,

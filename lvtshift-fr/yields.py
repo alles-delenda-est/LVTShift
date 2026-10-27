@@ -40,6 +40,15 @@ Status = Literal["verified", "derived", "reported"]
 
 AVERAGE_YEARS = 5
 
+# Sensitivity to D1 (not the headline): yields restated in 2025 euros with the
+# consumer price index, INSEE annual average, base 2015, all households, France
+# (BDM idbank 001764363, « séries arrêtées »; do not mix with base 2025).
+CPI = {2020: 104.73, 2021: 106.45, 2022: 112.01, 2023: 117.47, 2024: 119.82, 2025: 120.95}
+CPI_YEAR = 2025
+CPI_SOURCE = ("INSEE, indice annuel des prix à la consommation, base 2015, ensemble des ménages, "
+              "France (idbank 001764363)")
+CPI_URL = "https://www.insee.fr/fr/statistiques/serie/001764363"
+
 
 @dataclass(frozen=True)
 class TaxYield:
@@ -87,6 +96,11 @@ class TaxYield:
         """Reference yield, M€ (D1: 5-year average for cyclical taxes)."""
         years = self.reference_years()
         return sum(self.values[y] for y in years) / len(years)
+
+    def reference_constant(self) -> float:
+        """Reference yield with each year restated in CPI_YEAR euros, M€ (D1 sensitivity)."""
+        years = self.reference_years()
+        return sum(self.values[y] * CPI[CPI_YEAR] / CPI[y] for y in years) / len(years)
 
 
 # Departmental DMTO, M€. OFGL's departmental aggregate « DMTO avant péreq. »
@@ -409,6 +423,11 @@ def scenario_total(scenario: str, include_ifi: bool = False) -> float:
     return sum(t.reference() for t in lines_for(scenario, include_ifi))
 
 
+def scenario_total_constant(scenario: str, include_ifi: bool = False) -> float:
+    """Total reference yield in CPI_YEAR euros, M€ (D1 sensitivity)."""
+    return sum(t.reference_constant() for t in lines_for(scenario, include_ifi))
+
+
 def tier_totals(scenario: str, include_ifi: bool = False) -> Dict[str, float]:
     out: Dict[str, float] = {"local": 0.0, "departmental": 0.0, "national": 0.0}
     for t in lines_for(scenario, include_ifi):
@@ -431,6 +450,7 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
             variants.append({
                 "scenario": sc, "include_ifi": ifi,
                 "total_meur": round(scenario_total(sc, ifi)),
+                "total_constant_meur": round(scenario_total_constant(sc, ifi)),
                 "tiers_meur": {k: round(v) for k, v in tier_totals(sc, ifi).items()},
                 "rate_pct": round(indicative_rate_pct(sc, ifi), 2),
                 "lines": [t.key for t in lines_for(sc, ifi)],
@@ -438,6 +458,7 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
     payload = {
         "as_of": "2026-10-27",
         "average_years": AVERAGE_YEARS,
+        "constant_euros": {"year": CPI_YEAR, "source": CPI_SOURCE, "url": CPI_URL},
         "taxes": [{
             "key": t.key, "label_fr": t.label_fr, "scenario": t.scenario,
             "tier": t.tier, "budget": t.budget, "basis": t.basis, "status": t.status,

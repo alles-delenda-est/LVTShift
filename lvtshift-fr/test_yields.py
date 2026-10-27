@@ -52,6 +52,18 @@ def test_rents_include_csg():
     assert s3_only == {"rents_ir": 4198, "rents_ps": 2399, "rents_csg": 1093}
 
 
+def test_constant_euros_sensitivity():
+    # 2025 lines are unchanged; older years are raised by CPI; the headline stays nominal (D1).
+    tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
+    assert tfpb.reference_constant() == tfpb.reference()
+    rents = next(t for t in Y.YIELDS if t.key == "rents_ir")
+    assert abs(rents.reference_constant() - 4198 * 120.95 / 112.01) < 1e-9
+    for sc in Y.SCENARIOS:
+        for ifi in (False, True):
+            assert Y.scenario_total_constant(sc, ifi) > Y.scenario_total(sc, ifi)
+    assert set(Y.CPI) >= {y for t in Y.YIELDS for y in t.reference_years()}
+
+
 def test_scenarios_are_nested():
     s1 = {t.key for t in Y.lines_for("S1")}
     s2 = {t.key for t in Y.lines_for("S2")}

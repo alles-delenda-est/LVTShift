@@ -30,6 +30,7 @@ export interface YieldVariant {
   scenario: ScenarioKey;
   include_ifi: boolean;
   total_meur: number;
+  total_constant_meur: number;
   tiers_meur: Record<Tier, number>;
   rate_pct: number;
   lines: string[];
@@ -38,6 +39,7 @@ export interface YieldVariant {
 export interface YieldsData {
   as_of: string;
   average_years: number;
+  constant_euros: { year: number; source: string; url: string };
   taxes: YieldTax[];
   land_base: {
     taxable_meur: number;
