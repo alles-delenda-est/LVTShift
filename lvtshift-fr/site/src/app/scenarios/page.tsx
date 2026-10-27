@@ -264,7 +264,7 @@ export default function ScenariosPage() {
           </li>
           <li>
             <strong className="font-semibold">Vignes</strong> :{" "}
-            {num(farm.vine_area_ha / 1000)}&nbsp;milliers d&apos;hectares au prix
+            {num(Math.round(farm.vine_area_ha / 1000) * 1000)}&nbsp;hectares au prix
             moyen des vignes d&apos;appellation hors Champagne,{" "}
             {num(farm.vine_price_eur_ha)}&nbsp;€ l&apos;hectare. Ce prix sous-estime
             la Champagne et surestime les vignes sans appellation.
