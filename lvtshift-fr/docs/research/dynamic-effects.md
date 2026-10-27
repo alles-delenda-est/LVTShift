@@ -537,9 +537,9 @@ Unchanged: the evidence tables, the credibility grades and the rest of the propo
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
 
 Points f (capitalisation) and g (rents) of a single review whose other points
-cover the yields (answered in `yields-2026.md` on the yields branch). The prompt
-and full reply are kept outside the repository (session scratch folder,
-`argon/prompt.md` and `argon/gemini_reply.md`). Gemini's citations below were
+cover the yields (answered in `yields-2026.md` on the yields branch). The questions
+and Gemini's full reply are kept on the yields branch, in
+`docs/research/gemini-argon-2026-10-27/` (`01-questions.md`, `02-gemini-reply.md`). Gemini's citations below were
 not relied on unless they were already verified in this note.
 
 | Gemini point | My response |
