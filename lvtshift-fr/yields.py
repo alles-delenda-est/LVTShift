@@ -14,9 +14,10 @@ Scenarios (spec 0005 §1):
     S2  S1 + taxes on real-estate capital gains, with IFI as an optional toggle
     S3  S2 + taxes on rental income
 
-Indicative rates divide the yield by INSEE's built-land value net of public
-land. They are national averages, for orientation: the model sets the local
-tier commune by commune (spec 0005 §4.1).
+Indicative rates divide the yield by the taxable land value: INSEE's built land
+net of public land, plus farmland at SAFER prices × area (decision D6). They are
+national averages, for orientation: the model sets the local tier commune by
+commune (spec 0005 §4.1).
 
 All figures were re-read from the sources on 2026-10-26 and checked again by an
 independent verification pass, then reviewed by Gemini (gemini-4-argon) on
@@ -322,22 +323,74 @@ SCENARIOS: Dict[str, List[str]] = {
 
 
 @dataclass(frozen=True)
+class Farmland:
+    """Farmland at market prices: SAFER price per hectare × area (decision D6).
+
+    Arable land and grassland (orchards and other permanent crops included) are
+    valued at the midpoint of the prices of vacant and let land; the range uses
+    each price alone. Vineyards are valued at the AOP price excluding Champagne,
+    which undervalues Champagne and overvalues non-AOP vines.
+    """
+
+    area_ha: float = 26_638_633 - 747_976
+    vine_area_ha: float = 747_976
+    price_free_eur_ha: float = 6_460
+    price_let_eur_ha: float = 5_350
+    vine_price_eur_ha: float = 87_400
+    year: int = 2025
+    source: str = ("Groupe Safer, Le prix des terres 2025 (mai 2026), et Agreste, Statistique agricole "
+                   "annuelle 2025 provisoire (SAU des exploitations, France hors DROM)")
+    url: str = "https://www.le-prix-des-terres.fr/app/uploads/2026/05/2026-LPDT-synthese.pdf"
+
+    def _value(self, price: float) -> float:
+        return (self.area_ha * price + self.vine_area_ha * self.vine_price_eur_ha) / 1e6
+
+    @property
+    def value(self) -> float:
+        """Central value, M€."""
+        return self._value((self.price_free_eur_ha + self.price_let_eur_ha) / 2)
+
+    @property
+    def low(self) -> float:
+        return self._value(self.price_let_eur_ha)
+
+    @property
+    def high(self) -> float:
+        return self._value(self.price_free_eur_ha)
+
+
+FARMLAND = Farmland()
+
+# Not in the base (D6 sensitivity): forests, 17,5 Mha (IGN, Mémento 2024) at the
+# SAFER price of 4 950 €/ha, which includes standing timber, so an upper bound.
+FOREST_UPPER_MEUR = 17_500_000 * 4_950 / 1e6
+# INSEE's own value of cultivated land (AN.2112), end-2025, not used: about five
+# times the market price per hectare, with no published method.
+INSEE_FARMLAND_MEUR = 902_100
+
+
+@dataclass(frozen=True)
 class LandBase:
     """Taxable land value used for indicative national rates, M€."""
 
     built_land_total: float = 7_032_000
     built_land_public: float = 941_000
+    farmland: float = FARMLAND.value
     year: int = 2025
     source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
                    "d'actif », données 2025 provisoires (30 juillet 2026)")
     url: str = "https://www.insee.fr/fr/statistiques/2830290"
-    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré). "
-                 "Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE ne les "
-                 "isole pas. Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
+    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré), plus les terres "
+                 "agricoles au prix SAFER × surface (D6). Forêts non incluses. Terrains bâtis fin 2024 "
+                 "définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
+
+    @property
+    def taxable_built(self) -> float:
+        return self.built_land_total - self.built_land_public
 
     @property
     def taxable(self) -> float:
-        return self.built_land_total - self.built_land_public
+        return self.taxable_built + self.farmland
 
 
 LAND_BASE = LandBase()
@@ -394,9 +447,17 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
             "source": t.source, "url": t.url, "scope": t.scope, "note": t.note,
         } for t in YIELDS],
         "land_base": {
-            "taxable_meur": LAND_BASE.taxable, "total_meur": LAND_BASE.built_land_total,
+            "taxable_meur": round(LAND_BASE.taxable), "total_meur": LAND_BASE.built_land_total,
             "public_meur": LAND_BASE.built_land_public, "year": LAND_BASE.year,
             "source": LAND_BASE.source, "url": LAND_BASE.url, "note": LAND_BASE.note,
+            "farmland": {
+                "value_meur": round(FARMLAND.value), "low_meur": round(FARMLAND.low),
+                "high_meur": round(FARMLAND.high), "area_ha": FARMLAND.area_ha,
+                "vine_area_ha": FARMLAND.vine_area_ha, "price_free_eur_ha": FARMLAND.price_free_eur_ha,
+                "price_let_eur_ha": FARMLAND.price_let_eur_ha, "vine_price_eur_ha": FARMLAND.vine_price_eur_ha,
+                "year": FARMLAND.year, "source": FARMLAND.source, "url": FARMLAND.url,
+                "insee_meur": INSEE_FARMLAND_MEUR, "forest_upper_meur": round(FOREST_UPPER_MEUR),
+            },
         },
         "variants": variants,
     }

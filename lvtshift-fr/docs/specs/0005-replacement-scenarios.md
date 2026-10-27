@@ -216,7 +216,7 @@ effective rates, DMTO incidence range) go through the usual Gemini review.
 | D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
 | D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
 | D5 | Land base outside the panel | **Decided:** INSEE national accounts, with a published consistency check |
-| D6 | Agricultural and natural land in the national and departmental tiers | **Decided:** include in the base at SAFER values; show the effect on farm land separately |
+| D6 | Agricultural and natural land in the national and departmental tiers | **Decided:** include in the base at SAFER values; show the effect on farm land separately. Confirmed 2026-10-27: SAFER price × area for farmland (not INSEE AN.2112); forests out for now |
 | D7 | Furnished lets (BIC/LMNP) in "rental income" | **Decided:** include if a yield source is found; otherwise flag as missing |
 | D8 | Commune-level DMTO: DVF-based estimate or OFGL accounts | **Decided (most accurate per question):** yields from the **accounts** (DGCL by département; communal receipts from OFGL/DGFiP commune accounts, availability to verify live; communes under 5 000 inhabitants receive theirs through the departmental equalisation fund, so their receipts are not their own transactions); **who pays** from **DVF** (transactions are where the tax falls). Fallback for yields where accounts are missing: DVF × the communal rate (1,20 %) |
 

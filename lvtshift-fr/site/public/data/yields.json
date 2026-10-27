@@ -353,13 +353,28 @@
     }
   ],
   "land_base": {
-    "taxable_meur": 6091000,
+    "taxable_meur": 6309257,
     "total_meur": 7032000,
     "public_meur": 941000,
     "year": 2025,
     "source": "INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type d'actif », données 2025 provisoires (30 juillet 2026)",
     "url": "https://www.insee.fr/fr/statistiques/2830290",
-    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE ne les isole pas. Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081)."
+    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré), plus les terres agricoles au prix SAFER × surface (D6). Forêts non incluses. Terrains bâtis fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).",
+    "farmland": {
+      "value_meur": 218257,
+      "low_meur": 203888,
+      "high_meur": 232627,
+      "area_ha": 25890657,
+      "vine_area_ha": 747976,
+      "price_free_eur_ha": 6460,
+      "price_let_eur_ha": 5350,
+      "vine_price_eur_ha": 87400,
+      "year": 2025,
+      "source": "Groupe Safer, Le prix des terres 2025 (mai 2026), et Agreste, Statistique agricole annuelle 2025 provisoire (SAU des exploitations, France hors DROM)",
+      "url": "https://www.le-prix-des-terres.fr/app/uploads/2026/05/2026-LPDT-synthese.pdf",
+      "insee_meur": 902100,
+      "forest_upper_meur": 86625
+    }
   },
   "variants": [
     {
@@ -371,7 +386,7 @@
         "departmental": 14062,
         "national": 1788
       },
-      "rate_pct": 1.1,
+      "rate_pct": 1.06,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -393,7 +408,7 @@
         "departmental": 14062,
         "national": 5465
       },
-      "rate_pct": 1.16,
+      "rate_pct": 1.12,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -417,7 +432,7 @@
         "departmental": 14062,
         "national": 7797
       },
-      "rate_pct": 1.2,
+      "rate_pct": 1.16,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -442,7 +457,7 @@
         "departmental": 14062,
         "national": 13155
       },
-      "rate_pct": 1.29,
+      "rate_pct": 1.24,
       "lines": [
         "tfpb",
         "tfpnb",
@@ -469,7 +484,7 @@
         "departmental": 14062,
         "national": 15487
       },
-      "rate_pct": 1.33,
+      "rate_pct": 1.28,
       "lines": [
         "tfpb",
         "tfpnb",

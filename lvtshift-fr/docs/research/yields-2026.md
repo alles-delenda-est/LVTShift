@@ -15,22 +15,22 @@ source quoting the primary). No line is "reported" any more.
 
 ## Result
 
-| Scenario | Yield to replace (M€) | Indicative rate, % of taxable built land |
+| Scenario | Yield to replace (M€) | Indicative rate, % of taxable land |
 |---|---:|---:|
-| S1 — TF + THRS + DMTO | 67 113 | 1,10 |
-| S2 — + taxes on real-estate gains | 70 789 | 1,16 |
-| S2 + IFI | 73 121 | 1,20 |
-| S3 — + taxes on rental income | 78 479 | 1,29 |
-| S3 + IFI | 80 811 | 1,33 |
+| S1 — TF + THRS + DMTO | 67 113 | 1,06 |
+| S2 — + taxes on real-estate gains | 70 789 | 1,12 |
+| S2 + IFI | 73 121 | 1,16 |
+| S3 — + taxes on rental income | 78 479 | 1,24 |
+| S3 + IFI | 80 811 | 1,28 |
 
 S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
 (46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
 most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,3 Md€) is
 identical in all five.
 
-Rates are national averages against built land only. They will fall once
-agricultural and natural land is added (D6) and are not the rates the model
-applies: the local tier is set commune by commune.
+Rates are national averages against taxable built land plus farmland at SAFER
+prices (D6; forests out). They are not the rates the model applies: the local
+tier is set commune by commune.
 
 ## Changes
 
@@ -51,6 +51,7 @@ applies: the local tier is set commune by commune.
 | IFI at DGFiP's exact figures (2 159 / 2 332 instead of 2 200 / 2 300) | +32 M€ (IFI variants) |
 | *Decision of 27 October (after the review)* | |
 | Taxe d'habitation on second homes added to S1, surcharge included (`thrs`), with the State's 3 % fee (`thrs_etat`) | +3 063 M€ (all) |
+| Farmland added to the land base at SAFER price × area (D6), 218 Md€ | rates −3,5 % |
 
 ## Line by line
 
@@ -266,14 +267,23 @@ Of the 6 091 Md€, households and non-profits hold 4 190 Md€ and companies
 1 901 Md€ (non-financial 1 701, financial 200; INSEE T_8200_2025).
 
 Caveats:
-- **Agricultural and natural land (D6).** INSEE does publish it, contrary to
-  what this note said earlier: terrains cultivés (AN.2112) are 902 Md€ at
-  end-2025 (*Comptes de la Nation 2025*, T_8201; companies 710, households 193).
-  Area × SAFER price gives far less: 2025 farmland 26,6 Mha at 5 350–6 460 €/ha
-  plus vineyards gives about 190–270 Md€, and forests (17,5 Mha at 4 950 €/ha,
-  timber included) at most 87 Md€ more. The two differ by a factor of 3 to 4,
-  and no INSEE note explaining its method was found. D6 says SAFER values; the
-  choice changes the national base by 3 % to 15 %.
+- **Agricultural land (D6), decided 27 October: SAFER price × area.**
+  `yields.Farmland`: SAU des exploitations 2025, metropolitan France
+  (Agreste, SAA 2025 provisional) 26,64 Mha, of which vines 0,748 Mha.
+  The other 25,89 Mha (arable, grassland, orchards and other permanent crops)
+  are valued at the midpoint of the SAFER 2025 prices for vacant (6 460 €/ha)
+  and let (5 350 €/ha) land; vines at the AOP price excluding Champagne
+  (87 400 €/ha), which undervalues Champagne and overvalues non-AOP vines.
+  Result 218 Md€ (204–233 using either price alone; the vine price is a further
+  uncertainty of perhaps ±30 Md€), 3,5 % of the taxable base of 6 309 Md€.
+  At the S1 average rate farmland would pay ≈ 2,3 Md€ a year, against 1,2 Md€
+  of TFPNB today (which also covers forests and other unbuilt land).
+  INSEE's terrains cultivés (AN.2112, 902 Md€ at end-2025, *Comptes de la
+  Nation 2025*, T_8201; companies 710, households 193) is not used: it implies
+  ≈ 31 500 €/ha, about five times observed prices, and INSEE publishes no
+  method. Forests (17,5 Mha at 4 950 €/ha, timber included, so an upper bound
+  of 87 Md€) stay out; they would lower rates by about 1,4 %. Public ownership
+  of farmland is not removed (small, unmeasured).
 - **Public land.** The APU column includes land under roads and networks; the
   commune-level model must exclude the same land, or national and local rates
   will not reconcile.
@@ -308,9 +318,9 @@ Caveats:
 
 1. Rental income: a recent-year breakdown; furnished lets (D7) and
    non-residential lettings.
-2. Agricultural and natural land (D6): INSEE AN.2112 (902 Md€) or area ×
-   SAFER prices (≈ 190–270 Md€, 280–360 with forests); find INSEE's method
-   before choosing.
+2. Agricultural land (D6): decided, SAFER price × area. Still open: forests,
+   the share of farmland let versus vacant (the midpoint stands in for it), and
+   the vine mix by appellation.
 3. D1 in constant euros (+1,0 Md€ on S1).
 4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
    kept out; THRS added to S1).

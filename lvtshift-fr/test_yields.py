@@ -81,10 +81,20 @@ def test_every_line_is_sourced():
 
 
 def test_indicative_rate_uses_taxable_land():
-    assert Y.LAND_BASE.taxable == 7_032_000 - 941_000
+    assert Y.LAND_BASE.taxable_built == 7_032_000 - 941_000
+    assert Y.LAND_BASE.taxable == Y.LAND_BASE.taxable_built + Y.FARMLAND.value
     r = Y.indicative_rate_pct("S1")
     assert abs(r - 100 * Y.scenario_total("S1") / Y.LAND_BASE.taxable) < 1e-9
     assert 0.5 < r < 2.0  # sanity: order of magnitude of today's property taxes
+
+
+def test_farmland_at_safer_prices():
+    # D6: price × area, vines apart; the central value sits between the bounds,
+    # far below INSEE's AN.2112.
+    f = Y.FARMLAND
+    assert f.low < f.value < f.high
+    assert abs(f.low - (25_890_657 * 5_350 + 747_976 * 87_400) / 1e6) < 1e-6
+    assert 150_000 < f.value < 300_000 < Y.INSEE_FARMLAND_MEUR
 
 
 def test_every_exported_url_is_https(tmp_path: Path):
