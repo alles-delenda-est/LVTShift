@@ -51,7 +51,7 @@ export default function Home() {
                 terrains à bâtir gardés vides, friches, parkings de surface,
                 logements vacants &mdash; pendant que les prix du logement
                 grimpent et que les terrains se raréfient là où l&apos;on veut
-                vivre et travailler. Notre fiscalité pèse sur le bâtiment et 
+                vivre et travailler. Notre fiscalité pèse sur le bâtiment et
                 le commerce bien plus que sur le terrain :{" "}
                 <strong>
                   construisez, et votre taxe foncière augmente ; laissez le
@@ -75,11 +75,11 @@ export default function Home() {
                 </strong>
                 , à recettes totales inchangées. La France taxe{" "}
                 <em>déjà</em> séparément le bâti (TFPB) et le non-bâti (TFPNB),
-                avec des taux votés séparément : un premier pas peut être de 
-                baisser le taux de TFBP et augmenter celui de la TFPNB, mais 
-                ce sera imparfait et incomplet. La réforme modélisée ici va 
-                plus loin : elle assoit la taxe foncière de chaque parcelle sur 
-                la{" "} <strong>valeur de son sol</strong>, ce qui suppose de 
+                avec des taux votés séparément : un premier pas peut être de
+                baisser le taux de la TFPB et d&apos;augmenter celui de la TFPNB,
+                mais ce sera imparfait et incomplet. La réforme modélisée ici va
+                plus loin : elle assoit la taxe foncière de chaque parcelle sur
+                la <strong>valeur de son sol</strong>, ce qui suppose de
                 construire une base foncière par une loi de finances (voir{" "}
                 <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
                   la voie juridique
@@ -92,8 +92,10 @@ export default function Home() {
           {/* Revenue-neutrality callout */}
           <div className="mt-8 border-l-4 border-rouge pl-5 max-w-2xl">
             <p className="font-body text-base text-encre leading-relaxed">
-              <strong>La reforme proposée est à recettes constantes &mdash; 
-                ce n&apos;est pas une hausse déguisée.</strong>{" "}
+              <strong>
+                La réforme proposée est à recettes constantes &mdash; ce
+                n&apos;est pas une hausse déguisée.
+              </strong>{" "}
               Le total perçu ne change pas : les taux sont recalculés
               mécaniquement pour produire{" "}
               <strong>les mêmes recettes</strong>, simplement réparties
