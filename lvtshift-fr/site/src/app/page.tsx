@@ -75,9 +75,10 @@ export default function Home() {
                 </strong>
                 , à recettes totales inchangées. La France taxe{" "}
                 <em>déjà</em> séparément le bâti (TFPB) et le non-bâti (TFPNB),
-                avec des taux votés séparément : un premier pas peut être de
-                baisser le taux de la TFPB et d&apos;augmenter celui de la TFPNB,
-                mais ce sera imparfait et incomplet. La réforme modélisée ici va
+                avec des taux votés séparément : un premier pas peut être,
+                dans les limites fixées par la loi actuelle, de baisser le taux
+                de la TFPB et d&apos;augmenter celui de la TFPNB, mais ce sera
+                imparfait et incomplet. La réforme modélisée ici va
                 plus loin : elle assoit la taxe foncière de chaque parcelle sur
                 la <strong>valeur de son sol</strong>, ce qui suppose de
                 construire une base foncière par une loi de finances (voir{" "}
@@ -209,10 +210,14 @@ export default function Home() {
           </div>
 
           <p className="text-sm text-encre mt-5 max-w-3xl leading-relaxed">
-            Cas central. Ces résultats dépendent de la taxe que paient
-            aujourd&apos;hui bureaux et commerces, mal connue : si elle est plus
-            faible qu&apos;estimé, les ménages paraissent nettement plus gagnants.
-            Les deux hypothèses figurent côte à côte dans les résultats.
+            <strong>Incertitude principale.</strong> Pour savoir qui gagne, il
+            faut connaître ce que chaque type de bien paie aujourd&apos;hui. Aucune
+            donnée publique ne donne la part des bureaux et commerces dans la
+            taxe foncière d&apos;une commune ; nous l&apos;estimons. Si elle est
+            plus faible que notre estimation, les ménages paient aujourd&apos;hui
+            davantage, et la réforme leur est nettement plus favorable. Les
+            chiffres ci-dessus correspondent à notre estimation centrale ; les
+            résultats présentent les deux hypothèses côte à côte.
           </p>
 
           <p className="text-xs text-gris mt-5 max-w-xl leading-relaxed">
