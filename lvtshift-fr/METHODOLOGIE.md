@@ -242,7 +242,7 @@ référentiel :
 | **Bâtie, plus grand bâtiment de type hangar** (CRD) | €/m² terrain à bâtir × `activity_land_ratio` (types professionnels) ou × 1 (salles de sport, annexes) × surface, plancher à la valeur agricole €/m² ; hors zone urbaine, seule une cour de 3 × la surface plancher prend ce prix. Valeur de marché = terrain + bâti déprécié ; ni prix résidentiel ni bornage (`lv_flag` `built_drc`) |
 | **Constructible vacante** (zone U/AUc) | €/m² terrain à bâtir DVF × surface (médiane cellule si ≥ 8 ventes, sinon médiane communale, sinon repli national EPTB) |
 | **Constructible différée** (AU/AUs) | idem × `au_strict_factor` (urbanisation différée) |
-| **Agricole / naturelle** (zone A/N) | €/m² départemental SAFER × surface |
+| **Agricole / naturelle** (zone A/N) | €/m² départemental SAFER × surface ; **hors de la réforme** : la parcelle garde la TFPNB actuelle, ne prend aucune part du nouvel impôt et sort des résultats publiés (comptée dans `farmland_excluded_parcels`) |
 
 Seules les lignes DVF codées *terrains à bâtir* sont utilisées pour les prix du
 constructible — le brut `valeur_fonciere/surface_terrain` est contaminé pour les
@@ -784,8 +784,8 @@ industriel bon marché face à une base actuelle chargée en capital.
   85 % dégénéré auparavant — voir §6) et se situe à 38,0 % avec la valorisation
   du non-résidentiel par type. La fourchette 40–65 % est un repère
   métropolitain, non un test par commune (§3.7).
-- **Cohérence de signe** — le foncier agricole/naturel porte une part négligeable
-  du prélèvement (Cahors 0,3 %) ; le foncier constructible sous-utilisé paie
+- **Cohérence de signe** — le foncier agricole/naturel, hors de la réforme, ne
+  porte rien du prélèvement (il en portait 1,1 % à Cahors avant son exclusion) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
   progressif (totaux de groupe, base centrale : quintile le plus pauvre
   −12,2 %, le plus aisé +17,9 %).
@@ -917,9 +917,11 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    millésime « Filosofi 2 » 2023 avec indicateurs IRIS (rupture méthodologique) —
    2021 est conservé en attendant évaluation. Communes ≥ 5 000 habitants
    uniquement, certains IRIS sous secret statistique. Les quintiles exigent en
-   outre ≥ 5 IRIS aux revenus distincts : une commune à un ou deux IRIS
-   (p. ex. Figeac, pourtant ≥ 5 000 hab.) perd silencieusement ses graphiques de
-   revenu (l'amont saute le graphique quand les quantiles dégénèrent).
+   outre ≥ 10 IRIS aux revenus distincts, deux par quintile
+   (`export_web.MIN_IRIS_INCOMES`) : en dessous, un « quintile » n'est qu'un
+   quartier, si bien que Cahors (9) et Figeac (4) ne publient pas de
+   décomposition par revenu, et que les communes membres d'un territoire sous ce
+   seuil sortent des quintiles intra-communaux.
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont
    modélisées comme communes entières à partir de leurs arrondissements (§3.7) ;
    Marseille pourrait l'être de la même façon.

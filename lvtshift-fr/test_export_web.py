@@ -171,7 +171,8 @@ def _solved_frame(n=400, seed=7):
     df = pd.DataFrame({
         "property_category": cats, "taxable_land_value": land,
         "taxable_improvement_value": imp, "current_tax": cur,
-        "median_income": rng.choice([15e3, 20e3, 25e3, 30e3, 40e3, 55e3], n),
+        "median_income": rng.choice([15e3, 17e3, 20e3, 22e3, 25e3, 27e3, 30e3, 35e3,
+                                     40e3, 47e3, 55e3, 60e3], n),
     })
     _lm, _im, _rev, solved = model_split_rate_tax(
         df=df.copy(), land_value_col="taxable_land_value",
@@ -247,9 +248,9 @@ def test_quintile_totals_and_households_tell_the_group_story():
     shop = dict(property_category="Commercial", current_tax=5000.0,
                 tax_change=-2500.0, tax_change_pct=-50.0, n_dwellings=0.0)
     rows = []
-    for q in range(5):
-        for r in [houses] * 12 + [block] * 3 + [shop]:
-            rows.append({**r, "median_income": 20000.0 + 1000 * q})
+    for q in range(5):   # two IRIS incomes per group (MIN_IRIS_INCOMES)
+        for i, r in enumerate([houses] * 12 + [block] * 3 + [shop]):
+            rows.append({**r, "median_income": 20000.0 + 1000 * q + 500 * (i % 2)})
     q1 = ew.build_by_income_quintile(pd.DataFrame(rows))[0]
     assert q1["median_change_pct_residential"] == 10.0
     assert q1["total_change_pct"] == round(100 * (1200 - 12000) / 72000, 1)  # shop excluded
@@ -294,10 +295,10 @@ def test_quintile_group_figures_withheld_for_small_or_dominated_groups():
                 out.append(dict(property_category="Single Family Residential",
                                 current_tax=1000.0, tax_change=50.0, tax_change_pct=5.0,
                                 n_dwellings=np.nan if (nan_count and i == 0) else 1.0,
-                                median_income=20000.0 + q))
+                                median_income=20000.0 + 10 * q + 5 * (i % 2)))
             out.append(dict(property_category="Large Multi-Family (5+ units)",
                             current_tax=9000.0, tax_change=-900.0, tax_change_pct=-10.0,
-                            n_dwellings=block_flats, median_income=20000.0 + q))
+                            n_dwellings=block_flats, median_income=20000.0 + 10 * q + 5))
         return pd.DataFrame(out)
     ok = ew.build_by_income_quintile(rows(20, 10.0))[0]
     assert ok["household_median_change_pct"] == 5.0 and ok["total_change_pct"] is not None

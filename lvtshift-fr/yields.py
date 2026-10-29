@@ -15,7 +15,9 @@ Scenarios (spec 0005 §1):
     S3  S2 + taxes on rental income
 
 Indicative rates divide the yield by the taxable land value: INSEE's built land
-net of public land, plus farmland at SAFER prices × area (decision D6). They are
+net of public land. Agricultural and natural land is outside the reform (D6,
+revised 2026-10-29): it keeps today's TFPNB, so neither its value nor its TFPNB
+enters the totals. Its SAFER value is kept as a sensitivity. The rates are
 national averages, for orientation: the model sets the local tier commune by
 commune (spec 0005 §4.1).
 
@@ -123,14 +125,29 @@ _FRAIS_TF_RATE = 0.03
 _FRAIS_TASA_RATE = 0.08
 _FRAIS_TSE_RATE = 0.09
 _TFPB = {2024: 39113 + 2519, 2025: 40157 + 2619}
-_TFPNB = {2024: 1008 + 189 + 4 + 91 + 4, 2025: 916 + 172 + 4 + 91 + 5}
+_TFPNB_ALL = {2024: 1008 + 189 + 4 + 91 + 4, 2025: 916 + 172 + 4 + 91 + 5}
+# Part of it on agricultural and natural land (cadastral groups 1-6, 8, 9), which
+# stays on today's TFPNB (D6). Not published as such: rebuilt commune by commune
+# from the REI. The TAFNB base (B11/B31/B31MGP TAFNB) covers exactly the other
+# groups (BOI-IF-AUT-80, BOI-IF-TFNB-10-40-50), so base TAFNB ÷ base TFPNB is
+# each commune's non-agricultural share; the whole TAFNB is non-agricultural.
+# Check: the 20 % agricultural exemption base (D21, 2024) implies the same
+# agricultural base within 0,6 % (docs/research/tfpnb_farm_split.py). Syndicates excluded, as in _TFPNB_ALL.
+_TFPNB_FARM = {2024: 1032.9, 2025: 922.2}
+_FARM_SHARE = {y: _TFPNB_FARM[y] / _TFPNB_ALL[y] for y in _TFPNB_ALL}
+_TFPNB = {y: _TFPNB_ALL[y] - _TFPNB_FARM[y] for y in _TFPNB_ALL}
 # Other levies on the taxe foncière bill, REI « MONTANT RÉEL », built + non-built:
 # TSE (E53, E53A, B53, B53A), TASA (E53TASA), GEMAPI (E53gGEMAPI, B53gGEMAPI),
 # syndicates (E23, B23).
-_TSE = {2024: 191.2 + 75.4 + 1.3 + 0.4, 2025: 202.7 + 72.4 + 1.2 + 0.3}
+# The non-built parts (B53 + B53A, B53gGEMAPI, B23) lose their farmland share
+# like the TFPNB itself (same base, same exemptions).
+_TSE_NB = {2024: 1.3 + 0.4, 2025: 1.2 + 0.3}
+_GEMAPI_NB = {2024: 18.9, 2025: 20.5}
+_SYNDICATS_NB = {2024: 7.3, 2025: 6.7}
+_TSE = {y: b + _TSE_NB[y] * (1 - _FARM_SHARE[y]) for y, b in {2024: 191.2 + 75.4, 2025: 202.7 + 72.4}.items()}
 _TASA = {2024: 57.7, 2025: 57.9}
-_GEMAPI = {2024: 340.1 + 18.9, 2025: 376.6 + 20.5}
-_SYNDICATS = {2024: 174.8 + 7.3, 2025: 184.3 + 6.7}
+_GEMAPI = {y: b + _GEMAPI_NB[y] * (1 - _FARM_SHARE[y]) for y, b in {2024: 340.1, 2025: 376.6}.items()}
+_SYNDICATS = {y: b + _SYNDICATS_NB[y] * (1 - _FARM_SHARE[y]) for y, b in {2024: 174.8, 2025: 184.3}.items()}
 _TF_ANNEXES = {y: _TSE[y] + _TASA[y] + _GEMAPI[y] + _SYNDICATS[y] for y in _TSE}
 _FRAIS_TF = {y: _FRAIS_TF_RATE * (_TFPB[y] + _TFPNB[y] + _GEMAPI[y] + _SYNDICATS[y])
              + _FRAIS_TASA_RATE * _TASA[y] + _FRAIS_TSE_RATE * _TSE[y] for y in _TFPB}
@@ -156,12 +173,19 @@ YIELDS: List[TaxYield] = [
     TaxYield(
         key="tfpnb", label_fr="Taxe foncière sur les propriétés non bâties",
         scenario="S1", tier="local", budget="bloc communal",
-        values=dict(_TFPNB),
-        basis="latest", status="verified",
-        source="DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL »)",
+        values={y: round(v, 1) for y, v in _TFPNB.items()},
+        basis="latest", status="derived",
+        source="DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL » et bases "
+               "TAFNB, commune par commune)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
-        scope="Commune, intercommunalité et taxe additionnelle (TAFNB) ; syndicats dans « tf_annexes » ; "
-              "hors chambres d'agriculture.",
+        scope="Terrains non bâtis hors terres agricoles et naturelles (carrières, terrains à bâtir, "
+              "terrains d'agrément, voies ferrées, sols) : commune, intercommunalité et taxe additionnelle "
+              "(TAFNB) ; syndicats dans « tf_annexes » ; hors chambres d'agriculture. Les terres agricoles "
+              "et naturelles, hors de la réforme, gardent leur TFPNB (922 M€ en 2025 sur 1 188 M€).",
+        note="Part agricole et naturelle reconstituée commune par commune : la base de la TAFNB couvre "
+             "exactement les groupes non agricoles (BOI-IF-AUT-80), d'où la part non agricole de chaque "
+             "commune ; contrôle par la base de l'exonération agricole de 20 % (écart 0,6 %). "
+             "La compensation par l'État de cette exonération (environ 131 M€) reste hors du calcul.",
     ),
     TaxYield(
         key="tf_annexes", label_fr="Taxe foncière — syndicats, TSE, GEMAPI et TASA",
@@ -392,14 +416,15 @@ class LandBase:
     # Non-financial (S11, 1 700,7 Md€) and financial (S12, 200,3 Md€) companies,
     # INSEE T_8200_2025, row N2111.
     built_land_companies: float = 1_701_000 + 200_000
+    # D6 sensitivity only: farmland is outside the reform, so not in `taxable`
     farmland: float = FARMLAND.value
     year: int = 2025
     source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
                    "d'actif », données 2025 provisoires (30 juillet 2026)")
     url: str = "https://www.insee.fr/fr/statistiques/2830290"
-    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré), plus les terres "
-                 "agricoles au prix SAFER × surface (D6). Forêts non incluses. Terrains bâtis fin 2024 "
-                 "définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
+    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles "
+                 "et naturelles hors de la réforme (D6). Terrains bâtis fin 2024 définitif : 6 729 Md€ "
+                 "dont 903 publics (Insee Première n° 2081).")
 
     @property
     def taxable_built(self) -> float:
@@ -407,6 +432,11 @@ class LandBase:
 
     @property
     def taxable(self) -> float:
+        return self.taxable_built
+
+    @property
+    def taxable_with_farmland(self) -> float:
+        """D6 sensitivity: the base if farmland entered at SAFER prices."""
         return self.taxable_built + self.farmland
 
     @property
@@ -465,6 +495,22 @@ def indicative_rate_pct(scenario: str, include_ifi: bool = False,
     return 100.0 * scenario_total(scenario, include_ifi) / b.taxable
 
 
+def farmland_sensitivity(scenario: str = "S1", base: Optional[LandBase] = None) -> Dict[str, float]:
+    """D6 sensitivity: farmland in the reform at SAFER prices, its TFPNB replaced too.
+
+    Returns the rate, % of land value, and what farmland would pay, M€ a year.
+    """
+    b = base or LAND_BASE
+    y = max(_TFPNB_FARM)
+    sh = _FARM_SHARE[y]
+    farm_tf = ((_TFPNB_FARM[y] + sh * (_GEMAPI_NB[y] + _SYNDICATS_NB[y])) * (1 + _FRAIS_TF_RATE)
+               + sh * _TSE_NB[y] * (1 + _FRAIS_TSE_RATE))      # with the State's fees
+    total = scenario_total(scenario) + farm_tf
+    rate = 100.0 * total / b.taxable_with_farmland
+    return {"rate_pct": rate, "farmland_pays_meur": rate / 100 * b.farmland,
+            "farmland_tfpnb_meur": _TFPNB_FARM[y]}
+
+
 def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
     """Write the yield table and scenario totals for the site."""
     variants = []
@@ -479,8 +525,9 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
                 "companies_shift_meur": round(companies_shift(sc, ifi)),
                 "lines": [t.key for t in lines_for(sc, ifi)],
             })
+    farm = farmland_sensitivity()
     payload = {
-        "as_of": "2026-10-27",
+        "as_of": "2026-10-29",
         "average_years": AVERAGE_YEARS,
         "constant_euros": {"year": CPI_YEAR, "source": CPI_SOURCE, "url": CPI_URL},
         "taxes": [{
@@ -504,6 +551,11 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
                 "price_let_eur_ha": FARMLAND.price_let_eur_ha, "vine_price_eur_ha": FARMLAND.vine_price_eur_ha,
                 "year": FARMLAND.year, "source": FARMLAND.source, "url": FARMLAND.url,
                 "insee_meur": INSEE_FARMLAND_MEUR, "forest_upper_meur": round(FOREST_UPPER_MEUR),
+                "included": False,
+                "tfpnb_meur": round(farm["farmland_tfpnb_meur"]),
+                "tfpnb_all_meur": round(_TFPNB_ALL[max(_TFPNB_ALL)]),
+                "s1_rate_if_included_pct": round(farm["rate_pct"], 2),
+                "pays_if_included_meur": round(farm["farmland_pays_meur"]),
             },
         },
         "variants": variants,

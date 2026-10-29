@@ -78,9 +78,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 22 690 869 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 21 906 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[WARN] land_share_band** (validation) — Part foncière 38,0 % (bande 40–65 %).  
+- **[WARN] land_share_band** (validation) — Part foncière 37,7 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 8,7 % au plancher (15 %).
 
@@ -105,9 +105,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 10 022 009 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 12 877 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 45,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 44,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,5 % au plafond (85 %), 2,7 % au plancher (15 %).
 
 ### Sète (34301, dépt 34) — OK
@@ -185,16 +185,16 @@
 | Bagneux | 92007 | 92 | oui | OK | 0 | 0 |
 | Bois-Colombes | 92009 | 92 | oui | WARN | 0 | 1 |
 | Boulogne-Billancourt | 92012 | 92 | oui | WARN | 0 | 1 |
-| Bourg-la-Reine | 92014 | 92 | oui | OK | 0 | 0 |
+| Bourg-la-Reine | 92014 | 92 | oui | WARN | 0 | 1 |
 | Châtenay-Malabry | 92019 | 92 | oui | OK | 0 | 0 |
 | Châtillon | 92020 | 92 | oui | WARN | 0 | 1 |
-| Chaville | 92022 | 92 | oui | WARN | 0 | 1 |
+| Chaville | 92022 | 92 | oui | WARN | 0 | 2 |
 | Clamart | 92023 | 92 | oui | WARN | 0 | 1 |
 | Clichy | 92024 | 92 | oui | WARN | 0 | 1 |
 | Colombes | 92025 | 92 | oui | OK | 0 | 0 |
 | Courbevoie | 92026 | 92 | oui | WARN | 0 | 1 |
 | Fontenay-aux-Roses | 92032 | 92 | oui | OK | 0 | 0 |
-| Garches | 92033 | 92 | oui | WARN | 0 | 1 |
+| Garches | 92033 | 92 | oui | WARN | 0 | 2 |
 | La Garenne-Colombes | 92035 | 92 | oui | WARN | 0 | 1 |
 | Gennevilliers | 92036 | 92 | oui | OK | 0 | 0 |
 | Issy-les-Moulineaux | 92040 | 92 | oui | WARN | 0 | 1 |
@@ -209,13 +209,13 @@
 | Puteaux | 92062 | 92 | oui | WARN | 0 | 1 |
 | Rueil-Malmaison | 92063 | 92 | oui | WARN | 0 | 1 |
 | Saint-Cloud | 92064 | 92 | oui | WARN | 0 | 1 |
-| Sceaux | 92071 | 92 | oui | WARN | 0 | 1 |
+| Sceaux | 92071 | 92 | oui | WARN | 0 | 2 |
 | Sèvres | 92072 | 92 | oui | WARN | 0 | 2 |
 | Suresnes | 92073 | 92 | oui | WARN | 0 | 1 |
 | Vanves | 92075 | 92 | oui | WARN | 0 | 1 |
 | Vaucresson | 92076 | 92 | oui | WARN | 0 | 1 |
 | Ville-d'Avray | 92077 | 92 | oui | WARN | 0 | 1 |
-| Villeneuve-la-Garenne | 92078 | 92 | oui | OK | 0 | 0 |
+| Villeneuve-la-Garenne | 92078 | 92 | oui | WARN | 0 | 1 |
 | Aubervilliers | 93001 | 93 | oui | OK | 0 | 0 |
 | Aulnay-sous-Bois | 93005 | 93 | oui | OK | 0 | 0 |
 | Bagnolet | 93006 | 93 | oui | OK | 0 | 0 |
@@ -235,12 +235,12 @@
 | Les Lilas | 93045 | 93 | oui | WARN | 0 | 2 |
 | Livry-Gargan | 93046 | 93 | oui | OK | 0 | 0 |
 | Montfermeil | 93047 | 93 | oui | OK | 0 | 0 |
-| Neuilly-Plaisance | 93049 | 93 | oui | OK | 0 | 0 |
+| Neuilly-Plaisance | 93049 | 93 | oui | WARN | 0 | 1 |
 | Neuilly-sur-Marne | 93050 | 93 | oui | OK | 0 | 0 |
 | Noisy-le-Grand | 93051 | 93 | oui | OK | 0 | 0 |
 | Noisy-le-Sec | 93053 | 93 | oui | OK | 0 | 0 |
 | Pantin | 93055 | 93 | oui | WARN | 0 | 1 |
-| Les Pavillons-sous-Bois | 93057 | 93 | oui | OK | 0 | 0 |
+| Les Pavillons-sous-Bois | 93057 | 93 | oui | WARN | 0 | 1 |
 | Le Pré-Saint-Gervais | 93061 | 93 | oui | WARN | 0 | 1 |
 | Le Raincy | 93062 | 93 | oui | WARN | 0 | 1 |
 | Romainville | 93063 | 93 | oui | WARN | 0 | 1 |
@@ -264,7 +264,7 @@
 | Champigny-sur-Marne | 94017 | 94 | oui | OK | 0 | 0 |
 | Charenton-le-Pont | 94018 | 94 | oui | WARN | 0 | 1 |
 | Chennevières-sur-Marne | 94019 | 94 | oui | WARN | 0 | 1 |
-| Chevilly-Larue | 94021 | 94 | oui | OK | 0 | 0 |
+| Chevilly-Larue | 94021 | 94 | oui | WARN | 0 | 1 |
 | Choisy-le-Roi | 94022 | 94 | oui | OK | 0 | 0 |
 | Créteil | 94028 | 94 | oui | OK | 0 | 0 |
 | Fontenay-sous-Bois | 94033 | 94 | oui | WARN | 0 | 1 |
@@ -287,7 +287,7 @@
 | Le Plessis-Trévise | 94059 | 94 | oui | WARN | 0 | 1 |
 | La Queue-en-Brie | 94060 | 94 | oui | WARN | 0 | 1 |
 | Rungis | 94065 | 94 | oui | WARN | 0 | 1 |
-| Saint-Mandé | 94067 | 94 | oui | WARN | 0 | 1 |
+| Saint-Mandé | 94067 | 94 | oui | WARN | 0 | 2 |
 | Saint-Maur-des-Fossés | 94068 | 94 | oui | WARN | 0 | 1 |
 | Saint-Maurice | 94069 | 94 | oui | WARN | 0 | 2 |
 | Santeny | 94070 | 94 | oui | WARN | 0 | 1 |
@@ -296,9 +296,9 @@
 | Valenton | 94074 | 94 | oui | WARN | 0 | 2 |
 | Villecresnes | 94075 | 94 | oui | WARN | 0 | 1 |
 | Villejuif | 94076 | 94 | oui | OK | 0 | 0 |
-| Villeneuve-le-Roi | 94077 | 94 | oui | WARN | 0 | 1 |
+| Villeneuve-le-Roi | 94077 | 94 | oui | WARN | 0 | 2 |
 | Villeneuve-Saint-Georges | 94078 | 94 | oui | WARN | 0 | 1 |
-| Villiers-sur-Marne | 94079 | 94 | oui | OK | 0 | 0 |
+| Villiers-sur-Marne | 94079 | 94 | oui | WARN | 0 | 1 |
 | Vincennes | 94080 | 94 | oui | WARN | 0 | 1 |
 | Vitry-sur-Seine | 94081 | 94 | oui | OK | 0 | 0 |
 
@@ -368,7 +368,7 @@
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 6,2 % au plafond (85 %), 1,1 % au plancher (15 %).
 
-### Bourg-la-Reine (92014, dépt 92) — OK
+### Bourg-la-Reine (92014, dépt 92) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -376,7 +376,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 13 908 549 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 685 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 63,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,1 % au plafond (85 %), 0,7 % au plancher (15 %).
 
@@ -413,7 +414,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 11 681 623 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 141 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 66,6 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,4 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -489,7 +491,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 11 565 771 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 025 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 68,6 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,6 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -566,7 +569,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 1 112 753 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 726 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 68,6 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -632,7 +635,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 32 310 782 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 706 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 62,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,6 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -684,7 +687,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 19 479 453 € ; hors périmètre 0,4 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 089 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 68,4 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,3 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -697,7 +701,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 17 922 619 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 023 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (10 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (10 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 66,6 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -737,7 +741,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 6 401 670 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 981 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 63,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,4 % au plancher (15 %).
@@ -750,12 +754,12 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 7 806 971 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 241 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 64,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,5 % au plancher (15 %).
 
-### Villeneuve-la-Garenne (92078, dépt 92) — OK
+### Villeneuve-la-Garenne (92078, dépt 92) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -763,7 +767,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 15 517 454 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 656 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 46,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,5 % au plafond (85 %), 4,8 % au plancher (15 %).
 
@@ -847,7 +852,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 11 707 241 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 712 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 2,0 % au plancher (15 %).
@@ -860,7 +865,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 8 731 609 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 734 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 44,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,7 % au plafond (85 %), 3,6 % au plancher (15 %).
@@ -873,9 +878,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 2 639 413 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 571 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 62,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 62,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,9 % au plafond (85 %), 0,1 % au plancher (15 %).
 
 ### La Courneuve (93027, dépt 93) — OK
@@ -910,7 +915,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 8 350 486 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 773 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 44,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,0 % au plafond (85 %), 10,7 % au plancher (15 %).
@@ -947,7 +952,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 5 017 571 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 437 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 56,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,5 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -960,7 +965,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 6 156 918 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 479 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 49,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,3 % au plafond (85 %), 3,7 % au plancher (15 %).
@@ -973,7 +978,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 19 353 471 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 930 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (10 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (10 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 67,0 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1003,7 +1008,7 @@
 - **[OK] land_share_band** (validation) — Part foncière 60,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,4 % au plancher (15 %).
 
-### Neuilly-Plaisance (93049, dépt 93) — OK
+### Neuilly-Plaisance (93049, dépt 93) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -1011,7 +1016,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 13 509 514 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 5 439 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 63,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,4 % au plafond (85 %), 0,0 % au plancher (15 %).
 
@@ -1064,7 +1070,7 @@
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 4,3 % au plafond (85 %), 0,0 % au plancher (15 %).
 
-### Les Pavillons-sous-Bois (93057, dépt 93) — OK
+### Les Pavillons-sous-Bois (93057, dépt 93) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -1072,7 +1078,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 16 180 609 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 5 049 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 57,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,9 % au plafond (85 %), 0,3 % au plancher (15 %).
 
@@ -1084,7 +1091,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 13 866 221 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 033 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 64,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,0 % au plafond (85 %), 3,7 % au plancher (15 %).
@@ -1097,7 +1104,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 10 469 345 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 931 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 59,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,1 % au plafond (85 %), 0,5 % au plancher (15 %).
@@ -1196,7 +1203,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 3 436 478 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 353 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 49,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -1233,7 +1240,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 7 522 410 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 855 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 46,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 4,3 % au plancher (15 %).
@@ -1246,7 +1253,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 3 291 743 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 310 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 56,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 1,0 % au plancher (15 %).
@@ -1271,7 +1278,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 21 282 440 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 827 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 62,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -1284,7 +1291,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 9 983 752 € ; hors périmètre 1,7 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 917 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 49,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,6 % au plafond (85 %), 1,1 % au plancher (15 %).
@@ -1297,7 +1304,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 15 652 367 € ; hors périmètre 2,8 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 496 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 69,6 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1311,7 +1318,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 14 173 991 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 743 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (6 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 63,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,7 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -1361,12 +1368,12 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 15 966 224 € ; hors périmètre 0,9 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 430 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 64,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,1 % au plafond (85 %), 0,2 % au plancher (15 %).
 
-### Chevilly-Larue (94021, dépt 94) — OK
+### Chevilly-Larue (94021, dépt 94) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -1374,7 +1381,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 19 270 840 € ; hors périmètre 3,9 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 984 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 53,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,5 % au plafond (85 %), 0,0 % au plancher (15 %).
 
@@ -1423,7 +1431,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 17 609 262 € ; hors périmètre 3,6 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 061 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,4 % au plancher (15 %).
@@ -1436,7 +1444,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 22 685 860 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 605 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 64,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,1 % au plafond (85 %), 1,5 % au plancher (15 %).
@@ -1473,7 +1481,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 16 003 508 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 076 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 68,5 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1487,7 +1495,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 24 660 386 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 195 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 61,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,3 % au plafond (85 %), 2,3 % au plancher (15 %).
@@ -1500,7 +1508,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 12 276 206 € ; hors périmètre 3,9 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 654 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 41,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 1,5 % au plancher (15 %).
@@ -1526,9 +1534,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 445 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 63,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 63,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,0 % au plafond (85 %), 0,1 % au plancher (15 %).
 
 ### Marolles-en-Brie (94048, dépt 94) — WARN
@@ -1539,7 +1547,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 3 267 601 € ; hors périmètre 2,1 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 828 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 48,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 0,3 % au plancher (15 %).
@@ -1565,9 +1573,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 2 858 440 € ; hors périmètre 1,4 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 788 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 54,9 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 54,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,9 % au plafond (85 %), 0,2 % au plancher (15 %).
 
 ### Orly (94054, dépt 94) — WARN
@@ -1578,7 +1586,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 19 980 743 € ; hors périmètre 2,7 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 321 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 63,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,7 % au plafond (85 %), 0,4 % au plancher (15 %).
@@ -1591,7 +1599,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 8 231 758 € ; hors périmètre 1,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 534 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 66,1 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1605,9 +1613,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 1 291 669 € ; hors périmètre 4,2 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 597 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 50,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 50,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,7 % au plancher (15 %).
 
 ### Le Perreux-sur-Marne (94058, dépt 94) — OK
@@ -1630,7 +1638,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 10 448 157 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 613 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 48,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,4 % au plancher (15 %).
@@ -1643,9 +1651,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 7 184 494 € ; hors périmètre 2,5 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 3 835 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 48,8 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 48,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,2 % au plancher (15 %).
 
 ### Rungis (94065, dépt 94) — WARN
@@ -1656,7 +1664,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 14 013 480 € ; hors périmètre 3,6 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 688 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 45,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 2,1 % au plancher (15 %).
@@ -1669,7 +1677,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 18 292 417 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 100 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 73,4 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,2 % au plancher (15 %).
@@ -1695,7 +1704,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 11 829 598 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 811 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 65,3 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1709,9 +1718,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 3 141 206 € ; hors périmètre 0,6 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 778 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 52,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 51,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,0 % au plafond (85 %), 0,2 % au plancher (15 %).
 
 ### Sucy-en-Brie (94071, dépt 94) — OK
@@ -1746,7 +1755,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 9 064 654 € ; hors périmètre 0,7 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 2 870 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 65,9 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -1760,7 +1769,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 7 192 262 € ; hors périmètre 4,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 5 923 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 54,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -1785,7 +1794,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 12 701 880 € ; hors périmètre 3,6 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 6 133 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 70,1 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,4 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -1798,12 +1808,12 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune ; modélisé Commune+GFP = 13 103 080 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 5 730 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (13 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (13 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,7 % au plancher (15 %).
 
-### Villiers-sur-Marne (94079, dépt 94) — OK
+### Villiers-sur-Marne (94079, dépt 94) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -1811,7 +1821,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, Syndicat ; modélisé Commune+GFP = 17 879 209 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 6 340 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (9 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 58,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,2 % au plancher (15 %).
 
@@ -1881,7 +1892,7 @@
 | Saint-Cyr-au-Mont-d'Or | 69191 | 69 | oui | WARN | 0 | 2 |
 | Saint-Didier-au-Mont-d'Or | 69194 | 69 | oui | WARN | 0 | 2 |
 | Saint-Fons | 69199 | 69 | oui | WARN | 0 | 2 |
-| Sainte-Foy-lès-Lyon | 69202 | 69 | oui | OK | 0 | 0 |
+| Sainte-Foy-lès-Lyon | 69202 | 69 | oui | WARN | 0 | 1 |
 | Saint-Genis-Laval | 69204 | 69 | oui | WARN | 0 | 2 |
 | Saint-Genis-les-Ollières | 69205 | 69 | oui | WARN | 0 | 2 |
 | Saint-Germain-au-Mont-d'Or | 69207 | 69 | oui | WARN | 0 | 2 |
@@ -1917,7 +1928,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 568 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 57,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -1943,9 +1954,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 131 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 57,7 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 57,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Caluire-et-Cuire (69034, dépt 69) — OK
@@ -1969,7 +1980,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 854 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 54,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 2,4 % au plancher (15 %).
@@ -1983,9 +1994,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 503 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,1 % au plancher (15 %).
 
 ### Charly (69046, dépt 69) — WARN
@@ -1997,9 +2008,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 689 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 60,7 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 60,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Collonges-au-Mont-d'Or (69063, dépt 69) — WARN
@@ -2011,7 +2022,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 102 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 68,2 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -2026,9 +2037,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 167 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 60,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 60,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Craponne (69069, dépt 69) — WARN
@@ -2040,7 +2051,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 765 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 53,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2054,9 +2065,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 349 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59,4 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Dardilly (69072, dépt 69) — WARN
@@ -2067,9 +2078,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP ; modélisé Commune+GFP = 7 711 334 € ; hors périmètre 0,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 6 097 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59,5 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,4 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Écully (69081, dépt 69) — WARN
@@ -2081,7 +2092,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 519 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 61,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,3 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2095,9 +2106,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 990 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[WARN] land_share_band** (validation) — Part foncière 72,1 % (bande 40–65 %).  
+- **[WARN] land_share_band** (validation) — Part foncière 72,0 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,7 % au plafond (85 %), 0,0 % au plancher (15 %).
 
@@ -2110,7 +2121,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 176 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 58,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -2124,7 +2135,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 466 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,5 % au plancher (15 %).
@@ -2138,7 +2149,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 656 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 51,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2152,9 +2163,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 8 494 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (7 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 42,2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 42,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,7 % au plafond (85 %), 3,2 % au plancher (15 %).
 
 ### Grigny-sur-Rhône (69096, dépt 69) — WARN
@@ -2166,9 +2177,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 955 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 51,9 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 51,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,3 % au plafond (85 %), 1,0 % au plancher (15 %).
 
 ### Irigny (69100, dépt 69) — WARN
@@ -2180,9 +2191,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 828 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 61,3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 61,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,5 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Limonest (69116, dépt 69) — WARN
@@ -2194,7 +2205,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 619 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 57,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,2 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2208,9 +2219,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 992 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 51,2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 51,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,1 % au plancher (15 %).
 
 ### Marcy-l'Étoile (69127, dépt 69) — WARN
@@ -2221,7 +2232,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 3 939 926 € ; hors périmètre 1,7 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 1 905 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 55,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -2234,7 +2245,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 3 005 903 € ; hors périmètre 3,8 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 625 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 49,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,9 % au plafond (85 %), 3,8 % au plancher (15 %).
@@ -2248,7 +2259,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 875 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,6 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 2,1 % au plancher (15 %).
@@ -2275,9 +2286,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 329 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 56,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 56,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,0 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Quincieux (69163, dépt 69) — WARN
@@ -2289,9 +2300,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 620 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 58,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 58,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,4 % au plafond (85 %), 0,2 % au plancher (15 %).
 
 ### Rochetaillée-sur-Saône (69168, dépt 69) — WARN
@@ -2303,7 +2314,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 987 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 54,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,2 % au plafond (85 %), 0,9 % au plancher (15 %).
@@ -2317,9 +2328,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 947 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 64,3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 64,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,1 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Saint-Didier-au-Mont-d'Or (69194, dépt 69) — WARN
@@ -2331,9 +2342,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 584 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 63,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 63,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Saint-Fons (69199, dépt 69) — WARN
@@ -2345,12 +2356,12 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 503 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 45,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,9 % au plafond (85 %), 5,0 % au plancher (15 %).
 
-### Sainte-Foy-lès-Lyon (69202, dépt 69) — OK
+### Sainte-Foy-lès-Lyon (69202, dépt 69) — WARN
 
 - **[OK] dvf_coverage** (source) — DVF complet : 5/5 années.
 - **[OK] cadastre_parcelles** (source) — Parcellaire cadastral disponible.
@@ -2358,7 +2369,8 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 12 031 671 € ; hors périmètre 2,7 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 810 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[OK] income_quintiles** (validation) — Quintiles de revenu : 5/5 groupes produits (8 revenus IRIS distincts).
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
+  *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 57,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,0 % au plancher (15 %).
 
@@ -2371,7 +2383,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 7 502 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (8 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 56,9 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,6 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2385,9 +2397,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 080 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 60,4 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 60,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Saint-Germain-au-Mont-d'Or (69207, dépt 69) — WARN
@@ -2399,9 +2411,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 137 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 60,5 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 60,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,7 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Saint-Romain-au-Mont-d'Or (69233, dépt 69) — WARN
@@ -2413,9 +2425,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 526 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 63,2 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 63,1 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,5 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Tassin-la-Demi-Lune (69244, dépt 69) — WARN
@@ -2427,7 +2439,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 010 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (5 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 57,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2441,7 +2453,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 344 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 55,8 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,3 % au plafond (85 %), 0,2 % au plancher (15 %).
@@ -2454,7 +2466,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 26 780 695 € ; hors périmètre 3,3 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 7 974 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (14 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (14 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 50,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,9 % au plafond (85 %), 1,6 % au plancher (15 %).
@@ -2481,9 +2493,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 695 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59,5 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,4 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Chassieu (69271, dépt 69) — WARN
@@ -2494,9 +2506,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 10 082 688 € ; hors périmètre 3,3 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 747 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 59,1 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 59,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,1 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Corbas (69273, dépt 69) — WARN
@@ -2508,7 +2520,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 938 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 59,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,0 % au plafond (85 %), 0,4 % au plancher (15 %).
@@ -2521,7 +2533,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 18 831 122 € ; hors périmètre 5,0 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 8 436 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (9 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 53,3 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,1 % au plancher (15 %).
@@ -2535,7 +2547,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 264 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (3 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[WARN] land_share_band** (validation) — Part foncière 65,4 % (bande 40–65 %).  
   *Adaptation :* Hors bande : cœur très dense ou imputation à confronter au méthodo — signalé, jamais une cible à atteindre.
@@ -2550,9 +2562,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 4 527 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 57,3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 57,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,7 % au plafond (85 %), 0,1 % au plancher (15 %).
 
 ### Jonage (69279, dépt 69) — WARN
@@ -2563,7 +2575,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 5 869 050 € ; hors périmètre 4,8 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 4 415 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (2 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 60,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,1 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2590,7 +2602,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 6 923 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (4 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 55,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,3 % au plafond (85 %), 0,0 % au plancher (15 %).
@@ -2604,9 +2616,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 3 070 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 53,9 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 53,7 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,0 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Rillieux-la-Pape (69286, dépt 69) — WARN
@@ -2617,9 +2629,9 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 14 331 611 € ; hors périmètre 2,6 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 8 647 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (12 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (12 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 53,3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 53,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 1,2 % au plafond (85 %), 0,5 % au plancher (15 %).
 
 ### Saint-Priest (69290, dépt 69) — WARN
@@ -2630,7 +2642,7 @@
 - **[OK] rei_layers** (source) — REI FB 2025 : couches Commune, GFP, Syndicat ; modélisé Commune+GFP = 45 145 981 € ; hors périmètre 1,1 % du produit FB total.
 - **[OK] model_ran** (run) — Exécuté : 11 969 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (19 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (19 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 52,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 2,0 % au plafond (85 %), 0,5 % au plancher (15 %).
@@ -2644,7 +2656,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 1 309 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
 - **[OK] land_share_band** (validation) — Part foncière 51,0 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,8 % au plafond (85 %), 0,7 % au plancher (15 %).
@@ -2658,9 +2670,9 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 160 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 53,6 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 53,4 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,5 % au plafond (85 %), 0,0 % au plancher (15 %).
 
 ### Solaize (69296, dépt 69) — WARN
@@ -2672,7 +2684,7 @@
   *Adaptation :* Part non modélisée significative : choix de périmètre à documenter (syndicats/TSE/GEMAPI) ou à élargir.
 - **[OK] model_ran** (run) — Exécuté : 2 612 parcelles.
 - **[OK] revenue_neutrality** (validation) — Neutralité des recettes : écart 0,00 %.
-- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes).  
+- **[WARN] income_quintiles** (validation) — Quintiles de revenu : 0/5 groupes — revenu IRIS trop peu varié (0 valeurs distinctes, minimum 10).  
   *Adaptation :* Structurel (petite commune / peu d'IRIS) : agrégat quintile mis à null, aucun graphique publié.
-- **[OK] land_share_band** (validation) — Part foncière 63,3 % (bande 40–65 %).
+- **[OK] land_share_band** (validation) — Part foncière 63,2 % (bande 40–65 %).
 - **[OK] land_share_clip** (validation) — Parcelles bâties à la borne de part foncière : 0,9 % au plafond (85 %), 0,0 % au plancher (15 %).

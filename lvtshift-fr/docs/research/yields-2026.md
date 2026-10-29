@@ -17,11 +17,11 @@ source quoting the primary). No line is "reported" any more.
 
 | Scenario | Yield to replace (M€) | Indicative rate, % of taxable land |
 |---|---:|---:|
-| S1 — TF + THRS + DMTO | 67 113 | 1,06 |
-| S2 — + taxes on real-estate gains | 70 789 | 1,12 |
-| S2 + IFI | 73 121 | 1,16 |
-| S3 — + taxes on rental income | 78 479 | 1,24 |
-| S3 + IFI | 80 811 | 1,28 |
+| S1 — TF + THRS + DMTO | 66 140 | 1,09 |
+| S2 — + taxes on real-estate gains | 69 817 | 1,15 |
+| S2 + IFI | 72 149 | 1,18 |
+| S3 — + taxes on rental income | 77 507 | 1,27 |
+| S3 + IFI | 79 839 | 1,31 |
 
 S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
 (46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
@@ -34,9 +34,10 @@ S2 by 1 322 M€ (+ gains) and S3 by 1 936 M€ (+ rents, read for 2022), with o
 without IFI (2025 figures). Exported as `total_constant_meur` and stated on the
 site; the headline keeps current euros because they are what was collected.
 
-Rates are national averages against taxable built land plus farmland at SAFER
-prices (D6; forests out). They are not the rates the model applies: the local
-tier is set commune by commune.
+Rates are national averages against taxable built land. Agricultural and
+natural land is outside the reform (D6, revised 29 October) and keeps its
+TFPNB. They are not the rates the model applies: the local tier is set commune
+by commune.
 
 ## Changes
 
@@ -58,6 +59,8 @@ tier is set commune by commune.
 | *Decision of 27 October (after the review)* | |
 | Taxe d'habitation on second homes added to S1, surcharge included (`thrs`), with the State's 3 % fee (`thrs_etat`) | +3 063 M€ (all) |
 | Farmland added to the land base at SAFER price × area (D6), 218 Md€ | rates −3,5 % |
+| *Decision of 29 October: farmland out of the reform (D6 revised)* | |
+| Agricultural and natural land leaves the base and keeps its TFPNB: 922 M€ of the 1 188 M€ TFPNB (2025), and the same share of the non-built syndicates, TSE and GEMAPI, stop being replaced, with the State's fee on them | −973 M€ (all); rates +2,4 % net of both changes |
 
 ## Line by line
 
@@ -273,8 +276,31 @@ Of the 6 091 Md€, households and non-profits hold 4 190 Md€ and companies
 1 901 Md€ (non-financial 1 701, financial 200; INSEE T_8200_2025).
 
 Caveats:
-- **Agricultural land (D6), decided 27 October: SAFER price × area.**
-  `yields.Farmland`: SAU des exploitations 2025, metropolitan France
+- **Agricultural and natural land (D6), revised 29 October: outside the
+  reform.** It keeps today's TFPNB with its exemptions, so neither its value
+  nor its TFPNB enters the totals. Only the TFPNB on other unbuilt land
+  (cadastral groups 7, 10–13: quarries, building plots, amenity land,
+  railways, sols) is replaced: 263 M€ in 2024, 266 M€ in 2025. The split is
+  not published; it was rebuilt commune by commune from the REI (OFGL): the
+  TAFNB base covers exactly groups 7 and 10–13 (BOI-IF-AUT-80; the art. 1394 B
+  bis exemption covers the mirror groups 1–6, 8, 9, BOI-IF-TFNB-10-40-50), so
+  TAFNB base ÷ TFPNB base gives each commune's non-agricultural share of its
+  TFPNB, and the whole TAFNB (≈ 99 M€) is non-agricultural. Cross-check: the
+  2024 base of the 20 % agricultural exemption implies an agricultural base of
+  2 046 M€ after the exemption, against 2 059 M€ by this method (0,6 %; 2 028
+  against 2 032 on mainland France excluding Corsica, where farmland is wholly
+  exempt). Script: `docs/research/tfpnb_farm_split.py`, which downloads the
+  REI rows and reproduces 1 032,9 and 922,2 M€. Agricultural
+  and natural: 1 033 M€ in 2024 (80 %), 922 M€ in 2025 (78 %; the agricultural
+  exemption rose from 20 % to 30 % in 2025, LF 2025 art. 66). "Agricultural"
+  here is the legal bucket, which includes forests, heath, water and vegetable
+  gardens. Caveats: cadastral groups are not PLU zones (a field zoned U stays
+  in group 1 until reclassified, so some building land is counted as farmland);
+  the State's compensation for the agricultural exemption (≈ 131 M€, 2024)
+  stays outside, like the other compensations. Research note and scripts: the
+  agent pass of 29 October, reproduced before use.
+  **Sensitivity, farmland in at SAFER price × area (D6 as decided on 27
+  October):** `yields.Farmland`: SAU des exploitations 2025, metropolitan France
   (Agreste, SAA 2025 provisional) 26,64 Mha, of which vines 0,748 Mha.
   The other 25,89 Mha (arable, grassland, orchards and other permanent crops)
   are valued at the midpoint of the SAFER 2025 prices for vacant (6 460 €/ha)
@@ -282,8 +308,8 @@ Caveats:
   (87 400 €/ha), which undervalues Champagne and overvalues non-AOP vines.
   Result 218 Md€ (204–233 using either price alone; the vine price is a further
   uncertainty of perhaps ±30 Md€), 3,5 % of the taxable base of 6 309 Md€.
-  At the S1 average rate farmland would pay ≈ 2,3 Md€ a year, against 1,2 Md€
-  of TFPNB today (which also covers forests and other unbuilt land).
+  With farmland in and its TFPNB replaced too, the S1 rate is 1,06 % and
+  farmland would pay ≈ 2,3 Md€ a year, against 0,9 Md€ of TFPNB today.
   INSEE's terrains cultivés (AN.2112, 902 Md€ at end-2025, *Comptes de la
   Nation 2025*, T_8201; companies 710, households 193) is not used: it implies
   ≈ 31 500 €/ha, about five times observed prices, and INSEE publishes no

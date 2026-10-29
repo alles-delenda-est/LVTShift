@@ -47,6 +47,19 @@ FR_RESIDENTIAL_CATEGORIES = [
     "Large Multi-Family (5+ units)",   # immeuble_collectif
 ]
 
+# Unbuilt agricultural and natural land (PLU zones A and N, run_commune) is
+# outside the reform: it keeps today's TFPNB and its exemptions, so it takes no
+# share of the land tax. Parcels holding only farm buildings are unbuilt here,
+# since those buildings are dropped as TFPB-exempt (CGI 1382 6°).
+FARMLAND_TYPES = frozenset({"agricultural", "natural"})
+
+
+def farmland_excluded(p: pd.DataFrame) -> pd.Series:
+    """True for unbuilt A/N parcels, which stay on today's TFPNB."""
+    if "land_type" not in p.columns:
+        return pd.Series(False, index=p.index)
+    return p["land_type"].isin(FARMLAND_TYPES)
+
 
 def _write_report(out: pd.DataFrame, out_dir: str, cfg) -> None:
     """Render the France-relevant PNG charts from the standard export.
@@ -138,17 +151,24 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # ---- LVTShift's real revenue-neutral solver -------------------- #
     # Exempt public property (exemptions.py) pays neither tax: zero share of
     # today's FB (current_tax above) and zero taxable value in the solve, so the
-    # levy is held neutral over the taxable base only.
+    # levy is held neutral over the taxable base only. Excluded farmland bears
+    # no FB today (it is unbuilt) and is left out of the solve the same way.
     exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
     if exempt_col:
         p[exempt_col] = p[exempt_col].fillna(False).astype(int)
+    p["is_farmland_excluded"] = farmland_excluded(p).astype(int)
+    if exempt_col:
+        p["outside_levy"] = (p[exempt_col].astype(bool)
+                             | p["is_farmland_excluded"].astype(bool)).astype(int)
+    else:
+        p["outside_levy"] = p["is_farmland_excluded"]
     land_mill, imp_mill, revenue, p = model_split_rate_tax(
         df=p,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
         current_revenue=commune_tfpb_produit,
         land_improvement_ratio=cfg.split_rate_ratio,
-        exemption_flag_col=exempt_col,
+        exemption_flag_col="outside_levy",
     )
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
@@ -175,6 +195,12 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         land_millage=land_mill, improvement_millage=imp_mill,
         exempt_flag_col=exempt_col,
     )
+    # the standard export has no column for it: add the flag so export_web can
+    # leave these parcels out of the published shares (counted, never listed)
+    out["is_farmland_excluded"] = p["is_farmland_excluded"].astype(bool).values
+    out.to_csv(f"{out_dir}/{name}.csv", index=False)
+    print(f"[{cfg.name}] farmland outside the reform (A/N, unbuilt): "
+          f"{int(out['is_farmland_excluded'].sum())} parcels")
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 

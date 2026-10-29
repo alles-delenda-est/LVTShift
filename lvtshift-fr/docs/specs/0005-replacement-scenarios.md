@@ -112,9 +112,10 @@ parcel. This is overcome by using **INSEE national accounts** for the national b
   ratios.
 
 ### 4.3 Exclusions
-Exempt public land stays exempt (spec 0003). Agricultural and natural land is in
-the departmental and national base at SAFER values (D6), with the effect on farm
-land shown separately.
+Exempt public land stays exempt (spec 0003). Agricultural and natural land is
+outside the reform (D6, revised 2026-10-29): it keeps today's TFPNB and its
+exemptions, takes no share of the land tax, and its TFPNB is not replaced. Its
+SAFER value is shown as a sensitivity.
 
 ### 4.4 Who pays today, per parcel
 Needed for the distribution charts. Quality differs a lot by tax; each line gets
@@ -123,7 +124,7 @@ a quality flag on the site.
 | Tax | Attribution to parcels | Data | Quality |
 |---|---|---|---|
 | TFPB | done (REI split + floor area) | REI | medium |
-| TFPNB | non-built parcels, by land class | REI, GPU, SAFER | medium |
+| TFPNB | non-built parcels outside zones A and N, by land class; A/N land keeps its TFPNB | REI, GPU, SAFER | medium |
 | DMTO | value × rate × annual turnover probability (by type and IRIS, from DVF sales / stock): an annualised expected DMTO | DVF, DGCL totals to validate | medium |
 | IFI | no parcel attribution possible (owner wealth unknown). Commune total from DGFiP (communes > 20 000 inhabitants with > 50 taxpayers), shown at commune level only | data.gouv « IFI par collectivité » | aggregate only |
 | Gains (IR+PS) | non-main-residence dwellings × turnover × gain proxy | INSEE census (tenure, second homes) by IRIS, DVF | low: aggregate only unless D4 says otherwise |
@@ -216,7 +217,7 @@ effective rates, DMTO incidence range) go through the usual Gemini review.
 | D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
 | D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
 | D5 | Land base outside the panel | **Decided:** INSEE national accounts, with a published consistency check |
-| D6 | Agricultural and natural land in the national and departmental tiers | **Decided:** include in the base at SAFER values; show the effect on farm land separately. Confirmed 2026-10-27: SAFER price × area for farmland (not INSEE AN.2112); forests out for now |
+| D6 | Agricultural and natural land in the national and departmental tiers | **Revised 2026-10-29:** outside the reform, in the commune model and the national scenarios. Unbuilt A/N parcels (including those holding only farm buildings) keep today's TFPNB; only the TFPNB on other unbuilt land (≈ 22 %, rebuilt from TAFNB bases) is replaced. SAFER price × area (decided 2026-10-27) kept as a sensitivity |
 | D7 | Furnished lets (BIC/LMNP) in "rental income" | **Decided:** include if a yield source is found; otherwise flag as missing |
 | D8 | Commune-level DMTO: DVF-based estimate or OFGL accounts | **Decided (most accurate per question):** yields from the **accounts** (DGCL by département; communal receipts from OFGL/DGFiP commune accounts, availability to verify live; communes under 5 000 inhabitants receive theirs through the departmental equalisation fund, so their receipts are not their own transactions); **who pays** from **DVF** (transactions are where the tax falls). Fallback for yields where accounts are missing: DVF × the communal rate (1,20 %) |
 

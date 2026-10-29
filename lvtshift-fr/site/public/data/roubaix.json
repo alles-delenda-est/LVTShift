@@ -651,6 +651,7 @@
       0.85
     ],
     "exempt_public_parcels": 2278,
+    "farmland_excluded_parcels": 0,
     "note": "Agrégats uniquement — imputations honnêtes au niveau catégorie/quintile, jamais à la parcelle."
   },
   "currency": "EUR"

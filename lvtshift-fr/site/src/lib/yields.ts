@@ -66,6 +66,12 @@ export interface YieldsData {
       url: string;
       insee_meur: number;
       forest_upper_meur: number;
+      /** Farmland is outside the reform (D6); the fields below are the sensitivity. */
+      included: boolean;
+      tfpnb_meur: number;
+      tfpnb_all_meur: number;
+      s1_rate_if_included_pct: number;
+      pays_if_included_meur: number;
     };
   };
   variants: YieldVariant[];

@@ -88,6 +88,7 @@ export interface Commune {
     };
     /** parcels treated as exempt public property (count only; absent in older payloads) */
     exempt_public_parcels?: number;
+    farmland_excluded_parcels?: number;
   };
   members?: MemberRow[]; coverage?: Coverage;
   /** Territory only: quintiles ranked inside each member commune, then pooled. */

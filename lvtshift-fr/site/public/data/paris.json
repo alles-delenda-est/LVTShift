@@ -7,15 +7,15 @@
   "reference_year": 2025,
   "model_type": "split_rate:4.0",
   "headline": {
-    "parcels_modeled": 75090,
-    "tax_base_eur": 1144159573121.545,
-    "land_base_eur": 866856390686.5504,
+    "parcels_modeled": 75081,
+    "tax_base_eur": 1144159549965.7449,
+    "land_base_eur": 866856367530.7504,
     "improvement_base_eur": 277303182434.99445,
     "land_share_pct": 75.8,
     "built_at_cap_pct": 5.6,
-    "neutral_levy_eur": 1840896539.0000002,
-    "gross_shifted_eur": 360226699.89935565,
-    "net_shifted_eur": 180113349.9496779,
+    "neutral_levy_eur": 1840896539.0,
+    "gross_shifted_eur": 360226658.9663665,
+    "net_shifted_eur": 180113329.48318332,
     "gross_pct_of_levy": 19.6,
     "net_pct_of_levy": 9.8,
     "gross_bps_of_base": 3.1,
@@ -57,7 +57,7 @@
         {
           "category": "Vacant Land",
           "median_change_pct": null,
-          "median_change_eur": 931.0,
+          "median_change_eur": 941.0,
           "share_paying_more_pct": 100.0
         },
         {
@@ -145,7 +145,7 @@
         {
           "category": "Vacant Land",
           "median_change_pct": null,
-          "median_change_eur": 890.0,
+          "median_change_eur": 900.0,
           "share_paying_more_pct": 100.0
         },
         {
@@ -233,7 +233,7 @@
         {
           "category": "Vacant Land",
           "median_change_pct": null,
-          "median_change_eur": 966.0,
+          "median_change_eur": 976.0,
           "share_paying_more_pct": 100.0
         },
         {
@@ -332,11 +332,11 @@
     {
       "category": "Vacant Land",
       "label_fr": "Terrain nu / non bâti",
-      "parcels": 2992,
+      "parcels": 2983,
       "share_of_parcels_pct": 4.0,
       "median_change_pct": null,
-      "median_change_eur": 931.0,
-      "count_paying_more": 2992,
+      "median_change_eur": 941.0,
+      "count_paying_more": 2983,
       "share_paying_more_pct": 100.0
     },
     {
@@ -416,8 +416,8 @@
     {
       "bucket": "vacant",
       "label": "Terrain nu (0 %)",
-      "parcels": 2992,
-      "value_eur": 9176294782.364464,
+      "parcels": 2983,
+      "value_eur": 9176271626.564463,
       "value_pct_of_base": 0.8,
       "share_of_gross_change_pct": 5.0
     },
@@ -491,7 +491,7 @@
         {
           "category": "Vacant Land",
           "median_change_pct": null,
-          "median_change_eur": 931.0,
+          "median_change_eur": 941.0,
           "share_paying_more_pct": 100.0
         },
         {
@@ -579,7 +579,7 @@
         {
           "category": "Vacant Land",
           "median_change_pct": null,
-          "median_change_eur": 931.0,
+          "median_change_eur": 941.0,
           "share_paying_more_pct": 100.0
         },
         {
@@ -651,6 +651,7 @@
       0.85
     ],
     "exempt_public_parcels": 3099,
+    "farmland_excluded_parcels": 9,
     "note": "Agrégats uniquement — imputations honnêtes au niveau catégorie/quintile, jamais à la parcelle."
   },
   "currency": "EUR"
