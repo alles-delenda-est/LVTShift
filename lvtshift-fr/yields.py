@@ -7,7 +7,9 @@ so a figure changed here changes the published page.
 
 Reference value per tax (spec 0005, decision D1): the average of the last five
 available years for cyclical taxes (DMTO, taxes on gains), the latest year for
-the others.
+the others. Every reference value is in 2025 euros (INSEE consumer price index),
+so that all amounts on the page share one price basis with the 2025 land base
+and the commune model's 2025 tax data. Yearly values stay nominal.
 
 Scenarios (spec 0005 §1):
     S1  taxe foncière (TFPB + TFPNB) + taxe d'habitation on second homes + DMTO
@@ -42,14 +44,19 @@ Status = Literal["verified", "derived", "reported"]
 
 AVERAGE_YEARS = 5
 
-# Sensitivity to D1 (not the headline): yields restated in 2025 euros with the
-# consumer price index, INSEE annual average, base 2015, all households, France
-# (BDM idbank 001764363, « séries arrêtées »; do not mix with base 2025).
-CPI = {2020: 104.73, 2021: 106.45, 2022: 112.01, 2023: 117.47, 2024: 119.82, 2025: 120.95}
-CPI_YEAR = 2025
-CPI_SOURCE = ("INSEE, indice annuel des prix à la consommation, base 2015, ensemble des ménages, "
-              "France (idbank 001764363)")
+# Price basis. INSEE, IPC annual average, ensemble des ménages, France, base 2015
+# (BDM idbank 001764363, « séries arrêtées », last update 15 January 2026),
+# checked against the 12-month average of the monthly series 001759970.
+PRICE_YEAR = 2025
+_CPI = {2020: 104.73, 2021: 106.45, 2022: 112.01, 2023: 117.47, 2024: 119.82, 2025: 120.95}
+CPI_SOURCE = ("INSEE, indice annuel des prix à la consommation, ensemble des ménages, France, "
+              "base 2015 (idbank 001764363)")
 CPI_URL = "https://www.insee.fr/fr/statistiques/serie/001764363"
+
+
+def to_price_year(year: int, value: float) -> float:
+    """Restate a nominal amount of ``year`` in ``PRICE_YEAR`` euros."""
+    return value * _CPI[PRICE_YEAR] / _CPI[year]
 
 
 @dataclass(frozen=True)
@@ -95,14 +102,15 @@ class TaxYield:
         return years[-AVERAGE_YEARS:] if self.basis == "average" else years[-1:]
 
     def reference(self) -> float:
-        """Reference yield, M€ (D1: 5-year average for cyclical taxes)."""
+        """Reference yield, M€ in 2025 euros (D1: 5-year average for cyclical taxes)."""
+        years = self.reference_years()
+        return sum(to_price_year(y, self.values[y]) for y in years) / len(years)
+
+    def reference_nominal(self) -> float:
+        """Same average without the price restatement, M€ (for the record)."""
         years = self.reference_years()
         return sum(self.values[y] for y in years) / len(years)
 
-    def reference_constant(self) -> float:
-        """Reference yield with each year restated in CPI_YEAR euros, M€ (D1 sensitivity)."""
-        years = self.reference_years()
-        return sum(self.values[y] * CPI[CPI_YEAR] / CPI[y] for y in years) / len(years)
 
 
 # Departmental DMTO, M€. OFGL's departmental aggregate « DMTO avant péreq. »
@@ -462,24 +470,6 @@ def scenario_total(scenario: str, include_ifi: bool = False) -> float:
     return sum(t.reference() for t in lines_for(scenario, include_ifi))
 
 
-def scenario_total_constant(scenario: str, include_ifi: bool = False) -> float:
-    """Total reference yield in CPI_YEAR euros, M€ (D1 sensitivity)."""
-    return sum(t.reference_constant() for t in lines_for(scenario, include_ifi))
-
-
-def companies_shift(scenario: str, include_ifi: bool = False,
-                    base: Optional[LandBase] = None) -> float:
-    """Yield moved onto companies' land by S2–S3, M€ a year (D3).
-
-    S2 and S3 replace taxes that only individuals pay (IR and social levies on
-    gains and rents, IFI); companies' corporate tax on the same income stays.
-    The national rate that replaces them falls on all land, so companies pay
-    their share of the base on these lines without any tax of theirs being cut.
-    S1 lines are paid by companies and individuals alike and are left out.
-    """
-    b = base or LAND_BASE
-    added = sum(t.reference() for t in lines_for(scenario, include_ifi) if t.scenario != "S1")
-    return b.companies_share * added
 
 
 def tier_totals(scenario: str, include_ifi: bool = False) -> Dict[str, float]:
@@ -512,6 +502,19 @@ def farmland_sensitivity(scenario: str = "S1", base: Optional[LandBase] = None) 
             "farmland_tfpnb_meur": _TFPNB_FARM[y]}
 
 
+def company_land_transfer(scenario: str, include_ifi: bool = False,
+                          base: Optional[LandBase] = None) -> float:
+    """M€ a year that S2-S3 put on companies' land to replace individuals' taxes.
+
+    The lines S2 and S3 add are all national and are paid today by individuals
+    only (gains, rents, IFI); companies' corporate tax on the same income stays
+    (D3). The national rate falls on all taxable land, so companies' land bears
+    its share of what S2-S3 add over S1 while companies are relieved of nothing.
+    """
+    b = base or LAND_BASE
+    return b.companies_share * (scenario_total(scenario, include_ifi) - scenario_total("S1"))
+
+
 def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
     """Write the yield table and scenario totals for the site."""
     variants = []
@@ -520,30 +523,31 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
             variants.append({
                 "scenario": sc, "include_ifi": ifi,
                 "total_meur": round(scenario_total(sc, ifi)),
-                "total_constant_meur": round(scenario_total_constant(sc, ifi)),
                 "tiers_meur": {k: round(v) for k, v in tier_totals(sc, ifi).items()},
                 "rate_pct": round(indicative_rate_pct(sc, ifi), 2),
-                "companies_shift_meur": round(companies_shift(sc, ifi)),
+                "company_land_meur": round(company_land_transfer(sc, ifi)),
                 "lines": [t.key for t in lines_for(sc, ifi)],
             })
     farm = farmland_sensitivity()
     payload = {
         "as_of": "2026-10-29",
         "average_years": AVERAGE_YEARS,
-        "constant_euros": {"year": CPI_YEAR, "source": CPI_SOURCE, "url": CPI_URL},
+        "price_basis": {"year": PRICE_YEAR, "source": CPI_SOURCE, "url": CPI_URL,
+                        "cpi": {str(y): v for y, v in sorted(_CPI.items())}},
         "taxes": [{
             "key": t.key, "label_fr": t.label_fr, "scenario": t.scenario,
             "tier": t.tier, "budget": t.budget, "basis": t.basis, "status": t.status,
             "values_meur": {str(y): round(v, 1) for y, v in sorted(t.values.items())},
             "reference_years": t.reference_years(),
             "reference_meur": round(t.reference()),
+            "reference_nominal_meur": round(t.reference_nominal()),
             "source": t.source, "url": t.url, "scope": t.scope, "note": t.note,
         } for t in YIELDS],
         "land_base": {
             "taxable_meur": round(LAND_BASE.taxable), "total_meur": LAND_BASE.built_land_total,
             "public_meur": LAND_BASE.built_land_public, "year": LAND_BASE.year,
             "companies_meur": LAND_BASE.built_land_companies,
-            "companies_share": round(LAND_BASE.companies_share, 4),
+            "companies_share_pct": round(100 * LAND_BASE.companies_share, 1),
             "source": LAND_BASE.source, "url": LAND_BASE.url, "note": LAND_BASE.note,
             "farmland": {
                 "value_meur": round(FARMLAND.value), "low_meur": round(FARMLAND.low),
@@ -571,4 +575,5 @@ if __name__ == "__main__":
     data = export_json(Path(__file__).resolve().parent / "site/public/data/yields.json")
     for v in data["variants"]:
         print(f"{v['scenario']}{' + IFI' if v['include_ifi'] else ''}: "
-              f"{v['total_meur']:,} M€  ({v['rate_pct']} % of taxable land)")
+              f"{v['total_meur']:,} M€  ({v['rate_pct']} % of taxable land; "
+              f"companies' land {v['company_land_meur']:,} M€)")
