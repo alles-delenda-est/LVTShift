@@ -1,4 +1,5 @@
 import type { Commune, QuintileRow } from "@/lib/types";
+import { shiftedPct } from "@/lib/shift";
 
 /**
  * Counts behind the home page's "who pays" card, computed from the published
@@ -17,6 +18,9 @@ export interface ImpactSummary {
   flatsPayLess: number;
   poorestAnalysable: number;
   poorestPayLess: number;
+  /** Share of the levy that changes payer, % (lowest and highest territory). */
+  shiftMin: number | null;
+  shiftMax: number | null;
 }
 
 function poorestTotal(c: Commune): number | null {
@@ -31,7 +35,10 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
   let flatsPayLess = 0;
   let poorestAnalysable = 0;
   let poorestPayLess = 0;
+  const shifts: number[] = [];
   for (const c of communes) {
+    const s = shiftedPct(c.headline.net_pct_of_levy, c.headline.gross_pct_of_levy);
+    if (s != null) shifts.push(s);
     const house = c.by_category.find((r) => r.category === "Single Family Residential");
     const flat = c.by_category.find((r) => r.category === "Condominium");
     if (house?.median_change_pct != null) houses.push(house.median_change_pct);
@@ -50,5 +57,7 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
     flatsPayLess,
     poorestAnalysable,
     poorestPayLess,
+    shiftMin: shifts.length ? Math.min(...shifts) : null,
+    shiftMax: shifts.length ? Math.max(...shifts) : null,
   };
 }

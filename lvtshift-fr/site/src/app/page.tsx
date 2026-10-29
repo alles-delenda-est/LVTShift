@@ -4,6 +4,13 @@ import { pct, signedPct } from "@/lib/format";
 import { impactSummary } from "@/lib/impactSummary";
 import { panelLandShares } from "@/lib/panel";
 
+/** One decimal, French comma ("9,8"); "n. d." when missing. */
+function fmt1(n: number | null): string {
+  return n == null
+    ? "n. d."
+    : n.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
 export default function Home() {
   const { communes } = loadIndex();
 
@@ -89,6 +96,60 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          {/* Key redistribution results, computed from the payloads
+              (lib/impactSummary), so the banner cannot drift from the model. */}
+          <aside
+            aria-labelledby="resultats-cles"
+            className="mt-10 bg-marine text-creme max-w-5xl"
+          >
+            <div className="px-6 pt-5 pb-1 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+              <h3
+                id="resultats-cles"
+                className="text-xs uppercase tracking-[0.18em] text-creme/80"
+              >
+                Ce que la réforme change &mdash; principaux résultats
+              </h3>
+              <p className="text-xs text-creme/70">
+                {impact.territories} territoires, cas central
+              </p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-creme/15">
+              {[
+                {
+                  value: `${fmt1(impact.shiftMin)} à ${fmt1(impact.shiftMax)} %`,
+                  label: "de la taxe foncière change de payeur, selon le territoire",
+                },
+                {
+                  value: `${impact.poorestPayLess} sur ${impact.poorestAnalysable}`,
+                  label: "territoires où les 20 % de ménages les plus modestes paient moins",
+                },
+                {
+                  value: `${impact.flatsPayLess} sur ${impact.territories}`,
+                  label: "territoires où l’appartement type paie moins",
+                },
+                {
+                  value: `${impact.housesPayMore} sur ${impact.territories}`,
+                  label: "territoires où la maison type paie davantage",
+                },
+              ].map(({ value, label }) => (
+                <div key={label} className="bg-marine px-6 py-5">
+                  <p className="font-display text-3xl md:text-4xl font-medium leading-none text-creme">
+                    {value}
+                  </p>
+                  <p className="text-sm text-creme/80 mt-2 leading-snug">{label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="px-6 py-4 text-xs text-creme/70 leading-relaxed">
+              Taxe foncière déplacée du bâti vers le sol, à recettes égales dans
+              chaque commune. «&nbsp;Type&nbsp;» : variation médiane de la
+              catégorie.{" "}
+              <Link href="/resultats" className="underline underline-offset-2 text-creme hover:text-white">
+                Détail par commune
+              </Link>
+            </p>
+          </aside>
 
           {/* Revenue-neutrality callout */}
           <div className="mt-8 border-l-4 border-rouge pl-5 max-w-2xl">
