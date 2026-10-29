@@ -17,16 +17,16 @@ source quoting the primary). No line is "reported" any more.
 
 | Scenario | Yield to replace (M€) | Indicative rate, % of taxable built land |
 |---|---:|---:|
-| S1 — TF + DMTO | 64 050 | 1,05 |
-| S2 — + taxes on real-estate gains | 67 727 | 1,11 |
-| S2 + IFI | 70 059 | 1,15 |
-| S3 — + taxes on rental income | 75 417 | 1,24 |
-| S3 + IFI | 77 749 | 1,28 |
+| S1 — TF + THRS + DMTO | 67 113 | 1,10 |
+| S2 — + taxes on real-estate gains | 70 789 | 1,16 |
+| S2 + IFI | 73 121 | 1,20 |
+| S3 — + taxes on rental income | 78 479 | 1,29 |
+| S3 + IFI | 80 811 | 1,33 |
 
-S1 is 82–95 % of every variant; the taxe foncière bill with the State's fee
-(46,3 Md€) is 59–72 %. The choice of scenario changes the national rate by at
-most a fifth; the local tier (TF bill + communal DMTO, 48,3 Md€) is identical
-in all five.
+S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
+(46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
+most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,3 Md€) is
+identical in all five.
 
 Rates are national averages against built land only. They will fall once
 agricultural and natural land is added (D6) and are not the rates the model
@@ -49,6 +49,8 @@ applies: the local tier is set commune by commune.
 | CSG on rental income added (`rents_csg`): it is a separate line, not inside the PS | +1 093 M€ (S3) |
 | Rental IR and PS at the CPO's unrounded figures (4 198, 2 399) | −3 M€ (S3) |
 | IFI at DGFiP's exact figures (2 159 / 2 332 instead of 2 200 / 2 300) | +32 M€ (IFI variants) |
+| *Decision of 27 October (after the review)* | |
+| Taxe d'habitation on second homes added to S1, surcharge included (`thrs`), with the State's 3 % fee (`thrs_etat`) | +3 063 M€ (all) |
 
 ## Line by line
 
@@ -92,6 +94,25 @@ taxpayer. The REI records 2 068 M€ of such fees on the whole bill in 2025, TEO
 (at 8 %) included; the line is consistent with that total. The line is
 included because the equivalent fee on DMTO is; counting one and not the other
 would be inconsistent.
+
+### Taxe d'habitation on second homes (S1, local) — 2 974 M€, 2025; State's fee 89 M€
+
+Added by decision on 27 October 2026. Like the taxe foncière it is a local tax
+on a dwelling, and in most cases the owner pays it (the occupant of a second
+home is usually its owner). REI 2025 via OFGL, « MONTANT RÉEL »: commune
+1 727,4 + intercommunality 843,1 + syndicates 12,1 = 2 582,7 M€, plus the
+surcharge in high-demand areas (MTMAJOTHRS, CGI art. 1407 ter) 390,9 M€, which
+the communal amount does not include (checked by recomputing Paris and
+Bordeaux). The tax on vacant dwellings (THLV, 124 M€) stays out: it is a
+penalty the LVT makes unnecessary.
+
+2024 was 3 691 M€ (3 255 + 436). The 19 % fall in 2025 is spread across nearly
+all departments and is not explained in any source found; corrections after
+the 2023 occupancy declarations are the likely cause. D1 takes the latest year
+for non-cyclical taxes, so 2025 is used; 2024 would add 0,7 Md€.
+
+The State's fee is 3 % (CGI art. 1641: 2 % under I-A c, 1 % under II), 89 M€;
+the REI records 93 M€ of fees on the THRS bill (H01).
 
 ### DMTO — communes (S1, local) — 3 403 M€, average 2021–2025
 
@@ -273,7 +294,6 @@ Caveats:
 
 | Item | Yield | Natural place | Status here |
 |---|---:|---|---|
-| Taxe d'habitation on second homes (THRS) | 2 583 M€ (2025) + 391 M€ zone-tendue surcharge (MTMAJOTHRS, not inside the 2 583) = 2 974; 3 255 + 436 in 2024 | Optional S1 toggle | Out; stated. State's fee on it: 3 % (CGI art. 1641) |
 | State compensations for exempt property (mostly industrial) | ≈ 2,7 Md€ (2025) | S1, if the exemptions go | Out (not a tax); stated. Since 2026 multiplied by 0,807 (loi 2020-1721, art. 29 III-A-4) |
 | Contribution de sécurité immobilière (0,10 %, CGI art. 881 K) | 745 M€ (2025, provisional); 692 (2024) | S1, paid by the buyer at each sale | Out; stated |
 | Île-de-France office tax (TSBCS, CGI art. 231 ter) | ≈ 0,93 (2023) to 1,0–1,06 Md€ (2025), rebuilt from its beneficiaries | S1 toggle (a tax on floor area, not land) | Out; stated |
@@ -292,7 +312,8 @@ Caveats:
    SAFER prices (≈ 190–270 Md€, 280–360 with forests); find INSEE's method
    before choosing.
 3. D1 in constant euros (+1,0 Md€ on S1).
-4. The inclusion choices above: THRS, compensations, CSI, TSBCS.
+4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
+   kept out; THRS added to S1).
 5. The transfer onto companies' land in S2–S3 (D3), to show on the site.
 
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded

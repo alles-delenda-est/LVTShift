@@ -87,6 +87,48 @@
       "note": "Ordre de grandeur cohérent avec le REI 2025 (2 068 M€ de frais sur l'ensemble de l'avis, TEOM comprise à 8 %)."
     },
     {
+      "key": "thrs",
+      "label_fr": "Taxe d'habitation sur les résidences secondaires",
+      "scenario": "S1",
+      "tier": "local",
+      "budget": "bloc communal",
+      "basis": "latest",
+      "status": "verified",
+      "values_meur": {
+        "2024": 3691.4,
+        "2025": 2973.6
+      },
+      "reference_years": [
+        2025
+      ],
+      "reference_meur": 2974,
+      "source": "DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL » THS et majoration MTMAJOTHRS)",
+      "url": "https://data.ofgl.fr/explore/dataset/rei/",
+      "scope": "Résidences secondaires et autres logements meublés non affectés à l'habitation principale : parts commune, intercommunalité et syndicats (2 583 M€ en 2025) et majoration en zone tendue (391 M€, CGI art. 1407 ter). Hors taxe sur les logements vacants.",
+      "note": "Ajoutée par décision du 27 octobre 2026 : c'est un impôt local sur la propriété résidentielle, payé dans la plupart des cas par le propriétaire. Baisse de 19 % entre 2024 (3 691 M€) et 2025, dans presque tous les départements, non expliquée (correction probable des déclarations d'occupation) ; 2025 est retenu, conformément à D1."
+    },
+    {
+      "key": "thrs_etat",
+      "label_fr": "Taxe d'habitation (résidences secondaires) — frais de gestion (État)",
+      "scenario": "S1",
+      "tier": "national",
+      "budget": "État",
+      "basis": "latest",
+      "status": "derived",
+      "values_meur": {
+        "2024": 111,
+        "2025": 89
+      },
+      "reference_years": [
+        2025
+      ],
+      "reference_meur": 89,
+      "source": "CGI art. 1641 (lu sur Légifrance le 27 oct. 2026) : 2 % de dégrèvement et non-valeurs (I-A c) + 1 % d'assiette et recouvrement (II)",
+      "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053546093",
+      "scope": "Frais ajoutés par l'État à l'avis de taxe d'habitation sur les résidences secondaires, majoration comprise.",
+      "note": "Le REI 2025 donne 93 M€ de frais sur la taxe d'habitation (variable H01), proche des 89 M€ calculés ici."
+    },
+    {
       "key": "dmto_communes",
       "label_fr": "Droits de mutation — part communale",
       "scenario": "S1",
@@ -323,18 +365,20 @@
     {
       "scenario": "S1",
       "include_ifi": false,
-      "total_meur": 64050,
+      "total_meur": 67113,
       "tiers_meur": {
-        "local": 48289,
+        "local": 51263,
         "departmental": 14062,
-        "national": 1699
+        "national": 1788
       },
-      "rate_pct": 1.05,
+      "rate_pct": 1.1,
       "lines": [
         "tfpb",
         "tfpnb",
         "tf_annexes",
         "tf_etat",
+        "thrs",
+        "thrs_etat",
         "dmto_communes",
         "dmto_departements",
         "dmto_etat"
@@ -343,18 +387,20 @@
     {
       "scenario": "S2",
       "include_ifi": false,
-      "total_meur": 67727,
+      "total_meur": 70789,
       "tiers_meur": {
-        "local": 48289,
+        "local": 51263,
         "departmental": 14062,
-        "national": 5376
+        "national": 5465
       },
-      "rate_pct": 1.11,
+      "rate_pct": 1.16,
       "lines": [
         "tfpb",
         "tfpnb",
         "tf_annexes",
         "tf_etat",
+        "thrs",
+        "thrs_etat",
         "dmto_communes",
         "dmto_departements",
         "dmto_etat",
@@ -365,18 +411,20 @@
     {
       "scenario": "S2",
       "include_ifi": true,
-      "total_meur": 70059,
+      "total_meur": 73121,
       "tiers_meur": {
-        "local": 48289,
+        "local": 51263,
         "departmental": 14062,
-        "national": 7708
+        "national": 7797
       },
-      "rate_pct": 1.15,
+      "rate_pct": 1.2,
       "lines": [
         "tfpb",
         "tfpnb",
         "tf_annexes",
         "tf_etat",
+        "thrs",
+        "thrs_etat",
         "dmto_communes",
         "dmto_departements",
         "dmto_etat",
@@ -388,18 +436,20 @@
     {
       "scenario": "S3",
       "include_ifi": false,
-      "total_meur": 75417,
+      "total_meur": 78479,
       "tiers_meur": {
-        "local": 48289,
+        "local": 51263,
         "departmental": 14062,
-        "national": 13066
+        "national": 13155
       },
-      "rate_pct": 1.24,
+      "rate_pct": 1.29,
       "lines": [
         "tfpb",
         "tfpnb",
         "tf_annexes",
         "tf_etat",
+        "thrs",
+        "thrs_etat",
         "dmto_communes",
         "dmto_departements",
         "dmto_etat",
@@ -413,18 +463,20 @@
     {
       "scenario": "S3",
       "include_ifi": true,
-      "total_meur": 77749,
+      "total_meur": 80811,
       "tiers_meur": {
-        "local": 48289,
+        "local": 51263,
         "departmental": 14062,
-        "national": 15398
+        "national": 15487
       },
-      "rate_pct": 1.28,
+      "rate_pct": 1.33,
       "lines": [
         "tfpb",
         "tfpnb",
         "tf_annexes",
         "tf_etat",
+        "thrs",
+        "thrs_etat",
         "dmto_communes",
         "dmto_departements",
         "dmto_etat",

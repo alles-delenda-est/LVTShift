@@ -10,7 +10,7 @@ available years for cyclical taxes (DMTO, taxes on gains), the latest year for
 the others.
 
 Scenarios (spec 0005 §1):
-    S1  taxe foncière (TFPB + TFPNB) + DMTO
+    S1  taxe foncière (TFPB + TFPNB) + taxe d'habitation on second homes + DMTO
     S2  S1 + taxes on real-estate capital gains, with IFI as an optional toggle
     S3  S2 + taxes on rental income
 
@@ -120,6 +120,13 @@ _TF_ANNEXES = {y: _TSE[y] + _TASA[y] + _GEMAPI[y] + _SYNDICATS[y] for y in _TSE}
 _FRAIS_TF = {y: _FRAIS_TF_RATE * (_TFPB[y] + _TFPNB[y] + _GEMAPI[y] + _SYNDICATS[y])
              + _FRAIS_TASA_RATE * _TASA[y] + _FRAIS_TSE_RATE * _TSE[y] for y in _TFPB}
 
+# Taxe d'habitation on second homes, REI « MONTANT RÉEL »: commune, intercommunality
+# and syndicates (H13THS, H33THS, H23THS), plus the surcharge in high-demand areas
+# (MTMAJOTHRS, CGI art. 1407 ter), which H13THS does not include. The State's fee
+# is 3 % (CGI art. 1641 I-A c + II), as on the taxe foncière.
+_THRS = {2024: 2208.5 + 1031.6 + 15.0 + 436.3, 2025: 1727.42 + 843.14 + 12.10 + 390.92}
+_FRAIS_THRS_RATE = 0.03
+
 YIELDS: List[TaxYield] = [
     TaxYield(
         key="tfpb", label_fr="Taxe foncière sur les propriétés bâties",
@@ -166,6 +173,32 @@ YIELDS: List[TaxYield] = [
         scope="Frais d'assiette, de dégrèvement et de non-valeurs ajoutés par l'État à l'avis de taxe foncière, "
               "sur les lignes « tfpb », « tfpnb » et « tf_annexes ».",
         note="Ordre de grandeur cohérent avec le REI 2025 (2 068 M€ de frais sur l'ensemble de l'avis, TEOM comprise à 8 %).",
+    ),
+    TaxYield(
+        key="thrs", label_fr="Taxe d'habitation sur les résidences secondaires",
+        scenario="S1", tier="local", budget="bloc communal",
+        values={y: round(v, 1) for y, v in _THRS.items()},
+        basis="latest", status="verified",
+        source="DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL » THS et majoration MTMAJOTHRS)",
+        url="https://data.ofgl.fr/explore/dataset/rei/",
+        scope="Résidences secondaires et autres logements meublés non affectés à l'habitation principale : "
+              "parts commune, intercommunalité et syndicats (2 583 M€ en 2025) et majoration en zone tendue "
+              "(391 M€, CGI art. 1407 ter). Hors taxe sur les logements vacants.",
+        note="Ajoutée par décision du 27 octobre 2026 : c'est un impôt local sur la propriété résidentielle, "
+             "payé dans la plupart des cas par le propriétaire. Baisse de 19 % entre 2024 (3 691 M€) et 2025, "
+             "dans presque tous les départements, non expliquée (correction probable des déclarations d'occupation) ; "
+             "2025 est retenu, conformément à D1.",
+    ),
+    TaxYield(
+        key="thrs_etat", label_fr="Taxe d'habitation (résidences secondaires) — frais de gestion (État)",
+        scenario="S1", tier="national", budget="État",
+        values={y: round(_FRAIS_THRS_RATE * v) for y, v in _THRS.items()},
+        basis="latest", status="derived",
+        source="CGI art. 1641 (lu sur Légifrance le 27 oct. 2026) : 2 % de dégrèvement et non-valeurs (I-A c) "
+               "+ 1 % d'assiette et recouvrement (II)",
+        url="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053546093",
+        scope="Frais ajoutés par l'État à l'avis de taxe d'habitation sur les résidences secondaires, majoration comprise.",
+        note="Le REI 2025 donne 93 M€ de frais sur la taxe d'habitation (variable H01), proche des 89 M€ calculés ici.",
     ),
     TaxYield(
         key="dmto_communes", label_fr="Droits de mutation — part communale",

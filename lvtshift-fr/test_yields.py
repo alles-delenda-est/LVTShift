@@ -37,6 +37,14 @@ def test_state_fees_on_both_local_taxes():
     assert tfpb.reference() == 42776
 
 
+def test_thrs_in_s1_with_surcharge_and_fee():
+    # THRS counts the zone-tendue surcharge (not in H13THS) and the State's 3 % fee.
+    r = {t.key: t for t in Y.lines_for("S1")}
+    assert abs(r["thrs"].reference() - 2973.6) < 0.05
+    assert r["thrs"].tier == "local" and r["thrs_etat"].tier == "national"
+    assert r["thrs_etat"].reference() == round(0.03 * (1727.42 + 843.14 + 12.10 + 390.92))
+
+
 def test_rents_include_csg():
     # CPO rapport particulier n° 1: IR, PS and CSG are separate lines that add up;
     # CRL and IS (companies) stay out (D3).
@@ -77,6 +85,23 @@ def test_indicative_rate_uses_taxable_land():
     r = Y.indicative_rate_pct("S1")
     assert abs(r - 100 * Y.scenario_total("S1") / Y.LAND_BASE.taxable) < 1e-9
     assert 0.5 < r < 2.0  # sanity: order of magnitude of today's property taxes
+
+
+def test_every_exported_url_is_https(tmp_path: Path):
+    # The site renders every "url" field as a link: only https may reach it.
+    def urls(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == "url" or k.endswith("_url"):
+                    yield v
+                else:
+                    yield from urls(v)
+        elif isinstance(node, list):
+            for v in node:
+                yield from urls(v)
+
+    found = list(urls(Y.export_json(tmp_path / "yields.json")))
+    assert found and all(isinstance(u, str) and u.startswith("https://") for u in found)
 
 
 def test_export_round_trip(tmp_path: Path):
