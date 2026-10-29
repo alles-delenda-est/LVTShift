@@ -64,13 +64,33 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
     # count only (never which parcels): disclosed in the payload provenance
     df.attrs["exempt_parcels"] = n_exempt
     # unbuilt farmland stays on today's TFPNB (run_pipeline): outside the shares
+    # (exports from before the exclusion have no column: nothing was excluded)
     n_farm = 0
     if "is_farmland_excluded" in df.columns:
-        farm = df["is_farmland_excluded"].fillna(False).astype(bool)
+        farm = _strict_flag(df["is_farmland_excluded"], path.name)
+        paying = [c for c in ("current_tax", "new_tax", "taxable_improvement_value")
+                  if c in df.columns]
+        if paying and (df.loc[farm, paying].abs().sum(axis=1) > 0).any():
+            raise ValueError(f"{path.name}: rows flagged as excluded farmland pay tax "
+                             f"or carry a building")
         n_farm = int(farm.sum())
         df = df[~farm].copy()
     df.attrs["farmland_excluded_parcels"] = n_farm
     return df
+
+
+def _strict_flag(col: pd.Series, where: str) -> pd.Series:
+    """A boolean CSV column read back strictly: True/False or 1/0, nothing else
+    (``astype(bool)`` would turn the string "False" into True)."""
+    if col.dtype == bool:
+        return col
+    mapping = {True: True, False: False, 1: True, 0: False,
+               "True": True, "False": False, "1": True, "0": False}
+    out = col.map(mapping)          # anything unmapped, NaN included, becomes NaN
+    if out.isna().any():
+        raise ValueError(f"{where}: flag column {col.name!r} has values other than "
+                         f"True/False: {sorted(set(map(str, col[out.isna()])))[:5]}")
+    return out.astype(bool)
 
 
 def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.DataFrame:

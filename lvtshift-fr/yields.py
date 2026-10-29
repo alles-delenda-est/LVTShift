@@ -191,14 +191,15 @@ YIELDS: List[TaxYield] = [
         key="tf_annexes", label_fr="Taxe foncière — syndicats, TSE, GEMAPI et TASA",
         scenario="S1", tier="local", budget="bloc communal et établissements publics",
         values={y: round(v, 1) for y, v in _TF_ANNEXES.items()},
-        basis="latest", status="verified",
+        basis="latest", status="derived",
         source="DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », bâti et non bâti)",
         url="https://data.ofgl.fr/explore/dataset/rei/",
         scope="Prélevés sur l'avis de taxe foncière, sur la même base : syndicats (191 M€ en 2025), "
               "taxes spéciales d'équipement (277 M€, établissements publics fonciers), GEMAPI (397 M€) "
               "et taxe additionnelle spéciale annuelle d'Île-de-France (58 M€).",
         note="Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; "
-             "la spec 0005 (§ 2) range déjà les syndicats dans le niveau local.",
+             "la spec 0005 (§ 2) range déjà les syndicats dans le niveau local. Parts non bâties diminuées "
+             "de la part des terres agricoles et naturelles, qui gardent leur TFPNB (D6).",
     ),
     TaxYield(
         key="tf_etat", label_fr="Taxe foncière — frais de gestion (État)",

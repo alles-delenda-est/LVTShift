@@ -297,7 +297,13 @@ Caveats:
   gardens. Caveats: cadastral groups are not PLU zones (a field zoned U stays
   in group 1 until reclassified, so some building land is counted as farmland);
   the State's compensation for the agricultural exemption (≈ 131 M€, 2024)
-  stays outside, like the other compensations. Research note and scripts: the
+  stays outside, like the other compensations. The commune model excludes
+  by PLU zone and this split by cadastral group, so a field in a U zone pays
+  the LVT while its TFPNB stays, and amenity land in an N zone leaves both;
+  the net effect is bounded by the ≈ 266 M€ non-agricultural TFPNB. The CGI
+  1396 surcharge on building land may sit in the TFPNB base but not the
+  TAFNB base (Gemini, unverified); the D21 cross-check bounds it. Gemini
+  review and checks: `gemini-argon-2026-10-29/`. Research note and scripts: the
   agent pass of 29 October, reproduced before use.
   **Sensitivity, farmland in at SAFER price × area (D6 as decided on 27
   October):** `yields.Farmland`: SAU des exploitations 2025, metropolitan France

@@ -16,10 +16,13 @@ Check printed for 2024: the base of the 20 % agricultural exemption (D21,
 art. 1394 B bis, groups 1-6, 8, 9) gives the agricultural base independently.
 
 Run: python docs/research/tfpnb_farm_split.py   (downloads ~650 000 REI rows)
+Last run 2026-10-29: 1 296,3 / 1 032,9 M€ (2024) and 1 186,9 / 922,2 M€ (2025),
+the constants in yields._TFPNB_ALL and _TFPNB_FARM.
 """
 
 import collections
 import json
+import math
 import urllib.parse
 import urllib.request
 
@@ -30,14 +33,21 @@ VARS = ["B11", "B13", "B21", "B23", "B31", "B33", "B11TAFNB", "B13TAFNB", "B31TA
 
 def fetch(year: int) -> dict:
     """{idcom: {var: value}} for one year."""
-    where = f"annee='{year}' and var in ({', '.join(repr(v) for v in VARS)})"
+    where = f"annee='{int(year)}' and var in ({', '.join(repr(v) for v in VARS)})"
     url = API + "?" + urllib.parse.urlencode({"select": "idcom,var,valeur", "where": where})
     with urllib.request.urlopen(url, timeout=600) as r:
+        if not r.geturl().startswith("https://data.ofgl.fr/"):
+            raise RuntimeError(f"redirected to {r.geturl()}")
         rows = json.load(r)
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError(f"no REI rows for {year}")
     out = collections.defaultdict(lambda: collections.defaultdict(float))
     for row in rows:
         if row["valeur"] is not None:
-            out[row["idcom"]][row["var"]] += float(row["valeur"])
+            v = float(row["valeur"])
+            if not math.isfinite(v):
+                raise RuntimeError(f"non-finite value in {row}")
+            out[row["idcom"]][row["var"]] += v
     return out
 
 

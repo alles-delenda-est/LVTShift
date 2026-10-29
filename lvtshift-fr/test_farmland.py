@@ -114,3 +114,22 @@ def test_income_fifths_need_two_iris_incomes_per_fifth():
     more = df.assign(median_income=np.repeat(
         np.linspace(18_000, 24_000, ew.MIN_IRIS_INCOMES), n // 10)[:n])
     assert ew.build_by_income_quintile(more) is not None
+
+
+def test_export_refuses_a_corrupt_or_inconsistent_farmland_flag(tmp_path, monkeypatch):
+    import config
+    import export_web as ew
+    import pytest
+    monkeypatch.setitem(config.COMMUNES, "zz", config.CommuneConfig("99001", "ZZ", "99", key="zz"))
+    base = {"taxable_land_value": [1.0, 0.0], "current_tax": [10.0, 0.0],
+            "new_tax": [10.0, 0.0], "taxable_improvement_value": [5.0, 0.0]}
+    for flag in (["False", "yes"], ["no", "no"], [False, None]):
+        pd.DataFrame({**base, "is_farmland_excluded": flag}).to_csv(tmp_path / "zz.csv", index=False)
+        with pytest.raises(ValueError):
+            ew.load_parcels("zz", out_dir=str(tmp_path))
+    # a flagged parcel that pays tax is not farmland left out of the reform
+    pd.DataFrame({**base, "is_farmland_excluded": [True, True]}).to_csv(tmp_path / "zz.csv", index=False)
+    with pytest.raises(ValueError):
+        ew.load_parcels("zz", out_dir=str(tmp_path))
+    pd.DataFrame({**base, "is_farmland_excluded": [0, 1]}).to_csv(tmp_path / "zz.csv", index=False)
+    assert ew.load_parcels("zz", out_dir=str(tmp_path)).attrs["farmland_excluded_parcels"] == 1

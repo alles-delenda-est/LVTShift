@@ -157,6 +157,13 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     if exempt_col:
         p[exempt_col] = p[exempt_col].fillna(False).astype(int)
     p["is_farmland_excluded"] = farmland_excluded(p).astype(int)
+    # excluded farmland must be unbuilt land paying no FB today: anything else
+    # would take part of the levy out of the solve and the published shares
+    farm = p["is_farmland_excluded"].astype(bool)
+    bad = farm & ((p["improvement_value"] != 0) | (p["current_tax"] != 0))
+    if bad.any():
+        raise ValueError(f"[{cfg.name}] {int(bad.sum())} parcels flagged as excluded "
+                         f"farmland carry a building or today's FB")
     if exempt_col:
         p["outside_levy"] = (p[exempt_col].astype(bool)
                              | p["is_farmland_excluded"].astype(bool)).astype(int)
@@ -198,7 +205,10 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # the standard export has no column for it: add the flag so export_web can
     # leave these parcels out of the published shares (counted, never listed)
     out["is_farmland_excluded"] = p["is_farmland_excluded"].astype(bool).values
-    out.to_csv(f"{out_dir}/{name}.csv", index=False)
+    csv = Path(out_dir) / f"{name}.csv"
+    tmp = csv.with_suffix(".csv.part")
+    out.to_csv(tmp, index=False)
+    tmp.replace(csv)     # atomic: a crash never leaves the export without its flag
     print(f"[{cfg.name}] farmland outside the reform (A/N, unbuilt): "
           f"{int(out['is_farmland_excluded'].sum())} parcels")
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "

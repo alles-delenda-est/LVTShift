@@ -47,7 +47,7 @@
       "source": "DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL » et bases TAFNB, commune par commune)",
       "url": "https://data.ofgl.fr/explore/dataset/rei/",
       "scope": "Terrains non bâtis hors terres agricoles et naturelles (carrières, terrains à bâtir, terrains d'agrément, voies ferrées, sols) : commune, intercommunalité et taxe additionnelle (TAFNB) ; syndicats dans « tf_annexes » ; hors chambres d'agriculture. Les terres agricoles et naturelles, hors de la réforme, gardent leur TFPNB (922 M€ en 2025 sur 1 188 M€).",
-      "note": "Part agricole et naturelle reconstituée commune par commune : la base de la TAFNB couvre exactement les groupes non agricoles (BOI-IF-AUT-80), d'où la part non agricole de chaque commune ; contrôle par la base de l'exonération agricole de 20 % (écart 0,2 %). La compensation par l'État de cette exonération (environ 131 M€) reste hors du calcul."
+      "note": "Part agricole et naturelle reconstituée commune par commune : la base de la TAFNB couvre exactement les groupes non agricoles (BOI-IF-AUT-80), d'où la part non agricole de chaque commune ; contrôle par la base de l'exonération agricole de 20 % (écart 0,6 %). La compensation par l'État de cette exonération (environ 131 M€) reste hors du calcul."
     },
     {
       "key": "tf_annexes",
@@ -56,7 +56,7 @@
       "tier": "local",
       "budget": "bloc communal et établissements publics",
       "basis": "latest",
-      "status": "verified",
+      "status": "derived",
       "values_meur": {
         "2024": 844.9,
         "2025": 900.3
@@ -68,7 +68,7 @@
       "source": "DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », bâti et non bâti)",
       "url": "https://data.ofgl.fr/explore/dataset/rei/",
       "scope": "Prélevés sur l'avis de taxe foncière, sur la même base : syndicats (191 M€ en 2025), taxes spéciales d'équipement (277 M€, établissements publics fonciers), GEMAPI (397 M€) et taxe additionnelle spéciale annuelle d'Île-de-France (58 M€).",
-      "note": "Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; la spec 0005 (§ 2) range déjà les syndicats dans le niveau local."
+      "note": "Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; la spec 0005 (§ 2) range déjà les syndicats dans le niveau local. Parts non bâties diminuées de la part des terres agricoles et naturelles, qui gardent leur TFPNB (D6)."
     },
     {
       "key": "tf_etat",
