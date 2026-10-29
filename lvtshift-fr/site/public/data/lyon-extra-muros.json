@@ -581,7 +581,7 @@
       "bucket": "vacant",
       "label": "Terrain nu (0 %)",
       "parcels": 45900,
-      "value_eur": 10643217870.606941,
+      "value_eur": 10643218000.0,
       "value_pct_of_base": 6.1,
       "share_of_gross_change_pct": 20.1
     },
@@ -589,7 +589,7 @@
       "bucket": "lt10",
       "label": "Très sous-bâti (<10 %)",
       "parcels": 1165,
-      "value_eur": 1625390659.036087,
+      "value_eur": 1625391000.0,
       "value_pct_of_base": 0.9,
       "share_of_gross_change_pct": 2.7
     },
@@ -597,7 +597,7 @@
       "bucket": "r10_25",
       "label": "Sous-bâti (10–25 %)",
       "parcels": 1949,
-      "value_eur": 2017983163.2322059,
+      "value_eur": 2017983000.0,
       "value_pct_of_base": 1.2,
       "share_of_gross_change_pct": 1.6
     },
@@ -605,7 +605,7 @@
       "bucket": "r25_50",
       "label": "Sous-bâti (25–50 %)",
       "parcels": 94171,
-      "value_eur": 101769714285.44302,
+      "value_eur": 101769714000.0,
       "value_pct_of_base": 58.7,
       "share_of_gross_change_pct": 37.7
     },
@@ -613,7 +613,7 @@
       "bucket": "ge50",
       "label": "Bâti (≥50 %)",
       "parcels": 48799,
-      "value_eur": 57204521733.93761,
+      "value_eur": 57204522000.0,
       "value_pct_of_base": 33.0,
       "share_of_gross_change_pct": 37.9
     }

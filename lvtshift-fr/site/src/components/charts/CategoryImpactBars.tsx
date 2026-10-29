@@ -28,7 +28,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import type { BandCategoryRow, CategoryRow } from "@/lib/types";
+import type { BandCategoryRow, PublishedCategoryRow } from "@/lib/types";
 import { pct, signedPct, signedPctAxis, eurosExact } from "@/lib/format";
 import { bandSpan, byKey } from "@/lib/band";
 import { symmetricAxis } from "@/lib/axis";
@@ -37,7 +37,7 @@ import { useNarrow } from "./useNarrow";
 
 /* ── extended row ─────────────────────────────────────────────────── */
 
-interface ProcessedRow extends CategoryRow {
+interface ProcessedRow extends PublishedCategoryRow {
   barValue: number;   // median_change_pct ?? 0
   isNull: boolean;
   /** ±10 pt land-share band: whisker [below, above] and its ends */
@@ -126,7 +126,7 @@ function makeValueTick(data: ProcessedRow[]) {
 /* ── component ────────────────────────────────────────────────────── */
 
 export interface CategoryImpactBarsProps {
-  byCategory: CategoryRow[];
+  byCategory: PublishedCategoryRow[];
   /** Low / high legs of the ±10 pt land-share band (optional). */
   band?: {
     low?: BandCategoryRow[] | null;

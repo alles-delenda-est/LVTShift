@@ -35,22 +35,24 @@ def test_build_headline_basic():
 
 
 def test_build_buckets_partition_and_sum():
-    buckets = ew.build_buckets(_toy_df())
+    # each toy parcel 11 times, so no group falls under MIN_GROUP_PARCELS
+    buckets = ew.build_buckets(pd.concat([_toy_df()] * 11, ignore_index=True))
     assert [b["bucket"] for b in buckets] == ["vacant", "lt10", "r10_25", "r25_50", "ge50"]
-    assert sum(b["parcels"] for b in buckets) == 4
-    # Vacant Land has 0 improvement -> 1 parcel in the vacant bucket
-    assert next(b for b in buckets if b["bucket"] == "vacant")["parcels"] == 1
-    assert abs(sum(b["value_pct_of_base"] for b in buckets) - 100.0) < 0.5
+    assert sum(b["parcels"] for b in buckets) == 44
+    # Vacant Land has 0 improvement -> its 11 copies in the vacant bucket
+    assert next(b for b in buckets if b["bucket"] == "vacant")["parcels"] == 11
+    assert abs(sum(b["value_pct_of_base"] or 0 for b in buckets) - 100.0) < 0.5
 
 
 def test_by_category_win_lose_honest():
-    cats = {c["category"]: c for c in ew.build_by_category(_toy_df())}
+    toy = pd.concat([_toy_df()] * 11, ignore_index=True)
+    cats = {c["category"]: c for c in ew.build_by_category(toy)}
     sfr = cats["Single Family Residential"]
     assert sfr["label_fr"] == "Maison individuelle"
     assert sfr["count_paying_more"] == 0          # −100 € → pays less
     assert sfr["share_paying_more_pct"] == 0.0
     vac = cats["Vacant Land"]
-    assert vac["count_paying_more"] == 1          # +350 € → pays more
+    assert vac["count_paying_more"] == 11         # +350 € → pays more
     assert vac["share_paying_more_pct"] == 100.0
 
 
@@ -378,3 +380,63 @@ def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
         side.assign(current_tax_low=bad).to_csv(tmp_path / "x.households.csv", index=False)
         with pytest.raises(ValueError):
             ew.load_parcels("x", out_dir=str(tmp_path))
+
+
+def test_small_groups_are_merged_not_left_to_subtraction():
+    # nine parcels under 10 % building value, as in Cahors: merged with a
+    # neighbour, so no total minus the others reveals them
+    n = 200
+    df = pd.DataFrame({
+        "taxable_land_value": [100.0] * n, "taxable_improvement_value": [300.0] * n,
+        "tax_change": [5.0] * n, "tax_change_pct": [1.0] * n,
+        "property_category": ["Condominium"] * (n - 3) + ["Industrial"] * 3,
+    })
+    df.loc[:8, "taxable_improvement_value"] = 5.0             # < 10 %, 9 parcels
+    df.loc[9:29, "taxable_improvement_value"] = 20.0          # 10-25 %, 21 parcels
+    df.loc[30:39, "taxable_improvement_value"] = 0.0          # vacant, 10 parcels
+    b = {r["bucket"]: r for r in ew.build_buckets(df)}
+    assert all(r["parcels"] == 0 or r["parcels"] >= ew.MIN_GROUP_PARCELS for r in b.values())
+    assert sum(r["parcels"] for r in b.values()) == n
+    assert b["vacant+lt10"]["label"].startswith("Nu ou sous-bâti")
+    assert b["ge50"]["value_eur"] == round(b["ge50"]["value_eur"], -3)
+    # small categories join "Other": three industrial parcels are not shown apart
+    c = {r["category"]: r for r in ew.build_by_category(df)}
+    assert "Industrial" not in c and c["Other"]["parcels"] == 3
+    assert all(c["Other"][k] is None for k in ew.SMALL_GROUP_BLANK["by_category"])
+    # a commune too small for any group publishes counts only
+    assert all(r["value_eur"] is None for r in ew.build_buckets(df.head(8)))
+
+
+def test_small_group_guard():
+    ew._check_small_groups({"by_improvement_ratio": [
+        {"bucket": "ge50", "parcels": 500, "value_eur": 1000.0}]})
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_improvement_ratio": [
+            {"bucket": "lt10", "parcels": 9, "value_eur": 563_000.0}]})
+    with pytest.raises(AssertionError):          # a row must carry its count
+        ew._check_small_groups({"by_improvement_ratio": [{"bucket": "x", "value_eur": 1.0}]})
+    cat = {"category": "Other", "parcels": 3, "median_change_pct": None, "median_change_eur": None,
+           "count_paying_more": None, "share_paying_more_pct": None}
+    leg = {"by_category": [{"category": "Other", "median_change_pct": 2.0}]}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_category": [cat], "headline_sensitivity": {"low": leg}})
+    q = {"quintile": 1, "parcels": 5, "median_change_pct": None,
+         "median_change_pct_residential": 3.0}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_income_quintile": [q]})
+    q["median_change_pct_residential"] = None
+    qleg = {"by_income_quintile": [{"quintile": 1, "total_change_pct": -4.0}]}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_income_quintile": [q], "baseline_sensitivity": {"low": qleg}})
+
+
+def test_every_published_payload_passes_the_guards():
+    # the committed site data, not just fresh exports: a hand edit or a stale
+    # file must not reach the site with a small group's figures
+    from pathlib import Path
+    skip = {"index.json", "yields.json", "ingestion_register.json"}
+    files = [f for f in (Path(__file__).parent / "site/public/data").glob("*.json")
+             if f.name not in skip and not f.name.endswith(".validation.json")]
+    assert files
+    for f in files:
+        ew.assert_aggregate_only(json.loads(f.read_text(encoding="utf-8")))

@@ -22,6 +22,7 @@ import WinLoseSplit from "@/components/charts/WinLoseSplit";
 import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
 import TerritoryMembers from "@/components/TerritoryMembers";
+import { publishedCategories, withheldCategories } from "@/lib/disclosure";
 
 /** Caption under charts that carry the ±10 pt land-share whiskers. */
 function BandNote() {
@@ -238,7 +239,13 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             >
               Gagnants et perdants par catégorie
             </h3>
-            <WinLoseSplit byCategory={commune.by_category} />
+            <WinLoseSplit byCategory={publishedCategories(commune.by_category)} />
+            {withheldCategories(commune.by_category) > 0 && (
+              <p className="text-xs text-gris mt-2">
+                Les catégories de moins de 11 parcelles ne sont pas détaillées,
+                pour qu&apos;aucun bien ne soit reconnaissable.
+              </p>
+            )}
           </section>
 
           {/* 4. Category impact (diverging median bars) */}
@@ -250,7 +257,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               Impact médian par catégorie de bien
             </h3>
             <CategoryImpactBars
-              byCategory={commune.by_category}
+              byCategory={publishedCategories(commune.by_category)}
               band={{
                 low: commune.headline_sensitivity?.low?.by_category,
                 high: commune.headline_sensitivity?.high?.by_category,

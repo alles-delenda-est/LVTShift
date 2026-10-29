@@ -21,7 +21,7 @@ import {
   LabelList,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import type { CategoryRow } from "@/lib/types";
+import type { PublishedCategoryRow } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
 import { useNarrow } from "./useNarrow";
@@ -104,7 +104,7 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 /* ── component ───────────────────────────────────────────────────── */
 
 export interface WinLoseSplitProps {
-  byCategory: CategoryRow[];
+  byCategory: PublishedCategoryRow[];
 }
 
 export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {

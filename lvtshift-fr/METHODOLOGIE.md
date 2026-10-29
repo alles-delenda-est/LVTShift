@@ -684,6 +684,17 @@ isolée (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 au coût brut).
 industrielle tient avant tout au déplacement vers le sol : un foncier
 industriel bon marché face à une base actuelle chargée en capital.
 
+**Règle de diffusion.** Seuls des agrégats sont publiés, jamais une parcelle.
+Un groupe publié de moins de 11 parcelles (`export_web.MIN_GROUP_PARCELS`) est
+fusionné avec un voisin : une tranche de part du bâti avec la tranche
+adjacente la plus petite, une catégorie de bien avec « Autres ». Un simple
+masquage ne suffirait pas, puisque le total de la commune moins les autres
+groupes le reconstituerait. Un groupe resté trop petit (quintile de revenu,
+« Autres », très petite commune) garde son effectif mais aucune de ses valeurs ; un quintile où un seul immeuble porte plus
+de la moitié des logements ne publie pas ses chiffres par ménage. Les valeurs en
+euros des tranches sont arrondies au millier. `assert_aggregate_only` vérifie
+ces règles à l'export et sur chaque fichier publié (test CI).
+
 ## 4. Paramètres et hypothèses clés
 
 - **Coût de construction €/m²** (`construction_cost_eur_m2`) : coût de
