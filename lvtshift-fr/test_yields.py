@@ -174,3 +174,21 @@ def test_export_round_trip(tmp_path: Path):
     for v in data["variants"]:
         assert v["total_meur"] == round(Y.scenario_total(v["scenario"], v["include_ifi"]))
         assert set(v["lines"]) <= {t["key"] for t in data["taxes"]}
+
+
+def test_committed_yields_json_links_are_https():
+    # the site reads the committed file, not a fresh export: check it too
+    def urls(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == "url" or k.endswith("_url"):
+                    yield v
+                else:
+                    yield from urls(v)
+        elif isinstance(node, list):
+            for v in node:
+                yield from urls(v)
+
+    committed = Path(__file__).parent / "site/public/data/yields.json"
+    found = list(urls(json.loads(committed.read_text(encoding="utf-8"))))
+    assert found and all(isinstance(u, str) and u.startswith("https://") for u in found)
