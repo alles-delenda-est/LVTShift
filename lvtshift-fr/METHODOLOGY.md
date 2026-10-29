@@ -615,9 +615,11 @@ ring, more in single industrial communes (Saint-Fons 8, Tremblay-en-France 12, M
 cheap industrial land set against today's capital-heavy tax base.
 
 **Disclosure rule.** Only aggregates are published, never a parcel. A published
-group (property category, building-share bucket, income fifth) of fewer than 11
-parcels (`export_web.MIN_GROUP_PARCELS`) keeps its count but none of its
-figures; a fifth in which one building holds more than half the dwellings
+group of fewer than 11 parcels (`export_web.MIN_GROUP_PARCELS`) is merged with a
+neighbour: a building-share band with its smaller adjacent band, a property
+category with "Other". Blanking alone would not do, since the commune total
+minus the other groups would rebuild it. A group still too small (an income
+fifth, "Other", a very small commune) keeps its count but none of its figures; a fifth in which one building holds more than half the dwellings
 publishes no household figures. Bucket values in euros are rounded to the
 thousand. `assert_aggregate_only` enforces these rules on export and on every
 published file (CI test).

@@ -382,33 +382,52 @@ def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
             ew.load_parcels("x", out_dir=str(tmp_path))
 
 
-def test_small_groups_publish_their_count_only():
-    # nine parcels under 10 % building value, as in Cahors: count, no figures
+def test_small_groups_are_merged_not_left_to_subtraction():
+    # nine parcels under 10 % building value, as in Cahors: merged with a
+    # neighbour, so no total minus the others reveals them
     n = 200
     df = pd.DataFrame({
         "taxable_land_value": [100.0] * n, "taxable_improvement_value": [300.0] * n,
         "tax_change": [5.0] * n, "tax_change_pct": [1.0] * n,
         "property_category": ["Condominium"] * (n - 3) + ["Industrial"] * 3,
     })
-    df.loc[:8, "taxable_improvement_value"] = 5.0
+    df.loc[:8, "taxable_improvement_value"] = 5.0             # < 10 %, 9 parcels
+    df.loc[9:29, "taxable_improvement_value"] = 20.0          # 10-25 %, 21 parcels
+    df.loc[30:39, "taxable_improvement_value"] = 0.0          # vacant, 10 parcels
     b = {r["bucket"]: r for r in ew.build_buckets(df)}
-    assert b["lt10"]["parcels"] == 9
-    assert b["lt10"]["value_eur"] is None and b["lt10"]["share_of_gross_change_pct"] is None
+    assert all(r["parcels"] == 0 or r["parcels"] >= ew.MIN_GROUP_PARCELS for r in b.values())
+    assert sum(r["parcels"] for r in b.values()) == n
+    assert b["vacant+lt10"]["label"].startswith("Nu ou sous-bâti")
     assert b["ge50"]["value_eur"] == round(b["ge50"]["value_eur"], -3)
+    # small categories join "Other": three industrial parcels are not shown apart
     c = {r["category"]: r for r in ew.build_by_category(df)}
-    assert c["Industrial"]["parcels"] == 3
-    assert all(c["Industrial"][k] is None for k in ew.SMALL_GROUP_BLANK["by_category"])
-    assert c["Condominium"]["median_change_eur"] == 5.0
-    # the guard refuses a small group that still carries a figure
-    ew._check_small_groups({"by_improvement_ratio": list(b.values()),
-                            "by_category": list(c.values())})
-    b["lt10"]["value_eur"] = 563_000.0
+    assert "Industrial" not in c and c["Other"]["parcels"] == 3
+    assert all(c["Other"][k] is None for k in ew.SMALL_GROUP_BLANK["by_category"])
+    # a commune too small for any group publishes counts only
+    assert all(r["value_eur"] is None for r in ew.build_buckets(df.head(8)))
+
+
+def test_small_group_guard():
+    ew._check_small_groups({"by_improvement_ratio": [
+        {"bucket": "ge50", "parcels": 500, "value_eur": 1000.0}]})
     with pytest.raises(AssertionError):
-        ew._check_small_groups({"by_improvement_ratio": list(b.values())})
-    leg = {"by_category": [{"category": "Industrial", "median_change_pct": 2.0}]}
+        ew._check_small_groups({"by_improvement_ratio": [
+            {"bucket": "lt10", "parcels": 9, "value_eur": 563_000.0}]})
+    with pytest.raises(AssertionError):          # a row must carry its count
+        ew._check_small_groups({"by_improvement_ratio": [{"bucket": "x", "value_eur": 1.0}]})
+    cat = {"category": "Other", "parcels": 3, "median_change_pct": None, "median_change_eur": None,
+           "count_paying_more": None, "share_paying_more_pct": None}
+    leg = {"by_category": [{"category": "Other", "median_change_pct": 2.0}]}
     with pytest.raises(AssertionError):
-        ew._check_small_groups({"by_category": list(c.values()),
-                                "headline_sensitivity": {"low": leg}})
+        ew._check_small_groups({"by_category": [cat], "headline_sensitivity": {"low": leg}})
+    q = {"quintile": 1, "parcels": 5, "median_change_pct": None,
+         "median_change_pct_residential": 3.0}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_income_quintile": [q]})
+    q["median_change_pct_residential"] = None
+    qleg = {"by_income_quintile": [{"quintile": 1, "total_change_pct": -4.0}]}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_income_quintile": [q], "baseline_sensitivity": {"low": qleg}})
 
 
 def test_every_published_payload_passes_the_guards():

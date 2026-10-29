@@ -685,9 +685,12 @@ industrielle tient avant tout au déplacement vers le sol : un foncier
 industriel bon marché face à une base actuelle chargée en capital.
 
 **Règle de diffusion.** Seuls des agrégats sont publiés, jamais une parcelle.
-Un groupe publié (catégorie de bien, tranche de part du bâti, quintile de
-revenu) de moins de 11 parcelles (`export_web.MIN_GROUP_PARCELS`) garde son
-effectif mais aucune de ses valeurs ; un quintile où un seul immeuble porte plus
+Un groupe publié de moins de 11 parcelles (`export_web.MIN_GROUP_PARCELS`) est
+fusionné avec un voisin : une tranche de part du bâti avec la tranche
+adjacente la plus petite, une catégorie de bien avec « Autres ». Un simple
+masquage ne suffirait pas, puisque le total de la commune moins les autres
+groupes le reconstituerait. Un groupe resté trop petit (quintile de revenu,
+« Autres », très petite commune) garde son effectif mais aucune de ses valeurs ; un quintile où un seul immeuble porte plus
 de la moitié des logements ne publie pas ses chiffres par ménage. Les valeurs en
 euros des tranches sont arrondies au millier. `assert_aggregate_only` vérifie
 ces règles à l'export et sur chaque fichier publié (test CI).

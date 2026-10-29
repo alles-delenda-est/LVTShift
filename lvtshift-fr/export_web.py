@@ -254,25 +254,63 @@ def build_headline(df: pd.DataFrame) -> dict:
     }
 
 
+# Building-share bands: (key, label, lower, upper) on improvement / value;
+# "vacant" is exactly 0. Bands too small to publish are merged with a
+# neighbour (blanking alone would leave them recoverable by subtraction from
+# the commune totals).
+BUCKETS_SPEC = [
+    ("vacant", "Terrain nu (0 %)", 0.0, 0.0),
+    ("lt10", "Très sous-bâti (<10 %)", 0.0, 0.10),
+    ("r10_25", "Sous-bâti (10–25 %)", 0.10, 0.25),
+    ("r25_50", "Sous-bâti (25–50 %)", 0.25, 0.50),
+    ("ge50", "Bâti (≥50 %)", 0.50, math.inf),
+]
+
+
+def _merged_label(lo: float, hi: float, has_vacant: bool) -> str:
+    if math.isinf(hi):
+        return f"Bâti (≥{lo * 100:.0f} %)"
+    if lo == 0.0:
+        return f"{'Nu ou sous-bâti' if has_vacant else 'Sous-bâti'} (<{hi * 100:.0f} %)"
+    return f"Sous-bâti ({lo * 100:.0f}–{hi * 100:.0f} %)"
+
+
+def _bucket_groups(ratio: pd.Series) -> list:
+    """[(key, label, mask)] after merging every band under MIN_GROUP_PARCELS
+    into its smaller neighbour, until none is left or one band remains."""
+    groups = []
+    for key, label, lo, hi in BUCKETS_SPEC:
+        mask = (ratio == 0) if key == "vacant" else (ratio > 0) & (ratio >= lo) & (ratio < hi)
+        groups.append({"keys": [key], "label": label, "lo": lo, "hi": hi, "mask": mask})
+    while len(groups) > 1:
+        sizes = [int(g["mask"].sum()) for g in groups]
+        small = [i for i, n in enumerate(sizes) if 0 < n < MIN_GROUP_PARCELS]   # empty reveals nothing
+        if not small:
+            break
+        i = min(small, key=lambda k: sizes[k])
+        nbrs = [j for j in (i - 1, i + 1) if 0 <= j < len(groups)]
+        j = min(nbrs, key=lambda k: sizes[k])
+        a, b = sorted((i, j))
+        g, h = groups[a], groups[b]
+        keys = g["keys"] + h["keys"]
+        groups[a:b + 1] = [{"keys": keys, "lo": g["lo"], "hi": h["hi"],
+                            "mask": g["mask"] | h["mask"],
+                            "label": _merged_label(g["lo"], h["hi"], "vacant" in keys)}]
+    return [("+".join(g["keys"]), g["label"], g["mask"]) for g in groups]
+
+
 def build_buckets(df: pd.DataFrame) -> list:
     base_series = df["taxable_land_value"] + df["taxable_improvement_value"]
     total_base = float(base_series.sum())
     total_gross = float(df["tax_change"].abs().sum())
     ratio = (df["taxable_improvement_value"] / base_series.replace(0, np.nan)).fillna(0.0)
-    specs = [
-        ("vacant", "Terrain nu (0 %)", ratio == 0),
-        ("lt10", "Très sous-bâti (<10 %)", (ratio > 0) & (ratio < 0.10)),
-        ("r10_25", "Sous-bâti (10–25 %)", (ratio >= 0.10) & (ratio < 0.25)),
-        ("r25_50", "Sous-bâti (25–50 %)", (ratio >= 0.25) & (ratio < 0.50)),
-        ("ge50", "Bâti (≥50 %)", ratio >= 0.50),
-    ]
     out = []
-    for key, label, mask in specs:
+    for key, label, mask in _bucket_groups(ratio):
         sub = df[mask]
         n = int(mask.sum())
         val = float((sub["taxable_land_value"] + sub["taxable_improvement_value"]).sum())
         gross = float(sub["tax_change"].abs().sum())
-        small = _small(n)
+        small = 0 < n < MIN_GROUP_PARCELS     # only if the whole commune is that small
         out.append({
             "bucket": key, "label": label, "parcels": n,
             # an imputed value, so to the thousand euros, not to the euro
@@ -285,6 +323,13 @@ def build_buckets(df: pd.DataFrame) -> list:
 
 def build_by_category(df: pd.DataFrame) -> list:
     n = len(df)
+    # categories too small to publish join "Other" (blanking alone would leave
+    # their counts recoverable from the commune totals)
+    sizes = df["property_category"].value_counts()
+    tiny = [c for c, k in sizes.items() if _small(int(k)) and c != "Other"]
+    if tiny:
+        df = df.assign(property_category=df["property_category"].where(
+            ~df["property_category"].isin(tiny), "Other"))
     out = []
     for cat, sub in df.groupby("property_category"):
         chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
@@ -512,8 +557,8 @@ SMALL_GROUP_BLANK = {
     "by_improvement_ratio": ("value_eur", "value_pct_of_base", "share_of_gross_change_pct"),
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct"),
-    "by_income_quintile": ("median_change_pct", "total_change_pct",
-                           "household_median_change_pct"),
+    "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
+                           "total_change_pct", "household_median_change_pct", "dwellings"),
 }
 
 
@@ -524,7 +569,8 @@ def _check_small_groups(payload: dict) -> None:
         keys = (k, "by_income_quintile_within") if k == "by_income_quintile" else (k,)
         for key in keys:
             for r in payload.get(key) or []:
-                if r.get("parcels") is not None and r["parcels"] < MIN_GROUP_PARCELS:
+                assert isinstance(r.get("parcels"), int), f"{key}: row without a parcel count"
+                if r["parcels"] < MIN_GROUP_PARCELS:
                     filled = [f for f in blank if r.get(f) is not None]
                     assert not filled, f"{key}: group of {r['parcels']} parcels publishes {filled}"
     # leg rows carry no count: match them to the central rows
@@ -532,11 +578,18 @@ def _check_small_groups(payload: dict) -> None:
              if r["parcels"] < MIN_GROUP_PARCELS}
     legs = [(payload.get("headline_sensitivity") or {}).get(x) for x in ("base", "low", "high")]
     legs += [(payload.get("baseline_sensitivity") or {}).get(x) for x in ("central", "low")]
+    small_q = {k: {r["quintile"] for r in payload.get(k) or [] if r["parcels"] < MIN_GROUP_PARCELS}
+               for k in ("by_income_quintile", "by_income_quintile_within")}
     for leg in legs:
         for r in (leg or {}).get("by_category") or []:
             if r.get("category") in small:
                 filled = [f for f in BAND_CATEGORY_KEYS[1:] if r.get(f) is not None]
                 assert not filled, f"sensitivity leg: small group {r['category']} publishes {filled}"
+        for k, qs in small_q.items():
+            for r in (leg or {}).get(k) or []:
+                if r.get("quintile") in qs:
+                    filled = [f for f in BAND_QUINTILE_KEYS[1:] if r.get(f) is not None]
+                    assert not filled, f"sensitivity leg: small fifth {r['quintile']} publishes {filled}"
 
 
 def assert_aggregate_only(payload: dict) -> None:

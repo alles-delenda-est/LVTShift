@@ -263,20 +263,12 @@
       "share_of_gross_change_pct": 10.9
     },
     {
-      "bucket": "lt10",
-      "label": "Très sous-bâti (<10 %)",
-      "parcels": 9,
-      "value_eur": null,
-      "value_pct_of_base": null,
-      "share_of_gross_change_pct": null
-    },
-    {
-      "bucket": "r10_25",
-      "label": "Sous-bâti (10–25 %)",
-      "parcels": 28,
-      "value_eur": 1106000.0,
-      "value_pct_of_base": 0.0,
-      "share_of_gross_change_pct": 0.2
+      "bucket": "lt10+r10_25",
+      "label": "Sous-bâti (<25 %)",
+      "parcels": 37,
+      "value_eur": 1670000.0,
+      "value_pct_of_base": 0.1,
+      "share_of_gross_change_pct": 0.3
     },
     {
       "bucket": "r25_50",
