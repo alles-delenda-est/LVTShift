@@ -8,7 +8,7 @@ export interface Headline {
 }
 /** One category's figures in a sensitivity leg (subset of CategoryRow). */
 export interface BandCategoryRow {
-  category: string; median_change_pct: number | null; median_change_eur: number;
+  category: string; median_change_pct: number | null; median_change_eur: number | null;
   share_paying_more_pct: number | null;
 }
 /** One income quintile's figures in a sensitivity leg (subset of QuintileRow). */
@@ -35,9 +35,14 @@ export interface BaselineSensitivity {
 }
 export interface CategoryRow {
   category: string; label_fr: string; parcels: number; share_of_parcels_pct: number | null;
-  median_change_pct: number | null; median_change_eur: number; count_paying_more: number;
-  share_paying_more_pct: number | null;
+  /** Null for a category below the disclosure minimum (count only). */
+  median_change_pct: number | null; median_change_eur: number | null;
+  count_paying_more: number | null; share_paying_more_pct: number | null;
 }
+/** A category whose figures are published (see lib/disclosure). */
+export type PublishedCategoryRow = CategoryRow & {
+  median_change_eur: number; count_paying_more: number;
+};
 export interface QuintileRow {
   quintile: number; median_income_eur: number; median_change_pct: number | null;
   median_change_pct_residential: number | null; parcels: number;
@@ -48,7 +53,7 @@ export interface QuintileRow {
   dwellings?: number | null;
 }
 export interface BucketRow {
-  bucket: string; label: string; parcels: number; value_eur: number;
+  bucket: string; label: string; parcels: number; value_eur: number | null;
   value_pct_of_base: number | null; share_of_gross_change_pct: number | null;
 }
 /** One member commune of a territory (per-commune aggregates, never per-parcel). */

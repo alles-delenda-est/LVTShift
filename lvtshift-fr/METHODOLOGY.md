@@ -614,6 +614,14 @@ Taxing plant would move industrial bills by only 1–3 points across each
 ring, more in single industrial communes (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 at gross cost). Industry's cut is overwhelmingly the land shift:
 cheap industrial land set against today's capital-heavy tax base.
 
+**Disclosure rule.** Only aggregates are published, never a parcel. A published
+group (property category, building-share bucket, income fifth) of fewer than 11
+parcels (`export_web.MIN_GROUP_PARCELS`) keeps its count but none of its
+figures; a fifth in which one building holds more than half the dwellings
+publishes no household figures. Bucket values in euros are rounded to the
+thousand. `assert_aggregate_only` enforces these rules on export and on every
+published file (CI test).
+
 ## 4. Key parameters and assumptions
 
 - **Construction cost €/m²** (`construction_cost_eur_m2`): turnkey replacement

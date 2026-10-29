@@ -162,6 +162,11 @@ MAX_DWELLING_SHARE = 0.5
 MIN_IRIS_INCOMES = 10
 
 
+def _small(n: int) -> bool:
+    """A published group below MIN_GROUP_PARCELS keeps its count only."""
+    return n < MIN_GROUP_PARCELS
+
+
 def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     """One income group: the parcel medians, plus the group's total change and
     the typical household's change (residential parcels weighted by dwellings).
@@ -191,6 +196,10 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         # building's own: publish nothing household-level then
         if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
             hh_median, dwellings, total = None, None, None
+    if _small(len(sub)):
+        sp = sp.iloc[:0]
+    if _small(len(rsub)):
+        rp = rp.iloc[:0]
     return {
         "quintile": int(q),
         "median_income_eur": round(float(sub["median_income"].median()), 0),
@@ -260,13 +269,16 @@ def build_buckets(df: pd.DataFrame) -> list:
     out = []
     for key, label, mask in specs:
         sub = df[mask]
+        n = int(mask.sum())
         val = float((sub["taxable_land_value"] + sub["taxable_improvement_value"]).sum())
         gross = float(sub["tax_change"].abs().sum())
+        small = _small(n)
         out.append({
-            "bucket": key, "label": label, "parcels": int(mask.sum()),
-            "value_eur": val,
-            "value_pct_of_base": _pct(val, total_base),
-            "share_of_gross_change_pct": _pct(gross, total_gross),
+            "bucket": key, "label": label, "parcels": n,
+            # an imputed value, so to the thousand euros, not to the euro
+            "value_eur": None if small else round(val, -3),
+            "value_pct_of_base": None if small else _pct(val, total_base),
+            "share_of_gross_change_pct": None if small else _pct(gross, total_gross),
         })
     return out
 
@@ -276,15 +288,18 @@ def build_by_category(df: pd.DataFrame) -> list:
     out = []
     for cat, sub in df.groupby("property_category"):
         chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
+        small = _small(len(sub))
         out.append({
             "category": cat,
             "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
             "parcels": int(len(sub)),
             "share_of_parcels_pct": _pct(len(sub), n),
-            "median_change_pct": round(float(chg_pct.median()), 1) if len(chg_pct) else None,
-            "median_change_eur": round(float(sub["tax_change"].median()), 0),
-            "count_paying_more": int((sub["tax_change"] > 0).sum()),
-            "share_paying_more_pct": _pct(int((sub["tax_change"] > 0).sum()), len(sub)),
+            "median_change_pct": (round(float(chg_pct.median()), 1)
+                                  if len(chg_pct) and not small else None),
+            "median_change_eur": None if small else round(float(sub["tax_change"].median()), 0),
+            "count_paying_more": None if small else int((sub["tax_change"] > 0).sum()),
+            "share_paying_more_pct": (None if small else
+                                      _pct(int((sub["tax_change"] > 0).sum()), len(sub))),
         })
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
@@ -492,6 +507,38 @@ def _check_leg(g: dict, what: str) -> None:
             f"non-scalar value in a {what} row"
 
 
+# Fields a group below MIN_GROUP_PARCELS must leave empty (its count stays).
+SMALL_GROUP_BLANK = {
+    "by_improvement_ratio": ("value_eur", "value_pct_of_base", "share_of_gross_change_pct"),
+    "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
+                    "share_paying_more_pct"),
+    "by_income_quintile": ("median_change_pct", "total_change_pct",
+                           "household_median_change_pct"),
+}
+
+
+def _check_small_groups(payload: dict) -> None:
+    """Value guard: no figure for a published group of fewer than
+    MIN_GROUP_PARCELS parcels, in the central rows or any sensitivity leg."""
+    for k, blank in SMALL_GROUP_BLANK.items():
+        keys = (k, "by_income_quintile_within") if k == "by_income_quintile" else (k,)
+        for key in keys:
+            for r in payload.get(key) or []:
+                if r.get("parcels") is not None and r["parcels"] < MIN_GROUP_PARCELS:
+                    filled = [f for f in blank if r.get(f) is not None]
+                    assert not filled, f"{key}: group of {r['parcels']} parcels publishes {filled}"
+    # leg rows carry no count: match them to the central rows
+    small = {r["category"] for r in payload.get("by_category") or []
+             if r["parcels"] < MIN_GROUP_PARCELS}
+    legs = [(payload.get("headline_sensitivity") or {}).get(x) for x in ("base", "low", "high")]
+    legs += [(payload.get("baseline_sensitivity") or {}).get(x) for x in ("central", "low")]
+    for leg in legs:
+        for r in (leg or {}).get("by_category") or []:
+            if r.get("category") in small:
+                filled = [f for f in BAND_CATEGORY_KEYS[1:] if r.get(f) is not None]
+                assert not filled, f"sensitivity leg: small group {r['category']} publishes {filled}"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -524,6 +571,7 @@ def assert_aggregate_only(payload: dict) -> None:
     assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
+    _check_small_groups(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"

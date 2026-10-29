@@ -35,22 +35,24 @@ def test_build_headline_basic():
 
 
 def test_build_buckets_partition_and_sum():
-    buckets = ew.build_buckets(_toy_df())
+    # each toy parcel 11 times, so no group falls under MIN_GROUP_PARCELS
+    buckets = ew.build_buckets(pd.concat([_toy_df()] * 11, ignore_index=True))
     assert [b["bucket"] for b in buckets] == ["vacant", "lt10", "r10_25", "r25_50", "ge50"]
-    assert sum(b["parcels"] for b in buckets) == 4
-    # Vacant Land has 0 improvement -> 1 parcel in the vacant bucket
-    assert next(b for b in buckets if b["bucket"] == "vacant")["parcels"] == 1
-    assert abs(sum(b["value_pct_of_base"] for b in buckets) - 100.0) < 0.5
+    assert sum(b["parcels"] for b in buckets) == 44
+    # Vacant Land has 0 improvement -> its 11 copies in the vacant bucket
+    assert next(b for b in buckets if b["bucket"] == "vacant")["parcels"] == 11
+    assert abs(sum(b["value_pct_of_base"] or 0 for b in buckets) - 100.0) < 0.5
 
 
 def test_by_category_win_lose_honest():
-    cats = {c["category"]: c for c in ew.build_by_category(_toy_df())}
+    toy = pd.concat([_toy_df()] * 11, ignore_index=True)
+    cats = {c["category"]: c for c in ew.build_by_category(toy)}
     sfr = cats["Single Family Residential"]
     assert sfr["label_fr"] == "Maison individuelle"
     assert sfr["count_paying_more"] == 0          # −100 € → pays less
     assert sfr["share_paying_more_pct"] == 0.0
     vac = cats["Vacant Land"]
-    assert vac["count_paying_more"] == 1          # +350 € → pays more
+    assert vac["count_paying_more"] == 11         # +350 € → pays more
     assert vac["share_paying_more_pct"] == 100.0
 
 
@@ -378,3 +380,44 @@ def test_lower_bound_sidecar_must_be_revenue_neutral(tmp_path, monkeypatch):
         side.assign(current_tax_low=bad).to_csv(tmp_path / "x.households.csv", index=False)
         with pytest.raises(ValueError):
             ew.load_parcels("x", out_dir=str(tmp_path))
+
+
+def test_small_groups_publish_their_count_only():
+    # nine parcels under 10 % building value, as in Cahors: count, no figures
+    n = 200
+    df = pd.DataFrame({
+        "taxable_land_value": [100.0] * n, "taxable_improvement_value": [300.0] * n,
+        "tax_change": [5.0] * n, "tax_change_pct": [1.0] * n,
+        "property_category": ["Condominium"] * (n - 3) + ["Industrial"] * 3,
+    })
+    df.loc[:8, "taxable_improvement_value"] = 5.0
+    b = {r["bucket"]: r for r in ew.build_buckets(df)}
+    assert b["lt10"]["parcels"] == 9
+    assert b["lt10"]["value_eur"] is None and b["lt10"]["share_of_gross_change_pct"] is None
+    assert b["ge50"]["value_eur"] == round(b["ge50"]["value_eur"], -3)
+    c = {r["category"]: r for r in ew.build_by_category(df)}
+    assert c["Industrial"]["parcels"] == 3
+    assert all(c["Industrial"][k] is None for k in ew.SMALL_GROUP_BLANK["by_category"])
+    assert c["Condominium"]["median_change_eur"] == 5.0
+    # the guard refuses a small group that still carries a figure
+    ew._check_small_groups({"by_improvement_ratio": list(b.values()),
+                            "by_category": list(c.values())})
+    b["lt10"]["value_eur"] = 563_000.0
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_improvement_ratio": list(b.values())})
+    leg = {"by_category": [{"category": "Industrial", "median_change_pct": 2.0}]}
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_category": list(c.values()),
+                                "headline_sensitivity": {"low": leg}})
+
+
+def test_every_published_payload_passes_the_guards():
+    # the committed site data, not just fresh exports: a hand edit or a stale
+    # file must not reach the site with a small group's figures
+    from pathlib import Path
+    skip = {"index.json", "yields.json", "ingestion_register.json"}
+    files = [f for f in (Path(__file__).parent / "site/public/data").glob("*.json")
+             if f.name not in skip and not f.name.endswith(".validation.json")]
+    assert files
+    for f in files:
+        ew.assert_aggregate_only(json.loads(f.read_text(encoding="utf-8")))
