@@ -236,7 +236,7 @@ export default function YieldsChart({ data }: { data: YieldsData }) {
         </BarChart>
       </ResponsiveContainer>
       <p className="text-xs text-gris font-body mt-1" aria-hidden="true">
-        Milliards d&apos;euros par an
+        Milliards d&apos;euros de {data.price_basis.year} par an
       </p>
       <figcaption id={`${toggleId}-cap`} className="sr-only">
         Recettes à remplacer par scénario

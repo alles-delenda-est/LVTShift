@@ -37,15 +37,16 @@ export default function ResidentialImpactCallout() {
           Ce que dit vraiment le modèle
         </p>
         <p className="font-body text-sm text-encre mt-1 leading-relaxed">
-          L&apos;effet sur un propriétaire occupant dépend de la part du sol dans
-          la valeur de son bien — et de la commune. Il n&apos;est pas uniforme.
+          L&apos;effet sur un logement dépend de la part du sol dans la valeur
+          du bien — et de la commune. Il n&apos;est pas uniforme. (Le modèle ne
+          distingue pas propriétaires occupants et bailleurs : les parts
+          ci-dessous portent sur l&apos;ensemble des parcelles de chaque type.)
         </p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <caption className="sr-only">
-            Part des propriétaires occupants payant davantage, par type de bien
-            et commune
+            Part des parcelles payant davantage, par type de bien et commune
           </caption>
           <thead>
             <tr className="border-b border-lisere">

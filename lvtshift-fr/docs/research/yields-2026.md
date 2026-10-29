@@ -15,24 +15,19 @@ source quoting the primary). No line is "reported" any more.
 
 ## Result
 
-| Scenario | Yield to replace (M€) | Indicative rate, % of taxable land |
-|---|---:|---:|
-| S1 — TF + THRS + DMTO | 66 140 | 1,09 |
-| S2 — + taxes on real-estate gains | 69 817 | 1,15 |
-| S2 + IFI | 72 149 | 1,18 |
-| S3 — + taxes on rental income | 77 507 | 1,27 |
-| S3 + IFI | 79 839 | 1,31 |
+| Scenario | Yield to replace (M€, 2025 €) | Indicative rate, % of taxable built land | On companies' land (M€) |
+|---|---:|---:|---:|
+| S1 — TF + THRS + DMTO | 67 152 | 1,10 | — |
+| S2 — + taxes on real-estate gains | 71 139 | 1,17 | 1 244 |
+| S2 + IFI | 73 471 | 1,21 | 1 972 |
+| S3 — + taxes on rental income | 79 443 | 1,30 | 3 836 |
+| S3 + IFI | 81 775 | 1,34 | 4 564 |
 
-S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
-(46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
-most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,3 Md€) is
+All amounts are in 2025 euros (decided 29 October; see *Price basis* below). S1 is
+82–94 % of every variant; the taxe foncière bill with the State's fee
+(45,3 Md€) is 55–67 %. The choice of scenario changes the national rate by at
+most a fifth; the local tier (TF bill, THRS and communal DMTO, 50,5 Md€) is
 identical in all five.
-
-**Sensitivity, 2025 euros (D1 stays nominal).** Restating every year with
-the CPI (INSEE, base 2015, idbank 001764363) raises S1 by 1 011 M€ (DMTO),
-S2 by 1 322 M€ (+ gains) and S3 by 1 936 M€ (+ rents, read for 2022), with or
-without IFI (2025 figures). Exported as `total_constant_meur` and stated on the
-site; the headline keeps current euros because they are what was collected.
 
 Rates are national averages against taxable built land. Agricultural and
 natural land is outside the reform (D6, revised 29 October) and keeps its
@@ -61,6 +56,8 @@ by commune.
 | Farmland added to the land base at SAFER price × area (D6), 218 Md€ | rates −3,5 % |
 | *Decision of 29 October: farmland out of the reform (D6 revised)* | |
 | Agricultural and natural land leaves the base and keeps its TFPNB: 922 M€ of the 1 188 M€ TFPNB (2025), and the same share of the non-built syndicates, TSE and GEMAPI, stop being replaced, with the State's fee on them | −973 M€ (all); rates +2,4 % net of both changes |
+| *Decision of 29 October: price basis* | |
+| All reference amounts restated in 2025 euros (INSEE CPI) before averaging; the rental-income lines (2022) too | +1 011 M€ (S1), +1 322 (S2), +1 936 (S3) |
 
 ## Line by line
 
@@ -162,10 +159,16 @@ to their 31 January 2025 level from 1 April 2028. The permanent law is 4,5 %,
 which is what 2021–2024 reflect; 2025 carries nine months of the temporary
 increase.
 
-**Sensitivity: constant euros.** The average is in nominal euros. Restating
-each year in 2025 euros (INSEE CPI, series 001764363) would add 1,01 Md€ to
-S1 (communes +188, départements +804, State's fee +19) and 0,31 Md€ to the
-gains lines (S2, S3). Not applied: it changes decision D1.
+**Price basis: 2025 euros (decided 29 October).** Each year is restated in
+2025 euros with INSEE's CPI (annual average, base 2015, idbank 001764363)
+before averaging, so that every amount on the site shares one price basis with
+the 2025 land base and the commune model's 2025 tax data. This adds 1,01 Md€ to
+S1 (communes +188, départements +804, State's fee +19), 0,31 Md€ to the gains
+lines and 0,61 Md€ to the rental-income lines, whose latest year is 2022. Yearly
+values in `yields.py` and in the table stay nominal; `reference_nominal()`
+keeps the unrestated average. The CPI rather than the GDP deflator: it is the
+series verified from the primary source, and the amounts are what households
+pay.
 
 ### DMTO — State's fee (S1, national) — 333 M€, derived
 
@@ -335,15 +338,13 @@ Caveats:
   (1 901 Md€, 31 % of the base) the national rate, but S2 and S3 remove only
   individuals' taxes on gains and rents; companies' corporate tax on the same
   income stays (D3). At 31 % of the base, the national lines added by S2–S3
-  (11,4 Md€ in S3, 13,7 with IFI) put about 3,5 to 4,3 Md€ a year onto
-  companies' land, to fund cuts for individual landlords and sellers.
-  Shown on the site since 27 October (`yields.companies_shift`, exported as
-  `companies_shift_meur`): companies' share of taxable built land (31,2 %),
-  applied to the whole base, times the S2–S3 lines: S2 1 147 M€, S2 + IFI
-  1 875, S3 3 548, S3 + IFI 4 275. Upper estimate on one count: if INSEE puts
-  in S11 some property companies whose partners pay IR, those partners also
-  gain from the cut. Economic incidence (pass-through to tenants or
-  shareholders) is not modelled.
+  put 1,2 Md€ (S2) to 4,6 Md€ (S3 + IFI) a year onto companies'
+  land, to fund cuts for individual landlords and sellers. Shown on the
+  scenarios page since 29 October (`company_land_transfer`), assuming a uniform
+  national rate. Upper estimate on one count: if INSEE puts in S11 some
+  property companies whose partners pay IR, those partners also gain from the
+  cut. Economic incidence (pass-through to tenants or shareholders) is not
+  modelled.
 
 ## Left out, with yields (for decision)
 
@@ -363,15 +364,16 @@ Caveats:
 
 1. Rental income: a recent-year breakdown; furnished lets (D7) and
    non-residential lettings.
-2. Agricultural land (D6): decided, SAFER price × area. Still open: forests,
-   the share of farmland let versus vacant (the midpoint stands in for it), and
-   the vine mix by appellation.
-3. D1 in constant euros: decided 27 October, shown as a sensitivity only
-   (+1,0 Md€ on S1, +1,9 on S3).
+2. Agricultural and natural land (D6): revised 29 October, outside the
+   reform; SAFER price × area kept as a sensitivity. Still open for that
+   sensitivity: forests, the share of farmland let versus vacant (the midpoint
+   stands in for it), and the vine mix by appellation.
+3. ~~D1 in constant euros~~ — 29 October: all reference amounts in 2025
+   euros (CPI), superseding the 27 October choice of a sensitivity only.
 4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
    kept out; THRS added to S1).
-5. The transfer onto companies' land in S2–S3 (D3): shown on the site.
-   Open: how INSEE classifies property companies taxed at IR.
+5. ~~The transfer onto companies' land in S2–S3~~ — shown on the site 29
+   October. Open: how INSEE classifies property companies taxed at IR.
 
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
 

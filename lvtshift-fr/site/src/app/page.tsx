@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
-import { pct } from "@/lib/format";
+import { pct, signedPct } from "@/lib/format";
+import { impactSummary } from "@/lib/impactSummary";
 import { panelLandShares } from "@/lib/panel";
 
 export default function Home() {
@@ -21,6 +22,9 @@ export default function Home() {
   // What the results page actually lets you open one by one.
   const singles = communes.filter((c) => c.kind !== "territory").length;
   const rings = communes.length - singles;
+
+  // "Who pays" figures, computed from the payloads (central case).
+  const impact = impactSummary(communes.map((c) => loadCommune(c.commune_key)));
 
   return (
     <div>
@@ -47,8 +51,8 @@ export default function Home() {
                 terrains à bâtir gardés vides, friches, parkings de surface,
                 logements vacants &mdash; pendant que les prix du logement
                 grimpent et que les terrains se raréfient là où l&apos;on veut
-                vivre. Notre fiscalité traite un terrain vide en cœur de ville à
-                peu près comme un immeuble de logements :{" "}
+                vivre et travailler. Notre fiscalité pèse sur le bâtiment et
+                le commerce bien plus que sur le terrain :{" "}
                 <strong>
                   construisez, et votre taxe foncière augmente ; laissez le
                   terrain s&apos;apprécier sans rien en faire, et elle reste
@@ -70,12 +74,18 @@ export default function Home() {
                   moins sur ce qui est bâti, davantage sur le sol
                 </strong>
                 , à recettes totales inchangées. La France taxe{" "}
-                <em>déjà</em> le bâti (taxe foncière sur les propriétés bâties)
-                et le non-bâti (taxe foncière sur les propriétés non bâties)
-                séparément, avec des taux votés séparément. Il s&apos;agit
-                d&apos;actionner un{" "}
-                <strong>levier qui existe déjà</strong> &mdash; alléger le
-                bâti, relever le foncier &mdash; non de créer un impôt nouveau.
+                <em>déjà</em> séparément le bâti (TFPB) et le non-bâti (TFPNB),
+                avec des taux votés séparément : un premier pas peut être,
+                dans les limites fixées par la loi actuelle, de baisser le taux
+                de la TFPB et d&apos;augmenter celui de la TFPNB, mais ce sera
+                imparfait et incomplet. La réforme modélisée ici va
+                plus loin : elle assoit la taxe foncière de chaque parcelle sur
+                la <strong>valeur de son sol</strong>, ce qui suppose de
+                construire une base foncière par une loi de finances (voir{" "}
+                <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
+                  la voie juridique
+                </Link>
+                ).
               </p>
             </div>
           </div>
@@ -83,7 +93,10 @@ export default function Home() {
           {/* Revenue-neutrality callout */}
           <div className="mt-8 border-l-4 border-rouge pl-5 max-w-2xl">
             <p className="font-body text-base text-encre leading-relaxed">
-              <strong>À recettes constantes &mdash; ce n&apos;est pas une hausse déguisée.</strong>{" "}
+              <strong>
+                La réforme proposée est à recettes constantes &mdash; ce
+                n&apos;est pas une hausse déguisée.
+              </strong>{" "}
               Le total perçu ne change pas : les taux sont recalculés
               mécaniquement pour produire{" "}
               <strong>les mêmes recettes</strong>, simplement réparties
@@ -150,38 +163,62 @@ export default function Home() {
           </p>
 
           <h3 className="font-display text-xl md:text-2xl font-medium text-marine max-w-2xl mb-6 leading-snug">
-            Des transferts ciblés : ils épargnent le logement occupé, ils
-            pèsent sur le foncier oisif
+            Le transfert suit la part du sol dans chaque bien
           </h3>
 
-          <div className="grid md:grid-cols-2 gap-4 max-w-3xl">
-            {/* Owner-occupier — named FIRST per the honesty rule */}
+          {/* Figures computed from the published payloads (lib/impactSummary):
+              the card used to promise owner-occupiers "une baisse ou une
+              quasi-neutralité", which the model contradicts for houses. */}
+          <div className="grid md:grid-cols-3 gap-4 max-w-5xl">
             <div className="border border-lisere bg-creme p-5">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-gris mb-3">
-                Le propriétaire qui occupe son logement
+                La maison individuelle
               </p>
               <p className="font-body text-base text-encre leading-relaxed">
-                C&apos;est le cas le plus courant. L&apos;allègement sur le
-                bâti lui bénéficie directement : l&apos;effet attendu est une{" "}
-                <strong>baisse ou une quasi-neutralité</strong> de sa charge
-                fiscale. Les résultats précis par commune et par catégorie
-                figurent dans la modélisation.
+                Souvent assise sur un terrain de valeur, elle paie{" "}
+                <strong>davantage</strong> dans {impact.housesPayMore} des{" "}
+                {impact.territories} territoires présentés (variation médiane de{" "}
+                {signedPct(impact.houseMedianMin)} à{" "}
+                {signedPct(impact.houseMedianMax)} selon le territoire).
               </p>
             </div>
 
-            {/* Vacant-land owner */}
             <div className="border border-lisere bg-creme p-5">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-gris mb-3">
-                Le détenteur d&apos;un terrain constructible gardé vide
+                L&apos;appartement et les ménages modestes
               </p>
               <p className="font-body text-base text-encre leading-relaxed">
-                Sa charge fiscale augmentera fortement. C&apos;est le{" "}
-                <strong>cœur du dispositif, assumé</strong> : l&apos;impôt
-                envoie le signal que la collectivité attend une mise en valeur
-                du terrain.
+                En copropriété, le sol est partagé : l&apos;appartement paie{" "}
+                <strong>moins</strong> dans {impact.flatsPayLess} territoires sur{" "}
+                {impact.territories}. Le cinquième des ménages le plus modeste,
+                pris dans son ensemble, paie moins dans {impact.poorestPayLess}{" "}
+                des {impact.poorestAnalysable} territoires où le découpage par
+                revenu est possible.
+              </p>
+            </div>
+
+            <div className="border border-lisere bg-creme p-5">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-gris mb-3">
+                Le terrain constructible gardé vide
+              </p>
+              <p className="font-body text-base text-encre leading-relaxed">
+                Sa charge augmente fortement : c&apos;est le{" "}
+                <strong>cœur du dispositif</strong>, qui envoie le signal que la
+                collectivité attend une mise en valeur du terrain.
               </p>
             </div>
           </div>
+
+          <p className="text-sm text-encre mt-5 max-w-3xl leading-relaxed">
+            <strong>Incertitude principale.</strong> Pour savoir qui gagne, il
+            faut connaître ce que chaque type de bien paie aujourd&apos;hui. Aucune
+            donnée publique ne donne la part des bureaux et commerces dans la
+            taxe foncière d&apos;une commune ; nous l&apos;estimons. Si elle est
+            plus faible que notre estimation, les ménages paient aujourd&apos;hui
+            davantage, et la réforme leur est nettement plus favorable. Les
+            chiffres ci-dessus correspondent à notre estimation centrale ; les
+            résultats présentent les deux hypothèses côte à côte.
+          </p>
 
           <p className="text-xs text-gris mt-5 max-w-xl leading-relaxed">
             Les chiffres précis par catégorie de bien et par commune sont
