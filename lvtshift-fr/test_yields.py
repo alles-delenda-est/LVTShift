@@ -99,11 +99,21 @@ def test_every_line_is_sourced():
 
 def test_indicative_rate_uses_taxable_land():
     assert Y.LAND_BASE.taxable_built == 7_032_000 - 941_000
-    # D6: farmland is outside the reform, so outside the base
-    assert Y.LAND_BASE.taxable == Y.LAND_BASE.taxable_built
+    # D6: farmland is outside the reform, so outside the base; unbuilt
+    # building land is in it
+    assert Y.LAND_BASE.taxable == Y.LAND_BASE.taxable_built + Y.UNBUILT_LAND.value
     r = Y.indicative_rate_pct("S1")
     assert abs(r - 100 * Y.scenario_total("S1") / Y.LAND_BASE.taxable) < 1e-9
     assert 0.5 < r < 2.0  # sanity: order of magnitude of today's property taxes
+
+
+def test_unbuilt_building_land_estimate():
+    u = Y.UNBUILT_LAND
+    assert u.low < u.value < u.high
+    # central: (185 000 ha × 20 €/m² + 150 000 ha × 100 €/m²) × 85 % private
+    assert abs(u.value - (185_000e4 * 20 + 150_000e4 * 100) / 1e6 * 0.85) < 1e-6
+    # second-order: under a tenth of built land even in the high case
+    assert u.high < 0.10 * Y.LAND_BASE.taxable_built
 
 
 def test_farmland_keeps_its_tfpnb():

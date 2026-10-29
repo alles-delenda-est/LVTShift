@@ -17,11 +17,11 @@ source quoting the primary). No line is "reported" any more.
 
 | Scenario | Yield to replace (M€) | Indicative rate, % of taxable land |
 |---|---:|---:|
-| S1 — TF + THRS + DMTO | 66 140 | 1,09 |
-| S2 — + taxes on real-estate gains | 69 817 | 1,15 |
-| S2 + IFI | 72 149 | 1,18 |
-| S3 — + taxes on rental income | 77 507 | 1,27 |
-| S3 + IFI | 79 839 | 1,31 |
+| S1 — TF + THRS + DMTO | 66 140 | 1,06 |
+| S2 — + taxes on real-estate gains | 69 817 | 1,12 |
+| S2 + IFI | 72 149 | 1,15 |
+| S3 — + taxes on rental income | 77 507 | 1,24 |
+| S3 + IFI | 79 839 | 1,28 |
 
 S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
 (46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
@@ -34,7 +34,8 @@ S2 by 1 322 M€ (+ gains) and S3 by 1 936 M€ (+ rents, read for 2022), with o
 without IFI (2025 figures). Exported as `total_constant_meur` and stated on the
 site; the headline keeps current euros because they are what was collected.
 
-Rates are national averages against taxable built land. Agricultural and
+Rates are national averages against taxable built land plus an estimate of
+unbuilt building land (159 Md€, range 58–380; S1 rate 1,02–1,08 %). Agricultural and
 natural land is outside the reform (D6, revised 29 October) and keeps its
 TFPNB. They are not the rates the model applies: the local tier is set commune
 by commune.
@@ -60,6 +61,8 @@ by commune.
 | Taxe d'habitation on second homes added to S1, surcharge included (`thrs`), with the State's 3 % fee (`thrs_etat`) | +3 063 M€ (all) |
 | Farmland added to the land base at SAFER price × area (D6), 218 Md€ | rates −3,5 % |
 | *Decision of 29 October: farmland out of the reform (D6 revised)* | |
+| *Decision of 29 October: unbuilt building land added to the base* | |
+| AU zones and vacant U plots, privately held, at market prices (estimate, `yields.UnbuiltLand`): 159 Md€ | rates −2,5 % |
 | Agricultural and natural land leaves the base and keeps its TFPNB: 922 M€ of the 1 188 M€ TFPNB (2025), and the same share of the non-built syndicates, TSE and GEMAPI, stop being replaced, with the State's fee on them | −973 M€ (all); rates +2,4 % net of both changes |
 
 ## Line by line
@@ -322,6 +325,22 @@ Caveats:
   method. Forests (17,5 Mha at 4 950 €/ha, timber included, so an upper bound
   of 87 Md€) stay out; they would lower rates by about 1,4 %. Public ownership
   of farmland is not removed (small, unmeasured).
+- **Unbuilt building land, decided 29 October: an estimate in the base.**
+  INSEE values the buildable part of unbuilt land at housing prices (*Fiche
+  méthodologique 24*, base 2020, July 2026, p. 3–4 and n. 4: « une partie
+  urbanisable, via le prix des logements »), but in its unbuilt-land lines
+  (AN.2119 « autres terrains », 712 Md€ of which 147 public, and perhaps part
+  of AN.2112), which it does not split. Eurostat's land guide (2015, n. 16)
+  would put it in AN.2111; France does not. So it is missing from the 6 091.
+  Rebuilt as area × price: AU zones 145 000–250 000 ha unbuilt (Cerema, Nov.
+  2023: 144 976 ha in the 12 051 communes studied, an under-count) at
+  10–40 €/m² of raw land; vacant U plots 100 000–250 000 ha (no national
+  stock published: the weakest step) at 50–150 €/m² (serviced house plots
+  102 €/m² in 2024, SDES EPTB); 80–90 % privately held. Central 159 Md€,
+  range 58–380; S1 rate 1,06 % (1,02–1,08). The cadastral group 10 is no
+  guide: it is defined narrowly and does not follow zoning. Research pass of
+  29 October; the INSEE table, the INSEE method note and the Cerema figure
+  were re-read before use.
 - **Public land.** The APU column includes land under roads and networks; the
   commune-level model must exclude the same land, or national and local rates
   will not reconcile.

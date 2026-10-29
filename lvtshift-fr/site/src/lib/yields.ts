@@ -52,6 +52,17 @@ export interface YieldsData {
     source: string;
     url: string;
     note: string;
+    built_taxable_meur: number;
+    /** Unbuilt building land, an estimate (AU zones and vacant U plots). */
+    unbuilt: {
+      value_meur: number;
+      low_meur: number;
+      high_meur: number;
+      s1_rate_low_pct: number;
+      s1_rate_high_pct: number;
+      source: string;
+      url: string;
+    };
     farmland: {
       value_meur: number;
       low_meur: number;

@@ -409,6 +409,59 @@ INSEE_FARMLAND_MEUR = 902_100
 
 
 @dataclass(frozen=True)
+class UnbuiltLand:
+    """Unbuilt building land at market prices, an estimate (open point of #48).
+
+    INSEE values the buildable part of unbuilt land at housing prices, but in
+    its unbuilt-land lines (AN.2119, partly AN.2112), which it does not split;
+    it is therefore missing from built land (AN.2111), the rest of the base.
+    Rebuilt as area × price, in two parts, each with a low / central / high case:
+
+    * AU zones (to be urbanised): 144 976 ha unbuilt in the 12 051 communes
+      studied by Cerema, an under-count (no AU zone or no plan online elsewhere),
+      so 145 000-250 000 ha; raw unserviced land at 10-40 €/m².
+    * Vacant plots in U zones: no national stock is published. Assumed
+      100 000-250 000 ha at 50-150 €/m², against 102 €/m² for serviced plots
+      bought for a house in 2024 (SDES, EPTB). The weakest step.
+
+    A share of 85 % (80-90 %) is taken as privately held, since public land is
+    exempt. The national rate moves by -1 % to -6 % across the range.
+    """
+
+    au_ha: tuple = (145_000, 185_000, 250_000)
+    au_eur_m2: tuple = (10, 20, 40)
+    u_ha: tuple = (100_000, 150_000, 250_000)
+    u_eur_m2: tuple = (50, 100, 150)
+    private_share: tuple = (0.90, 0.85, 0.80)
+    source: str = ("Cerema, Consommation d'espaces et documents d'urbanisme (nov. 2023) ; SDES, Le prix "
+                   "des terrains et du bâti pour les maisons individuelles en 2024 (nov. 2025) ; INSEE, "
+                   "fiche méthodologique 24, base 2020 (juil. 2026)")
+    url: str = ("https://artificialisation.developpement-durable.gouv.fr/sites/artificialisation/files/"
+                "inline-files/conso_enaf_docurba.pdf")
+
+    def _case(self, i: int) -> float:
+        m2 = 1e4   # per hectare
+        gross = (self.au_ha[i] * m2 * self.au_eur_m2[i] + self.u_ha[i] * m2 * self.u_eur_m2[i]) / 1e6
+        return gross * self.private_share[i]
+
+    @property
+    def low(self) -> float:
+        return self._case(0)
+
+    @property
+    def value(self) -> float:
+        """Central value, M€."""
+        return self._case(1)
+
+    @property
+    def high(self) -> float:
+        return self._case(2)
+
+
+UNBUILT_LAND = UnbuiltLand()
+
+
+@dataclass(frozen=True)
 class LandBase:
     """Taxable land value used for indicative national rates, M€."""
 
@@ -417,15 +470,17 @@ class LandBase:
     # Non-financial (S11, 1 700,7 Md€) and financial (S12, 200,3 Md€) companies,
     # INSEE T_8200_2025, row N2111.
     built_land_companies: float = 1_701_000 + 200_000
+    # Unbuilt building land (AU zones, vacant U plots): in the reform, so in the base
+    unbuilt: float = UNBUILT_LAND.value
     # D6 sensitivity only: farmland is outside the reform, so not in `taxable`
     farmland: float = FARMLAND.value
     year: int = 2025
     source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
                    "d'actif », données 2025 provisoires (30 juillet 2026)")
     url: str = "https://www.insee.fr/fr/statistiques/2830290"
-    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles "
-                 "et naturelles hors de la réforme (D6). Terrains bâtis fin 2024 définitif : 6 729 Md€ "
-                 "dont 903 publics (Insee Première n° 2081).")
+    note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré), plus une "
+                 "estimation des terrains à bâtir non bâtis, que l'INSEE range avec les terrains non bâtis "
+                 "sans les isoler. Terres agricoles et naturelles hors de la réforme (D6).")
 
     @property
     def taxable_built(self) -> float:
@@ -433,12 +488,12 @@ class LandBase:
 
     @property
     def taxable(self) -> float:
-        return self.taxable_built
+        return self.taxable_built + self.unbuilt
 
     @property
     def taxable_with_farmland(self) -> float:
         """D6 sensitivity: the base if farmland entered at SAFER prices."""
-        return self.taxable_built + self.farmland
+        return self.taxable + self.farmland
 
     @property
     def companies_share(self) -> float:
@@ -545,6 +600,17 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
             "companies_meur": LAND_BASE.built_land_companies,
             "companies_share": round(LAND_BASE.companies_share, 4),
             "source": LAND_BASE.source, "url": LAND_BASE.url, "note": LAND_BASE.note,
+            "built_taxable_meur": round(LAND_BASE.taxable_built),
+            "unbuilt": {
+                "value_meur": round(UNBUILT_LAND.value), "low_meur": round(UNBUILT_LAND.low),
+                "high_meur": round(UNBUILT_LAND.high),
+                # S1 rate across the estimate's range (high value -> low rate)
+                "s1_rate_low_pct": round(100 * scenario_total("S1")
+                                         / (LAND_BASE.taxable_built + UNBUILT_LAND.high), 2),
+                "s1_rate_high_pct": round(100 * scenario_total("S1")
+                                          / (LAND_BASE.taxable_built + UNBUILT_LAND.low), 2),
+                "source": UNBUILT_LAND.source, "url": UNBUILT_LAND.url,
+            },
             "farmland": {
                 "value_meur": round(FARMLAND.value), "low_meur": round(FARMLAND.low),
                 "high_meur": round(FARMLAND.high), "area_ha": FARMLAND.area_ha,
