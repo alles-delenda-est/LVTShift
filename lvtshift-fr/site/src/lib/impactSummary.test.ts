@@ -19,5 +19,7 @@ describe("impactSummary on the published data", () => {
     expect(s.poorestPayLess).toBe(11);
     expect(s.houseMedianMin).toBe(-19.7);
     expect(s.houseMedianMax).toBe(41.4);
+    expect(s.shiftMin).toBe(9.8); // Paris
+    expect(s.shiftMax).toBe(25.9); // Grenoble
   });
 });
