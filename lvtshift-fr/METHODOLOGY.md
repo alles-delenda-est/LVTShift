@@ -219,7 +219,7 @@ each class is priced against the right benchmark:
 | **Built, largest building shed-type** (DRC) | terrain-à-bâtir €/m² × `activity_land_ratio` (business types) or × 1 (sports halls, annexes) × parcel area, floored at the agricultural €/m²; outside urban zoning only a yard of 3 × floor area takes that price. Market value = land + depreciated building; no residential price, no clip (`lv_flag` `built_drc`) |
 | **Constructible vacant** (zone U/AUc) | DVF terrain-à-bâtir €/m² × area (cell median where ≥8 sales, else commune median, else EPTB national fallback) |
 | **Constructible deferred** (AU/AUs) | as above × `au_strict_factor` (development deferred) |
-| **Agricultural / natural** (zone A/N) | SAFER départemental €/m² × area |
+| **Agricultural / natural** (zone A/N) | SAFER départemental €/m² × area; **outside the reform**: the parcel keeps today's TFPNB, takes no share of the new tax and leaves the published results (counted in `farmland_excluded_parcels`) |
 
 Only DVF rows coded *terrains à bâtir* are trusted for constructible prices —
 raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
@@ -704,8 +704,8 @@ cheap industrial land set against today's capital-heavy tax base.
   the DPE construction-year fix (it was a degenerate 85 % before — see §6) and
   is at 38.0 % with the per-type non-residential valuation. The 40–65 % range
   is a metro-wide reference, not a per-commune test (§3.7).
-- **Sign checks** — agricultural/natural land bears a negligible share of the
-  levy (Cahors 0.3 %); under-used constructible land pays *more* (the LVT
+- **Sign checks** — agricultural/natural land, outside the reform, bears none of
+  the levy (1.1 % in Cahors before it was excluded); under-used constructible land pays *more* (the LVT
   incentive); the Montreuil income gradient is progressive (group totals,
   central baseline: poorest fifth −12.2 %, richest +17.9 %).
 - **Today's-tax split** — the industrial reconstruction (WC75 ÷ 2020 rate),
@@ -820,10 +820,10 @@ Ranked by how much they move published (category/quintile) results.
 8. **Income (Filosofi)**: 2021 vintage; INSEE published a « Filosofi 2 » 2023
    vintage with IRIS indicators in May 2026 (methodological break) — 2021 is
    retained pending evaluation. Communes ≥5 000 inhabitants only, some IRIS
-   statistically suppressed. Quintiles additionally need ≥5 income-distinct
-   IRIS: a commune with one or two IRIS (e.g. Figeac, though ≥5 000) silently
-   loses its income charts (upstream skips the chart when quantile bins
-   collapse).
+   statistically suppressed. Quintiles additionally need ≥10 income-distinct
+   IRIS, two per fifth (`export_web.MIN_IRIS_INCOMES`): below that a "fifth" is
+   one neighbourhood, so Cahors (9) and Figeac (4) publish no income breakdown,
+   and territory members below it are left out of the within-commune fifths.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are
    modelled as whole communes from their arrondissements (§3.7); Marseille could
    be added the same way.

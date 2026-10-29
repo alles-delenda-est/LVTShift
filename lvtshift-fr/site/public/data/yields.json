@@ -44,20 +44,20 @@
       "tier": "local",
       "budget": "bloc communal",
       "basis": "latest",
-      "status": "verified",
+      "status": "derived",
       "values_meur": {
-        "2024": 1296,
-        "2025": 1188
+        "2024": 263.1,
+        "2025": 265.8
       },
       "reference_years": [
         2025
       ],
-      "reference_meur": 1188,
-      "reference_nominal_meur": 1188,
-      "source": "DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL »)",
+      "reference_meur": 266,
+      "reference_nominal_meur": 266,
+      "source": "DGFiP, REI 2024–2025, via OFGL (FNB et taxe additionnelle, « MONTANT RÉEL » et bases TAFNB, commune par commune)",
       "url": "https://data.ofgl.fr/explore/dataset/rei/",
-      "scope": "Commune, intercommunalité et taxe additionnelle (TAFNB) ; syndicats dans « tf_annexes » ; hors chambres d'agriculture.",
-      "note": ""
+      "scope": "Terrains non bâtis hors terres agricoles et naturelles (carrières, terrains à bâtir, terrains d'agrément, voies ferrées, sols) : commune, intercommunalité et taxe additionnelle (TAFNB) ; syndicats dans « tf_annexes » ; hors chambres d'agriculture. Les terres agricoles et naturelles, hors de la réforme, gardent leur TFPNB (922 M€ en 2025 sur 1 188 M€).",
+      "note": "Part agricole et naturelle reconstituée commune par commune : la base de la TAFNB couvre exactement les groupes non agricoles (BOI-IF-AUT-80), d'où la part non agricole de chaque commune ; contrôle par la base de l'exonération agricole de 20 % (écart 0,6 %). La compensation par l'État de cette exonération (environ 131 M€) reste hors du calcul."
     },
     {
       "key": "tf_annexes",
@@ -66,20 +66,20 @@
       "tier": "local",
       "budget": "bloc communal et établissements publics",
       "basis": "latest",
-      "status": "verified",
+      "status": "derived",
       "values_meur": {
-        "2024": 867.1,
-        "2025": 922.6
+        "2024": 844.9,
+        "2025": 900.3
       },
       "reference_years": [
         2025
       ],
-      "reference_meur": 923,
-      "reference_nominal_meur": 923,
+      "reference_meur": 900,
+      "reference_nominal_meur": 900,
       "source": "DGFiP, REI 2024–2025, via OFGL (« MONTANT RÉEL », bâti et non bâti)",
       "url": "https://data.ofgl.fr/explore/dataset/rei/",
       "scope": "Prélevés sur l'avis de taxe foncière, sur la même base : syndicats (191 M€ en 2025), taxes spéciales d'équipement (277 M€, établissements publics fonciers), GEMAPI (397 M€) et taxe additionnelle spéciale annuelle d'Île-de-France (58 M€).",
-      "note": "Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; la spec 0005 (§ 2) range déjà les syndicats dans le niveau local."
+      "note": "Ajoutée après la revue Gemini du 27 octobre 2026 : même base et même avis que la taxe foncière ; la spec 0005 (§ 2) range déjà les syndicats dans le niveau local. Parts non bâties diminuées de la part des terres agricoles et naturelles, qui gardent leur TFPNB (D6)."
     },
     {
       "key": "tf_etat",
@@ -90,14 +90,14 @@
       "basis": "latest",
       "status": "derived",
       "values_meur": {
-        "2024": 1333,
-        "2025": 1366
+        "2024": 1301,
+        "2025": 1338
       },
       "reference_years": [
         2025
       ],
-      "reference_meur": 1366,
-      "reference_nominal_meur": 1366,
+      "reference_meur": 1338,
+      "reference_nominal_meur": 1338,
       "source": "CGI art. 1641 (lu sur Légifrance le 27 oct. 2026) : 3 % (2 % de dégrèvement et non-valeurs, I-A, + 1 % d'assiette et recouvrement, II) sur la taxe foncière, les syndicats et la GEMAPI ; 8 % sur la TASA ; 9 % sur les TSE",
       "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053546093",
       "scope": "Frais d'assiette, de dégrèvement et de non-valeurs ajoutés par l'État à l'avis de taxe foncière, sur les lignes « tfpb », « tfpnb » et « tf_annexes ».",
@@ -389,19 +389,39 @@
     "companies_share_pct": 31.2,
     "source": "INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type d'actif », données 2025 provisoires (30 juillet 2026)",
     "url": "https://www.insee.fr/fr/statistiques/2830290",
-    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE les publie (902 Md€, T_8201) mais à un niveau 3 à 4 fois supérieur aux prix SAFER ; choix ouvert. Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081)."
+    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles et naturelles hors de la réforme (D6). Terrains bâtis fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).",
+    "farmland": {
+      "value_meur": 218257,
+      "low_meur": 203888,
+      "high_meur": 232627,
+      "area_ha": 25890657,
+      "vine_area_ha": 747976,
+      "price_free_eur_ha": 6460,
+      "price_let_eur_ha": 5350,
+      "vine_price_eur_ha": 87400,
+      "year": 2025,
+      "source": "Groupe Safer, Le prix des terres 2025 (mai 2026), et Agreste, Statistique agricole annuelle 2025 provisoire (SAU des exploitations, France hors DROM)",
+      "url": "https://www.le-prix-des-terres.fr/app/uploads/2026/05/2026-LPDT-synthese.pdf",
+      "insee_meur": 902100,
+      "forest_upper_meur": 86625,
+      "included": false,
+      "tfpnb_meur": 922,
+      "tfpnb_all_meur": 1188,
+      "s1_rate_if_included_pct": 1.08,
+      "pays_if_included_meur": 2357
+    }
   },
   "variants": [
     {
       "scenario": "S1",
       "include_ifi": false,
-      "total_meur": 68124,
+      "total_meur": 67152,
       "tiers_meur": {
-        "local": 51451,
+        "local": 50507,
         "departmental": 14866,
-        "national": 1807
+        "national": 1779
       },
-      "rate_pct": 1.12,
+      "rate_pct": 1.1,
       "company_land_meur": 0,
       "lines": [
         "tfpb",
@@ -418,13 +438,13 @@
     {
       "scenario": "S2",
       "include_ifi": false,
-      "total_meur": 72111,
+      "total_meur": 71139,
       "tiers_meur": {
-        "local": 51451,
+        "local": 50507,
         "departmental": 14866,
-        "national": 5794
+        "national": 5766
       },
-      "rate_pct": 1.18,
+      "rate_pct": 1.17,
       "company_land_meur": 1244,
       "lines": [
         "tfpb",
@@ -443,13 +463,13 @@
     {
       "scenario": "S2",
       "include_ifi": true,
-      "total_meur": 74443,
+      "total_meur": 73471,
       "tiers_meur": {
-        "local": 51451,
+        "local": 50507,
         "departmental": 14866,
-        "national": 8126
+        "national": 8098
       },
-      "rate_pct": 1.22,
+      "rate_pct": 1.21,
       "company_land_meur": 1972,
       "lines": [
         "tfpb",
@@ -469,13 +489,13 @@
     {
       "scenario": "S3",
       "include_ifi": false,
-      "total_meur": 80415,
+      "total_meur": 79443,
       "tiers_meur": {
-        "local": 51451,
+        "local": 50507,
         "departmental": 14866,
-        "national": 14098
+        "national": 14070
       },
-      "rate_pct": 1.32,
+      "rate_pct": 1.3,
       "company_land_meur": 3836,
       "lines": [
         "tfpb",
@@ -497,13 +517,13 @@
     {
       "scenario": "S3",
       "include_ifi": true,
-      "total_meur": 82747,
+      "total_meur": 81775,
       "tiers_meur": {
-        "local": 51451,
+        "local": 50507,
         "departmental": 14866,
-        "national": 16430
+        "national": 16402
       },
-      "rate_pct": 1.36,
+      "rate_pct": 1.34,
       "company_land_meur": 4564,
       "lines": [
         "tfpb",

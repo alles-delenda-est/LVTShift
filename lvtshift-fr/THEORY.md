@@ -47,7 +47,11 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   replacement cost (land at the local building-plot price, × 0.45/0.35 for
   business land, building at depreciated cost). Building-less parcels are
   classified by legal constructibility (GPU zoning) and priced against
-  terrain-à-bâtir comparables or SAFER farmland.
+  terrain-à-bâtir comparables or SAFER farmland. Unbuilt A/N land is then
+  left out of the reform: it keeps today's TFPNB (decision D6, 2026-10-29).
+  That was nearly free in revenue terms (1 % of the levy in Cahors) but it
+  changes the published picture in rural communes, where farmland parcels
+  outnumbered the built stock and dominated "who pays more".
 - **current tax** = the commune's real REI foncier-bâti produit, split between
   industrial establishments, professional premises and housing in the
   commune's official proportions (rebuilt from REI aggregates: the State's

@@ -32,6 +32,13 @@ const STATUS_STYLE: Record<YieldTax["status"], string> = {
   reported: "border-rouge text-rouge",
 };
 
+/** French number with a non-breaking thousands space: 6091 → "6 091". */
+function num(n: number, decimals = 0): string {
+  return n
+    .toLocaleString("fr-FR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    .replace(/\s/g, " ");
+}
+
 function H3({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <h3 id={id} className="font-display text-xl md:text-2xl font-medium text-marine leading-tight mb-3">
@@ -46,6 +53,7 @@ export default function ScenariosPage() {
   const s3ifi = variant(data, "S3", true);
   const local = s1.tiers_meur.local;
   const base = data.land_base;
+  const farm = base.farmland;
   const companyRows = (
     [
       ["S2", false, "Scénario 2"],
@@ -97,7 +105,7 @@ export default function ScenariosPage() {
           </p>
           <p className="font-body text-sm text-encre leading-relaxed">
             <strong className="font-semibold">Le taux est une moyenne.</strong>{" "}
-            Rapporté à la valeur des terrains bâtis, il irait de{" "}
+            Rapporté à la valeur du foncier imposable, il irait de{" "}
             {s1.rate_pct.toLocaleString("fr-FR")}&nbsp;% à{" "}
             {s3ifi.rate_pct.toLocaleString("fr-FR")}&nbsp;% par an. Le taux local
             réel serait fixé commune par commune.
@@ -167,8 +175,13 @@ export default function ScenariosPage() {
           variante ajoute au scénario 1, en supposant un taux national
           uniforme. Le scénario 1 ne crée pas ce transfert : les sociétés
           paient déjà la taxe foncière et les droits de mutation qu&apos;il
-          remplace. Source : INSEE, patrimoine des secteurs institutionnels,
-          fin {base.year}.
+          remplace. Ordre de grandeur : si une partie des terrains classés
+          «&nbsp;sociétés&nbsp;» appartient à des sociétés dont les associés
+          paient l&apos;impôt sur le revenu, ces associés profiteraient aussi de
+          la baisse et le transfert réel serait moindre ; les sociétés peuvent
+          aussi en reporter une partie sur leurs locataires ou leurs
+          actionnaires. Source : INSEE, patrimoine des secteurs
+          institutionnels, fin {base.year}.
         </p>
       </section>
 
@@ -184,6 +197,14 @@ export default function ScenariosPage() {
           pour que tous les montants du site partagent la même base de prix. «&nbsp;Vérifié&nbsp;» : lu dans la source
           primaire ; «&nbsp;Calculé&nbsp;» : déduit de chiffres primaires ;
           «&nbsp;À confirmer&nbsp;» : repris d&apos;une source secondaire.
+        </p>
+        <p className="font-body text-sm text-gris max-w-3xl leading-relaxed mb-4">
+          Indice des prix :{" "}
+          <a href={data.price_basis.url} className="text-marine underline underline-offset-2">
+            {data.price_basis.source}
+          </a>
+          . Les montants annuels d&apos;origine, en euros de chaque année, sont
+          dans les sources citées.
         </p>
         <div className="overflow-x-auto -mx-6 px-6">
           <table className="w-full min-w-[44rem] font-body text-sm border-collapse">
@@ -290,18 +311,98 @@ export default function ScenariosPage() {
         <H3 id="taux">D&apos;où vient le taux indicatif</H3>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
           L&apos;INSEE estime provisoirement la valeur des terrains bâtis à{" "}
-          {Math.round(base.total_meur / 1000).toLocaleString("fr-FR").replace(/\s/g, " ")}&nbsp;Md€
-          fin {base.year}. Les terrains publics (
-          {Math.round(base.public_meur / 1000).toLocaleString("fr-FR")}&nbsp;Md€)
-          ne paient pas d&apos;impôt foncier et sont retirés, ce qui laisse{" "}
-          {Math.round(base.taxable_meur / 1000).toLocaleString("fr-FR").replace(/\s/g, " ")}&nbsp;Md€.
-          Le taux indicatif divise les recettes à remplacer, en euros de{" "}
+          {num(base.total_meur / 1000)}&nbsp;Md€ fin {base.year}. Les terrains
+          publics ({num(base.public_meur / 1000)}&nbsp;Md€) ne paient pas
+          d&apos;impôt foncier et sont retirés, ce qui donne{" "}
+          {num(base.taxable_meur / 1000)}&nbsp;Md€ de foncier imposable. Le
+          taux indicatif divise les recettes à remplacer, en euros de{" "}
           {data.price_basis.year}, par ce montant.
         </p>
+        <h4 className="font-display text-lg font-medium text-marine leading-tight mt-6 mb-2">
+          Les terres agricoles et naturelles restent hors de la réforme
+        </h4>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          Deux limites : le chiffre de {base.year} est provisoire, et les terres
-          agricoles et naturelles n&apos;y figurent pas. Les inclure ferait
-          baisser le taux.
+          Champs, prés, vignes, forêts et landes continuent de payer la taxe
+          foncière sur les propriétés non bâties actuelle, avec ses
+          exonérations. Ni leur valeur ni leur impôt n&apos;entrent dans le
+          calcul : sur les {num(farm.tfpnb_all_meur)}&nbsp;M€ de taxe foncière
+          non bâtie de {farm.year}, la réforme ne remplace que la part payée
+          par les autres terrains nus (terrains à bâtir, carrières, voies
+          ferrées…), soit environ{" "}
+          {num(farm.tfpnb_all_meur - farm.tfpnb_meur)}&nbsp;M€ ; les{" "}
+          {num(farm.tfpnb_meur)}&nbsp;M€ des terres agricoles et naturelles
+          restent en place. Aucune statistique publique ne donne ce partage :
+          nous l&apos;avons reconstitué commune par commune à partir des bases
+          de la taxe additionnelle, qui ne frappe que les terrains non
+          agricoles.
+        </p>
+        <h4 className="font-display text-lg font-medium text-marine leading-tight mt-6 mb-2">
+          Et si elles y entraient ?
+        </h4>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Pour les terres agricoles, la mesure la plus directe de la valeur
+          du sol est le prix auquel elles se vendent. Les Safer, qui suivent
+          les ventes de terres, publient chaque année le prix moyen d&apos;un
+          hectare. Il suffit de le multiplier par la surface cultivée :
+        </p>
+        <ul className="font-body text-base text-encre leading-relaxed space-y-2 list-disc pl-5 mb-3">
+          <li>
+            <strong className="font-semibold">Terres et prés</strong> :{" "}
+            {num(farm.area_ha / 1e6, 1)}&nbsp;millions d&apos;hectares. Un hectare
+            libre de bail se vend en moyenne {num(farm.price_free_eur_ha)}&nbsp;€, un
+            hectare loué {num(farm.price_let_eur_ha)}&nbsp;€, parce que le fermier
+            en place garde le droit de l&apos;exploiter. Le calcul prend le milieu
+            des deux prix.
+          </li>
+          <li>
+            <strong className="font-semibold">Vignes</strong> :{" "}
+            {num(Math.round(farm.vine_area_ha / 1000) * 1000)}&nbsp;hectares au prix
+            moyen des vignes d&apos;appellation hors Champagne,{" "}
+            {num(farm.vine_price_eur_ha)}&nbsp;€ l&apos;hectare. Ce prix sous-estime
+            la Champagne et surestime les vignes sans appellation.
+          </li>
+        </ul>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Le résultat est de {num(farm.value_meur / 1000)}&nbsp;Md€ : entre{" "}
+          {num(farm.low_meur / 1000)} et {num(farm.high_meur / 1000)}&nbsp;Md€ selon
+          que l&apos;on retient le prix des terres louées ou celui des terres
+          libres. Si ces terres entraient dans la réforme, leur taxe foncière
+          non bâtie serait remplacée elle aussi, et le taux moyen du
+          scénario&nbsp;1 passerait de {s1.rate_pct.toLocaleString("fr-FR")}&nbsp;% à{" "}
+          {farm.s1_rate_if_included_pct.toLocaleString("fr-FR")}&nbsp;%. Elles paieraient alors environ{" "}
+          {num(farm.pays_if_included_meur / 1000, 1)}&nbsp;Md€ par an, contre{" "}
+          {num(farm.tfpnb_meur / 1000, 1)}&nbsp;Md€ de taxe foncière non bâtie
+          aujourd&apos;hui.
+        </p>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          <strong className="font-semibold">Pourquoi pas le chiffre de l&apos;INSEE ?</strong>{" "}
+          Les comptes nationaux évaluent les terres cultivées à{" "}
+          {num(farm.insee_meur / 1000)}&nbsp;Md€, plus de quatre fois le prix de
+          vente : environ 31&nbsp;500&nbsp;€ l&apos;hectare, quand les ventes
+          réelles se font autour de 6&nbsp;000&nbsp;€. L&apos;INSEE ne publie pas
+          la méthode qui mène à ce chiffre. Un impôt assis sur une valeur que
+          personne ne paie serait difficile à justifier auprès d&apos;un
+          exploitant ; le prix de vente, lui, se vérifie.
+        </p>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          <strong className="font-semibold">Les forêts ne sont pas comptées dans ce calcul.</strong>{" "}
+          Leur prix de vente inclut le bois sur pied, qui n&apos;est pas du sol.
+          Même à ce prix, elles ajouteraient au plus{" "}
+          {num(farm.forest_upper_meur / 1000)}&nbsp;Md€ et baisseraient encore le
+          taux d&apos;environ{" "}
+          {num((100 * farm.forest_upper_meur) / (base.taxable_meur + farm.value_meur + farm.forest_upper_meur), 1)}&nbsp;%.
+        </p>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Autres limites : la valeur des terrains bâtis de {base.year} est
+          provisoire, et les prix moyens nationaux masquent de grands écarts
+          entre régions.
+        </p>
+        <p className="font-body text-sm text-gris leading-relaxed mb-2">
+          Terres agricoles :{" "}
+          <a href={farm.url} className="text-marine underline underline-offset-2">
+            {farm.source}
+          </a>
+          .
         </p>
         <p className="font-body text-sm text-gris leading-relaxed">
           Source :{" "}

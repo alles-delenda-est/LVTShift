@@ -206,10 +206,10 @@ def test_within_commune_quintiles_reverse_a_pooling_artefact():
     """Two communes, each progressive inside; pooled ranking looks regressive."""
     rows = []
     # poor commune: everyone pays more, richer IRIS slightly more
-    for i, inc in enumerate(np.repeat([10, 11, 12, 13, 14], 20)):
+    for i, inc in enumerate(np.repeat(np.arange(10, 15, 0.5), 10)):
         rows.append(("poor", inc * 1000.0, 5.0 + inc / 10))
     # rich commune: everyone pays less, richer IRIS slightly less negative
-    for i, inc in enumerate(np.repeat([30, 31, 32, 33, 34], 20)):
+    for i, inc in enumerate(np.repeat(np.arange(30, 35, 0.5), 10)):
         rows.append(("rich", inc * 1000.0, -5.0 + inc / 100))
     df = pd.DataFrame(rows, columns=["_commune", "median_income", "tax_change_pct"])
     df["property_category"] = "Condominium"

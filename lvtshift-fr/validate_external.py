@@ -118,9 +118,11 @@ def validate_commune(commune_key, df, cfg, cache_dir="output/validation_cache",
     # 1) National land-share band (independent)
     checks.append(land_share_band_check(headline["land_share_pct"]))
 
-    # 2) Cadastre vs BD TOPO building map (data quality, NOT economic)
+    # 2) Cadastre vs BD TOPO building map (data quality, NOT economic). The
+    # cadastre counts every parcel: excluded farmland is unbuilt, count it back.
+    n_parcels = len(df) + df.attrs.get("farmland_excluded_parcels", 0)
     model_built_share = round(
-        100.0 * float((df["property_category"] != "Vacant Land").sum()) / len(df), 1) if len(df) else None
+        100.0 * float((df["property_category"] != "Vacant Land").sum()) / n_parcels, 1) if n_parcels else None
     if cadastre is None:
         checks.append({
             "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",

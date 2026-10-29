@@ -65,3 +65,25 @@ def test_fetch_cadastre_agreement_degrades_on_crs_failure(monkeypatch):
         insee_code, departement = "00000", "00"
 
     assert ve.fetch_cadastre_agreement(_Cfg()) is None
+
+
+def test_built_share_counts_excluded_farmland_as_unbuilt(tmp_path):
+    # the cadastre counts every parcel; farmland left out of the published
+    # shares (export_web) is still an unbuilt parcel on the map
+    df = pd.DataFrame({
+        "property_category": ["Vacant Land", "Single Family Residential"],
+        "current_tax": [0.0, 1000.0], "new_tax": [200.0, 800.0],
+        "tax_change": [200.0, -200.0], "tax_change_pct": [None, -20.0],
+        "taxable_land_value": [80000.0, 50000.0],
+        "taxable_improvement_value": [0.0, 150000.0],
+    })
+    df.attrs["farmland_excluded_parcels"] = 2
+
+    class _Cfg:
+        insee_code, name, departement = "00000", "X", "00"
+
+    cad = {"cadastre_built_share_pct": 25.0, "n_parcels": 4, "n_buildings": 1}
+    out = ve.validate_commune("x", df, _Cfg(), cache_dir=str(tmp_path),
+                              data_dir=str(tmp_path), cadastre=cad)
+    check = next(c for c in out["checks"] if "model_built_share_pct" in c)
+    assert check["model_built_share_pct"] == 25.0

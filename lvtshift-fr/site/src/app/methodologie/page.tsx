@@ -192,7 +192,15 @@ export default function MethodologiePage() {
             DVF ; les terres agricoles ou naturelles sont valorisées au
             barème SAFER (prix au m² par département). On ne leur applique
             pas le résiduel marché&nbsp;&minus;&nbsp;bâti, dont la fiabilité
-            serait nulle en l&apos;absence de bâtiment.
+            serait nulle en l&apos;absence de bâtiment.{" "}
+            <strong>Les terres agricoles et naturelles non bâties</strong>{" "}
+            (zones A et N du PLU) sont ensuite exclues de la réforme : elles
+            continuent de payer la taxe foncière sur les propriétés non bâties
+            actuelle, avec ses exonérations, et ne prennent aucune part du
+            nouvel impôt. Elles ne figurent donc pas dans les résultats
+            publiés. Le terrain constructible non bâti reste, lui, dans la
+            réforme, de même qu&apos;une parcelle non bâtie dont le zonage
+            n&apos;est pas connu (valorisée au barème agricole).
           </p>
 
           <p>
@@ -212,7 +220,8 @@ export default function MethodologiePage() {
             repère par l&apos;usage « Agricole » de la BD TOPO ou, pour les
             hangars sans usage renseigné, par leur situation en zone agricole
             ou naturelle du PLU, et une parcelle qui ne porte que de tels
-            bâtiments est traitée comme une terre agricole non bâtie (Périgny,
+            bâtiments est traitée comme une terre agricole non bâtie, donc
+            exclue de la réforme si elle est en zone A ou N (Périgny,
             commune des serres, passe ainsi de 41,8&nbsp;% à 47,9&nbsp;% de
             part foncière).
           </p>
@@ -246,11 +255,11 @@ export default function MethodologiePage() {
             Cette approche <em>classer-puis-valoriser</em> remplace une
             méthode antérieure qui appliquait une part foncière uniforme à
             toutes les parcelles — source d&apos;artefacts importants dans
-            les communes rurales. Désormais, le foncier agricole et naturel
-            ne représente qu&apos;une fraction infime de l&apos;assiette
-            imposable (de l&apos;ordre de 0,3&nbsp;% à Cahors) ;
-            l&apos;essentiel de la valeur du sol provient du foncier urbain
-            constructible.
+            les communes rurales. Désormais, l&apos;essentiel de la valeur du
+            sol provient du foncier urbain constructible. Valorisé au barème
+            SAFER, le foncier agricole et naturel ne pesait qu&apos;une fraction
+            infime de l&apos;assiette (environ 0,6&nbsp;% à Cahors) ; il est
+            maintenant hors de la réforme.
           </p>
 
           <div className="border-l-4 border-lisere pl-5 text-sm text-gris">
@@ -765,7 +774,8 @@ export default function MethodologiePage() {
               données Filosofi (INSEE) à l&apos;échelle des IRIS. Dans les
               communes disposant de peu d&apos;IRIS distincts — en particulier
               Cahors et Figeac — le nombre de revenus IRIS distincts est
-              insuffisant pour former cinq quintiles stables. Pour ces
+              insuffisant pour former cinq quintiles stables : il en faut au
+              moins dix, soit deux par quintile. Pour ces
               communes, l&apos;exportateur émet{" "}
               <code className="text-xs font-mono bg-lisere px-1">null</code>{" "}
               pour la décomposition par quintile, et aucun graphique de revenu

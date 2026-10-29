@@ -16,6 +16,10 @@ def test_reference_rule_d1():
     assert abs(dep.reference_nominal() - (16259 + 16538 + 12882 + 11145 + 13484) / 5) < 1e-9
 
 
+def test_cpi_covers_every_reference_year():
+    assert set(Y._CPI) >= {y for t in Y.YIELDS for y in t.reference_years()}
+
+
 def test_reference_in_2025_euros():
     # Each year is restated with INSEE's CPI before averaging; 2025 is unchanged.
     dep = next(t for t in Y.YIELDS if t.key == "dmto_departements")
@@ -55,9 +59,14 @@ def test_state_fees_on_both_local_taxes():
     assert {"dmto_etat", "tf_etat"} <= keys
     tf = next(t for t in Y.YIELDS if t.key == "tf_etat")
     # CGI art. 1641: 3 % on TF, syndicates and GEMAPI; 8 % on TASA; 9 % on TSE.
-    assert tf.reference() == round(0.03 * (42776 + 1188 + 397.1 + 191.0) + 0.08 * 57.9 + 0.09 * 276.6)
+    # Farmland keeps its TFPNB (D6): the non-built parts lose its share.
+    nb = 1 - Y._FARM_SHARE[2025]
+    assert tf.reference() == round(0.03 * (42776 + (1188 - 922.2) + 376.6 + 20.5 * nb
+                                           + 184.3 + 6.7 * nb)
+                                   + 0.08 * 57.9 + 0.09 * (275.1 + 1.5 * nb))
     annexes = next(t for t in Y.YIELDS if t.key == "tf_annexes")
-    assert annexes.scenario == "S1" and abs(annexes.reference() - 922.6) < 0.05
+    assert annexes.scenario == "S1"
+    assert abs(annexes.reference() - (922.6 - (1.5 + 20.5 + 6.7) * Y._FARM_SHARE[2025])) < 0.05
     tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
     assert tfpb.reference_years() == [2025]
     assert tfpb.reference() == 42776
@@ -76,6 +85,7 @@ def test_rents_include_csg():
     # CRL and IS (companies) stay out (D3).
     s3_only = {t.key: t.reference_nominal() for t in Y.YIELDS if t.scenario == "S3"}
     assert s3_only == {"rents_ir": 4198, "rents_ps": 2399, "rents_csg": 1093}
+
 
 
 def test_scenarios_are_nested():
@@ -107,10 +117,34 @@ def test_every_line_is_sourced():
 
 
 def test_indicative_rate_uses_taxable_land():
-    assert Y.LAND_BASE.taxable == 7_032_000 - 941_000
+    assert Y.LAND_BASE.taxable_built == 7_032_000 - 941_000
+    # D6: farmland is outside the reform, so outside the base
+    assert Y.LAND_BASE.taxable == Y.LAND_BASE.taxable_built
     r = Y.indicative_rate_pct("S1")
     assert abs(r - 100 * Y.scenario_total("S1") / Y.LAND_BASE.taxable) < 1e-9
     assert 0.5 < r < 2.0  # sanity: order of magnitude of today's property taxes
+
+
+def test_farmland_keeps_its_tfpnb():
+    # only the non-agricultural part of the TFPNB is replaced: about a fifth
+    tfpnb = next(t for t in Y.YIELDS if t.key == "tfpnb")
+    for y, all_ in Y._TFPNB_ALL.items():
+        assert abs(tfpnb.values[y] + Y._TFPNB_FARM[y] - all_) < 0.1
+        assert 0.70 < Y._TFPNB_FARM[y] / all_ < 0.85
+    # sensitivity: putting farmland back at SAFER prices, with its TFPNB, lowers
+    # the rate, and farmland would pay more than its TFPNB today
+    s = Y.farmland_sensitivity()
+    assert s["rate_pct"] < Y.indicative_rate_pct("S1")
+    assert s["farmland_pays_meur"] > s["farmland_tfpnb_meur"]
+
+
+def test_farmland_at_safer_prices():
+    # D6: price × area, vines apart; the central value sits between the bounds,
+    # far below INSEE's AN.2112.
+    f = Y.FARMLAND
+    assert f.low < f.value < f.high
+    assert abs(f.low - (25_890_657 * 5_350 + 747_976 * 87_400) / 1e6) < 1e-6
+    assert 150_000 < f.value < 300_000 < Y.INSEE_FARMLAND_MEUR
 
 
 def test_every_exported_url_is_https(tmp_path: Path):
@@ -128,6 +162,7 @@ def test_every_exported_url_is_https(tmp_path: Path):
 
     found = list(urls(Y.export_json(tmp_path / "yields.json")))
     assert found and all(isinstance(u, str) and u.startswith("https://") for u in found)
+
 
 
 def test_export_round_trip(tmp_path: Path):

@@ -54,6 +54,27 @@ export interface YieldsData {
     source: string;
     url: string;
     note: string;
+    farmland: {
+      value_meur: number;
+      low_meur: number;
+      high_meur: number;
+      area_ha: number;
+      vine_area_ha: number;
+      price_free_eur_ha: number;
+      price_let_eur_ha: number;
+      vine_price_eur_ha: number;
+      year: number;
+      source: string;
+      url: string;
+      insee_meur: number;
+      forest_upper_meur: number;
+      /** Farmland is outside the reform (D6); the fields below are the sensitivity. */
+      included: boolean;
+      tfpnb_meur: number;
+      tfpnb_all_meur: number;
+      s1_rate_if_included_pct: number;
+      pays_if_included_meur: number;
+    };
   };
   variants: YieldVariant[];
 }

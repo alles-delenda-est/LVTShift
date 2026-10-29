@@ -63,7 +63,34 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
         df = df[~exempt].copy()
     # count only (never which parcels): disclosed in the payload provenance
     df.attrs["exempt_parcels"] = n_exempt
+    # unbuilt farmland stays on today's TFPNB (run_pipeline): outside the shares
+    # (exports from before the exclusion have no column: nothing was excluded)
+    n_farm = 0
+    if "is_farmland_excluded" in df.columns:
+        farm = _strict_flag(df["is_farmland_excluded"], path.name)
+        paying = [c for c in ("current_tax", "new_tax", "taxable_improvement_value")
+                  if c in df.columns]
+        if paying and (df.loc[farm, paying].abs().sum(axis=1) > 0).any():
+            raise ValueError(f"{path.name}: rows flagged as excluded farmland pay tax "
+                             f"or carry a building")
+        n_farm = int(farm.sum())
+        df = df[~farm].copy()
+    df.attrs["farmland_excluded_parcels"] = n_farm
     return df
+
+
+def _strict_flag(col: pd.Series, where: str) -> pd.Series:
+    """A boolean CSV column read back strictly: True/False or 1/0, nothing else
+    (``astype(bool)`` would turn the string "False" into True)."""
+    if col.dtype == bool:
+        return col
+    mapping = {True: True, False: False, 1: True, 0: False,
+               "True": True, "False": False, "1": True, "0": False}
+    out = col.map(mapping)          # anything unmapped, NaN included, becomes NaN
+    if out.isna().any():
+        raise ValueError(f"{where}: flag column {col.name!r} has values other than "
+                         f"True/False: {sorted(set(map(str, col[out.isna()])))[:5]}")
+    return out.astype(bool)
 
 
 def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.DataFrame:
@@ -129,6 +156,10 @@ def weighted_median(values, weights):
 # its dwellings, or its total and household figures are left unpublished.
 MIN_GROUP_PARCELS = 11
 MAX_DWELLING_SHARE = 0.5
+# Income fifths are built from IRIS medians (Filosofi): with fewer than two
+# distinct IRIS incomes per fifth, a "fifth" is one neighbourhood, so the
+# breakdown is not published (Cahors, Figeac). Stated, not left to qcut.
+MIN_IRIS_INCOMES = 10
 
 
 def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
@@ -263,6 +294,8 @@ def build_by_income_quintile(df: pd.DataFrame):
     if "median_income" not in df.columns or df["median_income"].notna().sum() == 0:
         return None
     d = df[df["median_income"].notna()].copy()
+    if d["median_income"].nunique() < MIN_IRIS_INCOMES:
+        return None
     try:
         d["_q"] = pd.qcut(d["median_income"], 5, labels=[1, 2, 3, 4, 5], duplicates="drop")
     except ValueError:
@@ -573,6 +606,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "current_tax_baseline": baseline,
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
+            "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
             "note": ("Agrégats uniquement — imputations honnêtes au niveau "
                      "catégorie/quintile, jamais à la parcelle."),
         },
@@ -588,7 +622,7 @@ def load_territory(territory_key: str, out_dir: str = "output"):
     with no output is reported as missing — never imputed.
     """
     from config import TERRITORIES
-    frames, present, missing, n_exempt = [], [], [], 0
+    frames, present, missing, n_exempt, n_farm = [], [], [], 0, 0
     for key in TERRITORIES[territory_key]["members"]:
         try:
             df = load_parcels(key, out_dir)
@@ -598,10 +632,12 @@ def load_territory(territory_key: str, out_dir: str = "output"):
         frames.append(df.assign(_commune=key))
         present.append(key)
         n_exempt += df.attrs.get("exempt_parcels", 0)
+        n_farm += df.attrs.get("farmland_excluded_parcels", 0)
     if not frames:
         raise FileNotFoundError(f"no member outputs for territory {territory_key}")
     out = pd.concat(frames, ignore_index=True)
     out.attrs["exempt_parcels"] = n_exempt
+    out.attrs["farmland_excluded_parcels"] = n_farm
     return out, present, missing
 
 
@@ -676,6 +712,8 @@ def build_by_income_quintile_within(df: pd.DataFrame):
         return None, 0.0
     parts = []
     for _key, sub in df[df["median_income"].notna()].groupby("_commune"):
+        if sub["median_income"].nunique() < MIN_IRIS_INCOMES:
+            continue
         try:
             q = pd.qcut(sub["median_income"], 5, labels=[1, 2, 3, 4, 5], duplicates="drop")
         except ValueError:
@@ -731,6 +769,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
             "current_tax_baseline": _territory_baseline(present, out_dir),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
+            "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
             "note": ("Agrégat de communes modélisées chacune à recettes "
                      "constantes sur son propre produit de TFPB (pas de taux "

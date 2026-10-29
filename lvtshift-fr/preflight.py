@@ -276,7 +276,7 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
         (f"Quintiles de revenu : 5/5 groupes produits ({ninc} revenus IRIS distincts)."
          if nq == 5 else
          f"Quintiles de revenu : {nq}/5 groupes — revenu IRIS trop peu varié "
-         f"({ninc} valeurs distinctes)."),
+         f"({ninc} valeurs distinctes, minimum {ew.MIN_IRIS_INCOMES})."),
         adaptation=(None if nq == 5 else
                     "Structurel (petite commune / peu d'IRIS) : agrégat quintile "
                     "mis à null, aucun graphique publié."),
