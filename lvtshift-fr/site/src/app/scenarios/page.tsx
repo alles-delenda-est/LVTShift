@@ -51,15 +51,20 @@ export default function ScenariosPage() {
   const data = loadYields();
   const s1 = variant(data, "S1", false);
   const s3ifi = variant(data, "S3", true);
-  const shifts = [
-    { label: "Scénario 2", v: variant(data, "S2", false) },
-    { label: "Scénario 2 avec l'IFI", v: variant(data, "S2", true) },
-    { label: "Scénario 3", v: variant(data, "S3", false) },
-    { label: "Scénario 3 avec l'IFI", v: s3ifi },
-  ];
   const local = s1.tiers_meur.local;
   const base = data.land_base;
   const farm = base.farmland;
+  const companyRows = (
+    [
+      ["S2", false, "Scénario 2"],
+      ["S2", true, "Scénario 2 + IFI"],
+      ["S3", false, "Scénario 3"],
+      ["S3", true, "Scénario 3 + IFI"],
+    ] as const
+  ).map(([sc, ifi, label]) => {
+    const v = variant(data, sc, ifi);
+    return { label, added: v.total_meur - s1.total_meur, companies: v.company_land_meur };
+  });
   const groups = (["S1", "S2", "S2_IFI", "S3"] as const).map((sc) => ({
     sc,
     taxes: data.taxes.filter((t) => t.scenario === sc),
@@ -126,64 +131,80 @@ export default function ScenariosPage() {
       </section>
 
       <section aria-labelledby="societes" className="mb-12 max-w-3xl">
-        <H3 id="societes">Les scénarios 2 et 3 font payer les terrains des sociétés</H3>
+        <H3 id="societes">Scénarios 2 et 3 : une part de la charge passe aux sociétés</H3>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          Les impôts ajoutés par les scénarios 2 et 3 (impôt sur le revenu et
-          prélèvements sociaux sur les plus-values et les loyers, IFI) ne sont
-          payés que par des particuliers. Les sociétés, elles, paient l&apos;impôt
-          sur les sociétés sur ces revenus, et cet impôt reste en place. Or le
-          taux national qui remplace ces recettes frappe tous les terrains. Les
-          sociétés détiennent {num(base.companies_meur / 1000)}&nbsp;Md€ de terrains
-          bâtis, soit {num(100 * base.companies_share)}&nbsp;% des terrains bâtis
-          imposables : elles paieraient donc environ cette part des recettes
-          ajoutées, sans qu&apos;aucun de leurs impôts ne baisse.
+          Les impôts que les scénarios 2 et 3 suppriment ne sont payés que par
+          les particuliers : impôt sur le revenu et prélèvements sociaux sur
+          leurs plus-values et leurs loyers, et IFI. Les sociétés continuent de
+          payer l&apos;impôt sur les sociétés sur leurs propres loyers et
+          plus-values. Or l&apos;impôt sur le sol frappe tous les terrains, et
+          ceux des sociétés, entreprises publiques comprises, représentent{" "}
+          {Math.round(base.companies_meur / 1000).toLocaleString("fr-FR").replace(/\s/g, "\u00a0")}&nbsp;Md€,
+          soit {base.companies_share_pct.toLocaleString("fr-FR")}&nbsp;% de la
+          base taxable.
         </p>
-        <ul className="font-body text-base text-encre leading-relaxed space-y-1 list-disc pl-5 mb-3">
-          {shifts.map(({ label, v }) => (
-            <li key={label}>
-              {label} : environ {mdEur(v.companies_shift_meur)}&nbsp;Md€ par an.
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-x-auto -mx-6 px-6 mb-3">
+          <table className="w-full min-w-[30rem] font-body text-sm border-collapse">
+            <thead>
+              <tr className="border-b-2 border-marine text-left text-xs uppercase tracking-wider text-gris">
+                <th scope="col" className="py-2 pr-4 font-normal">Variante</th>
+                <th scope="col" className="py-2 pr-4 font-normal text-right">Ajouté au scénario 1</th>
+                <th scope="col" className="py-2 font-normal text-right">Porté par le foncier des sociétés</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companyRows.map((r) => (
+                <tr key={r.label} className="border-b border-lisere">
+                  <th scope="row" className="py-2 pr-4 text-left font-normal text-encre">{r.label}</th>
+                  <td className="py-2 pr-4 text-right tabular-nums">{mdEur(r.added)}&nbsp;Md€</td>
+                  <td className="py-2 text-right tabular-nums font-semibold">{mdEur(r.companies)}&nbsp;Md€</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          Une partie de la charge passe donc des particuliers qui louent ou
-          vendent des biens vers les sociétés. Le scénario&nbsp;1 n&apos;en crée pas : sociétés et
-          particuliers paient déjà la taxe foncière et les droits de mutation.
+          C&apos;est un transfert des bailleurs et vendeurs particuliers vers
+          les sociétés qui possèdent du foncier. Il disparaîtrait si
+          l&apos;impôt sur les sociétés payé sur les loyers et plus-values
+          immobiliers était remplacé lui aussi ; aucun chiffre public ne
+          l&apos;isole, il n&apos;est donc pas modélisé.
         </p>
         <p className="font-body text-sm text-gris leading-relaxed">
-          Ordre de grandeur : la part des sociétés est celle des terrains bâtis
-          (INSEE, fin {base.year}). Si une
-          partie des terrains classés «&nbsp;sociétés&nbsp;» appartient à des
-          sociétés dont les associés paient l&apos;impôt sur le revenu, ces
-          associés profiteraient aussi de la baisse et le transfert réel serait
-          moindre. Les sociétés peuvent aussi en reporter une partie sur leurs
-          locataires ou leurs actionnaires.
+          Calcul : part des sociétés dans la base taxable × montant que la
+          variante ajoute au scénario 1, en supposant un taux national
+          uniforme. Le scénario 1 ne crée pas ce transfert : les sociétés
+          paient déjà la taxe foncière et les droits de mutation qu&apos;il
+          remplace. Ordre de grandeur : si une partie des terrains classés
+          «&nbsp;sociétés&nbsp;» appartient à des sociétés dont les associés
+          paient l&apos;impôt sur le revenu, ces associés profiteraient aussi de
+          la baisse et le transfert réel serait moindre ; les sociétés peuvent
+          aussi en reporter une partie sur leurs locataires ou leurs
+          actionnaires. Source : INSEE, patrimoine des secteurs
+          institutionnels, fin {base.year}.
         </p>
       </section>
 
       <section aria-labelledby="tableau" className="mb-12">
         <H3 id="tableau">Le détail, impôt par impôt</H3>
         <p className="font-body text-sm text-gris max-w-3xl leading-relaxed mb-4">
-          Montants en millions d&apos;euros. Pour les impôts qui suivent le
-          marché immobilier (droits de mutation, plus-values), le montant retenu
-          est la moyenne des {data.average_years} dernières années connues ; pour
-          les autres, la dernière année. «&nbsp;Vérifié&nbsp;» : lu dans la source
+          Montants en millions d&apos;euros de {data.price_basis.year}. Pour les
+          impôts qui suivent le marché immobilier (droits de mutation,
+          plus-values), le montant retenu est la moyenne des{" "}
+          {data.average_years} dernières années connues ; pour les autres, la
+          dernière année. Chaque année est convertie en euros de{" "}
+          {data.price_basis.year} avec l&apos;indice des prix de l&apos;INSEE,
+          pour que tous les montants du site partagent la même base de prix. «&nbsp;Vérifié&nbsp;» : lu dans la source
           primaire ; «&nbsp;Calculé&nbsp;» : déduit de chiffres primaires ;
           «&nbsp;À confirmer&nbsp;» : repris d&apos;une source secondaire.
         </p>
         <p className="font-body text-sm text-gris max-w-3xl leading-relaxed mb-4">
-          Les montants sont en euros de chaque année. Corrigés de l&apos;inflation
-          et exprimés en euros de {data.constant_euros.year}, ils seraient plus
-          élevés de {mdEur(s1.total_constant_meur - s1.total_meur)}&nbsp;Md€ dans le
-          scénario&nbsp;1 et de {mdEur(s3ifi.total_constant_meur - s3ifi.total_meur)}&nbsp;Md€
-          dans le scénario&nbsp;3, surtout parce que la moyenne des droits de
-          mutation et des plus-values remonte à des années où les prix étaient
-          plus bas. Le site retient les euros courants : ce sont les sommes
-          effectivement encaissées. Indice :{" "}
-          <a href={data.constant_euros.url} className="text-marine underline underline-offset-2">
-            {data.constant_euros.source}
+          Indice des prix :{" "}
+          <a href={data.price_basis.url} className="text-marine underline underline-offset-2">
+            {data.price_basis.source}
           </a>
-          .
+          . Les montants annuels d&apos;origine, en euros de chaque année, sont
+          dans les sources citées.
         </p>
         <div className="overflow-x-auto -mx-6 px-6">
           <table className="w-full min-w-[44rem] font-body text-sm border-collapse">
@@ -299,8 +320,8 @@ export default function ScenariosPage() {
           l&apos;INSEE les compte avec les autres terrains non bâtis sans les
           isoler, et nous les estimons à partir des surfaces relevées par le
           Cerema. Cela donne {num(base.taxable_meur / 1000)}&nbsp;Md€ de foncier
-          imposable. Le taux indicatif divise les recettes à remplacer par ce
-          montant.
+          imposable. Le taux indicatif divise les recettes à remplacer, en
+          euros de {data.price_basis.year}, par ce montant.
         </p>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
           Les parcelles libres au milieu des zones déjà urbanisées ne sont pas

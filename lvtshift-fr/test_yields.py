@@ -13,7 +13,37 @@ def test_reference_rule_d1():
     # Cyclical taxes: mean of the last five years; others: latest year.
     dep = next(t for t in Y.YIELDS if t.key == "dmto_departements")
     assert dep.reference_years() == [2021, 2022, 2023, 2024, 2025]
-    assert abs(dep.reference() - (16259 + 16538 + 12882 + 11145 + 13484) / 5) < 1e-9
+    assert abs(dep.reference_nominal() - (16259 + 16538 + 12882 + 11145 + 13484) / 5) < 1e-9
+
+
+def test_cpi_covers_every_reference_year():
+    assert set(Y._CPI) >= {y for t in Y.YIELDS for y in t.reference_years()}
+
+
+def test_reference_in_2025_euros():
+    # Each year is restated with INSEE's CPI before averaging; 2025 is unchanged.
+    dep = next(t for t in Y.YIELDS if t.key == "dmto_departements")
+    cpi = Y._CPI
+    expected = sum(v * cpi[2025] / cpi[y] for y, v in Y._DMTO_DEP.items()) / 5
+    assert abs(dep.reference() - expected) < 1e-9
+    assert dep.reference() > dep.reference_nominal()
+    tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
+    assert tfpb.reference() == tfpb.reference_nominal() == 42776
+    # A latest-year line from an earlier year is restated too (rents, 2022).
+    rents = next(t for t in Y.YIELDS if t.key == "rents_ir")
+    assert abs(rents.reference() - 4198 * cpi[2025] / cpi[2022]) < 1e-9
+
+
+def test_company_land_transfer():
+    # S1 replaces taxes companies already pay (TF, DMTO): no transfer.
+    assert Y.company_land_transfer("S1") == 0
+    share = Y.LAND_BASE.companies_share
+    assert abs(share - 1_901_000 / 6_091_000) < 1e-12
+    for sc in ("S2", "S3"):
+        for ifi in (False, True):
+            added = Y.scenario_total(sc, ifi) - Y.scenario_total("S1")
+            assert abs(Y.company_land_transfer(sc, ifi) - share * added) < 1e-9
+    assert Y.company_land_transfer("S2") < Y.company_land_transfer("S3") < Y.company_land_transfer("S3", True)
 
 
 def test_dmto_paris_counted_once():
@@ -53,20 +83,9 @@ def test_thrs_in_s1_with_surcharge_and_fee():
 def test_rents_include_csg():
     # CPO rapport particulier n° 1: IR, PS and CSG are separate lines that add up;
     # CRL and IS (companies) stay out (D3).
-    s3_only = {t.key: t.reference() for t in Y.YIELDS if t.scenario == "S3"}
+    s3_only = {t.key: t.reference_nominal() for t in Y.YIELDS if t.scenario == "S3"}
     assert s3_only == {"rents_ir": 4198, "rents_ps": 2399, "rents_csg": 1093}
 
-
-def test_constant_euros_sensitivity():
-    # 2025 lines are unchanged; older years are raised by CPI; the headline stays nominal (D1).
-    tfpb = next(t for t in Y.YIELDS if t.key == "tfpb")
-    assert tfpb.reference_constant() == tfpb.reference()
-    rents = next(t for t in Y.YIELDS if t.key == "rents_ir")
-    assert abs(rents.reference_constant() - 4198 * 120.95 / 112.01) < 1e-9
-    for sc in Y.SCENARIOS:
-        for ifi in (False, True):
-            assert Y.scenario_total_constant(sc, ifi) > Y.scenario_total(sc, ifi)
-    assert set(Y.CPI) >= {y for t in Y.YIELDS for y in t.reference_years()}
 
 
 def test_scenarios_are_nested():
@@ -155,14 +174,6 @@ def test_every_exported_url_is_https(tmp_path: Path):
     found = list(urls(Y.export_json(tmp_path / "yields.json")))
     assert found and all(isinstance(u, str) and u.startswith("https://") for u in found)
 
-
-def test_companies_shift_only_from_s2_s3_lines():
-    assert Y.companies_shift("S1") == 0
-    share = Y.LAND_BASE.companies_share
-    assert 0.30 < share < 0.32
-    added = Y.scenario_total("S3", True) - Y.scenario_total("S1")
-    assert abs(Y.companies_shift("S3", True) - share * added) < 1e-6
-    assert Y.companies_shift("S2") < Y.companies_shift("S3") < Y.companies_shift("S3", True)
 
 
 def test_export_round_trip(tmp_path: Path):

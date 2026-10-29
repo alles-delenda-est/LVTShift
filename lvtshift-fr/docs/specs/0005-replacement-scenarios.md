@@ -144,14 +144,25 @@ contested: Fack (CEPREMAP 2005) finds 50–80 % of housing allowances absorbed b
 rents; IGEDD (2019) attributes that mainly to an omitted logarithm and
 composition effects, and its August 2025 report says the effect "remains to be
 assessed". Those studies also measure a demand subsidy to tenants, not a tax on
-landlords. An independent assessment with a recommended range is in
-`docs/research/apl-rent-incidence.md` (in progress).
+landlords. House view, from `docs/research/apl-rent-incidence.md`:
+- Fack's 0,78 is the top of her own range; her controlled difference-in-differences
+  estimates are 0,3–0,45 and imprecise. IGEDD's "omitted logarithm" barely moves
+  the raw estimate (recomputed); its stronger point is omitted structure effects.
+  Best reading for allowances: 0,3–0,6 in the medium run.
+- In a competitive market, the share of a landlord tax passed to rents is one
+  minus the share of a tenant subsidy captured by landlords. High allowance
+  capture therefore implies **low** pass-through of landlord taxes, not high.
+- Parameter for the removed taxes on rental income: years 1–3 **0,1** (0–0,2,
+  rents are sticky under French lease law); 10 years and more **0,5**
+  (0,25–0,75). The new land tax itself: 0.
 
 ### 4.5 Capitalisation (indicative)
 Per scenario: Δ = change in the annual tax attached to land, nationally and per
 commune. Indicative change in land value = −Δ / r, with r = 3 % and 4 % real
 (range shown), and the DMTO incidence stated as an assumption (§2). Labelled as
-a static upper bound: more construction partly offsets it.
+a static upper bound: more construction partly offsets it. Capitalisation rate:
+100 % central (full for the Danish land tax, Høj et al. 2018), 60 % sensitivity
+(`docs/research/dynamic-effects.md` §5).
 
 The same arithmetic per parcel on the change in *total* tax on the property gives
 the indicative change in **property value** (−Δ_property / r), reported by
@@ -162,13 +173,18 @@ results already computed, so it is modelled rather than only flagged in text.
 "Rendement égal" means equal at today's bases: no behavioural response. The site
 stays static, but each scenario **flags** its expected dynamic effects, each with
 a direction, the mechanism, and a range where the literature gives one:
-- transactions and mobility rise when DMTO goes;
-- construction responds to the lower tax on buildings;
-- GDP: the OECD ranking (Johansson et al. 2008: recurrent property taxes least
-  harmful to growth, then consumption, personal income, corporate taxes) gives
-  the direction; any figure is a long-run level effect, not a growth rate, and
-  must be verified before publication;
-- rents: per the pass-through range in §4.4.
+- transactions and mobility rise when DMTO goes: direction established abroad
+  (about −6 % to −14 % of sales per point of duty); the only French study (2014
+  rise) finds a timing effect only. No range for full removal;
+- construction: direction favourable, evidence weak, response muted by French
+  planning rules. No range;
+- GDP: the OECD ranking (Johansson et al. 2008) gives the direction, but its
+  robustness is contested (Xing 2012; Baiardi et al. 2019) and it concerns moves
+  away from income taxes, not S1's swap between property taxes. Direction only;
+- rents: per the pass-through range in §4.4;
+- property values: redistributed rather than reduced on average (§2), by land
+  share in S1 and from owner-occupiers to landlords and investors in S2–S3.
+Evidence, grades and proposed site wording: `docs/research/dynamic-effects.md`.
 Quantifying them belongs to the budget simulator, using its elasticities.
 
 ## 5. Site
@@ -215,7 +231,7 @@ effective rates, DMTO incidence range) go through the usual Gemini review.
 
 | # | Question | Decision / recommendation |
 |---|---|---|
-| D1 | Reference year for cyclical yields (DMTO, gains) | **Decided:** average of the last 5 available years; latest year shown as a sensitivity. 2026-10-27: the 2025-euro (CPI) restatement is also shown as a sensitivity; the headline stays in current euros |
+| D1 | Reference year for cyclical yields (DMTO, gains) | **Decided:** average of the last 5 available years; latest year shown as a sensitivity. All reference amounts in 2025 euros (INSEE CPI), decided 2026-10-29 (supersedes the 2026-10-27 choice of current euros with a 2025-euro sensitivity) |
 | D2 | Include the 17,2 % social levies on gains and rents? (they fund Sécurité sociale, so the LVT would partly fund the PLFSS) | **Decided:** include, on a separate line, consistent with the budget simulator's PLF+PLFSS scope |
 | D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
 | D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
