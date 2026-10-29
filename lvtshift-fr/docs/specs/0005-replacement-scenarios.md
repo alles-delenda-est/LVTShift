@@ -117,7 +117,8 @@ outside the reform (D6, revised 2026-10-29): it keeps today's TFPNB and its
 exemptions, takes no share of the land tax, and its TFPNB is not replaced. Its
 SAFER value is shown as a sensitivity. Unbuilt building land (AU zones, vacant
 U plots) is in the reform; INSEE does not isolate it, so the national base adds
-an estimate (159 Md€, range 58–380, `yields.UnbuiltLand`).
+an estimate for AU zones (31 Md€, range 13–80, `yields.UnbuiltLand`). Vacant U
+plots are a sensitivity only (risk of double counting with built land).
 
 ### 4.4 Who pays today, per parcel
 Needed for the distribution charts. Quality differs a lot by tax; each line gets

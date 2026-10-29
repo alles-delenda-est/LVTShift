@@ -110,10 +110,11 @@ def test_indicative_rate_uses_taxable_land():
 def test_unbuilt_building_land_estimate():
     u = Y.UNBUILT_LAND
     assert u.low < u.value < u.high
-    # central: (185 000 ha × 20 €/m² + 150 000 ha × 100 €/m²) × 85 % private
-    assert abs(u.value - (185_000e4 * 20 + 150_000e4 * 100) / 1e6 * 0.85) < 1e-6
-    # second-order: under a tenth of built land even in the high case
-    assert u.high < 0.10 * Y.LAND_BASE.taxable_built
+    # central AU: 185 000 ha × 20 €/m² × 85 % private; U plots stay outside
+    assert abs(u.value - 185_000e4 * 20 / 1e6 * 0.85) < 1e-6
+    assert abs(u.u_value - 150_000e4 * 100 / 1e6 * 0.85) < 1e-6
+    # second-order: under a tenth of built land even with U plots, high case
+    assert u.high + u.u_high < 0.10 * Y.LAND_BASE.taxable_built
 
 
 def test_farmland_keeps_its_tfpnb():

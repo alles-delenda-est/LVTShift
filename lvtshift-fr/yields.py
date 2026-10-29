@@ -425,7 +425,12 @@ class UnbuiltLand:
       bought for a house in 2024 (SDES, EPTB). The weakest step.
 
     A share of 85 % (80-90 %) is taken as privately held, since public land is
-    exempt. The national rate moves by -1 % to -6 % across the range.
+    exempt.
+
+    Only the AU part enters the base. The U part is a sensitivity: no stock is
+    published, and a vacant plot in a U zone is often a garden sold with its
+    house, already priced in built land (AN.2111) through house prices
+    (Gemini review, 29 October), so adding it risks double counting.
     """
 
     au_ha: tuple = (145_000, 185_000, 250_000)
@@ -439,23 +444,33 @@ class UnbuiltLand:
     url: str = ("https://artificialisation.developpement-durable.gouv.fr/sites/artificialisation/files/"
                 "inline-files/conso_enaf_docurba.pdf")
 
-    def _case(self, i: int) -> float:
-        m2 = 1e4   # per hectare
-        gross = (self.au_ha[i] * m2 * self.au_eur_m2[i] + self.u_ha[i] * m2 * self.u_eur_m2[i]) / 1e6
-        return gross * self.private_share[i]
+    def _au(self, i: int) -> float:
+        return self.au_ha[i] * 1e4 * self.au_eur_m2[i] / 1e6 * self.private_share[i]
+
+    def _u(self, i: int) -> float:
+        return self.u_ha[i] * 1e4 * self.u_eur_m2[i] / 1e6 * self.private_share[i]
 
     @property
     def low(self) -> float:
-        return self._case(0)
+        return self._au(0)
 
     @property
     def value(self) -> float:
-        """Central value, M€."""
-        return self._case(1)
+        """Central value of AU land, M€ (in the base)."""
+        return self._au(1)
 
     @property
     def high(self) -> float:
-        return self._case(2)
+        return self._au(2)
+
+    @property
+    def u_value(self) -> float:
+        """Central value of vacant U plots, M€ (sensitivity only)."""
+        return self._u(1)
+
+    @property
+    def u_high(self) -> float:
+        return self._u(2)
 
 
 UNBUILT_LAND = UnbuiltLand()
@@ -470,7 +485,7 @@ class LandBase:
     # Non-financial (S11, 1 700,7 Md€) and financial (S12, 200,3 Md€) companies,
     # INSEE T_8200_2025, row N2111.
     built_land_companies: float = 1_701_000 + 200_000
-    # Unbuilt building land (AU zones, vacant U plots): in the reform, so in the base
+    # Unbuilt AU land: in the reform, so in the base (U plots: sensitivity)
     unbuilt: float = UNBUILT_LAND.value
     # D6 sensitivity only: farmland is outside the reform, so not in `taxable`
     farmland: float = FARMLAND.value
@@ -604,11 +619,13 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
             "unbuilt": {
                 "value_meur": round(UNBUILT_LAND.value), "low_meur": round(UNBUILT_LAND.low),
                 "high_meur": round(UNBUILT_LAND.high),
-                # S1 rate across the estimate's range (high value -> low rate)
-                "s1_rate_low_pct": round(100 * scenario_total("S1")
-                                         / (LAND_BASE.taxable_built + UNBUILT_LAND.high), 2),
-                "s1_rate_high_pct": round(100 * scenario_total("S1")
-                                          / (LAND_BASE.taxable_built + UNBUILT_LAND.low), 2),
+                "u_value_meur": round(UNBUILT_LAND.u_value), "u_high_meur": round(UNBUILT_LAND.u_high),
+                # S1 rate if the vacant U plots were in the base too (central, high)
+                "s1_rate_with_u_pct": round(100 * scenario_total("S1")
+                                            / (LAND_BASE.taxable + UNBUILT_LAND.u_value), 2),
+                "s1_rate_with_u_high_pct": round(100 * scenario_total("S1")
+                                                 / (LAND_BASE.taxable_built + UNBUILT_LAND.high
+                                                    + UNBUILT_LAND.u_high), 2),
                 "source": UNBUILT_LAND.source, "url": UNBUILT_LAND.url,
             },
             "farmland": {
