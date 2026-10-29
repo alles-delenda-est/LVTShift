@@ -19,7 +19,9 @@ export interface YieldTax {
   status: Status;
   values_meur: Record<string, number>;
   reference_years: number[];
+  /** Reference value in euros of `price_basis.year`. */
   reference_meur: number;
+  reference_nominal_meur: number;
   source: string;
   url: string;
   scope: string;
@@ -32,17 +34,22 @@ export interface YieldVariant {
   total_meur: number;
   tiers_meur: Record<Tier, number>;
   rate_pct: number;
+  /** M€ a year S2–S3 put on companies' land while removing only individuals' taxes. */
+  company_land_meur: number;
   lines: string[];
 }
 
 export interface YieldsData {
   as_of: string;
   average_years: number;
+  price_basis: { year: number; source: string; url: string; cpi: Record<string, number> };
   taxes: YieldTax[];
   land_base: {
     taxable_meur: number;
     total_meur: number;
     public_meur: number;
+    companies_meur: number;
+    companies_share_pct: number;
     year: number;
     source: string;
     url: string;

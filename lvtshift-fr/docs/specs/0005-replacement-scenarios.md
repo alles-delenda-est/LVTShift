@@ -211,7 +211,7 @@ effective rates, DMTO incidence range) go through the usual Gemini review.
 
 | # | Question | Decision / recommendation |
 |---|---|---|
-| D1 | Reference year for cyclical yields (DMTO, gains) | **Decided:** average of the last 5 available years; latest year shown as a sensitivity |
+| D1 | Reference year for cyclical yields (DMTO, gains) | **Decided:** average of the last 5 available years; latest year shown as a sensitivity. All reference amounts in 2025 euros (INSEE CPI), decided 2026-10-29 |
 | D2 | Include the 17,2 % social levies on gains and rents? (they fund Sécurité sociale, so the LVT would partly fund the PLFSS) | **Decided:** include, on a separate line, consistent with the budget simulator's PLF+PLFSS scope |
 | D3 | IS on companies' real-estate gains and rents: no public figure found | **Decided:** exclude for now and say so on the site; revisit if a source turns up |
 | D4 | S2/S3 distribution: parcel level (weak attribution for gains) or aggregate first | **Decided:** aggregate yields, rates, transfers and capitalisation first (PR 1, 3); parcel-level rental attribution in PR 5; gains stay aggregate |
