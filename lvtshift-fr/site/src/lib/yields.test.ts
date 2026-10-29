@@ -34,6 +34,17 @@ describe("yields", () => {
     expect(stackRows(data, false)[1].segments.ifi).toBe(0);
   });
 
+  it("puts no transfer on companies in S1 and a growing one in S2–S3", () => {
+    expect(variant(data, "S1", false).company_land_meur).toBe(0);
+    const s2 = variant(data, "S2", false).company_land_meur;
+    const s3 = variant(data, "S3", false).company_land_meur;
+    const s3i = variant(data, "S3", true).company_land_meur;
+    expect(s2).toBeGreaterThan(0);
+    expect(s3).toBeGreaterThan(s2);
+    expect(s3i).toBeGreaterThan(s3);
+    expect(data.price_basis.year).toBe(2025);
+  });
+
   it("formats years and billions", () => {
     expect(yearsLabel([2021, 2022, 2023, 2024, 2025])).toBe("2021–2025");
     expect(yearsLabel([2025])).toBe("2025");

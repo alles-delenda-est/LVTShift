@@ -7,7 +7,9 @@ so a figure changed here changes the published page.
 
 Reference value per tax (spec 0005, decision D1): the average of the last five
 available years for cyclical taxes (DMTO, taxes on gains), the latest year for
-the others.
+the others. Every reference value is in 2025 euros (INSEE consumer price index),
+so that all amounts on the page share one price basis with the 2025 land base
+and the commune model's 2025 tax data. Yearly values stay nominal.
 
 Scenarios (spec 0005 §1):
     S1  taxe foncière (TFPB + TFPNB) + taxe d'habitation on second homes + DMTO
@@ -38,6 +40,20 @@ Basis = Literal["average", "latest"]
 Status = Literal["verified", "derived", "reported"]
 
 AVERAGE_YEARS = 5
+
+# Price basis. INSEE, IPC annual average, ensemble des ménages, France, base 2015
+# (BDM idbank 001764363, « séries arrêtées », last update 15 January 2026),
+# checked against the 12-month average of the monthly series 001759970.
+PRICE_YEAR = 2025
+_CPI = {2020: 104.73, 2021: 106.45, 2022: 112.01, 2023: 117.47, 2024: 119.82, 2025: 120.95}
+CPI_SOURCE = ("INSEE, indice annuel des prix à la consommation, ensemble des ménages, France, "
+              "base 2015 (idbank 001764363)")
+CPI_URL = "https://www.insee.fr/fr/statistiques/serie/001764363"
+
+
+def to_price_year(year: int, value: float) -> float:
+    """Restate a nominal amount of ``year`` in ``PRICE_YEAR`` euros."""
+    return value * _CPI[PRICE_YEAR] / _CPI[year]
 
 
 @dataclass(frozen=True)
@@ -83,7 +99,12 @@ class TaxYield:
         return years[-AVERAGE_YEARS:] if self.basis == "average" else years[-1:]
 
     def reference(self) -> float:
-        """Reference yield, M€ (D1: 5-year average for cyclical taxes)."""
+        """Reference yield, M€ in 2025 euros (D1: 5-year average for cyclical taxes)."""
+        years = self.reference_years()
+        return sum(to_price_year(y, self.values[y]) for y in years) / len(years)
+
+    def reference_nominal(self) -> float:
+        """Same average without the price restatement, M€ (for the record)."""
         years = self.reference_years()
         return sum(self.values[y] for y in years) / len(years)
 
@@ -327,17 +348,25 @@ class LandBase:
 
     built_land_total: float = 7_032_000
     built_land_public: float = 941_000
+    # Of the taxable part: companies (non-financial 1 701 + financial 200),
+    # households and non-profits the rest (INSEE T_8200_2025).
+    built_land_companies: float = 1_901_000
     year: int = 2025
     source: str = ("INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type "
                    "d'actif », données 2025 provisoires (30 juillet 2026)")
     url: str = "https://www.insee.fr/fr/statistiques/2830290"
     note: str = ("Terrains bâtis hors administrations publiques (foncier public exonéré). "
-                 "Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE ne les "
-                 "isole pas. Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
+                 "Terres agricoles et naturelles (décision D6) pas encore incluses : l'INSEE les publie "
+                 "(902 Md€, T_8201) mais à un niveau 3 à 4 fois supérieur aux prix SAFER ; choix ouvert. "
+                 "Fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).")
 
     @property
     def taxable(self) -> float:
         return self.built_land_total - self.built_land_public
+
+    @property
+    def companies_share(self) -> float:
+        return self.built_land_companies / self.taxable
 
 
 LAND_BASE = LandBase()
@@ -370,6 +399,19 @@ def indicative_rate_pct(scenario: str, include_ifi: bool = False,
     return 100.0 * scenario_total(scenario, include_ifi) / b.taxable
 
 
+def company_land_transfer(scenario: str, include_ifi: bool = False,
+                          base: Optional[LandBase] = None) -> float:
+    """M€ a year that S2-S3 put on companies' land to replace individuals' taxes.
+
+    The lines S2 and S3 add are all national and are paid today by individuals
+    only (gains, rents, IFI); companies' corporate tax on the same income stays
+    (D3). The national rate falls on all taxable land, so companies' land bears
+    its share of what S2-S3 add over S1 while companies are relieved of nothing.
+    """
+    b = base or LAND_BASE
+    return b.companies_share * (scenario_total(scenario, include_ifi) - scenario_total("S1"))
+
+
 def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
     """Write the yield table and scenario totals for the site."""
     variants = []
@@ -380,22 +422,28 @@ def export_json(path: str | Path = "site/public/data/yields.json") -> dict:
                 "total_meur": round(scenario_total(sc, ifi)),
                 "tiers_meur": {k: round(v) for k, v in tier_totals(sc, ifi).items()},
                 "rate_pct": round(indicative_rate_pct(sc, ifi), 2),
+                "company_land_meur": round(company_land_transfer(sc, ifi)),
                 "lines": [t.key for t in lines_for(sc, ifi)],
             })
     payload = {
-        "as_of": "2026-10-27",
+        "as_of": "2026-10-29",
         "average_years": AVERAGE_YEARS,
+        "price_basis": {"year": PRICE_YEAR, "source": CPI_SOURCE, "url": CPI_URL,
+                        "cpi": {str(y): v for y, v in sorted(_CPI.items())}},
         "taxes": [{
             "key": t.key, "label_fr": t.label_fr, "scenario": t.scenario,
             "tier": t.tier, "budget": t.budget, "basis": t.basis, "status": t.status,
             "values_meur": {str(y): round(v, 1) for y, v in sorted(t.values.items())},
             "reference_years": t.reference_years(),
             "reference_meur": round(t.reference()),
+            "reference_nominal_meur": round(t.reference_nominal()),
             "source": t.source, "url": t.url, "scope": t.scope, "note": t.note,
         } for t in YIELDS],
         "land_base": {
             "taxable_meur": LAND_BASE.taxable, "total_meur": LAND_BASE.built_land_total,
             "public_meur": LAND_BASE.built_land_public, "year": LAND_BASE.year,
+            "companies_meur": LAND_BASE.built_land_companies,
+            "companies_share_pct": round(100 * LAND_BASE.companies_share, 1),
             "source": LAND_BASE.source, "url": LAND_BASE.url, "note": LAND_BASE.note,
         },
         "variants": variants,
@@ -410,4 +458,5 @@ if __name__ == "__main__":
     data = export_json(Path(__file__).resolve().parent / "site/public/data/yields.json")
     for v in data["variants"]:
         print(f"{v['scenario']}{' + IFI' if v['include_ifi'] else ''}: "
-              f"{v['total_meur']:,} M€  ({v['rate_pct']} % of taxable land)")
+              f"{v['total_meur']:,} M€  ({v['rate_pct']} % of taxable land; "
+              f"companies' land {v['company_land_meur']:,} M€)")

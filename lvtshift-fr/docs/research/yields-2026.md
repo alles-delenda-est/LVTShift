@@ -15,17 +15,18 @@ source quoting the primary). No line is "reported" any more.
 
 ## Result
 
-| Scenario | Yield to replace (M€) | Indicative rate, % of taxable built land |
-|---|---:|---:|
-| S1 — TF + THRS + DMTO | 67 113 | 1,10 |
-| S2 — + taxes on real-estate gains | 70 789 | 1,16 |
-| S2 + IFI | 73 121 | 1,20 |
-| S3 — + taxes on rental income | 78 479 | 1,29 |
-| S3 + IFI | 80 811 | 1,33 |
+| Scenario | Yield to replace (M€, 2025 €) | Indicative rate, % of taxable built land | On companies' land (M€) |
+|---|---:|---:|---:|
+| S1 — TF + THRS + DMTO | 68 124 | 1,12 | — |
+| S2 — + taxes on real-estate gains | 72 111 | 1,18 | 1 244 |
+| S2 + IFI | 74 443 | 1,22 | 1 972 |
+| S3 — + taxes on rental income | 80 415 | 1,32 | 3 836 |
+| S3 + IFI | 82 747 | 1,36 | 4 564 |
 
-S1 is 83–95 % of every variant; the taxe foncière bill with the State's fee
-(46,3 Md€) is 57–69 %. The choice of scenario changes the national rate by at
-most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,3 Md€) is
+All amounts are in 2025 euros (decided 29 October; see *Price basis* below). S1 is
+82–94 % of every variant; the taxe foncière bill with the State's fee
+(46,3 Md€) is 56–68 %. The choice of scenario changes the national rate by at
+most a fifth; the local tier (TF bill, THRS and communal DMTO, 51,5 Md€) is
 identical in all five.
 
 Rates are national averages against built land only. They will fall once
@@ -152,10 +153,16 @@ to their 31 January 2025 level from 1 April 2028. The permanent law is 4,5 %,
 which is what 2021–2024 reflect; 2025 carries nine months of the temporary
 increase.
 
-**Sensitivity: constant euros.** The average is in nominal euros. Restating
-each year in 2025 euros (INSEE CPI, series 001764363) would add 1,01 Md€ to
-S1 (communes +188, départements +804, State's fee +19) and 0,31 Md€ to the
-gains lines (S2, S3). Not applied: it changes decision D1.
+**Price basis: 2025 euros (decided 29 October).** Each year is restated in
+2025 euros with INSEE's CPI (annual average, base 2015, idbank 001764363)
+before averaging, so that every amount on the site shares one price basis with
+the 2025 land base and the commune model's 2025 tax data. This adds 1,01 Md€ to
+S1 (communes +188, départements +804, State's fee +19), 0,31 Md€ to the gains
+lines and 0,61 Md€ to the rental-income lines, whose latest year is 2022. Yearly
+values in `yields.py` and in the table stay nominal; `reference_nominal()`
+keeps the unrestated average. The CPI rather than the GDP deflator: it is the
+series verified from the primary source, and the amounts are what households
+pay.
 
 ### DMTO — State's fee (S1, national) — 333 M€, derived
 
@@ -287,8 +294,10 @@ Caveats:
   (1 901 Md€, 31 % of the base) the national rate, but S2 and S3 remove only
   individuals' taxes on gains and rents; companies' corporate tax on the same
   income stays (D3). At 31 % of the base, the national lines added by S2–S3
-  (11,4 Md€ in S3, 13,7 with IFI) put about 3,5 to 4,3 Md€ a year onto
-  companies' land, to fund cuts for individual landlords and sellers. The site must show this transfer between sectors.
+  put 1,2 Md€ (S2) to 4,6 Md€ (S3 + IFI) a year onto companies'
+  land, to fund cuts for individual landlords and sellers. Shown on the
+  scenarios page since 29 October (`company_land_transfer`), assuming a uniform
+  national rate.
 
 ## Left out, with yields (for decision)
 
@@ -311,10 +320,10 @@ Caveats:
 2. Agricultural and natural land (D6): INSEE AN.2112 (902 Md€) or area ×
    SAFER prices (≈ 190–270 Md€, 280–360 with forests); find INSEE's method
    before choosing.
-3. D1 in constant euros (+1,0 Md€ on S1).
+3. ~~D1 in constant euros~~ — done 29 October (2025 euros, CPI).
 4. The inclusion choices above: compensations, CSI, TSBCS (decided 27 October:
    kept out; THRS added to S1).
-5. The transfer onto companies' land in S2–S3 (D3), to show on the site.
+5. ~~The transfer onto companies' land in S2–S3~~ — shown on the site 29 October.
 
 ## Gemini critique (model `gemini-4-argon`, 2026-10-27) and how I responded
 
