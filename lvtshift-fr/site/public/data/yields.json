@@ -381,7 +381,7 @@
     }
   ],
   "land_base": {
-    "taxable_meur": 6091000,
+    "taxable_meur": 6122450,
     "total_meur": 7032000,
     "public_meur": 941000,
     "year": 2025,
@@ -389,7 +389,19 @@
     "companies_share_pct": 31.2,
     "source": "INSEE, Chiffres-clés « Patrimoine national par secteur institutionnel et grand type d'actif », données 2025 provisoires (30 juillet 2026)",
     "url": "https://www.insee.fr/fr/statistiques/2830290",
-    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré). Terres agricoles et naturelles hors de la réforme (D6). Terrains bâtis fin 2024 définitif : 6 729 Md€ dont 903 publics (Insee Première n° 2081).",
+    "note": "Terrains bâtis hors administrations publiques (foncier public exonéré), plus une estimation des terrains à bâtir non bâtis, que l'INSEE range avec les terrains non bâtis sans les isoler. Terres agricoles et naturelles hors de la réforme (D6).",
+    "built_taxable_meur": 6091000,
+    "unbuilt": {
+      "value_meur": 31450,
+      "low_meur": 13050,
+      "high_meur": 80000,
+      "u_value_meur": 127500,
+      "u_high_meur": 300000,
+      "s1_rate_with_u_pct": 1.07,
+      "s1_rate_with_u_high_pct": 1.04,
+      "source": "Cerema, Consommation d'espaces et documents d'urbanisme (nov. 2023) ; SDES, Le prix des terrains et du bâti pour les maisons individuelles en 2024 (nov. 2025) ; INSEE, fiche méthodologique 24, base 2020 (juil. 2026)",
+      "url": "https://artificialisation.developpement-durable.gouv.fr/sites/artificialisation/files/inline-files/conso_enaf_docurba.pdf"
+    },
     "farmland": {
       "value_meur": 218257,
       "low_meur": 203888,
@@ -407,8 +419,8 @@
       "included": false,
       "tfpnb_meur": 922,
       "tfpnb_all_meur": 1188,
-      "s1_rate_if_included_pct": 1.08,
-      "pays_if_included_meur": 2357
+      "s1_rate_if_included_pct": 1.07,
+      "pays_if_included_meur": 2345
     }
   },
   "variants": [
@@ -444,7 +456,7 @@
         "departmental": 14866,
         "national": 5766
       },
-      "rate_pct": 1.17,
+      "rate_pct": 1.16,
       "company_land_meur": 1244,
       "lines": [
         "tfpb",
@@ -469,7 +481,7 @@
         "departmental": 14866,
         "national": 8098
       },
-      "rate_pct": 1.21,
+      "rate_pct": 1.2,
       "company_land_meur": 1972,
       "lines": [
         "tfpb",

@@ -15,11 +15,11 @@ source quoting the primary). No line is "reported" any more.
 
 ## Result
 
-| Scenario | Yield to replace (M€, 2025 €) | Indicative rate, % of taxable built land | On companies' land (M€) |
+| Scenario | Yield to replace (M€, 2025 €) | Indicative rate, % of taxable land | On companies' land (M€) |
 |---|---:|---:|---:|
 | S1 — TF + THRS + DMTO | 67 152 | 1,10 | — |
-| S2 — + taxes on real-estate gains | 71 139 | 1,17 | 1 244 |
-| S2 + IFI | 73 471 | 1,21 | 1 972 |
+| S2 — + taxes on real-estate gains | 71 139 | 1,16 | 1 244 |
+| S2 + IFI | 73 471 | 1,20 | 1 972 |
 | S3 — + taxes on rental income | 79 443 | 1,30 | 3 836 |
 | S3 + IFI | 81 775 | 1,34 | 4 564 |
 
@@ -29,7 +29,8 @@ All amounts are in 2025 euros (decided 29 October; see *Price basis* below). S1 
 most a fifth; the local tier (TF bill, THRS and communal DMTO, 50,5 Md€) is
 identical in all five.
 
-Rates are national averages against taxable built land. Agricultural and
+Rates are national averages against taxable built land plus an estimate of
+unbuilt land in AU zones (31 Md€, range 13–80). Agricultural and
 natural land is outside the reform (D6, revised 29 October) and keeps its
 TFPNB. They are not the rates the model applies: the local tier is set commune
 by commune.
@@ -55,6 +56,8 @@ by commune.
 | Taxe d'habitation on second homes added to S1, surcharge included (`thrs`), with the State's 3 % fee (`thrs_etat`) | +3 063 M€ (all) |
 | Farmland added to the land base at SAFER price × area (D6), 218 Md€ | rates −3,5 % |
 | *Decision of 29 October: farmland out of the reform (D6 revised)* | |
+| *Decision of 29 October: unbuilt building land added to the base* | |
+| AU zones, privately held, at market prices (estimate, `yields.UnbuiltLand`): 31 Md€; vacant U plots (128 Md€) a sensitivity only, after the Gemini review (double counting with AN.2111) | rates −0,5 % |
 | Agricultural and natural land leaves the base and keeps its TFPNB: 922 M€ of the 1 188 M€ TFPNB (2025), and the same share of the non-built syndicates, TSE and GEMAPI, stop being replaced, with the State's fee on them | −973 M€ (all); rates +2,4 % net of both changes |
 | *Decision of 29 October: price basis* | |
 | All reference amounts restated in 2025 euros (INSEE CPI) before averaging; the rental-income lines (2022) too | +1 011 M€ (S1), +1 322 (S2), +1 936 (S3) |
@@ -325,6 +328,27 @@ Caveats:
   method. Forests (17,5 Mha at 4 950 €/ha, timber included, so an upper bound
   of 87 Md€) stay out; they would lower rates by about 1,4 %. Public ownership
   of farmland is not removed (small, unmeasured).
+- **Unbuilt building land, decided 29 October: an estimate in the base.**
+  INSEE values the buildable part of unbuilt land at housing prices (*Fiche
+  méthodologique 24*, base 2020, July 2026, p. 3–4 and n. 4: « une partie
+  urbanisable, via le prix des logements »), but in its unbuilt-land lines
+  (AN.2119 « autres terrains », 712 Md€ of which 147 public, and perhaps part
+  of AN.2112), which it does not split. Eurostat's land guide (2015, n. 16)
+  would put it in AN.2111; France does not. So it is missing from the 6 091.
+  Rebuilt as area × price: AU zones 145 000–250 000 ha unbuilt (Cerema, Nov.
+  2023: 144 976 ha in the 12 051 communes studied, an under-count) at
+  10–40 €/m² of raw land; vacant U plots 100 000–250 000 ha (no national
+  stock published: the weakest step) at 50–150 €/m² (serviced house plots
+  102 €/m² in 2024, SDES EPTB); 80–90 % privately held. Only the AU part,
+  31 Md€ (13–80), is in the base. The U part (128 Md€ central, 300 high) is
+  a sensitivity: no stock is published, and Gemini pointed out (29 October,
+  checked: INSEE values land under dwellings through house prices, which
+  include gardens sold with the house) that a vacant U plot is often such a
+  garden, already in AN.2111. With it, the S1 rate would be 1,06 % instead
+  of 1,08 %. The cadastral group 10 is no guide: it is defined narrowly and
+  does not follow zoning. Research pass of
+  29 October; the INSEE table, the INSEE method note and the Cerema figure
+  were re-read before use.
 - **Public land.** The APU column includes land under roads and networks; the
   commune-level model must exclude the same land, or national and local rates
   will not reconcile.

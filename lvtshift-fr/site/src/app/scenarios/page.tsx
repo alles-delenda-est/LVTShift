@@ -313,10 +313,26 @@ export default function ScenariosPage() {
           L&apos;INSEE estime provisoirement la valeur des terrains bâtis à{" "}
           {num(base.total_meur / 1000)}&nbsp;Md€ fin {base.year}. Les terrains
           publics ({num(base.public_meur / 1000)}&nbsp;Md€) ne paient pas
-          d&apos;impôt foncier et sont retirés, ce qui donne{" "}
-          {num(base.taxable_meur / 1000)}&nbsp;Md€ de foncier imposable. Le
-          taux indicatif divise les recettes à remplacer, en euros de{" "}
-          {data.price_basis.year}, par ce montant.
+          d&apos;impôt foncier et sont retirés. S&apos;y ajoutent environ{" "}
+          {num(base.unbuilt.value_meur / 1000)}&nbsp;Md€ de terrains encore nus
+          en zone à urbaniser (entre {num(base.unbuilt.low_meur / 1000)} et{" "}
+          {num(base.unbuilt.high_meur / 1000)}&nbsp;Md€ selon les hypothèses) :
+          l&apos;INSEE les compte avec les autres terrains non bâtis sans les
+          isoler, et nous les estimons à partir des surfaces relevées par le
+          Cerema. Cela donne {num(base.taxable_meur / 1000)}&nbsp;Md€ de foncier
+          imposable. Le taux indicatif divise les recettes à remplacer, en
+          euros de {data.price_basis.year}, par ce montant.
+        </p>
+        <p className="font-body text-base text-encre leading-relaxed mb-3">
+          Les parcelles libres au milieu des zones déjà urbanisées ne sont pas
+          ajoutées : aucune statistique nationale n&apos;en donne la surface, et
+          beaucoup sont des jardins vendus avec la maison, déjà comptés dans la
+          valeur des terrains bâtis. Si l&apos;on en ajoutait une estimation
+          (environ {num(base.unbuilt.u_value_meur / 1000)}&nbsp;Md€), le taux du
+          scénario&nbsp;1 passerait de {s1.rate_pct.toLocaleString("fr-FR")}&nbsp;% à{" "}
+          {base.unbuilt.s1_rate_with_u_pct.toLocaleString("fr-FR")}&nbsp;%
+          ({base.unbuilt.s1_rate_with_u_high_pct.toLocaleString("fr-FR")}&nbsp;% dans
+          l&apos;hypothèse haute).
         </p>
         <h4 className="font-display text-lg font-medium text-marine leading-tight mt-6 mb-2">
           Les terres agricoles et naturelles restent hors de la réforme
@@ -408,6 +424,10 @@ export default function ScenariosPage() {
           Source :{" "}
           <a href={base.url} className="text-marine underline underline-offset-2">
             {base.source}
+          </a>
+          . Terrains à bâtir :{" "}
+          <a href={base.unbuilt.url} className="text-marine underline underline-offset-2">
+            {base.unbuilt.source}
           </a>
           . Le calcul est statique : les effets attendus de la réforme sur les
           prix, les ventes et les loyers ne sont pas intégrés à ces montants.
