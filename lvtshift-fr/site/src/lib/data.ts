@@ -34,3 +34,6 @@ export function loadValidation(key: string): { checks: ValidationCheck[] } | nul
 export function loadRegister(): { communes: RegisterCommune[] } {
   return readJson("ingestion_register.json");
 }
+export function loadYields(): import("@/lib/yields").YieldsData {
+  return readJson("yields.json");
+}

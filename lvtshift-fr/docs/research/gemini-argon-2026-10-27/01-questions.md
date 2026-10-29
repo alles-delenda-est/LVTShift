@@ -1,0 +1,14 @@
+You are an independent expert reviewer in French public finance, local taxation and housing economics. Below is the evidence pack for a model of a French land value tax (LVT) that replaces existing taxes "à rendement égal" (equal yield) in three nested scenarios (S1: taxe foncière TFPB+TFPNB + DMTO; S2: S1 + taxes on real-estate capital gains, IFI optional; S3: S2 + taxes on rental income). Please critique the economic and measurement choices below. Give sources (with article numbers, publication titles, table/line references) and numbers where you have them. For every factual claim, say how sure you are; explicitly flag anything you are unsure of or are recalling from memory. Do not invent sources. Be concise but complete; answer each lettered point separately.
+
+a. Reference rules: a 5-year average for DMTO and gains (decision D1), across the April 2025 rise in the departmental DMTO cap from 4,5 % to 5 %. For an equal-yield reform, is the average or the latest year the better reference? Should the pre-2025 years be adjusted to current law?
+b. Scope: should each of these be in S1 or kept out? (i) TSE/GEMAPI/TASA/syndicates on the TF bill (0,9 Md€); (ii) THRS, taxe d'habitation on second homes (2,6 Md€); (iii) State compensations for exempt property (≈ 2,7 Md€); (iv) TEOM and CFE; (v) the State's 3 % fee on TF (CGI art. 1641) and 2,37 % on DMTO (CGI art. 1647 V). Also check those two rates and articles.
+c. IFI basis: tax-notice amounts (DGFiP, 2,3 Md€ for 2025) or budget receipts (2,97 Md€ forecast, PLF 2026 Voies et moyens). Which is right for an equal-yield replacement, and what explains the gap?
+d. Land base: INSEE end-2025 provisional built land minus general-government (APU) land = 6 091 Md€. Is removing APU land right? How should agricultural and natural land (D6) be sourced and valued (SAFER/Agreste prices, INSEE AN.2112, other)?
+e. Rental-income scope: the CPO (Dec 2023, p. 23) lines are IR 4,2 / PS 2,4 / CSG 1,1 / CRL 0,1, total stated 8,3 Md€, which neither reconciles with its own lines (7,8) nor with PS at 17,2 %. What is the right yield and source (e.g. DGFiP IR statistics on revenus fonciers, Compte du logement, LMNP/BIC)?
+f. Capitalisation: 100 % central, 60 % sensitivity. Is the equal-yield framing right: property values redistributed rather than reduced on average, by land share in S1 and from owner-occupiers to landlords in S2–S3? Does the land component fall in the short run and recover in the long run?
+g. Rent pass-through of removed landlord income taxes: 0,1 in years 1–3, 0,5 (0,25–0,75) long run. Also assess the complementarity argument (pass-through of a landlord tax π_tax = 1 − π_subsidy, the landlord capture share of a tenant subsidy).
+h. Anything missing or wrong that would change any scenario total by more than 0,5 Md€.
+
+End with a short table: point | your recommendation | confidence (high/medium/low).
+
+=== EVIDENCE PACK ===
