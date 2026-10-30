@@ -164,8 +164,10 @@ export default function ScenariosPage() {
           </table>
         </div>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
-          C&apos;est un transfert des bailleurs et vendeurs particuliers vers
-          les sociétés qui possèdent du foncier. Il disparaîtrait si
+          Autrement dit, une partie de l&apos;impôt que paient aujourd&apos;hui
+          les bailleurs et vendeurs particuliers serait reportée sur les
+          sociétés propriétaires de terrains, qui ne bénéficient d&apos;aucune
+          baisse en échange. Ce report disparaîtrait si
           l&apos;impôt sur les sociétés payé sur les loyers et plus-values
           immobiliers était remplacé lui aussi ; aucun chiffre public ne
           l&apos;isole, il n&apos;est donc pas modélisé.
