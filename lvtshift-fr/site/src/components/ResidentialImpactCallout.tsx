@@ -4,7 +4,7 @@ import type { CategoryRow } from "@/lib/types";
 
 // Honest, data-grounded callout for the pagers: the effect on an owner-occupier
 // is NOT uniform. It depends on the land share of the property and on the
-// commune. Apartment owners (land split across the copropriété) generally pay
+// commune. Small buildings of 2–4 dwellings ("Condominium") generally pay
 // less; individual-house owners on valuable plots often pay MORE, especially in
 // dense high-land-value communes. This component reads the real model figures
 // so the prose can never drift from what the model actually shows.
@@ -57,7 +57,7 @@ export default function ResidentialImpactCallout() {
                 Maison individuelle
               </th>
               <th scope="col" className="text-left text-xs font-semibold uppercase tracking-[0.1em] text-gris px-4 py-2">
-                Appartement (copropriété)
+                Petit immeuble (2–4 logements)
               </th>
             </tr>
           </thead>
