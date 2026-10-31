@@ -26,7 +26,7 @@ MIN_BUILT_FOR_CAP_PCT = 30
 # Standard-category -> French display label (mirrors run_pipeline.CATEGORY_MAP).
 CATEGORY_LABELS_FR = {
     "Single Family Residential": "Maison individuelle",
-    "Condominium": "Appartement (copropriété)",
+    "Condominium": "Petit immeuble (2–4 logements)",
     "Large Multi-Family (5+ units)": "Immeuble collectif (5+ logements)",
     "Commercial": "Commerce",
     "Industrial": "Industriel",
