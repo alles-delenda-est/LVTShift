@@ -446,10 +446,14 @@ change divided by its dwellings, median weighted by dwellings
 parcel median in euros (`median_change_eur`) compares a whole block with one
 house: in Lyon a block's median change is +800 € against +267 € for a house,
 which reads as flats paying three times more when in percentage the block
-(+9.6 %) pays half what the house does (+20.6 %). The site shows the
+(+9.6 %) pays half what the house does (+20.6 %). Per dwelling the gap
+reverses: +34 € in a block against +287 € in a house. The site shows the
 per-dwelling figure; without counts, it labels a building category's figure
-"par immeuble". The disclosure rule is the income groups' rule: at least 11
-parcels, every parcel counted, no parcel holding more than half the dwellings.
+"par immeuble". The chart's percentage remains a parcel median, so the two
+figures can differ in sign, because large blocks weigh more in the
+per-dwelling median (Roubaix, blocks: +7.2 % per parcel, −5 € per dwelling).
+The disclosure rule is the income groups' rule: at least 11 parcels, every
+parcel counted, no parcel holding more than half the dwellings.
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
