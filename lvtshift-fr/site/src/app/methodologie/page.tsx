@@ -213,7 +213,10 @@ export default function MethodologiePage() {
             sont des personnes publiques en pleine propriété, sans bail ni
             copropriété. À Paris, ces parcelles portaient 4,9&nbsp;% du produit
             que le modèle leur attribuait auparavant ; ce montant est désormais
-            réparti sur les parcelles réellement imposables.{" "}
+            réparti sur les parcelles réellement imposables. Les associations,
+            fondations et établissements privés à but non lucratif ne sont pas
+            exclus : ils paient la taxe foncière aujourd&apos;hui et le modèle
+            taxe leur sol comme celui de tout propriétaire.{" "}
             <strong>Les bâtiments agricoles</strong> (serres, granges, silos,
             étables) sont eux aussi exonérés de taxe foncière bâtie, à raison
             de leur usage et non de leur propriétaire&nbsp;: le modèle les
@@ -224,6 +227,20 @@ export default function MethodologiePage() {
             exclue de la réforme si elle est en zone A ou N (Périgny,
             commune des serres, passe ainsi de 41,8&nbsp;% à 47,9&nbsp;% de
             part foncière).
+          </p>
+
+          <p>
+            <strong>Ce que paierait le foncier public.</strong> La réforme
+            conserve l&apos;exonération actuelle. Si le sol public était taxé
+            comme le sol privé, il paierait environ 10&nbsp;Md€ par an au taux
+            national du scénario&nbsp;1 (terrains bâtis des administrations
+            publiques&nbsp;: 941&nbsp;Md€ fin 2025, INSEE). À rendement égal,
+            l&apos;inclure ferait baisser l&apos;impôt de tous les autres
+            propriétaires de 13&nbsp;%. Mais les trois quarts de ce sol
+            appartiennent aux collectivités locales&nbsp;: l&apos;essentiel de
+            ces montants irait d&apos;une commune ou d&apos;un département à
+            lui-même. Seule la part de l&apos;État et de ses opérateurs, environ
+            un quart, serait un vrai transfert vers les budgets locaux.
           </p>
 
           <p>
@@ -602,6 +619,24 @@ export default function MethodologiePage() {
               de résultats présente donc les deux colonnes côte à côte, cas
               central et borne basse, dans le tableau «&nbsp;Incertitude sur
               la taxe actuelle des locaux professionnels&nbsp;».
+            </p>
+            <p className="font-body text-sm text-encre leading-relaxed mb-3">
+              <strong>Un contrôle indépendant penche du côté du cas central.</strong>{" "}
+              En 2017, la taxe d&apos;habitation portait encore sur tous les
+              logements occupés, avec les mêmes valeurs locatives que la taxe
+              foncière. Elle permet donc d&apos;estimer, commune par commune, la
+              part des logements dans la base de la taxe foncière, et par
+              différence celle des entreprises. Pour la France entière, cette
+              estimation retrouve le chiffre de la Cour des comptes (environ un
+              tiers pour les locaux professionnels et l&apos;industrie en
+              2017). À Lyon et à Paris, elle donne environ 39&nbsp;% (sur la base
+              de 2025), contre 29 et 26&nbsp;% dans le cas central et 11 à
+              13&nbsp;% en borne basse ; elle dépasse aussi le cas central dans
+              les autres villes modélisées, sauf à Figeac. Ces chiffres datent de
+              2017 et restent approximatifs (environ 5&nbsp;points par commune),
+              mais la borne basse, le cas où les logements de Lyon et de Paris
+              paient moins, paraît invraisemblable en ville. Elle sera remplacée
+              par cette estimation locale.
             </p>
             <p className="font-body text-sm text-encre leading-relaxed">
               <strong>Les machines.</strong> Par choix, la réforme modélisée
