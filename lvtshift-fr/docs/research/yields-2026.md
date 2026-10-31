@@ -370,6 +370,56 @@ Caveats:
   cut. Economic incidence (pass-through to tenants or shareholders) is not
   modelled.
 
+### Reconciliation with Trannoy & Wasmer (2022)
+
+Trannoy & Wasmer, *Le grand retour de la terre dans les patrimoines* (Odile
+Jacob, 2022), tableau 2.1 (p. 57), give land by sector for end-2019 from the
+national accounts as published then, in base 2014. INSEE has since moved to
+base 2020. Splitting the gap into the base revision and the change over
+2019–2025 needs INSEE's current figure for 2019: table 8.200, `T_8200_2019`,
+from the zip `T_8200_1959_2019_fr.zip` on the *Comptes de patrimoine* page
+(https://www.insee.fr/fr/statistiques/8988859, downloaded on 31 October 2026),
+row N2111. Patrick supplied the file because the site cannot be reached from
+here. The 2025 column is the base used above (`T_8200_2025`).
+
+Built land (N2111), Md€:
+
+| | T&W 2019 (base 2014) | INSEE 2019 (base 2020) | 2025 (base 2020) | Revision | 2019→2025 nominal | 2019→2025 real |
+|---|---:|---:|---:|---:|---:|---:|
+| Total | 5 956,9 | 6 279,7 | 7 032 | +5,4 % | +12,0 % | −3,5 % |
+| Taxable (total less public) | 5 145,0 | 5 457,0 | 6 091 | +6,1 % | +11,6 % | −3,8 % |
+| Non-financial companies (S11) | 1 357,7 | 1 437,7 | 1 700,7 | +5,9 % | +18,3 % | +1,9 % |
+| Financial companies (S12) | 144,9 | 161,7 | 200,3 | +11,6 % | +23,8 % | +6,7 % |
+| General government (S13) | 811,9 | 822,7 | 941 | +1,3 % | +14,4 % | −1,4 % |
+| Households + non-profits (S14+S15) | 3 642,4 | 3 857,6 | 4 190 | +5,9 % | +8,6 % | −6,4 % |
+| Companies' share of the taxable base | 29,2 % | 29,3 % | 31,2 % | | | |
+
+The real column uses INSEE's consumer price index (idbank 001764363). The 2019
+value is not in `_CPI`; it is taken as the 2020 value less 2020 inflation
+(0,5 %), giving a factor of 1,161. That is approximate, ±1 point.
+
+Readings:
+- The revision raises every sector by about 6 % (S12 by 12 %). It accounts
+  for about a third of the 18 % nominal gap, and it leaves the companies'
+  share unchanged.
+- The two-point rise in the companies' share is real and dates from
+  2019–2025. Companies' land kept its real value; households' land lost 6 %
+  in real terms, which fits the 2023–2024 fall in house prices.
+- The S1 yield restated in 2019 euros (≈ 57,9 Md€) over the 2019 taxable base
+  in base 2020 gives 1,06 %, against 1,10 % in 2025. This is rough, because
+  part of the yield is a five-year average.
+- Cultivated land (N2112), 2019 base 2020: 653,4 Md€, of which companies
+  485,8 and households 167,6. That is 74 % in S11, because farms run as
+  companies (EARL, SCEA, GFA and so on) are companies in the accounts. Of
+  S11's 570 Md€ of unbuilt land, 486 Md€ is cultivated. Farmland is outside
+  the reform (D6), so this does not affect the base. It does mean that any
+  claim about "companies' land" taken from total land includes a large share
+  of farms.
+- T&W's total land is 7 110,2 Md€; in base 2020 it is 7 471,7 Md€. T&W's
+  "autres terrains et plans d'eau" figure (511,1) is 534,0 in base 2020, of
+  which 338,3 is held by households. INSEE does not split it (see unbuilt
+  building land above).
+
 ## Left out, with yields (for decision)
 
 | Item | Yield | Natural place | Status here |
