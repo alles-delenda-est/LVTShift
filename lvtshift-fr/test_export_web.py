@@ -430,6 +430,21 @@ def test_small_group_guard():
         ew._check_small_groups({"by_income_quintile": [q], "baseline_sensitivity": {"low": qleg}})
 
 
+def test_small_group_guard_accepts_an_empty_band():
+    # no parcel under 10 % building value: the band's zeros describe nobody
+    df = pd.DataFrame({
+        "taxable_land_value": [100.0] * 20, "taxable_improvement_value": [300.0] * 20,
+        "tax_change": [5.0] * 20,
+    })
+    rows = ew.build_buckets(df)
+    assert [r["parcels"] for r in rows if r["bucket"] == "lt10"] == [0]
+    ew._check_small_groups({"by_improvement_ratio": rows})
+    # but an empty group with a real figure is still a leak
+    with pytest.raises(AssertionError):
+        ew._check_small_groups({"by_improvement_ratio": [
+            {"bucket": "lt10", "parcels": 0, "value_eur": 563_000.0}]})
+
+
 def test_every_published_payload_passes_the_guards():
     # the committed site data, not just fresh exports: a hand edit or a stale
     # file must not reach the site with a small group's figures
