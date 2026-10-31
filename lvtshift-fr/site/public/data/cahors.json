@@ -189,7 +189,9 @@
       "median_change_pct": 12.7,
       "median_change_eur": 127.0,
       "count_paying_more": 5305,
-      "share_paying_more_pct": 75.1
+      "share_paying_more_pct": 75.1,
+      "median_change_eur_per_dwelling": 143.0,
+      "dwellings": 6593
     },
     {
       "category": "Vacant Land",
@@ -199,17 +201,21 @@
       "median_change_pct": null,
       "median_change_eur": 98.0,
       "count_paying_more": 2364,
-      "share_paying_more_pct": 100.0
+      "share_paying_more_pct": 100.0,
+      "median_change_eur_per_dwelling": null,
+      "dwellings": null
     },
     {
       "category": "Condominium",
-      "label_fr": "Appartement (copropriété)",
+      "label_fr": "Petit immeuble (2–4 logements)",
       "parcels": 1138,
       "share_of_parcels_pct": 9.3,
       "median_change_pct": 3.9,
       "median_change_eur": 59.0,
       "count_paying_more": 636,
-      "share_paying_more_pct": 55.9
+      "share_paying_more_pct": 55.9,
+      "median_change_eur_per_dwelling": 41.0,
+      "dwellings": 2452
     },
     {
       "category": "Commercial",
@@ -219,7 +225,9 @@
       "median_change_pct": -26.0,
       "median_change_eur": -440.0,
       "count_paying_more": 121,
-      "share_paying_more_pct": 15.5
+      "share_paying_more_pct": 15.5,
+      "median_change_eur_per_dwelling": null,
+      "dwellings": null
     },
     {
       "category": "Other",
@@ -229,7 +237,9 @@
       "median_change_pct": -62.2,
       "median_change_eur": -183.0,
       "count_paying_more": 67,
-      "share_paying_more_pct": 17.1
+      "share_paying_more_pct": 17.1,
+      "median_change_eur_per_dwelling": null,
+      "dwellings": null
     },
     {
       "category": "Large Multi-Family (5+ units)",
@@ -239,7 +249,9 @@
       "median_change_pct": 11.3,
       "median_change_eur": 654.0,
       "count_paying_more": 233,
-      "share_paying_more_pct": 61.6
+      "share_paying_more_pct": 61.6,
+      "median_change_eur_per_dwelling": -0.0,
+      "dwellings": 4556
     },
     {
       "category": "Industrial",
@@ -249,7 +261,9 @@
       "median_change_pct": -74.6,
       "median_change_eur": -2834.0,
       "count_paying_more": 6,
-      "share_paying_more_pct": 6.6
+      "share_paying_more_pct": 6.6,
+      "median_change_eur_per_dwelling": null,
+      "dwellings": null
     }
   ],
   "by_income_quintile": null,

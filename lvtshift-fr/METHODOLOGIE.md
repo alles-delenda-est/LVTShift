@@ -489,6 +489,25 @@ sur `new_tax`) ; seuls les totaux par quintile sont publiés. BD TOPO sous-compt
 légèrement les logements (Paris ≈ 1,14 M contre ≈ 1,4 M au recensement), ce qui
 touche les pondérations, pas les totaux.
 
+**Montants par catégorie en euros : par logement.** Les mêmes décomptes donnent,
+pour chaque catégorie résidentielle, la variation en euros du ménage type : la
+variation de chaque parcelle divisée par son nombre de logements, médiane
+pondérée par les logements (`median_change_eur_per_dwelling`, avec les
+`dwellings` de la catégorie). La médiane par parcelle en euros
+(`median_change_eur`) compare un immeuble entier à une maison : à Lyon, la
+variation médiane d'un immeuble est de +800 € contre +267 € pour une maison, ce
+qui se lit comme des appartements payant trois fois plus, alors qu'en
+pourcentage l'immeuble (+9,6 %) paie deux fois moins que la maison (+20,6 %). Par
+logement, l'écart s'inverse : +34 € en immeuble collectif contre +287 € en
+maison. Le site affiche le chiffre par logement ; faute de décompte, il présente
+celui d'une catégorie d'immeubles comme « par immeuble ». Le pourcentage du
+graphique reste une médiane par parcelle : les deux chiffres peuvent donc
+différer de signe, car le grand immeuble pèse davantage dans la médiane par
+logement (Roubaix, immeubles collectifs : +7,2 % par parcelle, −5 € par
+logement). La règle de diffusion est celle des groupes de revenu : au moins
+11 parcelles, toutes décomptées, aucune ne réunissant plus de la moitié des
+logements.
+
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
 continu, tombait à ≈ 575 €/m² face à un prix DVF médian ≈ 10 860 €/m² : 95,5 % des

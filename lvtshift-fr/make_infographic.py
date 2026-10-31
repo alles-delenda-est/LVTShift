@@ -26,12 +26,12 @@ COLOR = {"cahors": "#2e7d32", "montreuil": "#1565c0", "roubaix": "#c62828",
          "villeurbanne": "#6a1b9a", "figeac": "#00838f",
          "grenoble": "#ef6c00", "annemasse": "#5d4037"}
 RES = ["Single Family Residential", "Condominium", "Large Multi-Family (5+ units)"]
-CAT_FR = {"Single Family Residential": "Maison", "Condominium": "Appartement",
+CAT_FR = {"Single Family Residential": "Maison", "Condominium": "Petit immeuble",
           "Large Multi-Family (5+ units)": "Immeuble collectif",
           "Commercial": "Commerce", "Industrial": "Industrie", "Other": "Autre",
           "Vacant Land": "Terrain sous-utilisé"}
 # vacant land first: its bar is the new bill on land that paid ~0 before
-CAT_ORDER = ["Terrain sous-utilisé", "Maison", "Appartement",
+CAT_ORDER = ["Terrain sous-utilisé", "Maison", "Petit immeuble",
              "Immeuble collectif", "Commerce", "Industrie"]
 QLAB = ["Q1\n(+ pauvre)", "Q2", "Q3", "Q4", "Q5\n(+ aisé)"]
 

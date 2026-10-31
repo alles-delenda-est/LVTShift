@@ -38,6 +38,9 @@ export interface CategoryRow {
   /** Null for a category below the disclosure minimum (count only). */
   median_change_pct: number | null; median_change_eur: number | null;
   count_paying_more: number | null; share_paying_more_pct: number | null;
+  /** Typical household's change in €, residential categories only (absent in older payloads). */
+  median_change_eur_per_dwelling?: number | null;
+  dwellings?: number | null;
 }
 /** A category whose figures are published (see lib/disclosure). */
 export type PublishedCategoryRow = CategoryRow & {
