@@ -350,6 +350,26 @@ parcels. In Paris this flags 3,099 parcels (1,362 built) carrying €91.6 M (5.0
 the produit the baseline used to spread onto them. Owner names are read only to
 recognise utilities and housing managers and are never stored or published.
 
+*Non-profits are not excluded.* Only the public legal forms above qualify.
+Associations, foundations, private non-profit schools and hospitals pay the TFPB
+today, and the model taxes their land like any other owner's. The exceptions
+that exist in law and are not modelled (worship buildings owned by associations,
+among others) stay taxable (§6 item 11).
+
+*What public property would pay.* The reform keeps today's exemption. If public
+land were taxed like private land instead, it would pay, at the national scale
+(INSEE end-2025, built land of general government 941 Md€,
+`docs/research/yields-2026.md`): at today's equal-yield rate, 10.3 Md€ a year in
+scenario 1 and 12.6 Md€ in scenario 3 with the IFI. Held at equal yield with
+public land in the base, the S1 rate falls from 1.10 % to 0.95 %: public land
+pays 9.0 Md€ and every other owner 13 % less. About three quarters of that public
+land belongs to local authorities (75 % in 2019, INSEE table 8.200), so most of
+that money would go from a commune or département to itself; only the State's
+and its agencies' share, about a quarter, would be a real transfer to local
+budgets. The INSEE figure also includes land under roads and networks. The
+commune results do not show the value of exempt parcels: the standard export
+sets it to zero.
+
 **Exempt rural buildings** (`exemptions.rural_buildings`). CGI art. 1382 6°
 exempts from the TFPB buildings permanently and exclusively used for agriculture
 (greenhouses, barns, silos, stables); the land under them pays the TFPNB, outside
@@ -763,6 +783,19 @@ Ranked by how much they move published (category/quintile) results.
      "Incertitude sur la taxe actuelle des locaux professionnels"); **always
      present both in any write-up too.** Per-commune professional values
      (Fichiers fonciers) are the real fix.
+     **Independent check (2026-10-31).** The 2017 taxe d'habitation gives a
+     second, local estimate: the housing share of the TFPB base is about
+     0.5 × the TH gross rental value ÷ the TFPB base (REI 2017 `J11`, `E11`).
+     Nationally it gives 32.7 % for business premises and industry, against
+     about 32.4 % implied by the Cour des comptes. Locally it puts that share
+     far above the raw proxy in every modelled city, and above the 2.5 case
+     except in Figeac: Lyon ≈ 39 % (2025 basis) against 12.5 % (raw) and 28.8 %
+     (central), Paris ≈ 39 % against 11.3 % and 26.3 %. Read ± 5 points per
+     commune (vacancy, outbuildings, exempt social housing; 2017 data). The raw
+     proxy, the case where homes in Lyon and Paris pay less, therefore looks
+     implausible in cities; the central case may understate the shift onto
+     homes. The raw-proxy column is to be replaced by this local variant
+     (`docs/research/tfpb-baseline-calibration.md` §9.5).
    - **Within each group** today's tax is still shared by floor area, which
      ignores cadastral category and weighted-surface coefficients, so read the
      **change**, not the starting bill, and never publish per-parcel amounts.
