@@ -321,6 +321,29 @@ def build_buckets(df: pd.DataFrame) -> list:
     return out
 
 
+def _per_dwelling(sub: pd.DataFrame) -> tuple:
+    """Typical household's change in euros for a residential category, and its
+    dwelling count: each parcel's change shared over its dwellings, weighted by
+    dwellings. A parcel median in euros compares a whole block of flats with one
+    house (Lyon: +800 € per block against +267 € per house), so the site shows
+    this figure instead.
+
+    Same disclosure rule as the income groups: every parcel must carry a count,
+    the group must reach MIN_GROUP_PARCELS, and no parcel may hold more than
+    MAX_DWELLING_SHARE of its dwellings. Otherwise (None, None).
+    """
+    if "n_dwellings" not in sub.columns or len(sub) < MIN_GROUP_PARCELS:
+        return None, None
+    if not sub["property_category"].isin(FR_RESIDENTIAL).all():
+        return None, None
+    n = sub["n_dwellings"]
+    if not n.notna().all() or n.sum() <= 0 or float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
+        return None, None
+    per = sub["tax_change"] / n.where(n > 0)
+    med = weighted_median(per, n)
+    return (None if med is None else round(med, 0)), int(round(float(n.sum())))
+
+
 def build_by_category(df: pd.DataFrame) -> list:
     n = len(df)
     # categories too small to publish join "Other" (blanking alone would leave
@@ -334,6 +357,7 @@ def build_by_category(df: pd.DataFrame) -> list:
     for cat, sub in df.groupby("property_category"):
         chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
         small = _small(len(sub))
+        per_dwelling, dwellings = _per_dwelling(sub)
         out.append({
             "category": cat,
             "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
@@ -345,6 +369,9 @@ def build_by_category(df: pd.DataFrame) -> list:
             "count_paying_more": None if small else int((sub["tax_change"] > 0).sum()),
             "share_paying_more_pct": (None if small else
                                       _pct(int((sub["tax_change"] > 0).sum()), len(sub))),
+            # residential only; None for other categories and older runs
+            "median_change_eur_per_dwelling": per_dwelling,
+            "dwellings": dwellings,
         })
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
@@ -556,7 +583,8 @@ def _check_leg(g: dict, what: str) -> None:
 SMALL_GROUP_BLANK = {
     "by_improvement_ratio": ("value_eur", "value_pct_of_base", "share_of_gross_change_pct"),
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
-                    "share_paying_more_pct"),
+                    "share_paying_more_pct", "median_change_eur_per_dwelling",
+                    "dwellings"),
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
                            "total_change_pct", "household_median_change_pct", "dwellings"),
 }

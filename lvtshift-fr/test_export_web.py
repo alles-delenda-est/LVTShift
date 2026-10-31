@@ -263,6 +263,37 @@ def test_quintile_totals_and_households_tell_the_group_story():
     assert q1["household_median_change_pct"] is None and q1["total_change_pct"] is not None
 
 
+def test_category_euros_per_dwelling():
+    # Lyon's case: a block's change per parcel dwarfs a house's, per flat it is small
+    houses = dict(property_category="Single Family Residential", tax_change=267.0,
+                  tax_change_pct=20.0, n_dwellings=1.0)
+    blocks = [dict(property_category="Large Multi-Family (5+ units)",
+                   tax_change=800.0 + 10 * i, tax_change_pct=9.6, n_dwellings=20.0)
+              for i in range(12)]
+    shop = dict(property_category="Commercial", tax_change=-200.0, tax_change_pct=-6.0,
+                n_dwellings=0.0)
+    df = pd.DataFrame([houses] * 12 + blocks + [shop] * 12)
+    cats = {c["category"]: c for c in ew.build_by_category(df)}
+    blk = cats["Large Multi-Family (5+ units)"]
+    assert blk["median_change_eur"] > cats["Single Family Residential"]["median_change_eur"]
+    assert blk["median_change_eur_per_dwelling"] == round(850.0 / 20, 0)   # 42 €
+    assert blk["dwellings"] == 240
+    assert cats["Single Family Residential"]["median_change_eur_per_dwelling"] == 267.0
+    assert cats["Commercial"]["median_change_eur_per_dwelling"] is None
+    assert cats["Commercial"]["dwellings"] is None
+    # older runs without counts, a missing count, or one dominant block: unset
+    old = {c["category"]: c for c in ew.build_by_category(df.drop(columns="n_dwellings"))}
+    assert old["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
+    gap = df.copy()
+    gap.loc[12, "n_dwellings"] = np.nan
+    gap = {c["category"]: c for c in ew.build_by_category(gap)}
+    assert gap["Large Multi-Family (5+ units)"]["dwellings"] is None
+    dom = df.copy()
+    dom.loc[12, "n_dwellings"] = 1000.0
+    dom = {c["category"]: c for c in ew.build_by_category(dom)}
+    assert dom["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
+
+
 def test_households_sidecar_must_match_its_run(tmp_path, monkeypatch):
     import config
     df = _toy_df()

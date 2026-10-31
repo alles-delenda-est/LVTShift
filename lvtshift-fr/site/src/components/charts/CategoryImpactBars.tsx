@@ -31,6 +31,7 @@ import type { TooltipProps } from "recharts";
 import type { BandCategoryRow, PublishedCategoryRow } from "@/lib/types";
 import { pct, signedPct, signedPctAxis, eurosExact } from "@/lib/format";
 import { bandSpan, byKey } from "@/lib/band";
+import { categoryAmount, BASIS_LABEL } from "@/lib/categoryAmount";
 import { symmetricAxis } from "@/lib/axis";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 import { useNarrow } from "./useNarrow";
@@ -51,8 +52,10 @@ interface ProcessedRow extends PublishedCategoryRow {
 function CatTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload as ProcessedRow;
-  const sign = row.median_change_eur >= 0 ? "+" : "−";
-  const absEur = eurosExact(Math.abs(row.median_change_eur));
+  const amount = categoryAmount(row);
+  const eur = amount.eur ?? row.median_change_eur;
+  const sign = eur >= 0 ? "+" : "−";
+  const absEur = eurosExact(Math.abs(eur));
   return (
     <div
       style={{
@@ -72,7 +75,7 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
         {row.isNull ? "n. d." : signedPct(row.median_change_pct)}
       </p>
       <p>
-        En montant&nbsp;: {sign}
+        En montant, {BASIS_LABEL[amount.basis]}&nbsp;: {sign}
         {absEur}
       </p>
       <p>Paie davantage&nbsp;: {pct(row.share_paying_more_pct)}</p>

@@ -439,6 +439,18 @@ per-quintile totals are published. BD TOPO under-counts dwellings slightly
 (Paris ≈ 1.14 M against ≈ 1.4 M in the census), which affects the weights, not
 the totals.
 
+**Category amounts in euros: per dwelling.** The same counts give, for each
+residential category, the typical household's change in euros: each parcel's
+change divided by its dwellings, median weighted by dwellings
+(`median_change_eur_per_dwelling`, with the category's `dwellings`). The
+parcel median in euros (`median_change_eur`) compares a whole block with one
+house: in Lyon a block's median change is +800 € against +267 € for a house,
+which reads as flats paying three times more when in percentage the block
+(+9.6 %) pays half what the house does (+20.6 %). The site shows the
+per-dwelling figure; without counts, it labels a building category's figure
+"par immeuble". The disclosure rule is the income groups' rule: at least 11
+parcels, every parcel counted, no parcel holding more than half the dwellings.
+
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
 ≈ €575/m² against a median DVF price of ≈ €10,860/m², so 95.5 % of built parcels
