@@ -5,6 +5,8 @@ export interface Headline {
   built_at_cap_pct?: number | null;
   gross_shifted_eur: number; net_shifted_eur: number; gross_pct_of_levy: number | null;
   net_pct_of_levy: number | null; gross_bps_of_base: number | null; currency: "EUR";
+  /** Typical flat-dweller's change, %, small buildings and blocks weighted by dwellings (absent in older payloads). */
+  flats_household_median_change_pct?: number | null;
 }
 /** One category's figures in a sensitivity leg (subset of CategoryRow). */
 export interface BandCategoryRow {
@@ -40,6 +42,8 @@ export interface CategoryRow {
   count_paying_more: number | null; share_paying_more_pct: number | null;
   /** Typical household's change in €, residential categories only (absent in older payloads). */
   median_change_eur_per_dwelling?: number | null;
+  /** Typical household's change, %: parcel change weighted by dwellings (absent in older payloads). */
+  household_median_change_pct?: number | null;
   dwellings?: number | null;
 }
 /** A category whose figures are published (see lib/disclosure). */
