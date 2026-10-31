@@ -391,6 +391,28 @@ signalées ; elles portaient 91,6 M€ (5,0 %) du produit que l'état initial le
 attribuait. Les dénominations ne servent qu'à reconnaître réseaux et bailleurs et
 ne sont jamais stockées ni publiées.
 
+*Les organismes sans but lucratif ne sont pas exclus.* Seules les formes
+juridiques publiques ci-dessus sont retenues. Associations, fondations, écoles et
+hôpitaux privés à but non lucratif paient aujourd'hui la TFPB, et le modèle taxe
+leur sol comme celui de tout propriétaire. Les exceptions prévues par la loi qui
+ne sont pas modélisées (édifices du culte détenus par des associations, entre
+autres) restent imposables (§6 point 11).
+
+*Ce que paierait le foncier public.* La réforme conserve l'exonération actuelle.
+Si le sol public était taxé comme le sol privé, il paierait, à l'échelle
+nationale (INSEE fin 2025, terrains bâtis des administrations publiques 941 Md€,
+`docs/research/yields-2026.md`) : au taux actuel à rendement égal, 10,3 Md€
+par an dans le scénario 1 et 12,6 Md€ dans le scénario 3 avec l'IFI. À rendement
+égal avec le sol public dans l'assiette, le taux du scénario 1 passe de 1,10 % à
+0,95 % : le sol public paie 9,0 Md€ et tous les autres propriétaires 13 % de moins.
+Environ les trois quarts de ce sol public appartiennent aux collectivités locales
+(75 % en 2019, INSEE tableau 8.200) : l'essentiel de ces montants irait d'une
+commune ou d'un département à lui-même ; seule la part de l'État et de ses
+opérateurs, environ un quart, serait un vrai transfert vers les budgets locaux. Le
+chiffre de l'INSEE comprend aussi le sol des routes et des réseaux. Les résultats
+par commune ne montrent pas la valeur des parcelles exonérées : l'export standard
+la met à zéro.
+
 **Bâtiments ruraux exonérés** (`exemptions.rural_buildings`). L'art. 1382 6° du
 CGI exonère de TFPB les bâtiments affectés de manière permanente et exclusive à un
 usage agricole (serres, granges, silos, étables) ; le sol qui les porte acquitte
@@ -831,6 +853,20 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      des locaux professionnels ») ; **les présenter aussi côte à côte dans
      toute publication.** Les valeurs professionnelles par commune (Fichiers
      fonciers) sont la vraie solution.
+     **Contrôle indépendant (31 octobre 2026).** La taxe d'habitation de 2017
+     donne une seconde estimation, locale : la part des logements dans la base de
+     TFPB vaut environ 0,5 × la valeur locative brute de TH ÷ la base de TFPB
+     (REI 2017, `J11` et `E11`). À l'échelle nationale, elle donne 32,7 % pour les
+     locaux professionnels et l'industrie, contre environ 32,4 % d'après la Cour
+     des comptes. Localement, elle situe cette part bien au-dessus du proxy brut
+     dans toutes les villes modélisées, et au-dessus du cas à 2,5 sauf à Figeac :
+     Lyon ≈ 39 % (base 2025) contre 12,5 % (brut) et 28,8 % (central), Paris
+     ≈ 39 % contre 11,3 % et 26,3 %. À lire à ± 5 points par commune (vacance,
+     dépendances, logements sociaux exonérés ; données 2017). Le proxy brut, cas
+     où les logements de Lyon et de Paris paient moins, paraît donc invraisemblable
+     en ville ; le cas central sous-estime peut-être le report sur les logements.
+     La colonne du proxy brut sera remplacée par cette variante locale
+     (`docs/research/tfpb-baseline-calibration.md` §9.5).
    - **Au sein de chaque groupe**, la taxe actuelle reste répartie à la surface
      plancher, qui ignore la catégorie cadastrale et les coefficients de
      pondération de surface : lire la **variation**, pas le montant de départ,

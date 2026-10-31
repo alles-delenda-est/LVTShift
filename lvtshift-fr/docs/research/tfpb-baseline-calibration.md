@@ -11,6 +11,11 @@
 > targets unless run with `--pro-scale 2.5`, and even then not in communes above
 > 75 %. The "floor housing at residential floor × 0.5" guard in §9.4 was not
 > adopted.
+>
+> **2026-10-31 (§9.5).** An independent proxy from the 2017 taxe d'habitation matches the
+> Cour des comptes nationally and puts the business share of the TFPB base in our cities
+> far above the k = 1 lower bound, and above k = 2.5 except in Figeac. The k = 1 lower
+> bound is to be replaced by that local variant.
 
 Research dates 2026-10-22 and 23. Each figure cites a source in §8 by tag, e.g. [T1]. Markers:
 **fetched live** (I downloaded the page, file or API myself and read the value), **snippet** (seen
@@ -393,6 +398,74 @@ case.**
   probably is not: it should be higher where public and non-profit occupiers are many, as
   in Paris. Report the low and high cases alongside the central one.
 
+### 9.5 Independent check from the 2017 taxe d'habitation (2026-10-31)
+
+**Why look again.** A reader questioned Lyon's result (flats and houses both pay more).
+Under the ×1 lower bound, Lyon's homes pay less (median −4.1 % against +12.2 %), so the
+sign rests on k.
+
+**No published split in 2017 either.** A DGCL bulletin says the REI "permet de décomposer
+les bases" of the TFPB between housing and "local à usage commercial ou établissement
+industriel", with 2017 as the last year available [T17]. The public REI 2017 file
+(`REI_COMPLET_2017.xlsx`, 872 variables, trace and notice read in full) has no such
+variable. The split the bulletin used must come from an internal DGFiP file.
+
+**The proxy.** In 2017 the taxe d'habitation still fell on every occupied dwelling, on the
+same 1970 rental values as the TFPB, whose base is half the rental value (CGI art. 1388,
+§9.1). So the housing share of a commune's TFPB base is about **0.5 × J11 / E11**: `J11`
+is "TH – V.L. brute des locaux de la commune", `E11` the commune's net TFPB base. The rest
+is professional plus industrial premises, at 2017 values (industrial values were halved
+in 2021). Script: `tfpb_th2017_check.py`; file: DGFiP REI 2017 [T2], read from the zip
+Patrick downloaded (`External Data/`).
+
+**National validation.** France 2017: ΣE11 87.7 bn, ΣJ11 118.0 bn, so housing 67.3 % and
+non-housing **32.7 %**. The Cour des comptes gives professional premises 21.6 % of the
+base in 2016 and industrial premises 5.7 % of receipts in 2021 [T15]. Undoing the 2021
+halving puts industrial at about 10.8 % before 2021 (2 × 5.7 / 1.057), so the Cour implies
+about **32.4 %** non-housing in 2016–17. The proxy matches within half a point.
+
+**By commune.** Non-housing share of the TFPB base. The 2017 figure is brought to 2025 by
+removing half of the 2017 industrial share, taken as 2 × the model's 2025 WC75 share
+(blank where the run merged industrial into professional; Figeac's 12.3 %):
+
+| Commune | Model, k = 1 | Model, k = 2.5 | TH 2017 | TH 2017, 2025 basis |
+|---|---|---|---|---|
+| Lyon | 12.5 % | 28.8 % | 40.2 % | ≈ 38.6 % |
+| Paris | 11.3 % | 26.3 % | 40.8 % | ≈ 39.4 % |
+| Villeurbanne | 6.5 % | 16.3 % | 28.5 % | ≈ 28.5 % |
+| Montreuil | 9.4 % | 23.6 % | 39.4 % | ≈ 39.4 % |
+| Grenoble | 9.2 % | 23.0 % | 31.9 % | ≈ 31.9 % |
+| Roubaix | 12.1 % | 30.2 % | 47.5 % | ≈ 47.5 % |
+| Annemasse | 9.1 % | 22.7 % | 27.0 % | ≈ 27.0 % |
+| Cahors | 9.3 % | 23.2 % | 31.6 % | ≈ 31.6 % |
+| Figeac | 17.2 % | 24.6 % | 33.3 % | ≈ 21.0 % |
+| Sète | 5.8 % | 14.5 % | 24.1 % | ≈ 24.1 % |
+| La Rochelle | 7.6 % | 18.9 % | 27.1 % | ≈ 27.1 % |
+
+(Model columns: the payloads' `current_tax_baseline` targets, industrial + professional,
+the k = 1 column dividing the professional target by 2.5.)
+
+**Biases of the proxy (judgement).**
+- Vacant dwellings pay TFPB but no TH: housing understated, non-housing overstated by
+  about the vacancy rate × the housing share (≈ 5 points at 8 % vacancy).
+- Premises in `J11` that are not housing for the TFPB push the other way: outbuildings,
+  premises of public bodies and associations liable to TH (art. 1407 I 2°), and recent
+  social housing exempt from TFPB (art. 1384 A) but liable to TH.
+- These offset nationally (the validation above), but nothing shows they offset in each
+  commune: read the commune figures as ± 5 points. The data are from 2017; nationally the
+  professional share drifted from 21.6 % to 23.4 % of the base over 2016–21 [T15].
+
+**Reading.** In every city in the table the TH proxy is far above the ×1 lower bound, and
+above the ×2.5 central case except in Figeac. This supports the suspicion of §9.4 that the
+CFE undercount is larger in cities. The ×1 lower bound, the case in which Lyon's homes
+pay less, looks implausible there; the central case may understate today's business
+share, and so the shift onto homes.
+
+**Decision (Patrick, 2026-10-31): keep the central case; replace the ×1 lower bound** by
+a local variant from this proxy, professional share = (1 − 0.5 × J11/E11) − 2 × the 2025
+industrial share, under the same 75 % cap. It needs a pipeline change and a re-run of the
+communes (follow-up PR).
+
 ## 8. Sources
 
 - [T1] OFGL, *(REI) Fiscalité directe locale 2024–2025*, dataset `rei`, Opendatasoft API v2.1. https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/rei. **Fetched live** (schema, years, FB/CFE vars for 93078, 94070, 69199, 75056 and 9 others).
@@ -410,6 +483,7 @@ case.**
 - [T13] CGI art. 1388. https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006311555. **Fetched live.**
 - [T14] CGI art. 1467 (CFE base; 30 % reduction for industrial establishments only), via BOFiP BOI-IF-CFE-20-20-20-10 and CMS Francis Lefebvre 2017 summaries. **Snippet.**
 - [T15] Cour des comptes, *Les taxes foncières* (observations définitives), 27 February 2023. https://www.ccomptes.fr/sites/default/files/2023-10/20230227-S2023-0028-Taxes-foncieres.pdf. **Fetched live** (115 pp.; quotes on pp. 19–21, 33).
+- [T17] DGCL, *Taxe sur le foncier bâti : quelles disparités entre territoires ?*, BIS n° 133, 2019. https://www.collectivites-locales.gouv.fr/files/files/Etudes-et-statistiques/BIS/2019/bis_133_0.pdf. **Fetched live** (supplement « Sources-Méthodes-Définitions » and Encadré 2).
 - [T16] Arthur Loyd, *L'Indispensable* T1 2025 and T1 2026 (Immostat/ORIE). https://www.arthur-loyd.com/media/file/7afe8363-l-indispensable-t1-2026-1.pdf. Also press reports of Immostat end-2025. **Snippet.**
 - **Skipped or failed:**
   - Paris city budget documents: no TFPB category split found (search only).
