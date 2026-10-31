@@ -1,18 +1,19 @@
 "use client";
 
 /**
- * BaselineRange — the same results under the central and the lower-bound
- * share of professional premises in today's tax.
+ * BaselineRange — the same results under the central share of professional
+ * premises in today's tax and its published alternative.
  *
- * Open data under-records professional premises (vacant offices, premises
+ * Open data under-record professional premises (vacant offices, premises
  * rented by public bodies): the model scales them to the national total
- * (central) and also publishes the raw figure (lower bound). The LVT bills
- * are identical in both columns; only today's tax, the starting point,
- * moves. Pure HTML, styled like SensitivityBand.
+ * (central) and also publishes a local estimate from the 2017 taxe
+ * d'habitation (older payloads: the raw CFE figure). The LVT bills are
+ * identical in both columns; only today's tax, the starting point, moves.
+ * Pure HTML, styled like SensitivityBand.
  */
 
 import type { BaselineSensitivity } from "@/lib/types";
-import { baselineRangeRows } from "@/lib/baselineRange";
+import { baselineRangeRows, altColumn } from "@/lib/baselineRange";
 import { pct, signedPct } from "@/lib/format";
 import { MARINE, CREME, ENCRE, GRIS, LISERE } from "./theme";
 
@@ -44,6 +45,7 @@ export interface BaselineRangeProps {
 
 export default function BaselineRange({ baseline, withinCommune = false }: BaselineRangeProps) {
   const rows = baselineRangeRows(baseline, withinCommune);
+  const alt = altColumn(baseline);
   const cols = [
     {
       key: "central" as const,
@@ -53,8 +55,8 @@ export default function BaselineRange({ baseline, withinCommune = false }: Basel
     },
     {
       key: "low" as const,
-      label: "Hypothèse plancher",
-      sub: `locaux professionnels ${fmtScale(baseline.pro_scale_low)}`,
+      label: alt.label,
+      sub: alt.sub,
       isBase: false,
     },
   ];

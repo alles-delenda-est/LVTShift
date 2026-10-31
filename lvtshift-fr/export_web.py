@@ -451,7 +451,11 @@ def _resolve_at_land_share(df: pd.DataFrame, target_share: float,
     return _sensitivity_summary(df, chg, target_share, current_revenue)
 
 
-def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False) -> dict | None:
+LOW_SOURCES = ("th2017", "cfe_raw")
+
+
+def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False,
+                               low_source: str = "cfe_raw") -> dict | None:
     """Central vs lower-bound baseline (professional premises' share of today's
     tax at the raw CFE proxy). The LVT bills are identical; only today's tax,
     and so every change, differs. None when the run carries no lower bound."""
@@ -477,6 +481,9 @@ def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False) -> dict |
     return {
         "pro_scale_central": M["pro_undercount_scale"],
         "pro_scale_low": M["pro_undercount_scale_low"],
+        # what the second column is: the local 2017 taxe d'habitation share
+        # ("th2017"), the raw CFE proxy ("cfe_raw"), or both across members
+        "low_source": low_source,
         "central": _sensitivity_summary(
             df, new - df["current_tax"].to_numpy(dtype=float), share, revenue, within),
         "low": _sensitivity_summary(
@@ -613,11 +620,13 @@ def assert_aggregate_only(payload: dict) -> None:
     bs = payload.get("baseline_sensitivity")
     if bs is not None:
         assert isinstance(bs, dict) and \
-            set(bs) <= {"pro_scale_central", "pro_scale_low", "central", "low"}, \
+            set(bs) <= {"pro_scale_central", "pro_scale_low", "low_source", "central", "low"}, \
             f"unexpected baseline_sensitivity keys: {set(bs) if isinstance(bs, dict) else bs}"
         for k in ("pro_scale_central", "pro_scale_low"):
             v = bs.get(k)
             assert isinstance(v, (int, float)) and not isinstance(v, bool), f"{k} must be a number"
+        assert bs.get("low_source", "cfe_raw") in LOW_SOURCES + ("mixed",), \
+            f"unknown low_source {bs.get('low_source')!r}"
         for leg in ("central", "low"):
             _check_leg(bs.get(leg) or {}, "baseline")
     sens = payload.get("headline_sensitivity") or {}
@@ -660,6 +669,12 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     for k in ("industrial", "professional"):
         out[f"target_{k}_share"] = share(rec.get("targets"), k)
         out[f"achieved_{k}_share"] = share(rec.get("achieved"), k)
+    # the published alternative (§9.5): local 2017 taxe d'habitation share, or
+    # the raw CFE proxy in older runs and where the 2017 line is missing
+    targets = rec.get("targets") if isinstance(rec.get("targets"), dict) else {}
+    src = targets.get("low_source")
+    out["low_source"] = src if src in LOW_SOURCES else "cfe_raw"
+    out["target_professional_low_share"] = share(targets, "professional_low")
     # where industrial m² would pay less than professional m² the two groups
     # are one (warehouses taxed as professional premises): only their combined
     # share is meaningful, so report it as professional and say so
@@ -675,10 +690,14 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
 
 
 def _territory_baseline(present: list, out_dir: str) -> dict:
-    """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'."""
-    n = sum(load_baseline(k, out_dir)["method"] == "calibrated" for k in present)
+    """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'.
+    The alternative's source is the members' common one, else 'mixed'."""
+    recs = [load_baseline(k, out_dir) for k in present]
+    n = sum(r["method"] == "calibrated" for r in recs)
     method = ("calibrated" if n == len(present) else "floor_area" if n == 0 else "mixed")
-    return {"method": method, "members_calibrated": n}
+    srcs = {r.get("low_source", "cfe_raw") for r in recs}
+    return {"method": method, "members_calibrated": n,
+            "low_source": srcs.pop() if len(srcs) == 1 else "mixed"}
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
@@ -699,7 +718,8 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "by_category": build_by_category(df),
         "by_income_quintile": build_by_income_quintile(df),
         "by_improvement_ratio": build_buckets(df),
-        "baseline_sensitivity": build_baseline_sensitivity(df),
+        "baseline_sensitivity": build_baseline_sensitivity(
+            df, low_source=baseline.get("low_source", "cfe_raw")),
         "provenance": {
             "construction_cost_eur_m2": cfg.construction_cost_eur_m2,
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
@@ -840,6 +860,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
     members = [_member_row(k, sub) for k, sub in df.groupby("_commune", sort=False)]
     members.sort(key=lambda m: m["neutral_levy_eur"], reverse=True)
     within, within_cov = build_by_income_quintile_within(df)
+    tb = _territory_baseline(present, out_dir)
     return {
         "commune_key": territory_key,
         "kind": "territory",
@@ -857,7 +878,8 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         "by_income_quintile_within": within,
         "by_income_quintile_within_coverage_pct": within_cov,
         "by_improvement_ratio": build_buckets(df),
-        "baseline_sensitivity": build_baseline_sensitivity(df, within=True),
+        "baseline_sensitivity": build_baseline_sensitivity(df, within=True,
+                                                           low_source=tb["low_source"]),
         "members": members,
         "coverage": {
             "members_total": len(t["members"]),
@@ -868,7 +890,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "construction_cost_eur_m2": TERRITORY_COST_EUR_M2.get(territory_key),
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
-            "current_tax_baseline": _territory_baseline(present, out_dir),
+            "current_tax_baseline": tb,
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),
