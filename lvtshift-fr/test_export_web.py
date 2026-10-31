@@ -281,6 +281,17 @@ def test_category_euros_per_dwelling():
     assert cats["Single Family Residential"]["median_change_eur_per_dwelling"] == 267.0
     assert cats["Commercial"]["median_change_eur_per_dwelling"] is None
     assert cats["Commercial"]["dwellings"] is None
+    assert blk["household_median_change_pct"] == 9.6
+    assert cats["Commercial"]["household_median_change_pct"] is None
+    # flats = small buildings + blocks, weighted by dwellings: here the blocks
+    small = [dict(property_category="Condominium", tax_change=-30.0, tax_change_pct=-5.0,
+                  n_dwellings=3.0)] * 12
+    both = pd.concat([df, pd.DataFrame(small)], ignore_index=True)
+    assert ew.flats_household_median_change_pct(both) == 9.6       # 240 flats vs 36
+    assert ew.build_headline(both.assign(current_tax=1000.0, new_tax=1000.0,
+                                         taxable_land_value=1.0,
+                                         taxable_improvement_value=1.0)
+                             )["flats_household_median_change_pct"] == 9.6
     # older runs without counts, a missing count, or one dominant block: unset
     old = {c["category"]: c for c in ew.build_by_category(df.drop(columns="n_dwellings"))}
     assert old["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None

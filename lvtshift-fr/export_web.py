@@ -250,6 +250,7 @@ def build_headline(df: pd.DataFrame) -> dict:
         "gross_pct_of_levy": _pct(gross, levy),
         "net_pct_of_levy": _pct(net, levy),
         "gross_bps_of_base": round(10000.0 * gross / base, 1) if base else None,
+        "flats_household_median_change_pct": flats_household_median_change_pct(df),
         "currency": "EUR",
     }
 
@@ -322,26 +323,40 @@ def build_buckets(df: pd.DataFrame) -> list:
 
 
 def _per_dwelling(sub: pd.DataFrame) -> tuple:
-    """Typical household's change in euros for a residential category, and its
-    dwelling count: each parcel's change shared over its dwellings, weighted by
-    dwellings. A parcel median in euros compares a whole block of flats with one
-    house (Lyon: +800 € per block against +267 € per house), so the site shows
-    this figure instead.
+    """Typical household's change for a group of residential parcels: in euros
+    (each parcel's change shared over its dwellings) and in % (each parcel's
+    change), both medians weighted by dwellings; plus the dwelling count. A
+    parcel median in euros compares a whole block of flats with one house
+    (Lyon: +800 € per block against +267 € per house), so the site shows these
+    figures instead.
 
     Same disclosure rule as the income groups: every parcel must carry a count,
     the group must reach MIN_GROUP_PARCELS, and no parcel may hold more than
-    MAX_DWELLING_SHARE of its dwellings. Otherwise (None, None).
+    MAX_DWELLING_SHARE of its dwellings. Otherwise (None, None, None).
     """
+    none = (None, None, None)
     if "n_dwellings" not in sub.columns or len(sub) < MIN_GROUP_PARCELS:
-        return None, None
+        return none
     if not sub["property_category"].isin(FR_RESIDENTIAL).all():
-        return None, None
+        return none
     n = sub["n_dwellings"]
     if not n.notna().all() or n.sum() <= 0 or float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
-        return None, None
-    per = sub["tax_change"] / n.where(n > 0)
-    med = weighted_median(per, n)
-    return (None if med is None else round(med, 0)), int(round(float(n.sum())))
+        return none
+    eur = weighted_median(sub["tax_change"] / n.where(n > 0), n)
+    pct = weighted_median(sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan), n)
+    return ((None if eur is None else round(eur, 0)),
+            (None if pct is None else round(pct, 1)),
+            int(round(float(n.sum()))))
+
+
+FLATS = ("Condominium", "Large Multi-Family (5+ units)")
+
+
+def flats_household_median_change_pct(df: pd.DataFrame):
+    """Typical flat-dweller's change, %, over both building categories (small
+    buildings and blocks) weighted by dwellings: the figure behind any claim
+    about "flats", since most flats are in the blocks."""
+    return _per_dwelling(df[df["property_category"].isin(FLATS)])[1]
 
 
 def build_by_category(df: pd.DataFrame) -> list:
@@ -357,7 +372,7 @@ def build_by_category(df: pd.DataFrame) -> list:
     for cat, sub in df.groupby("property_category"):
         chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
         small = _small(len(sub))
-        per_dwelling, dwellings = _per_dwelling(sub)
+        per_dwelling, hh_pct, dwellings = _per_dwelling(sub)
         out.append({
             "category": cat,
             "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
@@ -371,6 +386,7 @@ def build_by_category(df: pd.DataFrame) -> list:
                                       _pct(int((sub["tax_change"] > 0).sum()), len(sub))),
             # residential only; None for other categories and older runs
             "median_change_eur_per_dwelling": per_dwelling,
+            "household_median_change_pct": hh_pct,
             "dwellings": dwellings,
         })
     out.sort(key=lambda r: r["parcels"], reverse=True)
@@ -539,7 +555,7 @@ HEADLINE_KEYS = {
     "parcels_modeled", "tax_base_eur", "land_base_eur", "improvement_base_eur",
     "land_share_pct", "built_at_cap_pct", "neutral_levy_eur", "gross_shifted_eur",
     "net_shifted_eur", "gross_pct_of_levy", "net_pct_of_levy", "gross_bps_of_base",
-    "currency",
+    "flats_household_median_change_pct", "currency",
 }
 SENSITIVITY_LEG_KEYS = {
     "land_share_pct", "gross_pct_of_levy", "net_pct_of_levy",
@@ -584,7 +600,7 @@ SMALL_GROUP_BLANK = {
     "by_improvement_ratio": ("value_eur", "value_pct_of_base", "share_of_gross_change_pct"),
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct", "median_change_eur_per_dwelling",
-                    "dwellings"),
+                    "household_median_change_pct", "dwellings"),
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
                            "total_change_pct", "household_median_change_pct", "dwellings"),
 }
