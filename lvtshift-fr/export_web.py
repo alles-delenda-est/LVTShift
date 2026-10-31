@@ -571,7 +571,9 @@ def _check_small_groups(payload: dict) -> None:
             for r in payload.get(key) or []:
                 assert isinstance(r.get("parcels"), int), f"{key}: row without a parcel count"
                 if r["parcels"] < MIN_GROUP_PARCELS:
-                    filled = [f for f in blank if r.get(f) is not None]
+                    # an empty group's zeros describe nobody
+                    allowed = (None, 0) if r["parcels"] == 0 else (None,)
+                    filled = [f for f in blank if r.get(f) not in allowed]
                     assert not filled, f"{key}: group of {r['parcels']} parcels publishes {filled}"
     # leg rows carry no count: match them to the central rows
     small = {r["category"] for r in payload.get("by_category") or []
