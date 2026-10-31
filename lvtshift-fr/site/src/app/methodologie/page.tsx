@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadIndex, loadValidation, loadRegister } from "@/lib/data";
 import { pct } from "@/lib/format";
 import type { ValidationCheck, RegisterCommune, RegisterCheck } from "@/lib/types";
@@ -274,6 +275,78 @@ export default function MethodologiePage() {
             Cette bande n&apos;est pas une correction — c&apos;est une
             mesure explicite de l&apos;incertitude.
           </div>
+        </div>
+      </section>
+
+      {/* ── Section : base foncière nationale ─────────────────────────── */}
+      <section aria-labelledby="base-nationale" className="mb-12 border-t border-lisere pt-10">
+        <h3 id="base-nationale" className="font-display text-xl font-medium text-marine mb-4">
+          La base foncière nationale, comparée à Trannoy et Wasmer
+        </h3>
+        <div className="font-body text-base text-encre leading-relaxed space-y-4 max-w-3xl">
+          <p>
+            Les taux indicatifs des{" "}
+            <Link href="/scenarios" className="text-marine underline underline-offset-2 hover:text-rouge">scénarios</Link>{" "}
+            rapportent les recettes à remplacer à la valeur des terrains bâtis
+            publiée par l&apos;INSEE dans les comptes de patrimoine (fin 2025),
+            hors foncier public. Alain Trannoy et Étienne Wasmer donnent les
+            mêmes chiffres pour 2019 (<em>Le grand retour de la terre dans les
+            patrimoines</em>, 2022, tableau 2.1). Les deux séries ne sont pas
+            directement comparables : depuis, l&apos;INSEE a révisé ses comptes
+            (passage à la base 2020). Le chiffre de 2019 dans les comptes
+            actuels permet de séparer cette révision de l&apos;évolution réelle.
+          </p>
+        </div>
+        <div className="overflow-x-auto -mx-6 px-6 my-5 max-w-4xl">
+          <table className="w-full min-w-[36rem] font-body text-sm border-collapse">
+            <caption className="text-left text-xs text-gris mb-2">
+              Terrains supportant des bâtiments, en milliards d&apos;euros courants
+            </caption>
+            <thead>
+              <tr className="border-b-2 border-marine text-left text-xs uppercase tracking-wider text-gris">
+                <th scope="col" className="py-2 pr-4 font-normal">Propriétaires</th>
+                <th scope="col" className="py-2 pr-4 font-normal text-right">2019, Trannoy et Wasmer</th>
+                <th scope="col" className="py-2 pr-4 font-normal text-right">2019, INSEE actuel</th>
+                <th scope="col" className="py-2 pr-4 font-normal text-right">2025, INSEE</th>
+                <th scope="col" className="py-2 font-normal text-right">2019→2025, hors inflation</th>
+              </tr>
+            </thead>
+            <tbody className="tabular-nums">
+              {[
+                ["Base taxable (hors public)", "5 145", "5 457", "6 091", "−4 %"],
+                ["dont sociétés", "1 503", "1 599", "1 901", "+2 %"],
+                ["dont ménages et associations", "3 642", "3 858", "4 190", "−6 %"],
+                ["Part des sociétés", "29,2 %", "29,3 %", "31,2 %", ""],
+              ].map(([label, ...vals]) => (
+                <tr key={label} className="border-b border-lisere">
+                  <th scope="row" className="py-2 pr-4 text-left font-normal text-encre">{label}</th>
+                  {vals.map((v, i) => (
+                    <td key={i} className="py-2 pr-4 text-right last:pr-0">{v}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="font-body text-base text-encre leading-relaxed space-y-4 max-w-3xl">
+          <p>
+            La révision des comptes relève tous les secteurs d&apos;environ
+            6&nbsp;% et n&apos;explique qu&apos;un tiers de l&apos;écart. Le
+            reste est l&apos;évolution des prix entre 2019 et 2025 : hors
+            inflation, le foncier des ménages a perdu 6&nbsp;%, celui des
+            sociétés a conservé sa valeur. La part des sociétés dans la base
+            a donc réellement augmenté, de 29 à 31&nbsp;%. Le taux à rendement
+            égal du scénario&nbsp;1 aurait été d&apos;environ 1,06&nbsp;% en
+            2019, contre 1,10&nbsp;% en 2025.
+          </p>
+          <p className="text-sm text-gris">
+            Les comptes nationaux rangent parmi les sociétés les exploitations
+            agricoles constituées en société : elles détiennent les trois
+            quarts des terres cultivées. Ces terres sont hors de la réforme et
+            ne figurent pas dans la base ci-dessus. Sources : INSEE, comptes de
+            patrimoine, tableau 8.200 (2019 et 2025, base 2020) ; inflation :
+            indice des prix à la consommation, INSEE.
+          </p>
         </div>
       </section>
 
