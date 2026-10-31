@@ -349,6 +349,11 @@ def test_baseline_sensitivity_changes_only_todays_tax():
             ew.assert_aggregate_only({"baseline_sensitivity": {**b, "low": smuggle}})
     with pytest.raises(AssertionError):
         ew.assert_aggregate_only({"baseline_sensitivity": {**b, "pro_scale_low": "1"}})
+    # the second column names its source; anything else is refused
+    assert b["low_source"] == "cfe_raw"
+    assert ew.build_baseline_sensitivity(low, low_source="th2017")["low_source"] == "th2017"
+    with pytest.raises(AssertionError):
+        ew.assert_aggregate_only({"baseline_sensitivity": {**b, "low_source": "<x>"}})
     # no real lower bound: nothing published
     assert ew.build_baseline_sensitivity(df.assign(current_tax_low=df["current_tax"])) is None
     # a territory member without the figures: a clear error naming it

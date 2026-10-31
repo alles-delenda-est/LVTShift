@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { baselineRangeRows } from "@/lib/baselineRange";
+import { baselineRangeRows, altColumn } from "@/lib/baselineRange";
 import type { BaselineSensitivity, SensitivityLeg } from "@/lib/types";
 
 function leg(over: Partial<SensitivityLeg>): SensitivityLeg {
@@ -47,5 +47,16 @@ describe("baselineRangeRows", () => {
     const partial = { ...b, low: leg({ by_income_quintile: null }) };
     const q1 = baselineRangeRows(partial).find((r) => r.label === "20 % les plus modestes");
     expect(q1).toMatchObject({ central: -17.4, low: null });
+  });
+});
+
+describe("alternative column heading", () => {
+  it("names the local 2017 estimate, and the raw proxy in older payloads", () => {
+    expect(altColumn({ ...b, low_source: "th2017" })).toEqual({
+      label: "Variante locale", sub: "taxe d'habitation 2017",
+    });
+    expect(altColumn(b).label).toBe("Hypothèse plancher");
+    expect(altColumn({ ...b, low_source: "cfe_raw" }).sub).toBe("locaux professionnels ×1");
+    expect(altColumn({ ...b, low_source: "mixed" }).label).toBe("Variante locale");
   });
 });

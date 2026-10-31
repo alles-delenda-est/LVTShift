@@ -13,3 +13,4 @@ openpyxl>=3.1.0
 jupyter>=1.0.0
 nbconvert>=7.0.0
 ipykernel>=6.25.0
+python-calamine>=0.2.3   # lvtshift-fr: reads the REI 2017 workbook in seconds (openpyxl fallback)

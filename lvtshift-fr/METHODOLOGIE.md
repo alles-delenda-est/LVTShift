@@ -304,7 +304,7 @@ REI :
 | Groupe | Base TFPB reconstituée | Contrôle |
 |---|---|---|
 | Établissements industriels (art. 1499 CGI) | `WC75` ÷ (taux TFPB 2020 commune + département). `WC75` est la compensation versée par l'État pour la division par deux des valeurs industrielles en 2021 ; la loi (LFI 2021, art. 29 III A 2) la fixe à la perte de base × le taux 2020, et la base perdue égale la base restante. Les communes de la Métropole de Lyon prennent le taux 2014 du Rhône (11,03 %), comme le prévoit l'article ; Paris n'a pas de ligne départementale | Appliquée à toute la France, la méthode donne 5,7 % de la base TFPB, exactement le chiffre de la Cour des comptes (*Les taxes foncières*, 2023). La ligne industrielle de la CFE (`X503`) concorde dans un rapport de 0,6 à 1,13 |
-| Locaux professionnels (RVLLP, art. 1498) | 0,5 × la base brute de CFE des locaux professionnels (`T29_1`, à défaut `T29 − X503`), × **2,5**. Le 0,5 est l'abattement de 50 % de la TFPB (art. 1388 CGI), qui vaut pour toute propriété bâtie ; la CFE retient la valeur locative entière | La CFE est un impôt d'occupant : les locaux vacants et les occupants hors CFE en sortent. Au niveau national, l'indicateur brut donne 8,6 % de la base contre 22 % pour la Cour. Le facteur 2,5 le cale sur ce chiffre national ; l'indicateur brut (× 1,0) est la borne basse |
+| Locaux professionnels (RVLLP, art. 1498) | 0,5 × la base brute de CFE des locaux professionnels (`T29_1`, à défaut `T29 − X503`), × **2,5**. Le 0,5 est l'abattement de 50 % de la TFPB (art. 1388 CGI), qui vaut pour toute propriété bâtie ; la CFE retient la valeur locative entière | La CFE est un impôt d'occupant : les locaux vacants et les occupants hors CFE en sortent. Au niveau national, l'indicateur brut donne 8,6 % de la base contre 22 % pour la Cour. Le facteur 2,5 le cale sur ce chiffre national. La variante publiée est la part locale qu'implique la taxe d'habitation de 2017, 1 − 0,5 × `J11`/`E11` (REI 2017) − 2 × la part industrielle ; l'indicateur brut (× 1,0) là où cette ligne manque (`docs/research/tfpb-baseline-calibration.md` §9.5) |
 | Logement et autres | le reste de la base (`E11`) | — |
 
 Un seul taux de TFPB s'applique à toutes les catégories d'une commune : la part
@@ -342,13 +342,19 @@ le facteur 2,5 en découle.
   dans la provenance de chaque fichier publié (`current_tax_baseline`).
   `run_commune.py --baseline floor` reproduit l'ancienne base à la surface
   plancher, en sensibilité.
-- **Borne basse calculée en parallèle.** Chaque calcul répartit une seconde fois
-  la taxe actuelle avec la cible professionnelle à l'indicateur brut (× 1,0,
-  `pro_undercount_scale_low`), selon les mêmes groupes, la même règle de fusion
-  et les mêmes plafonds. Elle est conservée dans le fichier annexe des ménages
-  (`current_tax_low`), vérifiée à produit constant à l'export et publiée sous
-  `baseline_sensitivity` (§3.7). Les cotisations LVT ne changent pas ; seule la
-  taxe actuelle change.
+- **Variante calculée en parallèle.** Chaque calcul répartit une seconde fois
+  la taxe actuelle avec la cible professionnelle à la part locale qu'implique la
+  taxe d'habitation de 2017, 1 − 0,5 × `J11`/`E11` (REI 2017) − 2 × la part
+  industrielle (`ingest.fetch_th2017_housing_share` ; l'indicateur brut, × 1,0,
+  là où la ligne 2017 manque : Sathonay-Camp seulement), selon les mêmes
+  groupes, la même règle de fusion et les mêmes plafonds. Elle est conservée
+  dans le fichier annexe des ménages (`current_tax_low`), vérifiée à produit
+  constant à l'export et publiée sous `baseline_sensitivity` avec sa source
+  (`low_source`, §3.7). Les cotisations LVT ne changent pas ; seule la taxe
+  actuelle change. Jusqu'au 31 octobre 2026, la variante était l'indicateur brut
+  (× 1,0) ; le contrôle par la taxe d'habitation 2017
+  (`docs/research/tfpb-baseline-calibration.md` §9.5) l'a montré bien trop bas
+  en ville.
 
 Exemples de pondérations au m², rapportées au logement : Saint-Fons industriel
 1,30, professionnel 0,91 ; Rungis 1,71 (industriel fondu dans le
@@ -465,8 +471,8 @@ par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
 −17,1 à −19,1 %, dernier +15,6 à +15,8 %). La bande laisse la base de la taxe
 actuelle inchangée. L'incertitude propre à cette base, le facteur appliqué aux
 locaux professionnels (§3.5), déplace les résultats des ménages bien plus que la
-bande. Elle est publiée à part, sous forme de borne basse présentée à côté du
-cas central (§3.7, §6 point 1).
+bande. Elle est publiée à part, sous forme d'une variante locale présentée à
+côté du cas central (§3.7, §6 point 1).
 
 **Groupes de revenu : totaux et ménages, pas médianes par parcelle.** Chaque
 quintile de revenu (parcelles classées selon le revenu médian Filosofi de leur
@@ -607,17 +613,20 @@ plancher ; la base calée ci-dessous la remplace.
 (§3.5) ne change aucune part foncière (Paris 75,8 %, Lyon 60,0 %, couronne
 parisienne 65,3 %, couronne lyonnaise 55,4 %) ni aucune nouvelle cotisation :
 seul le point de départ bouge. « Avant » est la base à la surface plancher ;
-« centrale » applique le facteur 2,5 à l'indicateur professionnel ; « borne
-basse » prend l'indicateur brut (× 1,0).
+« centrale » applique le facteur 2,5 à l'indicateur professionnel ; « variante
+locale » prend la part professionnelle qu'implique la taxe d'habitation de 2017
+(§3.5). Les deux colonnes publiées sont celles des fichiers du 31 octobre 2026 ;
+« avant » et l'indicateur brut (× 1,0, la variante jusque-là) sont gardés pour
+mémoire.
 
-| | Avant (surface plancher) | Centrale (× 2,5) | Borne basse (× 1,0) |
-|---|---|---|---|
-| Paris, totaux par groupe de revenu Q1 … Q5, % | −20,1 −11,2 −4,2 +5,7 +14,9 | −17,4 −8,3 −1,3 +8,9 +18,9 | −27,6 −18,8 −12,1 −2,9 +3,9 |
-| Lyon | −18,7 −8,5 −0,8 +3,2 +13,6 | −14,0 −3,5 +4,4 +8,5 +18,9 | −27,7 −18,2 −10,8 −7,0 +3,5 |
-| Couronne parisienne | −9,1 −5,0 −0,6 −2,7 +1,1 | −7,4 −3,0 +2,0 −1,1 +5,5 | −21,9 −16,9 −12,1 −12,6 −9,0 |
-| Couronne lyonnaise | −3,7 +0,8 +5,0 −1,3 −4,7 | +0,6 +2,8 +10,7 +4,9 −1,1 | −15,9 −11,4 −7,7 −12,1 −14,2 |
-| Montant déplacé, % du produit : Paris / Lyon / couronne parisienne / couronne lyonnaise | 19,2 / 20,4 / 28,1 / 38,3 | 19,6 / 20,9 / 30,4 / 43,1 | 30,2 / 30,9 / 36,7 / 40,7 |
-| Part des parcelles qui paient plus, % : même ordre | 50,2 / 70,8 / 68,6 / 69,3 | 52,8 / 74,6 / 70,9 / 74,6 | 42,5 / 51,5 / 56,2 / 58,4 |
+| | Avant (surface plancher) | Centrale (× 2,5) | Variante locale (TH 2017) | Indicateur brut (× 1,0), retiré |
+|---|---|---|---|---|
+| Paris, totaux par groupe de revenu Q1 … Q5, % | −20,1 −11,2 −4,2 +5,7 +14,9 | −17,4 −8,3 −1,3 +8,9 +18,9 | −6,0 +3,2 +10,6 +21,8 +36,1 | −27,6 −18,8 −12,1 −2,9 +3,9 |
+| Lyon | −18,7 −8,5 −0,8 +3,2 +13,6 | −14,0 −3,5 +4,4 +8,5 +18,9 | −3,0 +8,2 +16,3 +20,6 +30,6 | −27,7 −18,2 −10,8 −7,0 +3,5 |
+| Couronne parisienne | −9,1 −5,0 −0,6 −2,7 +1,1 | −7,4 −3,0 +2,1 −1,2 +5,5 | +1,8 +4,8 +12,4 +11,9 +22,4 | −21,9 −16,9 −12,1 −12,6 −9,0 |
+| Couronne lyonnaise | −3,7 +0,8 +5,0 −1,3 −4,7 | +0,7 +2,6 +11,0 +4,4 0,0 | +0,5 +6,3 +10,3 +4,0 +4,0 | −15,9 −11,4 −7,7 −12,1 −14,2 |
+| Montant déplacé, % du produit : Paris / Lyon / couronne parisienne / couronne lyonnaise | 19,2 / 20,4 / 28,1 / 38,3 | 19,6 / 20,9 / 30,4 / 43,0 | 27,8 / 30,0 / 39,7 / 43,0 | 30,2 / 30,9 / 36,7 / 40,7 |
+| Part des parcelles qui paient plus, % : même ordre | 50,2 / 70,8 / 68,6 / 69,3 | 52,8 / 74,5 / 70,5 / 70,4 | 67,1 / 78,5 / 74,5 / 67,7 | 42,5 / 51,5 / 56,2 / 58,4 |
 
 Par catégorie, cas central :
 - **Couronne lyonnaise.** La part de l'industrie dans la taxe actuelle passe de
@@ -626,33 +635,37 @@ Par catégorie, cas central :
 - **Couronne parisienne.** La part de l'industrie passe de 5,3 à 5,8 %.
   Cotisations : industrielles −36 %, commerciales −15 %, maisons +18 %.
 
-Borne basse : dans la couronne lyonnaise, les cotisations commerciales
-augmentent de 47 %, les industrielles baissent de 42 % et les maisons de 6 % ;
-dans la couronne parisienne, commerce +77 %, industrie +1 %, maisons +1 %.
+Variante locale, variation médiane par catégorie : Paris maisons +53,8 %,
+immeubles collectifs +10,5 %, commerce −34,2 % ; Lyon maisons +39,4 %, immeubles
+collectifs +19,4 %, commerce −30,2 % ; couronne parisienne maisons +27,1 %,
+commerce −32,1 %, industrie −53,7 % ; couronne lyonnaise maisons +8,7 %, commerce
+−24,2 %, industrie −65,8 % (cas central : maisons de Paris +29,6 %, de Lyon
++20,6 %). L'indicateur brut retiré donnait le signe inverse aux entreprises : dans
+la couronne lyonnaise, commerce +47 %, industrie −42 %, maisons −6 % ; dans la
+couronne parisienne, commerce +77 %, industrie +1 %, maisons +1 %.
 
 *Sur le site.* Chaque fichier de commune et de territoire porte
-`baseline_sensitivity`, avec une branche centrale (× 2,5) et une branche basse
-(× 1,0) : montant déplacé, part des parcelles qui paient plus, variation médiane
+`baseline_sensitivity`, avec une branche centrale (× 2,5) et une variante
+(`low_source` : `th2017`, ou `mixed` pour la couronne lyonnaise, où
+Sathonay-Camp garde l'indicateur brut) : montant déplacé, part des parcelles qui paient plus, variation médiane
 résidentielle, catégories et totaux par groupe de revenu (les territoires
 classent aussi les groupes au sein de chaque commune). La page de résultats
 présente les deux côte à côte dans le tableau « Incertitude sur la taxe actuelle
 des locaux professionnels », après le tableau de sensibilité à la part foncière.
 Les cotisations LVT sont identiques dans les deux colonnes ; seule la taxe
-actuelle diffère. À Villepinte, par exemple, 68,8 % des parcelles paient plus
-dans le cas central, 19,3 % en borne basse. Les chiffres des territoires du
-tableau ci-dessus viennent d'un calcul d'essai du même code ; les fichiers
-publiés devraient les reproduire.
+actuelle diffère.
 
-**Le facteur professionnel est désormais l'incertitude porteuse.** Il déplace
-les résultats des ménages de 10 à 15 points (premier quintile parisien −17,4 %
-en central contre −27,6 % en borne basse ; couronne lyonnaise +0,6 % contre
-−15,9 %). Dans le cas central, le gradient progressif de Paris et de Lyon tient
-et se raidit en haut, et les ménages des couronnes gagnent moins qu'avec la base
-à la surface plancher. En borne basse, tous les groupes de revenu des couronnes
-paient moins, et seul le quintile le plus aisé de Paris et de Lyon paie plus.
-Le facteur 2,5 est la valeur la mieux étayée, l'indicateur brut ne captant
-qu'environ 40 % de la base professionnelle nationale, mais un multiplicateur
-national unique ne peut convenir à toutes les communes (§6, point 1).
+**La part professionnelle est l'incertitude porteuse.** La variante locale
+déplace les résultats des ménages d'environ 10 points, dans le sens inverse de
+l'indicateur brut retiré : premier quintile parisien −17,4 % en central contre
+−6,0 %, lyonnais −14,0 % contre −3,0 %, couronne parisienne −7,4 % contre +1,8 % ;
+la couronne lyonnaise bouge à peine (+0,7 % contre +0,5 %). Dans les deux
+colonnes publiées, le gradient de Paris et de Lyon est progressif : le quintile
+le plus aisé paie le plus. Dans la variante locale, tous les groupes de revenu de
+Paris et de Lyon sauf le plus modeste paient plus, et les locaux professionnels
+nettement moins. Le facteur 2,5 reste le cas central, car il est calé à
+l'échelle nationale ; la variante locale est calée commune par commune, mais sur
+des données de 2017 et un indicateur lu à ± 5 points (§6, point 1).
 
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
@@ -774,8 +787,9 @@ ces règles à l'export et sur chaque fichier publié (test CI).
 - **Base de la taxe actuelle** (`config.BASELINE_MODEL`, §3.5) : REI 2025,
   taux de TFPB 2020 (Métropole de Lyon : taux 2014 du Rhône, 11,03 %) ;
   indicateur professionnel 0,5 × base brute de CFE (art. 1388 CGI) × **2,5**
-  (central ; 1,0 = borne basse, calculée à chaque passage et publiée à côté du
-  cas central) ; pondérations au m² plafonnées à 5 × le
+  (central) ; variante = la part locale qu'implique la taxe d'habitation de 2017
+  (`alt_source`, indicateur brut × 1,0 en repli), calculée à chaque passage et
+  publiée à côté du cas central ; pondérations au m² plafonnées à 5 × le
   logement ; parts industrielle + professionnelle plafonnées à 75 %.
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
@@ -818,15 +832,15 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      industrielle est quasi exacte. La part professionnelle est un indicateur
      CFE multiplié par un facteur national unique, 2,5, car l'indicateur brut ne
      capte qu'environ 40 % de la base professionnelle nationale (8,6 % contre
-     22 % pour la Cour des comptes). Passer de 2,5 à l'indicateur brut (1,0)
-     déplace les résultats des ménages de 10 à 15 points : le premier quintile
-     parisien passe de −17,4 à −27,6 %, celui de la couronne lyonnaise de +0,6 à
-     −15,9 %, et les cotisations commerciales de la couronne lyonnaise de −24 %
-     à +47 % (§3.7). Les nouvelles cotisations sont identiques dans les deux
-     cas ; seul le point de départ bouge. 2,5 est la valeur la mieux étayée,
-     mais le sous-comptage n'est sûrement pas uniforme : il devrait être plus
-     fort là où beaucoup de locaux sont vacants ou occupés par des organismes
-     publics et des associations, comme à Paris. Le site présente les deux côte à côte
+     22 % pour la Cour des comptes). La variante publiée est locale : la part
+     des entreprises qu'implique la taxe d'habitation de 2017 (§3.5). Elle
+     dépasse le cas central dans les villes, et les ménages y paient donc plus :
+     le premier quintile parisien passe de −17,4 à −6,0 %, le lyonnais de −14,0
+     à −3,0 %, et les cotisations commerciales de Paris de −2,2 % à −34,2 %
+     (variation médiane ; §3.7). Les nouvelles cotisations sont identiques dans
+     les deux cas ; seul le point de départ bouge. Le sous-comptage n'est pas
+     uniforme : il est plus fort là où beaucoup de locaux sont vacants ou
+     occupés par des organismes publics et des associations, comme à Paris. Le site présente les deux côte à côte
      sur chaque page de résultats (tableau « Incertitude sur la taxe actuelle
      des locaux professionnels ») ; **les présenter aussi côte à côte dans
      toute publication.** Les valeurs professionnelles par commune (Fichiers

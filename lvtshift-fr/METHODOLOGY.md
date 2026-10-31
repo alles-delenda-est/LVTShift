@@ -274,7 +274,7 @@ commune to its official 2025 REI split between three groups of premises
 | Group | TFPB base rebuilt as | Check |
 |---|---|---|
 | Industrial establishments (CGI art. 1499) | `WC75` ÷ (2020 commune + département TFPB rate). `WC75` is the State's compensation for the 2021 halving of industrial values; by law (LFI 2021 art. 29 III A 2) it equals the base lost × the 2020 rate, and the base lost equals the base that remains. Métropole de Lyon communes use the Rhône 2014 rate (11.03 %), as the article requires; Paris has no département line | A national run gives 5.7 % of the TFPB base, exactly the Cour des comptes figure (*Les taxes foncières*, 2023). The CFE industrial line (`X503`) agrees within a ratio of 0.6–1.13 |
-| Professional premises (RVLLP, art. 1498) | 0.5 × the CFE gross base of professional premises (`T29_1`, else `T29 − X503`), × **2.5**. The 0.5 is the TFPB's 50 % deduction (CGI art. 1388), which applies to every built property; the CFE takes the full rental value | The CFE is an occupier tax, so vacant premises and occupiers outside the CFE drop out: nationally the raw proxy gives 8.6 % of the base against the Cour's 22 %. The scale of 2.5 calibrates it to that national figure. The raw proxy (× 1.0) is the lower bound |
+| Professional premises (RVLLP, art. 1498) | 0.5 × the CFE gross base of professional premises (`T29_1`, else `T29 − X503`), × **2.5**. The 0.5 is the TFPB's 50 % deduction (CGI art. 1388), which applies to every built property; the CFE takes the full rental value | The CFE is an occupier tax, so vacant premises and occupiers outside the CFE drop out: nationally the raw proxy gives 8.6 % of the base against the Cour's 22 %. The scale of 2.5 calibrates it to that national figure. The published alternative is the local share implied by the 2017 taxe d'habitation, 1 − 0.5 × `J11`/`E11` (REI 2017) − 2 × the industrial share; the raw proxy (× 1.0) where that line is missing (`docs/research/tfpb-baseline-calibration.md` §9.5) |
 | Housing and other | the rest of the base (`E11`) | — |
 
 One TFPB rate applies to every category in a commune, so each group's share of
@@ -308,12 +308,17 @@ claims were wrong. Its point that the CFE proxy undercounts was right, and the
 - **Published.** The method, the targets and the achieved shares are in each
   payload's provenance (`current_tax_baseline`). `run_commune.py --baseline
   floor` reproduces the old floor-area baseline as a sensitivity.
-- **Lower bound computed alongside.** Every run also shares today's tax a
-  second time with the professional target at the raw proxy (× 1.0,
-  `pro_undercount_scale_low`), under the same groups, merge rule and caps. It
-  is stored in the households sidecar (`current_tax_low`), checked to be
-  revenue-neutral on export, and published as `baseline_sensitivity` (§3.7).
-  The LVT bills do not change; only today's tax does.
+- **Alternative computed alongside.** Every run also shares today's tax a
+  second time with the professional target at the local share implied by the
+  2017 taxe d'habitation, 1 − 0.5 × `J11`/`E11` (REI 2017) − 2 × the industrial
+  share (`ingest.fetch_th2017_housing_share`; the raw proxy, × 1.0, where the
+  2017 line is missing: Sathonay-Camp only), under the same groups, merge rule
+  and caps. It is stored in the households sidecar (`current_tax_low`), checked
+  to be revenue-neutral on export, and published as `baseline_sensitivity`
+  with its `low_source` (§3.7). The LVT bills do not change; only today's tax
+  does. Until 31 October 2026 the alternative was the raw proxy (× 1.0); the
+  2017 check (`docs/research/tfpb-baseline-calibration.md` §9.5) showed it far
+  too low in cities.
 
 Example weights per m², relative to housing: Saint-Fons industrial 1.30,
 professional 0.91; Rungis 1.71 (industrial merged into professional); Vaujours
@@ -416,8 +421,8 @@ treated as robust only if it holds across the band; in Paris the quintile gradie
 barely moves (median residential parcel: poorest fifth −17.1 to −19.1 %, richest
 +15.6 to +15.8 %). The band holds today's-tax baseline fixed. The baseline's own
 uncertainty, the professional-premises scale (§3.5), moves household results
-far more than the band does. It is published separately, as a lower bound shown
-beside the central case (§3.7, §6 item 1).
+far more than the band does. It is published separately, as a local
+alternative shown beside the central case (§3.7, §6 item 1).
 
 **Income groups: totals and households, not parcel medians.** Each income
 quintile (parcels ranked by their IRIS's Filosofi median income) carries three
@@ -545,16 +550,19 @@ floor-area baseline; the calibrated baseline below replaces it.
 (§3.5) leaves every land share unchanged (Paris 75.8 %, Lyon 60.0 %, Paris ring
 65.3 %, Lyon ring 55.4 %) and every new bill unchanged: only the starting point
 moves. "Before" is the floor-area baseline; "central" scales the professional
-proxy by 2.5; "low bound" uses the raw proxy (× 1.0).
+proxy by 2.5; "local variant" takes the professional share implied by the 2017
+taxe d'habitation (§3.5). The two published columns are the 31 October 2026
+payloads; "before" and the raw proxy (× 1.0, the alternative until then) are
+kept for the record.
 
-| | Before (floor area) | Central (× 2.5) | Low bound (× 1.0) |
-|---|---|---|---|
-| Paris, income group totals Q1 … Q5, % | −20.1 −11.2 −4.2 +5.7 +14.9 | −17.4 −8.3 −1.3 +8.9 +18.9 | −27.6 −18.8 −12.1 −2.9 +3.9 |
-| Lyon | −18.7 −8.5 −0.8 +3.2 +13.6 | −14.0 −3.5 +4.4 +8.5 +18.9 | −27.7 −18.2 −10.8 −7.0 +3.5 |
-| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.0 −1.1 +5.5 | −21.9 −16.9 −12.1 −12.6 −9.0 |
-| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.6 +2.8 +10.7 +4.9 −1.1 | −15.9 −11.4 −7.7 −12.1 −14.2 |
-| Amount shifted, % of levy: Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.1 | 30.2 / 30.9 / 36.7 / 40.7 |
-| Share of parcels paying more, %: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.6 / 70.9 / 74.6 | 42.5 / 51.5 / 56.2 / 58.4 |
+| | Before (floor area) | Central (× 2.5) | Local variant (TH 2017) | Raw proxy (× 1.0), retired |
+|---|---|---|---|---|
+| Paris, income group totals Q1 … Q5, % | −20.1 −11.2 −4.2 +5.7 +14.9 | −17.4 −8.3 −1.3 +8.9 +18.9 | −6.0 +3.2 +10.6 +21.8 +36.1 | −27.6 −18.8 −12.1 −2.9 +3.9 |
+| Lyon | −18.7 −8.5 −0.8 +3.2 +13.6 | −14.0 −3.5 +4.4 +8.5 +18.9 | −3.0 +8.2 +16.3 +20.6 +30.6 | −27.7 −18.2 −10.8 −7.0 +3.5 |
+| Paris ring | −9.1 −5.0 −0.6 −2.7 +1.1 | −7.4 −3.0 +2.1 −1.2 +5.5 | +1.8 +4.8 +12.4 +11.9 +22.4 | −21.9 −16.9 −12.1 −12.6 −9.0 |
+| Lyon ring | −3.7 +0.8 +5.0 −1.3 −4.7 | +0.7 +2.6 +11.0 +4.4 0.0 | +0.5 +6.3 +10.3 +4.0 +4.0 | −15.9 −11.4 −7.7 −12.1 −14.2 |
+| Amount shifted, % of levy: Paris / Lyon / Paris ring / Lyon ring | 19.2 / 20.4 / 28.1 / 38.3 | 19.6 / 20.9 / 30.4 / 43.0 | 27.8 / 30.0 / 39.7 / 43.0 | 30.2 / 30.9 / 36.7 / 40.7 |
+| Share of parcels paying more, %: same order | 50.2 / 70.8 / 68.6 / 69.3 | 52.8 / 74.5 / 70.5 / 70.4 | 67.1 / 78.5 / 74.5 / 67.7 | 42.5 / 51.5 / 56.2 / 58.4 |
 
 By category, central case:
 - **Lyon ring.** Industry's share of today's tax rises from 10.0 to 11.9 %, and
@@ -563,31 +571,34 @@ By category, central case:
 - **Paris ring.** Industry's share rises from 5.3 to 5.8 %. Bills: industrial
   −36 %, commercial −15 %, houses +18 %.
 
-Low bound: in the Lyon ring commercial bills rise 47 %, industrial fall 42 % and
-houses fall 6 %; in the Paris ring commercial +77 %, industrial +1 %, houses
-+1 %.
+Local variant, median change by category: Paris houses +53.8 %, blocks
++10.5 %, commercial −34.2 %; Lyon houses +39.4 %, blocks +19.4 %, commercial
+−30.2 %; Paris ring houses +27.1 %, commercial −32.1 %, industrial −53.7 %; Lyon
+ring houses +8.7 %, commercial −24.2 %, industrial −65.8 % (central: Paris
+houses +29.6 %, Lyon +20.6 %). The retired raw proxy had the opposite sign for
+business: in the Lyon ring commercial bills +47 %, industrial −42 %, houses −6 %;
+in the Paris ring commercial +77 %, industrial +1 %, houses +1 %.
 
 *On the site.* Each commune and territory payload carries
-`baseline_sensitivity`, with a central (× 2.5) and a low (× 1.0) leg: amount
+`baseline_sensitivity`, with a central (× 2.5) and an alternative leg
+(`low_source`: `th2017`, or `mixed` for the Lyon ring, where Sathonay-Camp
+keeps the raw proxy): amount
 shifted, share of parcels paying more, residential median change, categories and
 income-group totals (territories also rank groups within each commune). The
 results page shows the two side by side in the table "Incertitude sur la taxe
 actuelle des locaux professionnels", after the land-share sensitivity table. The
-LVT bills are identical in both columns; only today's tax differs. In
-Villepinte, for example, 68.8 % of parcels pay more in the central case and
-19.3 % at the low bound. The territory figures in the table above come from a
-scratch run of the same code; the published payloads should reproduce them.
+LVT bills are identical in both columns; only today's tax differs.
 
-**The professional scale is now the load-bearing uncertainty.** It moves the
-household results by 10–15 points (Paris's poorest fifth −17.4 % central against
-−27.6 % low; the Lyon ring's +0.6 % against −15.9 %). Under the central case
-the progressive gradient in Paris and Lyon holds and steepens at the top, and
-the rings' households gain less than on the floor-area baseline. Under the low
-bound every ring income group pays less, and only the richest fifth in Paris and
-Lyon pays more. The 2.5 is the better-supported
-value, since the raw proxy is known to capture only about 40 % of the
-professional base nationally, but one national multiplier cannot fit every
-commune (§6, item 1).
+**The professional share is the load-bearing uncertainty.** The local variant
+moves household results by about 10 points the other way from the retired raw
+proxy: Paris's poorest fifth −17.4 % central against −6.0 %, Lyon's −14.0 %
+against −3.0 %, the Paris ring's −7.4 % against +1.8 %; the Lyon ring barely
+moves (+0.7 % against +0.5 %). Under both published columns the gradient in
+Paris and Lyon is progressive: the richest fifth pays most. Under the local
+variant every income group in Paris and Lyon except the poorest pays more, and
+business premises pay markedly less. The 2.5 stays the central case because it
+is calibrated nationally; the local variant is calibrated commune by commune
+but on 2017 data and a proxy read at ± 5 points (§6, item 1).
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (Saint-Fons
@@ -694,8 +705,10 @@ published file (CI test).
 - **AU discount** (`au_strict_factor`): 0.55. **Hedonic shrinkage** k = 8.
 - **Today's-tax baseline** (`config.BASELINE_MODEL`, §3.5): REI 2025, 2020
   TFPB rates (Métropole de Lyon: Rhône 2014 rate, 11.03 %); professional proxy
-  0.5 × CFE gross base (CGI art. 1388) × **2.5** (central; 1.0 = low bound,
-  computed on every run and published beside the central case);
+  0.5 × CFE gross base (CGI art. 1388) × **2.5** (central); alternative = the
+  local share implied by the 2017 taxe d'habitation (`alt_source`, raw proxy
+  × 1.0 as fallback), computed on every run and published beside the central
+  case;
   per-m² weights capped at 5 × housing; industrial + professional share capped
   at 75 %.
 - **REI layers** held neutral: Commune + intercommunalité (configurable). The
@@ -736,13 +749,14 @@ Ranked by how much they move published (category/quintile) results.
      close to exact. The professional share is a CFE proxy scaled by one
      national multiplier, 2.5, because the raw proxy captures only about 40 %
      of the professional base nationally (8.6 % against the Cour des comptes'
-     22 %). Moving from 2.5 to the raw proxy (1.0) moves household results by
-     10–15 points: Paris's poorest fifth goes from −17.4 to −27.6 %, the Lyon
-     ring's from +0.6 to −15.9 %, and in the Lyon ring commercial bills go from
-     −24 % to +47 % (§3.7). The reform's new bills are the same in both cases;
-     only the starting point moves. 2.5 is the better-supported value, but the
-     undercount is surely not uniform: it should be larger where many premises
-     are vacant or occupied by public bodies and associations, as in Paris.
+     22 %). The published alternative is local: the business share implied by
+     the 2017 taxe d'habitation (§3.5). It is higher than the central case in
+     the cities, so households pay more: Paris's poorest fifth goes from −17.4
+     to −6.0 %, Lyon's from −14.0 to −3.0 %, and Paris commercial bills from
+     −2.2 % to −34.2 % (median change; §3.7). The reform's new bills are the
+     same in both cases; only the starting point moves. The undercount is
+     not uniform: it is larger where many premises are vacant or occupied by
+     public bodies and associations, as in Paris.
      The site shows both side by side on every results page (table
      "Incertitude sur la taxe actuelle des locaux professionnels"); **always
      present both in any write-up too.** Per-commune professional values

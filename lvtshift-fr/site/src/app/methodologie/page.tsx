@@ -585,23 +585,25 @@ export default function MethodologiePage() {
             </p>
             <p className="font-body text-sm text-encre leading-relaxed mb-3">
               <strong>
-                Le facteur de 2,5 est aujourd&apos;hui la principale source
+                La part des locaux professionnels dans la taxe
+                d&apos;aujourd&apos;hui est la principale source
                 d&apos;incertitude sur les résultats par revenu.
               </strong>{" "}
-              Sans lui (borne basse), la taxe actuelle des locaux
-              professionnels est plus faible, et les ménages paraissent plus
-              gagnants de 10 à 15 points : à Paris, le cinquième le plus
-              modeste voit son impôt baisser de 17&nbsp;% dans le cas central,
-              de 28&nbsp;% en borne basse ; dans la couronne lyonnaise, il
-              augmente de 1&nbsp;% dans le cas central et baisse de 16&nbsp;%
-              en borne basse. Les nouvelles cotisations sont les mêmes dans les
-              deux cas : seul le point de départ change. Le facteur 2,5 est le
-              mieux étayé, mais un multiplicateur national unique ne peut
-              convenir à chaque commune. Seuls les Fichiers fonciers, qui
-              donnent la valeur réelle de chaque local, trancheraient. La page
-              de résultats présente donc les deux colonnes côte à côte, cas
-              central et borne basse, dans le tableau «&nbsp;Incertitude sur
-              la taxe actuelle des locaux professionnels&nbsp;».
+              Un multiplicateur national unique ne peut convenir à chaque
+              commune. Le site publie donc, à côté du cas central, une variante
+              locale : la part des entreprises qu&apos;implique, commune par
+              commune, la taxe d&apos;habitation de 2017, qui portait encore sur
+              tous les logements occupés. En ville, elle est plus élevée que
+              dans le cas central, et les ménages paient donc davantage : à
+              Paris, le cinquième le plus modeste voit son impôt baisser de
+              17&nbsp;% dans le cas central et de 6&nbsp;% dans la variante
+              locale ; à Lyon, de 14&nbsp;% et de 3&nbsp;%. Dans les deux cas,
+              le cinquième le plus aisé paie le plus. Les nouvelles cotisations
+              sont les mêmes : seul le point de départ change. Seuls les
+              Fichiers fonciers, qui donnent la valeur réelle de chaque local,
+              trancheraient. La page de résultats présente les deux colonnes
+              côte à côte dans le tableau «&nbsp;Incertitude sur la taxe
+              actuelle des locaux professionnels&nbsp;».
             </p>
             <p className="font-body text-sm text-encre leading-relaxed">
               <strong>Les machines.</strong> Par choix, la réforme modélisée
