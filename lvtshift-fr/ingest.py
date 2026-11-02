@@ -749,13 +749,83 @@ def _rei_baseline_split(cfg) -> dict:
     pro = M["pro_cfe_factor"] * cfe_pro * M["pro_undercount_scale"]
     pro_low = M["pro_cfe_factor"] * cfe_pro * M["pro_undercount_scale_low"]
     out = {"industrial": industrial / e11, "professional": pro / e11,
-           "professional_low": pro_low / e11,
+           "professional_low": pro_low / e11, "low_source": "cfe_raw",
            "year": int(year), "pro_source": src}
+    # published alternative: the local share implied by the 2017 taxe
+    # d'habitation; 2 × today's industrial share undoes the 2021 halving
+    housing17 = (fetch_th2017_housing_share(cfg.insee_code)
+                 if M.get("alt_source") == "th2017" else None)
+    if housing17 is not None:
+        out["professional_low"] = min(1.0, max(0.0, 1.0 - housing17 - 2.0 * out["industrial"]))
+        out["low_source"] = "th2017"
+        out["housing_share_2017"] = housing17
     if not all(0 <= out[k] <= 1 for k in ("industrial", "professional", "professional_low")):
         raise IngestUnavailable("REI", f"implausible baseline split for {cfg.insee_code}: {out}")
     print(f"  [{cfg.name}] TFPB base {year}: industrial {100 * out['industrial']:.1f}%, "
-          f"professional {100 * out['professional']:.1f}% ({src})")
+          f"professional {100 * out['professional']:.1f}% ({src}); alternative "
+          f"{100 * out['professional_low']:.1f}% ({out['low_source']})")
     return out
+
+
+_TH2017: dict | None = None
+
+
+def fetch_th2017_housing_share(insee: str) -> float | None:
+    """Housing share of a commune's TFPB base implied by the 2017 taxe
+    d'habitation, 0.5 × J11 / E11 (REI 2017; tfpb-baseline-calibration.md §9.5).
+
+    The REI 2017 zip (≈ 94 MB) is read once per process, from LVTFR_REI2017_ZIP
+    (a local copy) or the DGFiP attachment through the download cache. None
+    when the file cannot be read or the commune has no usable 2017 line (a
+    later merger, say): the caller then keeps the raw CFE alternative.
+    """
+    global _TH2017
+    if _TH2017 is None:
+        try:
+            _TH2017 = _read_th2017()
+        except Exception as exc:          # never let the alternative break a run
+            print(f"  [REI 2017] unavailable ({type(exc).__name__}: {exc}); "
+                  f"raw CFE alternative kept")
+            _TH2017 = {}
+    v = _TH2017.get(str(insee))
+    return v if v is not None and 0.0 < v < 1.0 else None
+
+
+def _read_th2017() -> dict:
+    member = "REI-2017-fichier-notice-trace/REI_COMPLET_2017.xlsx"
+    local = os.environ.get("LVTFR_REI2017_ZIP")
+    raw = Path(local).read_bytes() if local else _get(SRC["rei_2017_zip"], timeout=600)
+    xlsx = zipfile.ZipFile(io.BytesIO(raw)).read(member)
+    try:
+        from python_calamine import CalamineWorkbook
+        rows = CalamineWorkbook.from_filelike(io.BytesIO(xlsx)).get_sheet_by_index(0).to_python()
+        hdr, body = [str(h) for h in rows[0]], rows[1:]
+    except ImportError:                    # openpyxl: several minutes, once
+        import openpyxl
+        ws = openpyxl.load_workbook(io.BytesIO(xlsx), read_only=True).worksheets[0]
+        it = ws.iter_rows(values_only=True)
+        hdr, body = [str(h) for h in next(it)], it
+    i_dep, i_com, i_e11, i_j11 = (hdr.index(c) for c in ("DEP", "COM", "E11", "J11"))
+    out = {}
+    for r in body:
+        e11, j11 = _num(_to_float(r[i_e11])), _num(_to_float(r[i_j11]))
+        if not e11 or e11 <= 0 or j11 is None:
+            continue
+        dep = str(r[i_dep]).split(".")[0]
+        com = str(r[i_com]).split(".")[0].zfill(3)
+        # overseas départements carry three digits (971 + 01 = 97101)
+        code = dep + com[-2:] if dep.startswith("97") and len(dep) == 3 else dep.zfill(2)[:2] + com
+        out[code] = 0.5 * j11 / e11
+    if len(out) < 30_000:                 # a truncated or wrong file
+        raise ValueError(f"only {len(out)} communes read")
+    return out
+
+
+def _to_float(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
 
 
 # ------------------------------------------------------------------ #

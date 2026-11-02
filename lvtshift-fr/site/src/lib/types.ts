@@ -31,6 +31,10 @@ export interface Sensitivity { delta_pt: number; base: SensitivityLeg; low: Sens
  *  LVT bills are identical, only today's tax (and so every change) differs. */
 export interface BaselineSensitivity {
   pro_scale_central: number; pro_scale_low: number;
+  /** What the second column is: the local share implied by the 2017 taxe
+   *  d'habitation, the raw CFE proxy (older payloads: absent), or both across
+   *  a territory's members. */
+  low_source?: "th2017" | "cfe_raw" | "mixed";
   central: SensitivityLeg; low: SensitivityLeg;
 }
 export interface CategoryRow {

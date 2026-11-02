@@ -233,6 +233,13 @@ DATA_SOURCES = {
     # DGFiP « Fichiers des locaux et des parcelles des personnes morales »
     # (Licence Ouverte 2.0, annual). Catalog of yearly zip attachments; ids change
     # every vintage, so exemptions._attachments() matches them by pattern.
+    # DGFiP REI 2017 (Licence Ouverte 2.0): the last year whose taxe d'habitation
+    # still covered every occupied dwelling. 0.5 x J11 / E11 estimates the
+    # housing share of a commune's TFPB base (ingest.fetch_th2017_housing_share;
+    # docs/research/tfpb-baseline-calibration.md §9.5). Zip of ≈ 94 MB, read once.
+    "rei_2017_zip": ("https://data.economie.gouv.fr/api/v2/catalog/datasets/"
+                     "impots-locaux-fichier-de-recensement-des-elements-dimposition-a-la-fiscalite-dir/"
+                     "attachments/rei_2017_fichier_notice_trace_zip"),
     "pm_catalog": ("https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
                    "fichiers-des-locaux-et-des-parcelles-des-personnes-morales/attachments"),
     # Notaires-INSEE « indice des prix des logements anciens » (IPLA), quarterly,
@@ -534,9 +541,14 @@ BASELINE_MODEL = {
     # The CFE proxy captures ~40 % of the professional TFPB base nationally
     # (8.6 % vs the Cour des comptes' 22 % of receipts, Les taxes foncières,
     # 2023): vacancy and non-CFE occupiers. Central 2.5 calibrates it to the
-    # national figure; 1.0 (raw proxy) is the lower bound, reported in the docs.
+    # national figure. The published alternative is set below (alt_source).
     "pro_undercount_scale": 2.5,
-    "pro_undercount_scale_low": 1.0,     # published lower bound (raw proxy)
+    # Published alternative to the central case: the local share implied by the
+    # 2017 taxe d'habitation (§9.5), professional = 1 − housing₂₀₁₇ − 2 × the
+    # 2025 industrial share (industrial values were halved in 2021). Where the
+    # 2017 figure is missing, the raw CFE proxy (scale below) stands in.
+    "alt_source": "th2017",
+    "pro_undercount_scale_low": 1.0,     # fallback alternative (raw proxy)
     "max_weight_ratio": 5.0,             # per-m² tax vs housing, industrial and pro
     "max_targeted_share": 0.75,          # sanity bound on industrial + pro
 }

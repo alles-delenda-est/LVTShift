@@ -1,6 +1,7 @@
 /**
  * Rows for the "today's tax" uncertainty table: the same figures under the
- * central and the lower-bound share of professional premises in today's tax.
+ * central share of professional premises in today's tax and its published
+ * alternative (local 2017 taxe d'habitation share, or the raw CFE proxy).
  */
 import type { BaselineSensitivity, BandQuintileRow } from "@/lib/types";
 import { shiftedPct } from "@/lib/shift";
@@ -70,4 +71,18 @@ export function baselineRangeRows(
     });
   }
   return rows;
+}
+
+/** Heading of the second column, from the payload's low_source. */
+export function altColumn(b: BaselineSensitivity): { label: string; sub: string } {
+  if (b.low_source === "th2017") {
+    return { label: "Variante locale", sub: "taxe d'habitation 2017" };
+  }
+  if (b.low_source === "mixed") {
+    return { label: "Variante locale", sub: "taxe d'habitation 2017 ou CFE brute" };
+  }
+  return {
+    label: "Hypothèse plancher",
+    sub: `locaux professionnels ×${b.pro_scale_low.toLocaleString("fr-FR")}`,
+  };
 }

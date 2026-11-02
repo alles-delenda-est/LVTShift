@@ -219,10 +219,13 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                 Les données ouvertes sous-estiment la part des bureaux et
                 commerces dans la taxe foncière d&apos;aujourd&apos;hui (locaux
                 vacants, locaux loués par des organismes publics). L&apos;estimation
-                centrale la recale sur le total national de la Cour des comptes ;
-                l&apos;hypothèse plancher garde le chiffre brut. Les montants
-                payés après la réforme sont identiques dans les deux colonnes :
-                seul le point de départ change.
+                centrale la recale sur le total national de la Cour des comptes ;{" "}
+                {commune.baseline_sensitivity.low_source === "cfe_raw" ||
+                !commune.baseline_sensitivity.low_source
+                  ? "l'hypothèse plancher garde le chiffre brut."
+                  : "la variante locale l'estime commune par commune à partir de la taxe d'habitation de 2017, qui portait sur tous les logements occupés."}{" "}
+                Les montants payés après la réforme sont identiques dans les
+                deux colonnes : seul le point de départ change.
               </p>
               <BaselineRange
                 baseline={commune.baseline_sensitivity}

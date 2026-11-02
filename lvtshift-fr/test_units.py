@@ -786,10 +786,12 @@ def test_rei_baseline_split(monkeypatch=None):
            {"var": "T29", "valeur": 500_000.0}, {"var": "X503", "valeur": 100_000.0}]
     rates = [{"destinataire": "Commune", "taux_net": 20.0},
              {"destinataire": "Département", "taux_net": 10.0}]
-    orig = ingest._ofgl_records
+    orig, orig_th = ingest._ofgl_records, ingest._TH2017
     ingest._ofgl_records = lambda url, where, select: rei if "rei" in url else rates
+    ingest._TH2017 = {}                   # no 2017 line: raw CFE alternative
     try:
         s = ingest.fetch_rei_baseline_split(CFG)
+        assert s["low_source"] == "cfe_raw"
         assert abs(s["industrial"] - 0.1) < 1e-12          # 30 000 / 30 % / 1 M
         from config import BASELINE_MODEL as M
         assert abs(s["professional"] - 0.2 * M["pro_undercount_scale"]) < 1e-12   # 0.5 × 400k / 1 M × scale
@@ -801,7 +803,34 @@ def test_rei_baseline_split(monkeypatch=None):
         rei[0]["valeur"] = None
         _assert_raises(ingest.IngestUnavailable, ingest.fetch_rei_baseline_split, CFG)
     finally:
-        ingest._ofgl_records = orig
+        ingest._ofgl_records, ingest._TH2017 = orig, orig_th
+
+
+def test_rei_baseline_split_th2017_alternative():
+    # §9.5: alternative professional share = 1 − housing₂₀₁₇ − 2 × industrial
+    import ingest
+    rei = [{"var": "E11", "valeur": 1_000_000.0}, {"var": "WC75", "valeur": 30_000.0},
+           {"var": "T29", "valeur": 500_000.0}, {"var": "X503", "valeur": 100_000.0}]
+    rates = [{"destinataire": "Commune", "taux_net": 20.0},
+             {"destinataire": "Département", "taux_net": 10.0}]
+    orig, orig_th = ingest._ofgl_records, ingest._TH2017
+    ingest._ofgl_records = lambda url, where, select: rei if "rei" in url else rates
+    try:
+        ingest._TH2017 = {CFG.insee_code: 0.6}
+        s = ingest.fetch_rei_baseline_split(CFG)
+        assert s["low_source"] == "th2017" and s["housing_share_2017"] == 0.6
+        assert abs(s["professional_low"] - (1 - 0.6 - 2 * 0.1)) < 1e-12
+        # central case untouched
+        from config import BASELINE_MODEL as M
+        assert abs(s["professional"] - 0.2 * M["pro_undercount_scale"]) < 1e-12
+        # an implausible 2017 share is ignored, never used
+        ingest._TH2017 = {CFG.insee_code: 1.4}
+        assert ingest.fetch_rei_baseline_split(CFG)["low_source"] == "cfe_raw"
+        # never negative
+        ingest._TH2017 = {CFG.insee_code: 0.95}
+        assert ingest.fetch_rei_baseline_split(CFG)["professional_low"] == 0.0
+    finally:
+        ingest._ofgl_records, ingest._TH2017 = orig, orig_th
 
 
 def test_rei_baseline_split_fails_safe_on_bad_answers():
@@ -817,7 +846,8 @@ def test_rei_baseline_split_fails_safe_on_bad_answers():
         (good_rei + [{"var": "WC75", "valeur": 1.0}], good_rates),         # duplicate var
         ([{"var": "E11", "valeur": float("inf")}] + good_rei[1:], good_rates),
     ]
-    orig = ingest._ofgl_records
+    orig, orig_th = ingest._ofgl_records, ingest._TH2017
+    ingest._TH2017 = {}
     try:
         for rei, rates in cases:
             ingest._ofgl_records = (lambda r, t: lambda url, where, select:
@@ -834,7 +864,7 @@ def test_rei_baseline_split_fails_safe_on_bad_answers():
             good_rei if "rei" in url else [{"destinataire": "Commune", "taux_net": 20.0}])
         assert abs(ingest.fetch_rei_baseline_split(paris)["industrial"] - 0.15) < 1e-12
     finally:
-        ingest._ofgl_records = orig
+        ingest._ofgl_records, ingest._TH2017 = orig, orig_th
 
 
 def test_config_rejects_injectable_codes():
@@ -873,6 +903,7 @@ def test_load_baseline_coerces_sidecar(tmp=None):
         assert b == {"method": "calibrated", "target_industrial_share": None,
                      "achieved_industrial_share": None, "target_professional_share": 0.2,
                      "achieved_professional_share": None,
+                     "low_source": "cfe_raw", "target_professional_low_share": None,
                      "industrial_merged_into_professional": False}
         side.write_text(json.dumps({"method": "calibrated", "note": "industrial merged into professional",
                                     "targets": {"industrial": 0.01, "professional": 0.2},
@@ -880,6 +911,14 @@ def test_load_baseline_coerces_sidecar(tmp=None):
         m = ew.load_baseline("zzb", str(d))
         assert m["industrial_merged_into_professional"] and m["achieved_industrial_share"] is None
         assert m["target_professional_share"] == 0.21 and m["achieved_professional_share"] == 0.21
+        side.write_text(json.dumps({"method": "calibrated",
+                                    "targets": {"industrial": 0.01, "professional": 0.2,
+                                                "professional_low": 0.35, "low_source": "th2017"}}))
+        t = ew.load_baseline("zzb", str(d))
+        assert t["low_source"] == "th2017" and t["target_professional_low_share"] == 0.35
+        side.write_text(json.dumps({"method": "calibrated",
+                                    "targets": {"professional": 0.2, "low_source": "<x>"}}))
+        assert ew.load_baseline("zzb", str(d))["low_source"] == "cfe_raw"
         side.write_text(json.dumps({"method": {"x": "<script>"}}))
         _assert_raises(ValueError, ew.load_baseline, "zzb", str(d))
         side.write_text("[1, 2]")
