@@ -8,8 +8,9 @@ import { shiftedPct } from "@/lib/shift";
  * contradicts for houses almost everywhere).
  *
  * Counts come under the central case and, in `alt`, under the published local
- * variant of today's tax (baseline_sensitivity.low), which shifts more onto
- * homes in most cities. Territories use the within-commune income ranking,
+ * variant of today's tax (baseline_sensitivity.low), which gives business
+ * premises a larger share of today's tax in most cities, so the reform shifts
+ * more onto homes. Territories use the within-commune income ranking,
  * which is where each levy applies.
  */
 export interface LegCounts {
@@ -73,13 +74,13 @@ function legInputs(c: Commune, leg: SensitivityLeg): Inputs {
 }
 
 function count(inputs: Inputs[]): LegCounts {
-  const analysable = inputs.filter((i) => i.q1 != null);
+  const analysable = inputs.filter((i) => i.q1 != null && i.q5 != null);
   return {
     housesPayMore: inputs.filter((i) => i.house != null && i.house > 0).length,
     flatsPayLess: inputs.filter((i) => i.flat != null && i.flat < 0).length,
     poorestAnalysable: analysable.length,
     poorestPayLess: analysable.filter((i) => i.q1! < 0).length,
-    poorestBelowRichest: analysable.filter((i) => i.q5 != null && i.q1! < i.q5).length,
+    poorestBelowRichest: analysable.filter((i) => i.q1! < i.q5!).length,
   };
 }
 
@@ -101,7 +102,10 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
     ? communes.map((c, k) => legInputs(c, legs[k]!))
     : null;
   const comparable =
-    alt != null && alt.every((a, k) => (a.q1 == null) === (central[k].q1 == null));
+    alt != null &&
+    alt.every(
+      (a, k) => (a.q1 == null) === (central[k].q1 == null) && (a.q5 == null) === (central[k].q5 == null),
+    );
 
   return {
     territories: communes.length,
@@ -117,8 +121,8 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
   };
 }
 
-/** "9 sur 13" when both hypotheses agree, "6 à 9 sur 13" otherwise. */
+/** "9 sur 13" when both hypotheses agree, "6 à 9 sur 13" otherwise (no-break spaces). */
 export function countRange(central: number, alt: number | undefined, of: number): string {
   if (alt == null || alt === central) return `${central} sur ${of}`;
-  return `${Math.min(central, alt)} à ${Math.max(central, alt)} sur ${of}`;
+  return `${Math.min(central, alt)} à ${Math.max(central, alt)} sur ${of}`;
 }

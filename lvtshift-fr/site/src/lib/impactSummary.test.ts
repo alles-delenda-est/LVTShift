@@ -64,7 +64,7 @@ describe("countRange", () => {
   });
 
   it("gives the lower count first", () => {
-    expect(countRange(9, 6, 13)).toBe("6 à 9 sur 13");
-    expect(countRange(11, 12, 13)).toBe("11 à 12 sur 13");
+    expect(countRange(9, 6, 13)).toBe("6 à 9 sur 13");
+    expect(countRange(11, 12, 13)).toBe("11 à 12 sur 13");
   });
 });

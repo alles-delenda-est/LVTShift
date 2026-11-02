@@ -110,7 +110,8 @@ export default function ResidentialImpactCallout() {
         sensibilité ±&thinsp;10&nbsp;points sur la part foncière. Chiffres du
         cas central : dans la variante locale sur la taxe actuelle, les hausses
         sont plus fréquentes, surtout en ville. L&apos;appartement en
-        copropriété, dont le sol est partagé, paie souvent moins ; la maison
+        copropriété, dont le sol est partagé, paie moins dans la moitié environ
+        à deux tiers des territoires selon l&apos;hypothèse ; la maison
         individuelle sur un terrain de valeur paie souvent davantage, surtout là
         où le foncier est cher.{" "}
         <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
