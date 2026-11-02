@@ -898,8 +898,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      dépendances, logements sociaux exonérés ; données 2017). Le proxy brut, cas
      où les logements de Lyon et de Paris paient moins, paraît donc invraisemblable
      en ville ; le cas central sous-estime peut-être le report sur les logements.
-     La colonne du proxy brut sera remplacée par cette variante locale
-     (`docs/research/tfpb-baseline-calibration.md` §9.5).
+     Depuis le 31 octobre 2026, la colonne du proxy brut est remplacée par cette
+     variante locale (§3.5, §3.7 ; `docs/research/tfpb-baseline-calibration.md`
+     §9.5).
    - **Au sein de chaque groupe**, la taxe actuelle reste répartie à la surface
      plancher, qui ignore la catégorie cadastrale et les coefficients de
      pondération de surface : lire la **variation**, pas le montant de départ,

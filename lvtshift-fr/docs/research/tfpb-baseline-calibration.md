@@ -15,7 +15,8 @@
 > **2026-10-31 (§9.5).** An independent proxy from the 2017 taxe d'habitation matches the
 > Cour des comptes nationally and puts the business share of the TFPB base in our cities
 > far above the k = 1 lower bound, and above k = 2.5 except in Figeac. The k = 1 lower
-> bound is to be replaced by that local variant.
+> bound was replaced by that local variant (PR #62, merged 2026-11-02; Sathonay-Camp,
+> with no usable 2017 line, keeps k = 1).
 
 Research dates 2026-10-22 and 23. Each figure cites a source in §8 by tag, e.g. [T1]. Markers:
 **fetched live** (I downloaded the page, file or API myself and read the value), **snippet** (seen
@@ -464,7 +465,7 @@ share, and so the shift onto homes.
 **Decision (Patrick, 2026-10-31): keep the central case; replace the ×1 lower bound** by
 a local variant from this proxy, professional share = (1 − 0.5 × J11/E11) − 2 × the 2025
 industrial share, under the same 75 % cap. It needs a pipeline change and a re-run of the
-communes (follow-up PR).
+communes: done in PR #62 (re-run b03d521).
 
 ## 8. Sources
 

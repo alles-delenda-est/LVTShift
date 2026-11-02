@@ -696,7 +696,7 @@ export default function MethodologiePage() {
               actuelle des locaux professionnels&nbsp;».
             </p>
             <p className="font-body text-sm text-encre leading-relaxed mb-3">
-              <strong>Un contrôle indépendant penche du côté du cas central.</strong>{" "}
+              <strong>D&apos;où vient la variante locale.</strong>{" "}
               En 2017, la taxe d&apos;habitation portait encore sur tous les
               logements occupés, avec les mêmes valeurs locatives que la taxe
               foncière. Elle permet donc d&apos;estimer, commune par commune, la
@@ -706,12 +706,12 @@ export default function MethodologiePage() {
               tiers pour les locaux professionnels et l&apos;industrie en
               2017). À Lyon et à Paris, elle donne environ 39&nbsp;% (sur la base
               de 2025), contre 29 et 26&nbsp;% dans le cas central et 11 à
-              13&nbsp;% en borne basse ; elle dépasse aussi le cas central dans
+              13&nbsp;% avec l&apos;ancienne borne basse (CFE brute) ; elle dépasse aussi le cas central dans
               les autres villes modélisées, sauf à Figeac. Ces chiffres datent de
               2017 et restent approximatifs (environ 5&nbsp;points par commune),
-              mais la borne basse, le cas où les logements de Lyon et de Paris
-              paient moins, paraît invraisemblable en ville. Elle sera remplacée
-              par cette estimation locale.
+              mais l&apos;ancienne borne basse, le cas où les logements de Lyon
+              et de Paris payaient moins, paraissait invraisemblable en ville.
+              Depuis le 31 octobre 2026, cette estimation locale la remplace.
             </p>
             <p className="font-body text-sm text-encre leading-relaxed">
               <strong>Les machines.</strong> Par choix, la réforme modélisée
