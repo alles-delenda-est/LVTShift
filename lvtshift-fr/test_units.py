@@ -1072,8 +1072,7 @@ def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
                                        "ref_density_quantile": 0.5})
     lv = out["land_value"].to_numpy()
     assert abs(lv[0] - lv[1]) < 1e-6           # capped to the block's 500 m², same density
-    for bad in ({"plot_elasticity": 0.0}, {"plot_elasticity": 1.5},
-                {"density_elasticity": -0.1}, {"density_elasticity": 1.5},
+    for bad in ({"density_elasticity": -0.1}, {"density_elasticity": 1.5},
                 {"ref_density_quantile": 1.0}, {"plot_cap_quantile": 0.2},
                 {"min_zone_parcels": 0}):
         _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)

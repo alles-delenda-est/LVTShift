@@ -556,7 +556,7 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     none) the residual land of the pooled parcels is kept as a total and shared
     again in proportion to
 
-        capped plot area ** plot_elasticity × density ** density_elasticity,
+        capped plot area × density ** density_elasticity,
         density = max(own floor-area ratio, reference FAR),
 
     the reference FAR being the ref_density_quantile of the pooled parcels'
@@ -578,12 +578,11 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     """
     from config import SITE_VALUE
     prm = {**SITE_VALUE, **(params or {})}
-    beta = float(prm["plot_elasticity"])
     theta = float(prm["density_elasticity"])
     q_ref = float(prm["ref_density_quantile"])
     q_cap = float(prm["plot_cap_quantile"])
     min_n = int(prm["min_zone_parcels"])
-    if not (0.0 < beta <= 1.0 and 0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0
+    if not (0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0
             and 0.5 <= q_cap <= 1.0 and min_n >= 1):
         raise ValueError(f"invalid SITE_VALUE parameters {prm}")
 
@@ -615,7 +614,7 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
         by_zone = far[ok].groupby(key[ok]).quantile(q_ref)
         ref = ref.mask(key.index.isin(ok), key.map(by_zone))
     density = np.maximum(far, ref)
-    weight = plot ** beta * density ** theta
+    weight = plot * density ** theta
 
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
              if "iris" in out.columns else pd.Series("_commune", index=far.index))
