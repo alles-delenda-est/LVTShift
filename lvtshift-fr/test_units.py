@@ -992,16 +992,18 @@ def _site_frame():
     })
 
 
-def test_site_value_keeps_the_pool_total_and_follows_capacity():
+def test_site_value_keeps_the_pool_total_and_follows_plot_and_density():
     p = _site_frame()
     prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5}   # reference FAR 2
     out = estimate.site_value_land(p, prm)
     assert abs(out["land_value"].sum() - p["land_value"].sum()) < 1e-6
-    # capacity: H 500 × 2 = 1000 (its own 150 is less), B 1000, D 1000 (own)
-    assert list(out["site_capacity_m2"]) == [1000.0, 1000.0, 1000.0]
-    # equal capacity, equal land, whatever stands on the plot
+    # density: the low house is valued at the zone's 2, the dense block at its own 4
+    assert list(out["site_density"]) == [2.0, 2.0, 4.0]
+    # same plot, same reference density: same land, whatever stands on it
     lv = out["land_value"].to_numpy()
-    assert abs(lv[0] - lv[1]) < 1e-6 and abs(lv[1] - lv[2]) < 1e-6
+    assert abs(lv[0] - lv[1]) < 1e-6
+    # half the plot at twice the density: 0.5 × 2 ** 0.5 of the land
+    assert abs(lv[2] / lv[1] - 0.5 * 2 ** 0.5) < 1e-9
     assert (out["lv_flag"] == "built_site_value").all()
     assert list(out["land_value_current"]) == list(p["land_value"])
 
@@ -1019,11 +1021,12 @@ def test_site_value_building_keeps_its_cost_and_value_is_the_sum():
 
 def test_site_value_density_counts_sub_proportionally():
     p = _site_frame()
-    p.loc[2, "floor_area_m2"] = 4000.0          # FAR 16: four times the block's floor
+    p.loc[2, "parcel_area_m2"] = 500.0
+    p.loc[2, "floor_area_m2"] = 8000.0          # FAR 16 on the block's plot (FAR 2)
     out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
                                        "density_elasticity": 0.5})
     lv = out.set_index("idpar")["land_value"]
-    assert abs(lv["D"] / lv["B"] - 2.0) < 1e-9     # 4× the floor, 2× the land (θ = 0.5)
+    assert abs(lv["D"] / lv["B"] - 8 ** 0.5) < 1e-9   # 8× the floor, √8 × the land
 
 
 def test_site_value_pools_by_iris_and_leaves_other_parcels_alone():
@@ -1059,7 +1062,7 @@ def test_site_value_reference_density_falls_back_from_thin_zones():
     p["zone_libelle"] = ["UA", "UB", "UC"]       # each label has one parcel
     out = estimate.site_value_land(p, {"min_zone_parcels": 2, "ref_density_quantile": 0.5})
     # zone type U holds all three: median FAR 2, as in the one-zone case
-    assert list(out["site_capacity_m2"]) == [1000.0, 1000.0, 1000.0]
+    assert list(out["site_density"]) == [2.0, 2.0, 4.0]
 
 
 def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
@@ -1067,8 +1070,10 @@ def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
     p.loc[0, "parcel_area_m2"] = 1e6             # a park counted as the house's plot
     out = estimate.site_value_land(p, {"min_zone_parcels": 1, "plot_cap_quantile": 0.5,
                                        "ref_density_quantile": 0.5})
-    assert out.loc[0, "site_capacity_m2"] < 1e5
-    for bad in ({"density_elasticity": 0.0}, {"density_elasticity": 1.5},
+    lv = out["land_value"].to_numpy()
+    assert abs(lv[0] - lv[1]) < 1e-6           # capped to the block's 500 m², same density
+    for bad in ({"plot_elasticity": 0.0}, {"plot_elasticity": 1.5},
+                {"density_elasticity": -0.1}, {"density_elasticity": 1.5},
                 {"ref_density_quantile": 1.0}, {"plot_cap_quantile": 0.2},
                 {"min_zone_parcels": 0}):
         _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)

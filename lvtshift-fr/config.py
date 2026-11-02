@@ -578,15 +578,18 @@ LAND_MODEL = {
 # An LVT taxes land as if vacant at its permitted use, not at the density that
 # happens to stand on it. Within each IRIS the residual land of parcels valued
 # by the residual is pooled and shared again in proportion to
-#     capacity ** density_elasticity,
-#     capacity = max(floor area, plot × reference floor-area ratio of its zone),
-# the floor area the plot could carry at the zone's typical density (or its
-# actual floor area if denser: lawful existing use, as in Denmark).
+#     plot ** plot_elasticity × density ** density_elasticity,
+#     density = max(own floor-area ratio, reference ratio of its zone),
+# a standard land value per m² of plot adjusted for the density the zone
+# typically allows (or the parcel's own, if denser: lawful existing use, as in
+# Denmark), as German Bodenrichtwerte are.
 SITE_VALUE = {
-    # Elasticity of land value to that capacity. German residential conversion
-    # coefficients (WertR 2006 Anl. 11) imply 0.45–0.54 for land per m² of plot
-    # against floor-area ratio; French building-plot sales (EPTB, Combes,
-    # Duranton & Gobillon) 0.3–0.45 against plot area for house plots.
+    # Land in proportion to plot area, as Baden-Württemberg's land tax, NSW and
+    # the Welsh studies price it (zone €/m² × area). Below 1 would add the
+    # diminishing value of large house plots (EPTB sales: 0.3–0.45).
+    "plot_elasticity": 1.0,
+    # Land per m² of plot against floor-area ratio: German residential
+    # conversion coefficients (WertR 2006 Anl. 11) imply 0.45–0.54.
     "density_elasticity": 0.5,
     # Reference density: this quantile of the realised floor-area ratio of the
     # pooled parcels in the same PLU zone label (permitted density is not open

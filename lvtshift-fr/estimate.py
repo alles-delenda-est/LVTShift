@@ -556,8 +556,8 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     none) the residual land of the pooled parcels is kept as a total and shared
     again in proportion to
 
-        capacity ** density_elasticity,
-        capacity = max(floor area, capped plot area × reference FAR),
+        capped plot area ** plot_elasticity × density ** density_elasticity,
+        density = max(own floor-area ratio, reference FAR),
 
     the reference FAR being the ref_density_quantile of the pooled parcels'
     floor-area ratio in the same PLU zone label (zone type, then commune, where
@@ -573,22 +573,24 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     params: SITE_VALUE keys (config.SITE_VALUE by default).
 
     Adds land_value_current and market_value_current (before re-sharing) and
-    site_capacity_m2; updates land_value, improvement_value, market_value,
-    land_share, land_share_raw and lv_flag ('built_site_value').
+    site_density (the density used); updates land_value, improvement_value,
+    market_value, land_share, land_share_raw and lv_flag ('built_site_value').
     """
     from config import SITE_VALUE
     prm = {**SITE_VALUE, **(params or {})}
+    beta = float(prm["plot_elasticity"])
     theta = float(prm["density_elasticity"])
     q_ref = float(prm["ref_density_quantile"])
     q_cap = float(prm["plot_cap_quantile"])
     min_n = int(prm["min_zone_parcels"])
-    if not (0.0 < theta <= 1.0 and 0.0 < q_ref < 1.0 and 0.5 <= q_cap <= 1.0 and min_n >= 1):
+    if not (0.0 < beta <= 1.0 and 0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0
+            and 0.5 <= q_cap <= 1.0 and min_n >= 1):
         raise ValueError(f"invalid SITE_VALUE parameters {prm}")
 
     out = p.copy()
     out["land_value_current"] = out["land_value"]
     out["market_value_current"] = out["market_value"]
-    out["site_capacity_m2"] = np.nan
+    out["site_density"] = np.nan
     area = pd.to_numeric(out["parcel_area_m2"], errors="coerce")
     floor = pd.to_numeric(out["floor_area_m2"], errors="coerce")
     cost = pd.to_numeric(out["building_cost"], errors="coerce")
@@ -612,8 +614,8 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
         ok = n[n >= min_n].index
         by_zone = far[ok].groupby(key[ok]).quantile(q_ref)
         ref = ref.mask(key.index.isin(ok), key.map(by_zone))
-    capacity = np.maximum(floor[pool], plot * ref)
-    weight = capacity ** theta
+    density = np.maximum(far, ref)
+    weight = plot ** beta * density ** theta
 
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
              if "iris" in out.columns else pd.Series("_commune", index=far.index))
@@ -627,7 +629,7 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     out.loc[pool, "land_share"] = share
     out.loc[pool, "land_share_raw"] = share
     out.loc[pool, "lv_flag"] = "built_site_value"
-    out.loc[pool, "site_capacity_m2"] = capacity
+    out.loc[pool, "site_density"] = density
     return out
 
 
