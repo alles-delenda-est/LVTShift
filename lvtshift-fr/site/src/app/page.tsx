@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
-import { impactSummary } from "@/lib/impactSummary";
+import { countRange, impactSummary } from "@/lib/impactSummary";
 import { panelLandShares } from "@/lib/panel";
 
 /** One decimal, French comma ("9,8"); "n. d." when missing. */
@@ -111,7 +111,8 @@ export default function Home() {
                 Ce que la réforme change &mdash; principaux résultats
               </h3>
               <p className="text-xs text-creme/70">
-                {impact.territories} territoires, cas central
+                {impact.territories} territoires
+                {impact.alt ? ", deux hypothèses sur la taxe actuelle" : ", cas central"}
               </p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-creme/15">
@@ -121,15 +122,17 @@ export default function Home() {
                   label: "de la taxe foncière change de payeur, selon le territoire",
                 },
                 {
-                  value: `${impact.poorestPayLess} sur ${impact.poorestAnalysable}`,
-                  label: "territoires où les 20 % de ménages les plus modestes paient moins",
+                  value: `${impact.poorestBelowRichestBoth} sur ${impact.poorestAnalysable}`,
+                  label: impact.alt
+                    ? "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés, dans les deux hypothèses"
+                    : "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés",
                 },
                 {
-                  value: `${impact.flatsPayLess} sur ${impact.territories}`,
+                  value: countRange(impact.flatsPayLess, impact.alt?.flatsPayLess, impact.territories),
                   label: "territoires où l’appartement type paie moins",
                 },
                 {
-                  value: `${impact.housesPayMore} sur ${impact.territories}`,
+                  value: countRange(impact.housesPayMore, impact.alt?.housesPayMore, impact.territories),
                   label: "territoires où la maison type paie davantage",
                 },
               ].map(({ value, label }) => (
@@ -145,6 +148,14 @@ export default function Home() {
               Taxe foncière déplacée du bâti vers le sol, à recettes égales dans
               chaque commune. «&nbsp;Type&nbsp;» : variation médiane de la
               catégorie.{" "}
+              {impact.alt && (
+                <>
+                  Deux nombres : l&apos;un pour le cas central, l&apos;autre
+                  pour la variante locale, deux estimations de la part des
+                  locaux professionnels dans la taxe actuelle. Part qui change
+                  de payeur : cas central.{" "}
+                </>
+              )}
               <Link href="/resultats" className="underline underline-offset-2 text-creme hover:text-white">
                 Détail par commune
               </Link>
@@ -238,9 +249,13 @@ export default function Home() {
               <p className="font-body text-base text-encre leading-relaxed">
                 Souvent assise sur un terrain de valeur, elle paie{" "}
                 <strong>davantage</strong> dans {impact.housesPayMore} des{" "}
-                {impact.territories} territoires présentés (variation médiane de{" "}
-                {signedPct(impact.houseMedianMin)} à{" "}
-                {signedPct(impact.houseMedianMax)} selon le territoire).
+                {impact.territories} territoires présentés
+                {impact.alt && impact.alt.housesPayMore !== impact.housesPayMore && (
+                  <> ({impact.alt.housesPayMore} dans la variante locale)</>
+                )}{" "}
+                (variation médiane de {signedPct(impact.houseMedianMin)} à{" "}
+                {signedPct(impact.houseMedianMax)} selon le territoire, cas
+                central).
               </p>
             </div>
 
@@ -249,12 +264,29 @@ export default function Home() {
                 L&apos;appartement et les ménages modestes
               </p>
               <p className="font-body text-base text-encre leading-relaxed">
-                En copropriété, le sol est partagé : l&apos;appartement paie{" "}
-                <strong>moins</strong> dans {impact.flatsPayLess} territoires sur{" "}
-                {impact.territories}. Le cinquième des ménages le plus modeste,
-                pris dans son ensemble, paie moins dans {impact.poorestPayLess}{" "}
-                des {impact.poorestAnalysable} territoires où le découpage par
-                revenu est possible.
+                Le cinquième des ménages le plus modeste, pris dans son
+                ensemble, s&apos;en sort <strong>mieux</strong> que le cinquième
+                le plus aisé dans {impact.poorestBelowRichestBoth} des{" "}
+                {impact.poorestAnalysable} territoires où le découpage par revenu
+                est possible
+                {impact.alt ? (
+                  <>
+                    , dans les deux hypothèses. Il paie moins dans{" "}
+                    {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
+                    {impact.alt.poorestPayLess} dans la variante locale. En
+                    copropriété, le sol est partagé : l&apos;appartement paie
+                    moins dans {impact.flatsPayLess} territoires sur{" "}
+                    {impact.territories} dans le cas central,{" "}
+                    {impact.alt.flatsPayLess} dans la variante locale.
+                  </>
+                ) : (
+                  <>
+                    , et paie moins dans {impact.poorestPayLess} d&apos;entre eux.
+                    En copropriété, le sol est partagé : l&apos;appartement paie
+                    moins dans {impact.flatsPayLess} territoires sur{" "}
+                    {impact.territories}.
+                  </>
+                )}
               </p>
             </div>
 
@@ -274,11 +306,14 @@ export default function Home() {
             <strong>Incertitude principale.</strong> Pour savoir qui gagne, il
             faut connaître ce que chaque type de bien paie aujourd&apos;hui. Aucune
             donnée publique ne donne la part des bureaux et commerces dans la
-            taxe foncière d&apos;une commune ; nous l&apos;estimons. Si elle est
-            plus faible que notre estimation, les ménages paient aujourd&apos;hui
-            davantage, et la réforme leur est nettement plus favorable. Les
-            chiffres ci-dessus correspondent à notre estimation centrale ; les
-            résultats présentent les deux hypothèses côte à côte.
+            taxe foncière d&apos;une commune ; nous l&apos;estimons. Une variante
+            locale, tirée de la taxe d&apos;habitation de 2017, la place plus
+            haut que notre estimation centrale dans presque toutes les villes
+            modélisées : les ménages paieraient alors aujourd&apos;hui moins, et
+            la réforme leur serait moins favorable. Le classement, lui, ne
+            change pas : les plus modestes s&apos;en sortent mieux que les plus
+            aisés dans les deux cas. Les résultats présentent les deux
+            hypothèses côte à côte.
           </p>
 
           <p className="text-xs text-gris mt-5 max-w-xl leading-relaxed">

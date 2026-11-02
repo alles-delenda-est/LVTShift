@@ -1,4 +1,4 @@
-import type { Commune, QuintileRow } from "@/lib/types";
+import type { BandCategoryRow, BandQuintileRow, Commune, SensitivityLeg } from "@/lib/types";
 import { shiftedPct } from "@/lib/shift";
 
 /**
@@ -7,57 +7,118 @@ import { shiftedPct } from "@/lib/shift";
  * owner-occupiers "une baisse ou une quasi-neutralité", which the model
  * contradicts for houses almost everywhere).
  *
- * Central case only. Territories use the within-commune income ranking, which
- * is where each levy applies.
+ * Counts come under the central case and, in `alt`, under the published local
+ * variant of today's tax (baseline_sensitivity.low), which shifts more onto
+ * homes in most cities. Territories use the within-commune income ranking,
+ * which is where each levy applies.
  */
-export interface ImpactSummary {
-  territories: number;
+export interface LegCounts {
   housesPayMore: number;
-  houseMedianMin: number | null;
-  houseMedianMax: number | null;
   flatsPayLess: number;
   poorestAnalysable: number;
   poorestPayLess: number;
+  /** Territories where the poorest fifth's total change is below the richest fifth's. */
+  poorestBelowRichest: number;
+}
+
+export interface ImpactSummary extends LegCounts {
+  territories: number;
+  houseMedianMin: number | null;
+  houseMedianMax: number | null;
   /** Share of the levy that changes payer, % (lowest and highest territory). */
   shiftMin: number | null;
   shiftMax: number | null;
+  /** Same counts under the local variant; null unless every territory
+   *  publishes one with the same quintile coverage, so both sets of counts
+   *  share a denominator. */
+  alt: LegCounts | null;
+  /** Territories where the poorest fifth does better than the richest under
+   *  both hypotheses (equals poorestBelowRichest when alt is null). */
+  poorestBelowRichestBoth: number;
 }
 
-function poorestTotal(c: Commune): number | null {
-  const rows: QuintileRow[] | null | undefined =
-    c.kind === "territory" ? c.by_income_quintile_within : c.by_income_quintile;
-  const q1 = rows?.find((r) => r.quintile === 1);
-  return q1?.total_change_pct ?? null;
+interface Inputs {
+  house: number | null;
+  flat: number | null;
+  q1: number | null;
+  q5: number | null;
 }
+
+function median(rows: BandCategoryRow[] | null | undefined, category: string): number | null {
+  return rows?.find((r) => r.category === category)?.median_change_pct ?? null;
+}
+
+function total(rows: BandQuintileRow[] | null | undefined, quintile: number): number | null {
+  return rows?.find((r) => r.quintile === quintile)?.total_change_pct ?? null;
+}
+
+function centralInputs(c: Commune): Inputs {
+  const rows = c.kind === "territory" ? c.by_income_quintile_within : c.by_income_quintile;
+  return {
+    house: median(c.by_category, "Single Family Residential"),
+    flat: median(c.by_category, "Condominium"),
+    q1: total(rows, 1),
+    q5: total(rows, 5),
+  };
+}
+
+function legInputs(c: Commune, leg: SensitivityLeg): Inputs {
+  const rows = c.kind === "territory" ? leg.by_income_quintile_within : leg.by_income_quintile;
+  return {
+    house: median(leg.by_category, "Single Family Residential"),
+    flat: median(leg.by_category, "Condominium"),
+    q1: total(rows, 1),
+    q5: total(rows, 5),
+  };
+}
+
+function count(inputs: Inputs[]): LegCounts {
+  const analysable = inputs.filter((i) => i.q1 != null);
+  return {
+    housesPayMore: inputs.filter((i) => i.house != null && i.house > 0).length,
+    flatsPayLess: inputs.filter((i) => i.flat != null && i.flat < 0).length,
+    poorestAnalysable: analysable.length,
+    poorestPayLess: analysable.filter((i) => i.q1! < 0).length,
+    poorestBelowRichest: analysable.filter((i) => i.q5 != null && i.q1! < i.q5).length,
+  };
+}
+
+const below = (i: Inputs) => i.q1 != null && i.q5 != null && i.q1 < i.q5;
 
 export function impactSummary(communes: Commune[]): ImpactSummary {
-  const houses: number[] = [];
-  let flatsPayLess = 0;
-  let poorestAnalysable = 0;
-  let poorestPayLess = 0;
   const shifts: number[] = [];
   for (const c of communes) {
     const s = shiftedPct(c.headline.net_pct_of_levy, c.headline.gross_pct_of_levy);
     if (s != null) shifts.push(s);
-    const house = c.by_category.find((r) => r.category === "Single Family Residential");
-    const flat = c.by_category.find((r) => r.category === "Condominium");
-    if (house?.median_change_pct != null) houses.push(house.median_change_pct);
-    if (flat?.median_change_pct != null && flat.median_change_pct < 0) flatsPayLess++;
-    const q1 = poorestTotal(c);
-    if (q1 != null) {
-      poorestAnalysable++;
-      if (q1 < 0) poorestPayLess++;
-    }
   }
+  const central = communes.map(centralInputs);
+  const houses = central.map((i) => i.house).filter((v): v is number => v != null);
+
+  // A territory without the variant, or whose variant lacks quintiles the
+  // central case has, would give the two counts different denominators.
+  const legs = communes.map((c) => c.baseline_sensitivity?.low ?? null);
+  const alt = legs.every((l) => l != null)
+    ? communes.map((c, k) => legInputs(c, legs[k]!))
+    : null;
+  const comparable =
+    alt != null && alt.every((a, k) => (a.q1 == null) === (central[k].q1 == null));
+
   return {
     territories: communes.length,
-    housesPayMore: houses.filter((v) => v > 0).length,
+    ...count(central),
     houseMedianMin: houses.length ? Math.min(...houses) : null,
     houseMedianMax: houses.length ? Math.max(...houses) : null,
-    flatsPayLess,
-    poorestAnalysable,
-    poorestPayLess,
     shiftMin: shifts.length ? Math.min(...shifts) : null,
     shiftMax: shifts.length ? Math.max(...shifts) : null,
+    alt: comparable ? count(alt!) : null,
+    poorestBelowRichestBoth: comparable
+      ? central.filter((i, k) => below(i) && below(alt![k])).length
+      : central.filter(below).length,
   };
+}
+
+/** "9 sur 13" when both hypotheses agree, "6 à 9 sur 13" otherwise. */
+export function countRange(central: number, alt: number | undefined, of: number): string {
+  if (alt == null || alt === central) return `${central} sur ${of}`;
+  return `${Math.min(central, alt)} à ${Math.max(central, alt)} sur ${of}`;
 }

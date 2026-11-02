@@ -776,8 +776,9 @@ def fetch_th2017_housing_share(insee: str) -> float | None:
 
     The REI 2017 zip (≈ 94 MB) is read once per process, from LVTFR_REI2017_ZIP
     (a local copy) or the DGFiP attachment through the download cache. None
-    when the file cannot be read or the commune has no usable 2017 line (a
-    later merger, say): the caller then keeps the raw CFE alternative.
+    when the file cannot be read, the commune has no 2017 line (a later
+    merger, say) or its share falls outside (0, 1) (Sathonay-Camp: 1.11): the
+    caller then keeps the raw CFE alternative.
     """
     global _TH2017
     if _TH2017 is None:
