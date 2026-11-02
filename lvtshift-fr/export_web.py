@@ -31,8 +31,8 @@ CATEGORY_LABELS_FR = {
     "Commercial": "Commerce",
     "Industrial": "Industriel",
     "Vacant Land": "Terrain nu / non bâti",
-    "Other": "Autre / dépendance",
-    "other": "Autre / dépendance",
+    "Other": "Autre bâtiment",
+    "other": "Autre bâtiment",
 }
 FR_RESIDENTIAL = {
     "Single Family Residential", "Condominium", "Large Multi-Family (5+ units)",

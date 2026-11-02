@@ -346,11 +346,50 @@ def test_tab_comparables_filters_non_building_plots():
 
 def test_residential_category_by_dwellings():
     import run_commune as rc
-    assert rc._residential_cat(1, 2) == "maison"
-    assert rc._residential_cat(3, 2) == "appartement"
-    assert rc._residential_cat(8, 2) == "immeuble_collectif"
-    assert rc._residential_cat(np.nan, 4) == "appartement"   # no count -> storeys
-    assert rc._residential_cat(np.nan, 1) == "maison"
+    assert rc._residential_cat(1, 2, 150.0) == "maison"
+    assert rc._residential_cat(3, 2, 300.0) == "appartement"
+    assert rc._residential_cat(8, 2, 700.0) == "immeuble_collectif"
+    assert rc._residential_cat(0.4, 1, 60.0) == "maison"   # area-shared sliver of a house
+
+
+def test_residential_category_missing_count_uses_size():
+    import run_commune as rc
+    # no BD TOPO count: a small low building is a house...
+    assert rc._residential_cat(np.nan, 1, 150.0) == "maison"
+    assert rc._residential_cat(np.nan, 2, 450.0) == "maison"
+    # ...a tall or large one is flats, sized at the households sidecar's m² per dwelling
+    assert rc._residential_cat(np.nan, 3, 300.0) == "appartement"            # 4 dwellings
+    assert rc._residential_cat(np.nan, 2, 600.0) == "immeuble_collectif"     # 7 dwellings
+    assert rc._residential_cat(np.nan, 6, 1200.0) == "immeuble_collectif"
+
+
+def test_residential_category_never_makes_a_large_building_a_house():
+    import run_commune as rc
+    # the tax files record no dwelling: not housing
+    assert rc._residential_cat(0, 1, 120.0) == "dependance"
+    assert rc._residential_cat(0, 4, 900.0) == "dependance"
+    # one recorded dwelling in a building far larger than a house: not a house
+    assert rc._residential_cat(1, 4, 750.0) == "dependance"
+    assert rc._residential_cat(1, 2, rc.MAISON_MAX_FLOOR_M2) == "maison"   # bound inclusive
+
+
+def test_derive_parcel_category_missing_counts_stay_missing():
+    """A parcel whose buildings all lack a dwelling count must not read as
+    zero dwellings (pandas sums all-NaN to 0), which made every unmatched
+    building a house whatever its size."""
+    import run_commune as rc
+    b = pd.DataFrame([
+        dict(idpar="P1", footprint_m2=150.0, n_levels=np.nan, height_m=18.0,
+             usage="Résidentiel", n_dwellings=np.nan),     # 6 storeys from height
+        dict(idpar="P2", footprint_m2=90.0, n_levels=np.nan, height_m=6.0,
+             usage="Indifférencié", n_dwellings=np.nan),   # 2 storeys, 180 m²
+        dict(idpar="P3", footprint_m2=200.0, n_levels=4.0, height_m=13.0,
+             usage="Résidentiel", n_dwellings=0.0),
+    ])
+    cat = rc.derive_parcel_category(b)
+    assert cat["P1"] == "immeuble_collectif"
+    assert cat["P2"] == "maison"
+    assert cat["P3"] == "dependance"
 
 
 def test_derive_parcel_category_dominant_building():
