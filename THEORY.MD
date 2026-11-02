@@ -25,6 +25,10 @@ pay more under reform must never be buried. HeadlineCards gives it a rouge accen
 at equal weight to the positive figures. WinLoseSplit sorts categories by share-paying-
 more descending. Reference years are displayed only when known — never fabricated.
 
+A corollary: every headline claim in prose is computed from the payloads at build time
+(`lib/impactSummary`), and a vitest pins the counts, so a pipeline re-run that changes
+a claim fails a test instead of silently making the prose false.
+
 The chart layer (HeadlineCards, SensitivityBand, WinLoseSplit, CategoryImpactBars,
 IncomeQuintileChart) is shared across the site via `src/components/charts/`. All use
 the shared palette from `theme.ts` (MARINE, ROUGE, CREME, GRIS, LISERE) which mirrors
@@ -35,7 +39,7 @@ the Tailwind `@theme` tokens in `globals.css`.
 The build follows a subagent-driven development plan (SDD) with sequential tasks:
 1. Data layer (types, loaders, format utilities)
 2. Per-chart components
-3. The `/resultats` results explorer (Task 6 — now complete)
+3. The `/resultats` results explorer
 4. Remaining editorial pages
 
 The `/resultats` page uses a server/client split that is intentional and load-bearing:
@@ -44,6 +48,12 @@ passes the full array to the client `CommunePicker` as props, and the client swi
 communes via `useState` with zero latency. This means all commune data is bundled into
 the page JS. Now 14 entries (12 communes + 2 ring aggregates, whose member tables add
 ~180 rows); the 177 ring members are deliberately not individual picker entries.
+
+Claims are graded by robustness. The biggest uncertainty is not the land share but
+today's tax: no public data splits a commune's taxe foncière between homes and
+business premises. The site therefore publishes two baselines (central case and a
+local variant from the 2017 taxe d'habitation) and prose leads with what holds under
+both, giving ranges where they differ.
 
 ## Key Discoveries
 
@@ -56,16 +66,29 @@ the page JS. Now 14 entries (12 communes + 2 ring aggregates, whose member table
   of adding a new chart page is small.
 - `reference_year` can be null in the Commune type. The honesty rule requires
   omitting the year rather than inventing one when it is null.
-
 - Territories (inner rings) reuse the commune payload shape with `kind:
   "territory"`, `insee: null`, a per-member table and coverage. The picker groups
   them separately; landing totals sum de-duplicated counts because Montreuil and
   Villeurbanne appear both alone and inside their ring. Ring-wide income
   quintiles can mislead (they mix the reform with commune-to-commune differences),
   so territories also show quintiles ranked within each commune.
+- The alternative baseline flipped direction (Nov 2026). The old one (raw CFE) gave
+  business a smaller share of today's tax, so it was kinder to households; the 2017
+  taxe d'habitation variant gives business a larger share almost everywhere (Figeac
+  aside), so it is harsher. Prose written for the old alternative ("si elle est plus
+  faible, la réforme est plus favorable aux ménages") became the reverse of the truth
+  without any test failing, because tests pinned counts, not sentences.
+- Under both baselines the poorest fifth fares better than the richest in 11 of 11
+  territories: progressivity is robust. Absolute claims are not: the poorest fifth
+  pays less in 11 of 11 (central) but 8 of 11 (variant); the typical small
+  multi-dwelling building ("Condominium") pays less in 9 vs 6 of 13.
 
 ## Open Questions
 
+- Which baseline is closer to the truth? Only the Fichiers fonciers (per-premises
+  rental values) would settle it; the 2017 check leans towards the variant in cities.
+- "Appartement type" on the home page is the 2–4 dwelling category, not flats in
+  general; draft #58 reworks flats vs houses across both building categories.
 - Will the departement field reliably distinguish communes with the same name?
   Currently displayed in the select option as "(93)" etc. — but may need INSEE code
   as the authoritative disambiguator if multiple communes share a name across departments.
