@@ -71,7 +71,7 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
     >
       <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{row.label_fr}</p>
       <p>
-        Variation médiane&nbsp;:{" "}
+        Variation médiane, par parcelle&nbsp;:{" "}
         {row.isNull ? "n. d." : signedPct(row.median_change_pct)}
       </p>
       <p>
@@ -187,6 +187,7 @@ export default function CategoryImpactBars({
 
   const valueTick = makeValueTick(sortedData);
   const vacant = sortedData.find((r) => r.isNull);
+  const perDwelling = sortedData.some((r) => categoryAmount(r).basis === "dwelling");
 
   return (
     <figure aria-label="Variation médiane de l'impôt par catégorie de bien">
@@ -257,6 +258,14 @@ export default function CategoryImpactBars({
           (le non-bâti relève de la TFPNB, hors du périmètre modélisé), donc la
           variation en pourcentage n&apos;est pas définie. Le chiffre indiqué est
           la hausse médiane en euros par parcelle.
+        </p>
+      )}
+      {perDwelling && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          Les pourcentages sont des médianes par parcelle ; au survol, les
+          montants des catégories résidentielles sont par logement. Un immeuble
+          compte pour une parcelle dans le premier cas et pour tous ses logements
+          dans le second : les deux chiffres peuvent donc être de signe opposé.
         </p>
       )}
     </figure>
