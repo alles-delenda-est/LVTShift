@@ -115,6 +115,9 @@ class CommuneConfig:
     # ~45-50% of household real estate nationally; dense cores higher,
     # periphery lower). Used to clip/flag, not to impose.
     land_share_bounds: tuple = (0.15, 0.85)
+    # Land of built parcels: "site" (as if vacant at the zone's typical
+    # density, SITE_VALUE) or "current" (the residual at the existing density).
+    land_concept: str = "site"
     # Split-rate ratio for the headline scenario (LVTShift convention)
     split_rate_ratio: float = 4.0
     # Paris / Lyon / Marseille: the commune levies the taxe foncière under its
@@ -146,6 +149,9 @@ class CommuneConfig:
             raise ValueError(f"activity_land_ratio must be in "
                              f"[{ACTIVITY_LAND_RATIO_MIN}, 1], got {r!r}")
         self.activity_land_ratio = float(r)
+        if self.land_concept not in ("site", "current"):
+            raise ValueError(f"land_concept must be 'site' or 'current', "
+                             f"got {self.land_concept!r}")
         for name in ("construction_cost_eur_m2", "house_cost_eur_m2"):
             v = getattr(self, name)
             if v is None and name == "house_cost_eur_m2":
@@ -566,6 +572,32 @@ LAND_MODEL = {
     # Fallback buffer (m) around buildings to call a parcel constructible where
     # GPU has no coverage (RNU communes / uncovered slivers).
     "rnu_building_buffer_m": 25.0,
+}
+
+# Site value of built land (estimate.site_value_land, METHODOLOGY §3.4).
+# An LVT taxes land as if vacant at its permitted use, not at the density that
+# happens to stand on it. Within each IRIS the residual land of parcels valued
+# by the residual is pooled and shared again in proportion to
+#     capacity ** density_elasticity,
+#     capacity = max(floor area, plot × reference floor-area ratio of its zone),
+# the floor area the plot could carry at the zone's typical density (or its
+# actual floor area if denser: lawful existing use, as in Denmark).
+SITE_VALUE = {
+    # Elasticity of land value to that capacity. German residential conversion
+    # coefficients (WertR 2006 Anl. 11) imply 0.45–0.54 for land per m² of plot
+    # against floor-area ratio; French building-plot sales (EPTB, Combes,
+    # Duranton & Gobillon) 0.3–0.45 against plot area for house plots.
+    "density_elasticity": 0.5,
+    # Reference density: this quantile of the realised floor-area ratio of the
+    # pooled parcels in the same PLU zone label (permitted density is not open
+    # data in structured form; the typical upper end of what was built stands in).
+    "ref_density_quantile": 0.75,
+    # Zone labels with fewer pooled parcels fall back to the zone type (U, AU…),
+    # then to the commune.
+    "min_zone_parcels": 20,
+    # Plot areas above this quantile of the commune's pooled parcels are capped
+    # (parks of horizontal copropriétés, estates with farmland attached).
+    "plot_cap_quantile": 0.99,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

@@ -719,6 +719,36 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     return out
 
 
+def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
+    """How the run valued built land (households sidecar meta): site value with
+    its parameters, or the residual at the existing density ("current"; also
+    every run from before the field existed). Scalars only, validated."""
+    from config import COMMUNES, SITE_VALUE
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.households.meta.json"
+    rec = json.loads(path.read_text("utf-8")) if path.exists() else {}
+    land = rec.get("land_value") if isinstance(rec, dict) else None
+    if land is None:
+        return {"concept": "current"}
+    if not isinstance(land, dict) or land.get("concept") not in ("site", "current"):
+        raise ValueError(f"{path}: invalid land_value record {land!r}")
+    if land["concept"] == "current":
+        return {"concept": "current"}
+    out = {"concept": "site"}
+    for k in sorted(SITE_VALUE):
+        v = land.get(k)
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")
+        out[k] = float(v)
+    return out
+
+
+def _territory_land_method(present: list, out_dir: str) -> dict:
+    """The members' common land method, else 'mixed' (parameters dropped)."""
+    recs = [load_land_method(k, out_dir) for k in present]
+    first = recs[0] if recs else {"concept": "current"}
+    return first if all(r == first for r in recs) else {"concept": "mixed"}
+
+
 def _territory_baseline(present: list, out_dir: str) -> dict:
     """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'.
     The alternative's source is the members' common one, else 'mixed'."""
@@ -755,6 +785,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
             "activity_land_ratio": getattr(cfg, "activity_land_ratio", None),
             "current_tax_baseline": baseline,
+            "land_value": load_land_method(commune_key, out_dir),
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
@@ -921,6 +952,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
             "current_tax_baseline": tb,
+            "land_value": _territory_land_method(present, out_dir),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),

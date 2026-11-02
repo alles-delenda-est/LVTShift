@@ -282,6 +282,12 @@ def main():
     ap.add_argument("--baseline", choices=("calibrated", "floor"), default="calibrated",
                     help="today's tax: calibrated to the commune's REI split by tax "
                          "group (default), or shared by plain floor area (sensitivity)")
+    ap.add_argument("--land", choices=("site", "current"), default=None,
+                    help="land of built parcels: site value at the zone's typical "
+                         "density (default, config.SITE_VALUE) or the residual at "
+                         "the existing density (sensitivity)")
+    ap.add_argument("--site-elasticity", type=float, default=None,
+                    help="override SITE_VALUE density_elasticity (sensitivity)")
     ap.add_argument("--cache-dir", default=None,
                     help="cache raw downloads here (resumable batch runs); "
                          "default: env LVTFR_CACHE_DIR, else no cache")
@@ -290,6 +296,11 @@ def main():
         ingest.CACHE_DIR = args.cache_dir
 
     cfg = COMMUNES[args.commune]
+    if args.land:
+        import dataclasses
+        cfg = dataclasses.replace(cfg, land_concept=args.land)
+    site_value = (None if args.site_elasticity is None
+                  else {"density_elasticity": args.site_elasticity})
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
     deflator = None if args.no_deflator else estimate.deflator_factors(cfg)
     if deflator:
@@ -310,7 +321,7 @@ def main():
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
-                 deflator=deflator, baseline_split=split)
+                 deflator=deflator, baseline_split=split, site_value=site_value)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")

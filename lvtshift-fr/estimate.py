@@ -538,6 +538,99 @@ def land_value_residual(p: pd.DataFrame, cfg,
     return out
 
 
+# Built parcels whose land is the residual (clipped or not) at the existing
+# density: the ones site_value_land re-shares. Replacement-cost parcels (sheds,
+# retail boxes) and those floored at the farmland value are already priced off
+# their plot.
+SITE_POOLED_FLAGS = frozenset({"built_residual", "built_clipped_high", "built_clipped_low"})
+
+
+def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
+    """
+    Land of built parcels as site value: as if vacant, at its zone's typical
+    density, instead of in proportion to the floor area standing on it.
+
+    The residual (market value − building cost) makes land proportional to the
+    existing floor area, so a low house gets a fraction of the land of a block
+    on an identical plot. Within each IRIS (the whole commune where there is
+    none) the residual land of the pooled parcels is kept as a total and shared
+    again in proportion to
+
+        capacity ** density_elasticity,
+        capacity = max(floor area, capped plot area × reference FAR),
+
+    the reference FAR being the ref_density_quantile of the pooled parcels'
+    floor-area ratio in the same PLU zone label (zone type, then commune, where
+    the label has fewer than min_zone_parcels). The building keeps its
+    depreciated replacement cost (`building_cost`) and market value becomes
+    land + building, so land may exceed the old floor-proportional market value:
+    no land-share clip applies to these parcels.
+
+    p: frame after land_value_residual, with building_cost (depreciated cost
+    before the residual), lv_flag, land_value, parcel_area_m2, floor_area_m2,
+    and optionally iris, zone_libelle, zone_typ, is_exempt_public (exempt
+    parcels keep their values and stay out of the pools).
+    params: SITE_VALUE keys (config.SITE_VALUE by default).
+
+    Adds land_value_current and market_value_current (before re-sharing) and
+    site_capacity_m2; updates land_value, improvement_value, market_value,
+    land_share, land_share_raw and lv_flag ('built_site_value').
+    """
+    from config import SITE_VALUE
+    prm = {**SITE_VALUE, **(params or {})}
+    theta = float(prm["density_elasticity"])
+    q_ref = float(prm["ref_density_quantile"])
+    q_cap = float(prm["plot_cap_quantile"])
+    min_n = int(prm["min_zone_parcels"])
+    if not (0.0 < theta <= 1.0 and 0.0 < q_ref < 1.0 and 0.5 <= q_cap <= 1.0 and min_n >= 1):
+        raise ValueError(f"invalid SITE_VALUE parameters {prm}")
+
+    out = p.copy()
+    out["land_value_current"] = out["land_value"]
+    out["market_value_current"] = out["market_value"]
+    out["site_capacity_m2"] = np.nan
+    area = pd.to_numeric(out["parcel_area_m2"], errors="coerce")
+    floor = pd.to_numeric(out["floor_area_m2"], errors="coerce")
+    cost = pd.to_numeric(out["building_cost"], errors="coerce")
+    exempt = (out["is_exempt_public"].fillna(False).astype(bool)
+              if "is_exempt_public" in out.columns
+              else pd.Series(False, index=out.index))
+    pool = (out["lv_flag"].isin(SITE_POOLED_FLAGS) & ~exempt
+            & (area > 0) & (floor > 0) & cost.notna() & (cost >= 0))
+    if not pool.any():
+        return out
+
+    far = floor[pool] / area[pool]
+    plot = area[pool].clip(upper=area[pool].quantile(q_cap))
+    ref = pd.Series(far.quantile(q_ref), index=far.index)
+    for col in ("zone_typ", "zone_libelle"):          # coarse first, finest wins
+        if col not in out.columns:
+            continue
+        key = out.loc[pool, col].astype("object")
+        known = key.notna()
+        n = key[known].map(key[known].value_counts())
+        ok = n[n >= min_n].index
+        by_zone = far[ok].groupby(key[ok]).quantile(q_ref)
+        ref = ref.mask(key.index.isin(ok), key.map(by_zone))
+    capacity = np.maximum(floor[pool], plot * ref)
+    weight = capacity ** theta
+
+    group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
+             if "iris" in out.columns else pd.Series("_commune", index=far.index))
+    total = out.loc[pool, "land_value"].groupby(group).transform("sum")
+    land = total * weight / weight.groupby(group).transform("sum")
+
+    out.loc[pool, "land_value"] = land
+    out.loc[pool, "improvement_value"] = cost[pool]
+    out.loc[pool, "market_value"] = land + cost[pool]
+    share = land / (land + cost[pool]).replace(0, np.nan)
+    out.loc[pool, "land_share"] = share
+    out.loc[pool, "land_share_raw"] = share
+    out.loc[pool, "lv_flag"] = "built_site_value"
+    out.loc[pool, "site_capacity_m2"] = capacity
+    return out
+
+
 def sensitivity_band(p: pd.DataFrame, cfg, shifts=(-0.10, 0.0, +0.10)):
     """Re-split market value at land_share +/- shift -> dict of variants
     for the published sensitivity band.
