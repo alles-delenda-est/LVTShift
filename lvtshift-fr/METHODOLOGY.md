@@ -312,7 +312,8 @@ claims were wrong. Its point that the CFE proxy undercounts was right, and the
   second time with the professional target at the local share implied by the
   2017 taxe d'habitation, 1 − 0.5 × `J11`/`E11` (REI 2017) − 2 × the industrial
   share (`ingest.fetch_th2017_housing_share`; the raw proxy, × 1.0, where the
-  2017 line is missing: Sathonay-Camp only), under the same groups, merge rule
+  2017 share is missing or outside (0, 1): Sathonay-Camp only, whose 2017 line
+  gives 1.11), under the same groups, merge rule
   and caps. It is stored in the households sidecar (`current_tax_low`), checked
   to be revenue-neutral on export, and published as `baseline_sensitivity`
   with its `low_source` (§3.7). The LVT bills do not change; only today's tax
