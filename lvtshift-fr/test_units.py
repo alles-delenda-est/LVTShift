@@ -1115,6 +1115,12 @@ def test_site_value_counts_only_a_yard_in_farmland_and_natural_zones():
     lv = out.set_index("idpar")["land_value"]
     # yard 3 × 150 = 450 m²; its zone label UA keeps the reference density 2
     assert abs(lv["H"] / lv["B"] - 450.0 / 500.0) < 1e-9
+    # density is measured on the yard (150 / 450), not on the 5 000 m² plot
+    assert abs(out.set_index("idpar").loc["H", "site_density"] - 2.0) < 1e-9
+    p2 = p.assign(zone_libelle=["NA", "UA", "UA"])      # the house alone in its zone
+    d2 = estimate.site_value_land(p2, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "plot_cap_quantile": 1.0}).set_index("idpar")
+    assert abs(d2.loc["H", "site_density"] - 150.0 / 450.0) < 1e-9
 
 
 def test_site_value_without_pooled_parcels_is_a_no_op():

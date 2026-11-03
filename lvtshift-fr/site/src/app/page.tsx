@@ -291,6 +291,9 @@ export default function Home() {
                     Dans l&apos;immeuble collectif, où vivent la plupart des
                     ménages, le sol est partagé : il paie moins dans{" "}
                     {impact.blocksPayLess} territoires sur {impact.territories}.
+                    Le petit immeuble de 2 à 4 logements, souvent moins dense
+                    que ses voisins, paie moins dans{" "}
+                    {impact.smallBuildingsPayLess} territoires seulement.
                   </>
                 )}
               </p>

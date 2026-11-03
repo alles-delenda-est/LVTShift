@@ -633,10 +633,12 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
         from config import DRC_CURTILAGE_FACTOR
         rural = out.loc[pool, "zone_typ"].isin(["A", "N"])
         plot = plot.where(~rural, np.minimum(plot, DRC_CURTILAGE_FACTOR * floor[pool]))
-    zones =[out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
+        # ...so its density is measured on that yard, not on the fields around it
+        far = far.where(~rural, floor[pool] / plot)
+    zones = [out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
              if c in out.columns]
     ref = _zone_quantile(far, zones, q_ref, min_n)
-    typical_plot = _zone_quantile(area[pool], zones, 0.5, min_n)
+    typical_plot = _zone_quantile(plot, zones, 0.5, min_n)
     density = np.maximum(far, ref)
     house_scale = (far < ref) & (ref < far_sur)
     surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
