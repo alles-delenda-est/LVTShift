@@ -293,6 +293,15 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               }}
             />
             <BandNote />
+            <p className="text-xs text-gris font-body mt-2 max-w-3xl leading-relaxed">
+              Ces résultats ne portent que sur les logements. La variation de
+              l&apos;impôt des commerces, bureaux et locaux industriels n&apos;est
+              attribuée à aucun ménage : savoir qui la supporterait au bout du
+              compte (clients, salariés, locataires ou propriétaires) est
+              difficile à estimer, même à comportements inchangés, et
+              indissociable des effets dynamiques de la réforme. Ce point pourra
+              être traité dans une seconde phase.
+            </p>
           </section>
 
           {/* 5b. Territory only: quintiles ranked within each commune */}

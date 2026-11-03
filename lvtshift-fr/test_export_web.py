@@ -278,9 +278,12 @@ def test_category_euros_per_dwelling():
     assert blk["median_change_eur"] > cats["Single Family Residential"]["median_change_eur"]
     assert blk["median_change_eur_per_dwelling"] == round(850.0 / 20, 0)   # 42 €
     assert blk["dwellings"] == 240
+    assert blk["household_median_change_pct"] == 9.6
+    assert blk["share_dwellings_paying_more_pct"] == 100.0
     assert cats["Single Family Residential"]["median_change_eur_per_dwelling"] == 267.0
     assert cats["Commercial"]["median_change_eur_per_dwelling"] is None
     assert cats["Commercial"]["dwellings"] is None
+    assert cats["Commercial"]["share_dwellings_paying_more_pct"] is None
     # older runs without counts, a missing count, or one dominant block: unset
     old = {c["category"]: c for c in ew.build_by_category(df.drop(columns="n_dwellings"))}
     assert old["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
@@ -292,6 +295,20 @@ def test_category_euros_per_dwelling():
     dom.loc[12, "n_dwellings"] = 1000.0
     dom = {c["category"]: c for c in ew.build_by_category(dom)}
     assert dom["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
+    assert dom["Large Multi-Family (5+ units)"]["share_dwellings_paying_more_pct"] is None
+    assert dom["Large Multi-Family (5+ units)"]["household_median_change_pct"] is None
+
+
+def test_category_share_of_dwellings_paying_more_weights_by_dwellings():
+    # most parcels (houses) pay more, but most dwellings (in blocks) pay less
+    rows = ([dict(property_category="Condominium", tax_change=50.0, tax_change_pct=5.0,
+                  n_dwellings=2.0)] * 10
+            + [dict(property_category="Condominium", tax_change=-80.0, tax_change_pct=-8.0,
+                    n_dwellings=4.0)] * 5)
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["share_paying_more_pct"] == round(100 * 10 / 15, 1)       # parcels: 66.7
+    assert cat["share_dwellings_paying_more_pct"] == 50.0               # 20 of 40 dwellings
+    assert cat["household_median_change_pct"] == -8.0
 
 
 def test_households_sidecar_must_match_its_run(tmp_path, monkeypatch):

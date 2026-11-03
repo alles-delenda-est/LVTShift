@@ -262,10 +262,10 @@ export default function CategoryImpactBars({
       )}
       {perDwelling && (
         <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
-          Les pourcentages sont des médianes par parcelle ; au survol, les
-          montants des catégories résidentielles sont par logement. Un immeuble
-          compte pour une parcelle dans le premier cas et pour tous ses logements
-          dans le second : les deux chiffres peuvent donc être de signe opposé.
+          Chaque barre donne la variation médiane par parcelle : un immeuble y
+          compte pour une seule parcelle, quel que soit son nombre de logements.
+          Pour les logements, le montant au survol est celui du ménage type, en
+          euros par logement et par an.
         </p>
       )}
     </figure>

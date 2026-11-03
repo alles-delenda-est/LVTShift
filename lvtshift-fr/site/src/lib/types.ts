@@ -44,6 +44,10 @@ export interface CategoryRow {
   count_paying_more: number | null; share_paying_more_pct: number | null;
   /** Typical household's change in €, residential categories only (absent in older payloads). */
   median_change_eur_per_dwelling?: number | null;
+  /** Typical household's change in %, parcels weighted by dwellings (absent in older payloads). */
+  household_median_change_pct?: number | null;
+  /** % of the category's dwellings in parcels that pay more (absent in older payloads). */
+  share_dwellings_paying_more_pct?: number | null;
   dwellings?: number | null;
 }
 /** A category whose figures are published (see lib/disclosure). */
