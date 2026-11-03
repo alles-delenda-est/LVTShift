@@ -92,7 +92,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         commune_tfpb_produit: float, iris_income: pd.DataFrame | None = None,
         out_dir: str = "output", make_report: bool = True, cfg=CFG,
         deflator: dict | None = None,
-        baseline_split: dict | None = None) -> pd.DataFrame:
+        baseline_split: dict | None = None,
+        site_value: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
@@ -104,7 +105,9 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
        bringing DVF prices to cfg.reference_year euros before the hedonic fit.
        baseline_split: optional {'industrial': s, 'professional': s} shares of
        the commune's TFPB base (ingest.fetch_rei_baseline_split); when given,
-       today's tax is calibrated by tax group, otherwise shared by floor area."""
+       today's tax is calibrated by tax group, otherwise shared by floor area.
+       site_value: overrides of config.SITE_VALUE (sensitivity runs); used when
+       cfg.land_concept is "site"."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
@@ -122,7 +125,11 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # both sides of the residual on habitable area (METHODOLOGY §3.2)
     p = estimate.habitable_basis(p, cfg)
     p = estimate.market_value(p, surface, cfg.net_to_gross)
+    p["building_cost"] = p["improvement_value"]     # before the residual reshapes it
     p = estimate.land_value_residual(p, cfg)
+    if getattr(cfg, "land_concept", "site") == "site":
+        p = estimate.site_value_land(p, site_value)
+        _report_site_value(p, cfg)
     stale = Path(out_dir) / f"{slug_of(cfg)}.baseline.json"
     if stale.exists():          # never pair a new export with an old sidecar
         stale.unlink()
@@ -214,11 +221,24 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 
-    _write_households(p, buildings, out_dir, name)
+    _write_households(p, buildings, out_dir, name, land_method(cfg, site_value))
     _write_baseline(p, baseline, out_dir, name)
     if make_report:
         _write_report(out, out_dir, cfg)
     return out
+
+
+def _report_site_value(p: pd.DataFrame, cfg) -> None:
+    """One log line on the site-value re-sharing (commune-level figures only)."""
+    s = p["lv_flag"].eq("built_site_value")
+    if not s.any():
+        print(f"[{cfg.name}] site value: no parcel valued by the residual; nothing re-shared")
+        return
+    moved = float((p.loc[s, "land_value"] - p.loc[s, "land_value_current"]).abs().sum()) / 2
+    over = float((p.loc[s, "land_value"] > p.loc[s, "market_value_current"]).mean())
+    print(f"[{cfg.name}] site value: {int(s.sum())} parcels re-shared, "
+          f"{100 * moved / float(p.loc[s, 'land_value'].sum()):.1f}% of their land moved; "
+          f"{100 * over:.1f}% now have land above their old floor-based market value")
 
 
 def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
@@ -326,8 +346,17 @@ def dwellings_per_parcel(p: pd.DataFrame, buildings: pd.DataFrame) -> pd.DataFra
                          "dwellings_imputed": missing.values})
 
 
+def land_method(cfg, site_value: dict | None = None) -> dict:
+    """How built land was valued in this run, for the payload provenance."""
+    from config import SITE_VALUE
+    if getattr(cfg, "land_concept", "site") != "site":
+        return {"concept": "current"}
+    prm = {**SITE_VALUE, **(site_value or {})}
+    return {"concept": "site", **{k: prm[k] for k in sorted(SITE_VALUE)}}
+
+
 def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
-                      name: str) -> None:
+                      name: str, land: dict | None = None) -> None:
     """Sidecar to the standard export (whose 16 columns are fixed upstream):
     same rows in the same order, with new_tax repeated so a reader can check
     the alignment. Local only — output/ is git-ignored and never published."""
@@ -338,12 +367,19 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
     # today's tax at the lower-bound professional share (baseline sensitivity)
     if "current_tax_low" in p.columns:
         side["current_tax_low"] = p["current_tax_low"].values
+    # residual land clipped at the upper land-share bound before any site-value
+    # re-sharing: the clip still shapes each IRIS's land total (export_web)
+    flag = p["lv_flag_current"] if "lv_flag_current" in p.columns else p.get("lv_flag")
+    if flag is not None:
+        side["residual_at_cap"] = flag.eq("built_clipped_high").values
     side.to_csv(Path(out_dir) / f"{name}.households.csv", index=False)
     # tie the sidecar to the exact export it belongs to (new_tax alone repeats
     # across parcels, so it cannot prove the rows line up)
     export = Path(out_dir) / f"{name}.csv"
     meta = {"export_sha256": hashlib.sha256(export.read_bytes()).hexdigest(),
             "rows": int(len(side))}
+    if land is not None:            # how built land was valued (export provenance)
+        meta["land_value"] = land
     (Path(out_dir) / f"{name}.households.meta.json").write_text(
         json.dumps(meta) + "\n", encoding="utf-8")
     print(f"[{name}] dwellings: {side['n_dwellings'].sum():,.0f} "

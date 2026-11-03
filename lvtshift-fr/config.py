@@ -115,6 +115,9 @@ class CommuneConfig:
     # ~45-50% of household real estate nationally; dense cores higher,
     # periphery lower). Used to clip/flag, not to impose.
     land_share_bounds: tuple = (0.15, 0.85)
+    # Land of built parcels: "site" (as if vacant at the zone's typical
+    # density, SITE_VALUE) or "current" (the residual at the existing density).
+    land_concept: str = "site"
     # Split-rate ratio for the headline scenario (LVTShift convention)
     split_rate_ratio: float = 4.0
     # Paris / Lyon / Marseille: the commune levies the taxe foncière under its
@@ -146,6 +149,9 @@ class CommuneConfig:
             raise ValueError(f"activity_land_ratio must be in "
                              f"[{ACTIVITY_LAND_RATIO_MIN}, 1], got {r!r}")
         self.activity_land_ratio = float(r)
+        if self.land_concept not in ("site", "current"):
+            raise ValueError(f"land_concept must be 'site' or 'current', "
+                             f"got {self.land_concept!r}")
         for name in ("construction_cost_eur_m2", "house_cost_eur_m2"):
             v = getattr(self, name)
             if v is None and name == "house_cost_eur_m2":
@@ -566,6 +572,52 @@ LAND_MODEL = {
     # Fallback buffer (m) around buildings to call a parcel constructible where
     # GPU has no coverage (RNU communes / uncovered slivers).
     "rnu_building_buffer_m": 25.0,
+}
+
+# Site value of built land (estimate.site_value_land, METHODOLOGY §3.4).
+# An LVT taxes land as if vacant at its permitted use, not at the density that
+# happens to stand on it. Within each IRIS the residual land of parcels valued
+# by the residual is pooled and shared again in proportion to
+#     plot area × density ** density_elasticity,
+#     density = max(own floor-area ratio, reference ratio of its zone),
+# a standard land value per m² of plot adjusted for the density the zone
+# typically allows (or the parcel's own, if denser: lawful existing use, as in
+# Denmark), as German Bodenrichtwerte are.
+# Land is in proportion to plot area, as Baden-Württemberg's land tax, NSW and
+# the Welsh studies price it (zone €/m² × area). Vacant house plots sell for
+# less than proportionally more as they grow (EPTB: 0.3–0.45 % per 1 %), but a
+# concave curve applied to every parcel would move land from the large plots of
+# blocks to small house plots; it would belong within house plots only, which
+# is not modelled (METHODOLOGY §6).
+SITE_VALUE = {
+    # Land per m² of plot against floor-area ratio: German residential
+    # conversion coefficients (WertR 2006 Anl. 11) imply 0.45–0.54.
+    "density_elasticity": 0.5,
+    # Reference density: this quantile of the realised floor-area ratio of the
+    # pooled parcels in the same PLU zone label (permitted density is not open
+    # data in structured form; the typical upper end of what was built stands in).
+    "ref_density_quantile": 0.75,
+    # Zone labels with fewer pooled parcels fall back to the zone type (U, AU…),
+    # then to the commune.
+    "min_zone_parcels": 20,
+    # Plot areas above this quantile of the commune's pooled parcels are capped
+    # (parks of horizontal copropriétés, estates with farmland attached).
+    "plot_cap_quantile": 0.99,
+    # Surplus land: on a parcel built below its zone's reference density, plot
+    # area beyond this multiple of the zone's median plot (it could be split
+    # into that many typical plots) counts at surplus_plot_weight. Vacant plot
+    # prices rise far less than in proportion to size (EPTB: elasticity 0.11
+    # at 2 000 m²), and in DVF house sales an extra m² of garden is worth
+    # 0.14–0.27 of a building-plot m² (Lyon, Montreuil, Aulnay, Ormesson).
+    "surplus_plot_multiple": 2.0,
+    "surplus_plot_weight": 0.25,
+    # ...in house-scale zones only: those evidence (EPTB covers single-house
+    # plots; German size coefficients apply to one- and two-family land). In a
+    # denser zone a large plot carries a large building and keeps its full area.
+    # Model floor-area ratio (BD TOPO gross floor ÷ plot): individual-housing
+    # zones run 0.2–0.9 (Lyon URi1a 0.93, Villeurbanne 0.78, Cahors Ub 0.47),
+    # mixed and collective zones 1.4–6.6.
+    "surplus_max_ref_far": 1.0,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

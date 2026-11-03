@@ -969,6 +969,204 @@ def test_load_baseline_coerces_sidecar(tmp=None):
 
 
 # ------------------------------------------------------------------ #
+# site_value_land: land as if vacant at the zone's typical density
+# ------------------------------------------------------------------ #
+
+def _site_frame():
+    """One IRIS, one zone: a low house on a large plot, a block at the zone's
+    typical density on the same plot, and a dense block on a small plot."""
+    return pd.DataFrame({
+        "idpar": ["H", "B", "D"],
+        "iris": ["I1", "I1", "I1"],
+        "zone_libelle": ["UA", "UA", "UA"],
+        "zone_typ": ["U", "U", "U"],
+        "parcel_area_m2": [500.0, 500.0, 250.0],
+        "floor_area_m2": [150.0, 1000.0, 1000.0],    # FAR 0.3, 2, 4
+        "building_cost": [200_000.0, 1_500_000.0, 1_500_000.0],
+        "land_value": [100_000.0, 1_000_000.0, 1_000_000.0],   # ∝ floor area
+        "improvement_value": [200_000.0, 1_500_000.0, 1_500_000.0],
+        "market_value": [300_000.0, 2_500_000.0, 2_500_000.0],
+        "land_share": [1 / 3, 0.4, 0.4],
+        "land_share_raw": [1 / 3, 0.4, 0.4],
+        "lv_flag": ["built_residual", "built_residual", "built_clipped_high"],
+    })
+
+
+def test_site_value_keeps_the_pool_total_and_follows_plot_and_density():
+    p = _site_frame()
+    prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5}   # reference FAR 2
+    out = estimate.site_value_land(p, prm)
+    assert abs(out["land_value"].sum() - p["land_value"].sum()) < 1e-6
+    # density: the low house is valued at the zone's 2, the dense block at its own 4
+    assert list(out["site_density"]) == [2.0, 2.0, 4.0]
+    # same plot, same reference density: same land, whatever stands on it
+    lv = out["land_value"].to_numpy()
+    assert abs(lv[0] - lv[1]) < 1e-6
+    # half the plot at twice the density: 0.5 × 2 ** 0.5 of the land
+    assert abs(lv[2] / lv[1] - 0.5 * 2 ** 0.5) < 1e-9
+    assert (out["lv_flag"] == "built_site_value").all()
+    assert list(out["land_value_current"]) == list(p["land_value"])
+
+
+def test_site_value_building_keeps_its_cost_and_value_is_the_sum():
+    out = estimate.site_value_land(_site_frame(), {"min_zone_parcels": 1,
+                                                   "ref_density_quantile": 0.5})
+    assert list(out["improvement_value"]) == [200_000.0, 1_500_000.0, 1_500_000.0]
+    assert np.allclose(out["market_value"], out["land_value"] + out["improvement_value"])
+    share = out["land_value"] / out["market_value"]
+    assert np.allclose(out["land_share"], share) and np.allclose(out["land_share_raw"], share)
+    # the house's land now exceeds its old (floor-proportional) market value: no clip
+    assert out.loc[0, "land_value"] > 300_000.0
+
+
+def test_site_value_density_counts_sub_proportionally():
+    p = _site_frame()
+    p.loc[2, "parcel_area_m2"] = 500.0
+    p.loc[2, "floor_area_m2"] = 8000.0          # FAR 16 on the block's plot (FAR 2)
+    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "density_elasticity": 0.5})
+    lv = out.set_index("idpar")["land_value"]
+    assert abs(lv["D"] / lv["B"] - 8 ** 0.5) < 1e-9   # 8× the floor, √8 × the land
+
+
+def test_site_value_pools_by_iris_and_leaves_other_parcels_alone():
+    p = _site_frame()
+    other = pd.DataFrame({
+        "idpar": ["X", "S", "E", "V"], "iris": ["I2", "I1", "I1", "I1"],
+        "zone_libelle": ["UA"] * 4, "zone_typ": ["U"] * 4,
+        "parcel_area_m2": [500.0, 2000.0, 500.0, 800.0],
+        "floor_area_m2": [150.0, 1500.0, 150.0, 0.0],
+        "building_cost": [200_000.0, 300_000.0, 200_000.0, 0.0],
+        "land_value": [50_000.0, 400_000.0, 80_000.0, 160_000.0],
+        "improvement_value": [200_000.0, 300_000.0, 200_000.0, 0.0],
+        "market_value": [250_000.0, 700_000.0, 280_000.0, 160_000.0],
+        "land_share": [0.2, 4 / 7, 2 / 7, 1.0], "land_share_raw": [0.2, 4 / 7, 2 / 7, 1.0],
+        "lv_flag": ["built_residual", "built_drc", "built_residual", "constructible"],
+        "is_exempt_public": [False, False, True, False],
+    })
+    p["is_exempt_public"] = False
+    out = estimate.site_value_land(pd.concat([p, other], ignore_index=True),
+                                   {"min_zone_parcels": 1})
+    o = out.set_index("idpar")
+    # alone in its IRIS: keeps its land
+    assert abs(o.loc["X", "land_value"] - 50_000.0) < 1e-6
+    # replacement-cost, exempt and vacant parcels are untouched
+    for k in ("S", "E", "V"):
+        assert o.loc[k, "land_value"] == other.set_index("idpar").loc[k, "land_value"]
+        assert o.loc[k, "lv_flag"] != "built_site_value"
+    assert abs(o.loc[["H", "B", "D"], "land_value"].sum() - 2_100_000.0) < 1e-6
+
+
+def test_site_value_reference_density_falls_back_from_thin_zones():
+    p = _site_frame()
+    p["zone_libelle"] = ["UA", "UB", "UC"]       # each label has one parcel
+    out = estimate.site_value_land(p, {"min_zone_parcels": 2, "ref_density_quantile": 0.5})
+    # zone type U holds all three: median FAR 2, as in the one-zone case
+    assert list(out["site_density"]) == [2.0, 2.0, 4.0]
+
+
+def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
+    p = _site_frame()
+    p.loc[0, "parcel_area_m2"] = 1e6             # a park counted as the house's plot
+    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "plot_cap_quantile": 0.5,
+                                       "ref_density_quantile": 0.5})
+    lv = out["land_value"].to_numpy()
+    assert abs(lv[0] - lv[1]) < 1e-6           # capped to the block's 500 m², same density
+    for bad in ({"density_elasticity": -0.1}, {"density_elasticity": 1.5},
+                {"ref_density_quantile": 1.0}, {"plot_cap_quantile": 0.2},
+                {"min_zone_parcels": 0}):
+        _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)
+
+
+def test_site_value_discounts_surplus_land_on_under_built_plots_only():
+    p = _site_frame()
+    # zone median plot 500 m²: a 3 000 m² plot is 1 000 m² of building land
+    # (2 × 500) plus 2 000 m² of surplus counted at a quarter
+    p.loc[0, "parcel_area_m2"] = 3000.0           # the house: FAR 0.05, below the zone's 2
+    p.loc[2, "parcel_area_m2"] = 3000.0           # the block on the same plot size...
+    p.loc[2, "floor_area_m2"] = 12000.0           # ...at FAR 4, above the reference
+    extra = p.iloc[[1, 1]].assign(idpar=["B2", "B3"])          # keep the zone median at 500
+    p = pd.concat([p, extra], ignore_index=True)
+    prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5, "plot_cap_quantile": 1.0,
+           "surplus_max_ref_far": 3.0}         # the zone's reference FAR 2 counts as house-scale
+    out = estimate.site_value_land(p, prm)
+    lv = out.set_index("idpar")["land_value"]
+    # house: (1 000 + 0.25 × 2 000) × 2 ** 0.5; block B: 500 × 2 ** 0.5
+    assert abs(lv["H"] / lv["B"] - 1500.0 / 500.0) < 1e-9
+    # the dense block uses its whole plot: 3 000 × 4 ** 0.5 against 500 × 2 ** 0.5
+    assert abs(lv["D"] / lv["B"] - (3000.0 * 2.0) / (500.0 * 2 ** 0.5)) < 1e-9
+    # a weight of 1 switches the discount off
+    lv1 = estimate.site_value_land(p, {**prm, "surplus_plot_weight": 1.0}).set_index("idpar")["land_value"]
+    assert abs(lv1["H"] / lv1["B"] - 3000.0 / 500.0) < 1e-9
+    # in a denser zone (reference FAR 2 above the default bound 1) the whole plot counts
+    lv2 = estimate.site_value_land(p, {**prm, "surplus_max_ref_far": 1.0}).set_index("idpar")["land_value"]
+    assert abs(lv2["H"] / lv2["B"] - 3000.0 / 500.0) < 1e-9
+    for bad in ({"surplus_plot_multiple": 0.5}, {"surplus_plot_weight": -0.1},
+                {"surplus_plot_weight": 1.5}, {"surplus_max_ref_far": -1.0}):
+        _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)
+
+
+def test_site_value_counts_only_a_yard_in_farmland_and_natural_zones():
+    p = _site_frame()
+    p["zone_typ"] = ["N", "U", "U"]              # the house stands in a natural zone
+    p.loc[0, "parcel_area_m2"] = 5000.0
+    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "plot_cap_quantile": 1.0})
+    lv = out.set_index("idpar")["land_value"]
+    # yard 3 × 150 = 450 m²; its zone label UA keeps the reference density 2
+    assert abs(lv["H"] / lv["B"] - 450.0 / 500.0) < 1e-9
+    # density is measured on the yard (150 / 450), not on the 5 000 m² plot
+    assert abs(out.set_index("idpar").loc["H", "site_density"] - 2.0) < 1e-9
+    p2 = p.assign(zone_libelle=["NA", "UA", "UA"])      # the house alone in its zone
+    d2 = estimate.site_value_land(p2, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "plot_cap_quantile": 1.0}).set_index("idpar")
+    assert abs(d2.loc["H", "site_density"] - 150.0 / 450.0) < 1e-9
+
+
+def test_site_value_without_pooled_parcels_is_a_no_op():
+    p = _site_frame()
+    p["lv_flag"] = "built_drc"
+    out = estimate.site_value_land(p)
+    assert out["land_value"].equals(p["land_value"])
+    assert out["lv_flag"].eq("built_drc").all()
+
+
+def test_land_method_round_trips_through_the_sidecar():
+    import json
+    import tempfile
+    import config
+    import export_web as ew
+    import run_pipeline as rp
+    d = Path(tempfile.mkdtemp())
+    config.COMMUNES["zzl"] = config.CommuneConfig("99002", "ZZL", "99", key="zzl")
+    meta = d / "zzl.households.meta.json"
+    try:
+        assert ew.load_land_method("zzl", str(d)) == {"concept": "current"}   # older runs
+        site = rp.land_method(config.COMMUNES["zzl"], {"density_elasticity": 0.3})
+        meta.write_text(json.dumps({"export_sha256": "x", "land_value": site}))
+        got = ew.load_land_method("zzl", str(d))
+        assert got["concept"] == "site" and got["density_elasticity"] == 0.3
+        assert set(got) == {"concept", *config.SITE_VALUE}
+        import dataclasses
+        cur = rp.land_method(dataclasses.replace(config.COMMUNES["zzl"], land_concept="current"))
+        meta.write_text(json.dumps({"land_value": cur}))
+        assert ew.load_land_method("zzl", str(d)) == {"concept": "current"}
+        for bad in ({"concept": "market"}, [1], {**site, "density_elasticity": "0.5"},
+                    {**site, "plot_cap_quantile": None}):
+            meta.write_text(json.dumps({"land_value": bad}))
+            _assert_raises(ValueError, ew.load_land_method, "zzl", str(d))
+    finally:
+        del config.COMMUNES["zzl"]
+
+
+def test_land_concept_is_validated():
+    import config
+    _assert_raises(ValueError, config.CommuneConfig, "46042", "X", "46",
+                   construction_cost_eur_m2=1650.0, land_concept="market")
+    assert config.CAHORS.land_concept == "site"
+
+
+# ------------------------------------------------------------------ #
 
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items())

@@ -79,16 +79,27 @@ both, giving ranges where they differ.
   faible, la réforme est plus favorable aux ménages") became the reverse of the truth
   without any test failing, because tests pinned counts, not sentences.
 - Under both baselines the poorest fifth fares better than the richest in 11 of 11
-  territories: progressivity is robust. Absolute claims are not: the poorest fifth
-  pays less in 11 of 11 (central) but 8 of 11 (variant); the typical small
-  multi-dwelling building ("Condominium") pays less in 9 vs 6 of 13.
+  territories: progressivity is robust. Absolute claims are not, and they also
+  depend on how built land is valued.
+- Site value moved the category story (Nov 2026). Valuing built land as if vacant
+  at its zone's density moves tax within each neighbourhood from dense blocks to
+  low-rise plots: blocks of 5+ pay less in 13 of 13 territories (10 in the
+  variant), houses more in 10 of 13, small 2–4 buildings less in only 4. The
+  home page's old « appartement type » was the 2–4 category, so it now names the
+  collective block. The richest fifth's total falls in Grenoble and Annemasse, so
+  "the richest fifth pays more" is no longer a panel-wide claim. Income-fifth
+  totals barely move, as IRIS land totals are kept.
 
 ## Open Questions
 
 - Which baseline is closer to the truth? Only the Fichiers fonciers (per-premises
   rental values) would settle it; the 2017 check leans towards the variant in cities.
-- "Appartement type" on the home page is the 2–4 dwelling category, not flats in
-  general; draft #58 reworks flats vs houses across both building categories.
+- Site value cannot be checked against sales of built property; only rare vacant
+  and teardown sales measure it. The density elasticity moves the typical house
+  by ±15–17 points in Lyon and Villeurbanne: house figures are the least robust
+  on the site.
+- Draft #58 (flats vs houses across both building categories) predates site
+  value and needs rebasing on it.
 - Will the departement field reliably distinguish communes with the same name?
   Currently displayed in the select option as "(93)" etc. — but may need INSEE code
   as the authoritative disambiguator if multiple communes share a name across departments.

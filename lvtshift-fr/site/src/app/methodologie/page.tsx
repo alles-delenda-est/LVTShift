@@ -181,7 +181,41 @@ export default function MethodologiePage() {
             selon le niveau de prix des parcelles bâties de l&apos;IRIS. On soustrait ensuite cette
             valeur bâtie à la valeur de marché estimée par régression
             hédonique sur les ventes DVF des cinq dernières années. Le
-            résiduel est la valeur imputée du sol.
+            résiduel donne la valeur du sol de chaque quartier (IRIS), prise
+            dans son ensemble.
+          </p>
+
+          <p>
+            <strong>Le sol est ensuite évalué comme s&apos;il était nu.</strong>{" "}
+            Un impôt sur la valeur du sol taxe le terrain à l&apos;usage que
+            permet l&apos;urbanisme, non au bâtiment qui s&apos;y trouve : ainsi
+            le font l&apos;Allemagne (valeurs foncières de référence par zone),
+            le Bade-Wurtemberg depuis 2025, le Danemark ou la Nouvelle-Galles
+            du Sud. Or
+            le résiduel suit la surface bâtie : une maison basse y reçoit une
+            fraction du terrain d&apos;un immeuble posé sur une parcelle
+            identique. Sur les ventes de maisons, le prix du terrain croît
+            pourtant avec la surface de la parcelle, et non avec celle de la
+            maison. Dans chaque quartier, le sol est donc réparti à nouveau
+            selon la surface de chaque parcelle et la densité habituelle de sa
+            zone du PLU (le quart le plus dense de ce qui y est bâti), une
+            parcelle plus dense gardant la sienne mais à la racine carrée,
+            comme dans les barèmes allemands. Dans les zones d&apos;habitat
+            individuel, le jardin au-delà de deux parcelles types compte pour
+            un quart ; en zone agricole ou naturelle, seule une cour autour de
+            la maison compte. Le sol passe ainsi des immeubles denses aux
+            parcelles peu bâties : à Villeurbanne, les maisons paient au total
+            +115&nbsp;% au lieu de +21&nbsp;%, les grands immeubles
+            &minus;13&nbsp;% au lieu de &minus;1&nbsp;%.{" "}
+            <strong>Limite :</strong> la valeur du site ne peut pas se vérifier
+            sur les ventes de biens bâtis, qui reflètent ce qui est construit.
+            Les seules preuves directes sont les rares ventes de terrains à
+            bâtir nus et les ventes de biens destinés à la démolition, que les
+            données ouvertes ne permettent guère de repérer. Là où les terrains
+            nus se vendent en nombre (Montreuil, Roubaix), le terrain des
+            maisons au m² en est proche ; les paramètres, eux, sont empruntés à
+            des barèmes et à des études, non estimés sur les ventes
+            françaises.
           </p>
 
           <p>
@@ -686,8 +720,8 @@ export default function MethodologiePage() {
               tous les logements occupés. En ville, elle est plus élevée que
               dans le cas central, et les ménages paient donc davantage : à
               Paris, le cinquième le plus modeste voit son impôt baisser de
-              17&nbsp;% dans le cas central et de 6&nbsp;% dans la variante
-              locale ; à Lyon, de 14&nbsp;% et de 3&nbsp;%. Dans les deux cas,
+              21&nbsp;% dans le cas central et de 11&nbsp;% dans la variante
+              locale ; à Lyon, de 17&nbsp;% et de 6&nbsp;%. Dans les deux cas,
               le cinquième le plus aisé paie le plus. Les nouvelles cotisations
               sont les mêmes : seul le point de départ change. Seuls les
               Fichiers fonciers, qui donnent la valeur réelle de chaque local,
@@ -766,11 +800,14 @@ export default function MethodologiePage() {
               marché et une valeur du bâti calculées toutes deux sur la surface
               habitable, des coûts de construction recalés et une
               valorisation propre aux locaux d&apos;activité, la part
-              foncière de Paris ressort à 75,8&nbsp;%, avec 5,6&nbsp;% des
-              parcelles bâties au plafond : elle est désormais mesurée.
-              Aucune commune n&apos;a plus de la moitié de ses parcelles
-              bâties au plafond (Neuilly-sur-Seine en a le plus,
-              25,3&nbsp;%). Lyon est à 60,0&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              foncière de Paris ressort à 75,3&nbsp;%, avec 3,6&nbsp;% des
+              parcelles bâties dont le résiduel atteint le plafond : elle est
+              désormais mesurée. Aucune commune n&apos;a plus de la moitié de
+              ses parcelles bâties au plafond (Neuilly-sur-Seine en a le plus,
+              19,0&nbsp;%). Lyon est à 60,0&nbsp;%. Le plafond ne borne plus
+              que le résiduel, qui fixe le total de sol de chaque quartier :
+              le sol de chaque parcelle, évalué comme s&apos;il était nu, peut
+              ensuite le dépasser. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
               l&apos;indice Notaires-INSEE le plus local (appartements
               parisiens, départements de petite couronne, agglomération
               lyonnaise…), ce qui retire le pic de 2021–2022.
@@ -789,9 +826,9 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+7,6&nbsp;%), alors que ce groupe paie
-              6,3&nbsp;% de moins au total et que son ménage type paie
-              6,1&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              plus pauvre en hausse (+4,6&nbsp;%), alors que ce groupe paie
+              6,1&nbsp;% de moins au total et que son ménage type paie
+              19,7&nbsp;% de moins : les grands immeubles, où vivent la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
@@ -859,11 +896,11 @@ export default function MethodologiePage() {
               0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
               reporte sur le résiduel foncier. Le registre signale en WARN les
               communes dont la part foncière imputée sort de la fourchette
-              40–65&nbsp;% (48 au-dessus et 1 en dessous sur 188, dont Paris
-              et La Rochelle dans le panel). Cette fourchette est un repère à
-              l&apos;échelle d&apos;une métropole, pas un test que chaque
-              commune devrait passer : les communes limitrophes de Paris
-              (76&nbsp;%) se situent naturellement entre 65 et 75&nbsp;%, comme
+              40–65&nbsp;% (37 au-dessus et 2 en dessous sur 188, dont Paris,
+              La Rochelle et Cahors dans le panel). Cette fourchette est un
+              repère à l&apos;échelle d&apos;une métropole, pas un test que
+              chaque commune devrait passer : les communes limitrophes de Paris
+              (75&nbsp;%) se situent naturellement entre 65 et 75&nbsp;%, comme
               les quartiers d&apos;affaires de premier rang. Les bureaux restent
               valorisés au prix de vente des logements, faute d&apos;une
               surface de prix propre aux locaux professionnels. La bande

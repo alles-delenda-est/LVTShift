@@ -13,24 +13,26 @@ describe("impactSummary on the published data", () => {
     expect(s.territories).toBe(13);
   });
 
-  it("matches the central-case figures in the October 2026 payloads", () => {
-    expect(s.housesPayMore).toBe(11); // all but Roubaix and La Rochelle
-    expect(s.flatsPayLess).toBe(9);
+  it("matches the central-case figures in the November 2026 site-value payloads", () => {
+    expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
+    expect(s.smallBuildingsPayLess).toBe(4);
+    expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
     expect(s.poorestPayLess).toBe(11);
     expect(s.poorestBelowRichest).toBe(11);
-    expect(s.houseMedianMin).toBe(-19.7);
-    expect(s.houseMedianMax).toBe(41.4);
-    expect(s.shiftMin).toBe(9.8); // Paris
-    expect(s.shiftMax).toBe(25.9); // Grenoble
+    expect(s.houseMedianMin).toBe(-15.5); // Roubaix
+    expect(s.houseMedianMax).toBe(118.3); // Paris
+    expect(s.shiftMin).toBe(19.9); // Paris
+    expect(s.shiftMax).toBe(35.7); // Grenoble
   });
 
-  it("matches the local-variant figures in the 31 October 2026 payloads", () => {
+  it("matches the local-variant figures in the November 2026 site-value payloads", () => {
     expect(s.alt).toEqual({
-      housesPayMore: 12, // all but La Rochelle
-      flatsPayLess: 6, // Villeurbanne, Montreuil, Paris and Lyon turn positive
+      housesPayMore: 11, // all but Figeac and La Rochelle
+      smallBuildingsPayLess: 3,
+      blocksPayLess: 10, // Montreuil, Paris and Lyon turn positive
       poorestAnalysable: 11,
-      poorestPayLess: 8, // Villeurbanne, Montreuil and Paris extra-muros turn positive
+      poorestPayLess: 10, // Villeurbanne turns positive
       poorestBelowRichest: 11,
     });
     expect(s.poorestBelowRichestBoth).toBe(11);
