@@ -312,7 +312,8 @@ claims were wrong. Its point that the CFE proxy undercounts was right, and the
   second time with the professional target at the local share implied by the
   2017 taxe d'habitation, 1 − 0.5 × `J11`/`E11` (REI 2017) − 2 × the industrial
   share (`ingest.fetch_th2017_housing_share`; the raw proxy, × 1.0, where the
-  2017 line is missing: Sathonay-Camp only), under the same groups, merge rule
+  2017 share is missing or outside (0, 1): Sathonay-Camp only, whose 2017 line
+  gives 1.11), under the same groups, merge rule
   and caps. It is stored in the households sidecar (`current_tax_low`), checked
   to be revenue-neutral on export, and published as `baseline_sensitivity`
   with its `low_source` (§3.7). The LVT bills do not change; only today's tax
@@ -808,8 +809,9 @@ Ranked by how much they move published (category/quintile) results.
      commune (vacancy, outbuildings, exempt social housing; 2017 data). The raw
      proxy, the case where homes in Lyon and Paris pay less, therefore looks
      implausible in cities; the central case may understate the shift onto
-     homes. The raw-proxy column is to be replaced by this local variant
-     (`docs/research/tfpb-baseline-calibration.md` §9.5).
+     homes. Since 31 October 2026 the raw-proxy column has been replaced by
+     this local variant (§3.5, §3.7; `docs/research/tfpb-baseline-calibration.md`
+     §9.5).
    - **Within each group** today's tax is still shared by floor area, which
      ignores cadastral category and weighted-surface coefficients, so read the
      **change**, not the starting bill, and never publish per-parcel amounts.

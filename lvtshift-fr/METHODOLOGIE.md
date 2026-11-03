@@ -346,7 +346,8 @@ le facteur 2,5 en découle.
   la taxe actuelle avec la cible professionnelle à la part locale qu'implique la
   taxe d'habitation de 2017, 1 − 0,5 × `J11`/`E11` (REI 2017) − 2 × la part
   industrielle (`ingest.fetch_th2017_housing_share` ; l'indicateur brut, × 1,0,
-  là où la ligne 2017 manque : Sathonay-Camp seulement), selon les mêmes
+  là où la part 2017 manque ou sort de (0, 1) : Sathonay-Camp seulement, dont la
+  ligne 2017 donne 1,11), selon les mêmes
   groupes, la même règle de fusion et les mêmes plafonds. Elle est conservée
   dans le fichier annexe des ménages (`current_tax_low`), vérifiée à produit
   constant à l'export et publiée sous `baseline_sensitivity` avec sa source
@@ -898,8 +899,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      dépendances, logements sociaux exonérés ; données 2017). Le proxy brut, cas
      où les logements de Lyon et de Paris paient moins, paraît donc invraisemblable
      en ville ; le cas central sous-estime peut-être le report sur les logements.
-     La colonne du proxy brut sera remplacée par cette variante locale
-     (`docs/research/tfpb-baseline-calibration.md` §9.5).
+     Depuis le 31 octobre 2026, la colonne du proxy brut est remplacée par cette
+     variante locale (§3.5, §3.7 ; `docs/research/tfpb-baseline-calibration.md`
+     §9.5).
    - **Au sein de chaque groupe**, la taxe actuelle reste répartie à la surface
      plancher, qui ignore la catégorie cadastrale et les coefficients de
      pondération de surface : lire la **variation**, pas le montant de départ,
