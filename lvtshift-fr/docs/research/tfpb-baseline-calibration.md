@@ -16,7 +16,7 @@
 > Cour des comptes nationally and puts the business share of the TFPB base in our cities
 > far above the k = 1 lower bound, and above k = 2.5 except in Figeac. The k = 1 lower
 > bound was replaced by that local variant (PR #62, merged 2026-11-02; Sathonay-Camp,
-> with no usable 2017 line, keeps k = 1).
+> whose 2017 line implies a housing share of 1.11, which is rejected, keeps k = 1).
 
 Research dates 2026-10-22 and 23. Each figure cites a source in §8 by tag, e.g. [T1]. Markers:
 **fetched live** (I downloaded the page, file or API myself and read the value), **snippet** (seen
