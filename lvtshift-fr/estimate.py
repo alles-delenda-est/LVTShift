@@ -580,7 +580,9 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     surplus_plot_weight: a large garden is not as many building plots (vacant
     house plots sell for far less than proportionally more as they grow). In a
     denser zone, or at or above the reference density, the whole plot counts.
-    The building keeps its
+    In agricultural or natural zones (A, N), where the rest of a plot cannot
+    be built on, only a yard of DRC_CURTILAGE_FACTOR × floor area counts, as
+    for shed-type parcels. The building keeps its
     depreciated replacement cost (`building_cost`) and market value becomes
     land + building, so land may exceed the old floor-proportional market value:
     no land-share clip applies to these parcels.
@@ -625,7 +627,11 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
 
     far = floor[pool] / area[pool]
     plot = area[pool].clip(upper=area[pool].quantile(q_cap))
-    zones = [out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
+    if "zone_typ" in out.columns:            # A/N: only the house's yard is building land
+        from config import DRC_CURTILAGE_FACTOR
+        rural = out.loc[pool, "zone_typ"].isin(["A", "N"])
+        plot = plot.where(~rural, np.minimum(plot, DRC_CURTILAGE_FACTOR * floor[pool]))
+    zones =[out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
              if c in out.columns]
     ref = _zone_quantile(far, zones, q_ref, min_n)
     typical_plot = _zone_quantile(area[pool], zones, 0.5, min_n)

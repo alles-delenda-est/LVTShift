@@ -1106,6 +1106,17 @@ def test_site_value_discounts_surplus_land_on_under_built_plots_only():
         _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)
 
 
+def test_site_value_counts_only_a_yard_in_farmland_and_natural_zones():
+    p = _site_frame()
+    p["zone_typ"] = ["N", "U", "U"]              # the house stands in a natural zone
+    p.loc[0, "parcel_area_m2"] = 5000.0
+    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "plot_cap_quantile": 1.0})
+    lv = out.set_index("idpar")["land_value"]
+    # yard 3 × 150 = 450 m²; its zone label UA keeps the reference density 2
+    assert abs(lv["H"] / lv["B"] - 450.0 / 500.0) < 1e-9
+
+
 def test_site_value_without_pooled_parcels_is_a_no_op():
     p = _site_frame()
     p["lv_flag"] = "built_drc"

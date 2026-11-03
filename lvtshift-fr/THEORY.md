@@ -41,8 +41,13 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   rebuild cost, effective age is capped at 30 years (maintained stock);
   construction eras come from DPE, which dates dwellings only. Other buildings
   have their own lives (sheds 40 years) and, undated, sit at mid-life.
-- **land value** = classify-then-price. Built parcels take the residual, except
-  those dominated by sheds, retail boxes, farm, sports or garage buildings: they
+- **land value** = classify-then-price, then **site value** for built land. The
+  residual (market − building) sets each IRIS's land total only; within the
+  IRIS that land is shared again by plot area × max(own, zone-typical
+  floor-area ratio)^0.5, with surplus garden land in house zones at a quarter.
+  An LVT taxes land as if vacant at its permitted use; the residual follows
+  the floor area standing on the plot (current use). Built parcels dominated
+  by sheds, retail boxes, farm, sports or garage buildings: they
   rarely sell and match no residential price, so they take depreciated
   replacement cost (land at the local building-plot price, × 0.45/0.35 for
   business land, building at depreciated cost). Building-less parcels are
@@ -120,6 +125,18 @@ land-share band, so error propagates visibly rather than silently.
   Restating the depreciation trigger per habitable m² halved Lyon's maintained
   weight before it was caught; the trigger keeps its calibrated basis. Check
   downstream thresholds whenever a unit changes.
+- **The residual measured current use, not site value, and its house category
+  was mostly not houses** (Nov 2026). Land = (price − cost) × floor area, so
+  land tracked the building: on 8,591 DVF house sales the market's land rises
+  with plot area (elasticity ≈ 0.46) and not with floor area, the model's the
+  reverse. Separately, missing dwelling counts summed to zero, so unmatched
+  buildings of any size were "houses" (80 % of Paris's house-category tax).
+  The project lead chose site value as the concept. Its first forms each
+  failed a data check: a concave power on capacity flattened land across
+  parcels (houses +166 %), linear plot area let the largest plots absorb the
+  pool (Cahors top decile +201 %), and a surplus-land discount applied in dense
+  zones moved land from block plots to houses. Plattage evidence is about
+  single-house plots, so the discount now applies in house-scale zones only.
 - **Parcels are not households.** A 200-flat block is one parcel, like a house.
   Parcel medians showed every Villeurbanne income quintile paying more while the
   poorest fifth as a group pays −7.9 % and its typical household −11.8 %, because
@@ -146,6 +163,16 @@ land-share band, so error propagates visibly rather than silently.
   exemption counts); every claim is verified before it changes code or docs.
 
 ## Open questions / where the theory might break
+
+- **Site value cannot be checked against sales of built property**, which price
+  what stands on the plot. The only direct evidence is rare vacant-plot sales
+  and teardown sales, which open data do not flag (DVF would need linking to
+  Sitadel demolition and building permits). Permitted density is not open data
+  either: the zone's 75th-percentile realised density stands in, and θ = 0.5
+  and the surplus rule are borrowed from German tables and French plot-sale
+  studies, not estimated on French sales. Category results for houses and
+  small buildings move most with these choices; income-fifth totals barely,
+  as IRIS land totals are kept.
 
 - **The habitable ÷ true-gross ratio behind the costs is now the main
   uncertainty** (0.71 flats, 0.82 houses): ±0.05 moves building value about ±7 %.

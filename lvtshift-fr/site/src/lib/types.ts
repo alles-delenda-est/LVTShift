@@ -98,6 +98,16 @@ export interface Commune {
       /** industrial and professional treated as one group (warehouses taxed as professional premises) */
       industrial_merged_into_professional?: boolean;
     };
+    /** how built land was valued: site value (as if vacant at the zone's typical
+     *  density, with its parameters), the residual at the existing density
+     *  ("current"), or both across a territory's members (absent in older payloads) */
+    land_value?: {
+      concept: "site" | "current" | "mixed";
+      density_elasticity?: number; ref_density_quantile?: number;
+      min_zone_parcels?: number; plot_cap_quantile?: number;
+      surplus_plot_multiple?: number; surplus_plot_weight?: number;
+      surplus_max_ref_far?: number;
+    };
     /** parcels treated as exempt public property (count only; absent in older payloads) */
     exempt_public_parcels?: number;
     farmland_excluded_parcels?: number;
