@@ -4,8 +4,8 @@ import type { CategoryRow } from "@/lib/types";
 
 // Honest, data-grounded callout for the pagers: the effect on an owner-occupier
 // is NOT uniform. It depends on the land share of the property and on the
-// commune. Small buildings of 2–4 dwellings ("Condominium") generally pay
-// less; individual-house owners on valuable plots often pay MORE, especially in
+// commune. Small buildings of 2–4 dwellings ("Condominium") often pay less
+// (central case); individual-house owners on valuable plots often pay MORE, especially in
 // dense high-land-value communes. This component reads the real model figures
 // so the prose can never drift from what the model actually shows.
 
@@ -107,10 +107,13 @@ export default function ResidentialImpactCallout() {
       </div>
       <p className="px-4 py-3 text-xs text-gris leading-relaxed border-t border-lisere">
         Toutes les variations médianes sont encadrées par la bande de
-        sensibilité ±&thinsp;10&nbsp;points sur la part foncière. L&apos;appartement
-        en copropriété, dont le sol est partagé, paie généralement moins ; la
-        maison individuelle sur un terrain de valeur paie souvent davantage,
-        surtout là où le foncier est cher.{" "}
+        sensibilité ±&thinsp;10&nbsp;points sur la part foncière. Chiffres du
+        cas central : dans la variante locale sur la taxe actuelle, les hausses
+        sont plus fréquentes, surtout en ville. L&apos;appartement en
+        copropriété, dont le sol est partagé, paie moins dans la moitié environ
+        à deux tiers des territoires selon l&apos;hypothèse ; la maison
+        individuelle sur un terrain de valeur paie souvent davantage, surtout là
+        où le foncier est cher.{" "}
         <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
           Voir chaque commune en détail →
         </a>
