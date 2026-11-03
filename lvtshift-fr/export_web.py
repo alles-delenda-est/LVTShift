@@ -130,6 +130,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
             raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
                              f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
+    if "residual_at_cap" in side.columns:
+        df = df.assign(residual_at_cap=_strict_flag(side["residual_at_cap"],
+                                                    side_path.name).to_numpy())
     return df
 
 
@@ -217,15 +220,20 @@ def _pct(num: float, den: float, ndigits: int = 1):
 
 
 def built_at_cap_pct(df: pd.DataFrame, cap: float = LAND_SHARE_CAP):
-    """% of built parcels whose land share sits at the upper clip. When most
-    parcels are there, the aggregate land share is set by the bound, not
-    measured, and the site must say so."""
+    """% of built parcels whose residual land share sits at the upper clip.
+    When most parcels are there, the aggregate land share is set by the bound,
+    not measured, and the site must say so. Runs with the households sidecar's
+    `residual_at_cap` flag count the clip on the residual, which forms each
+    IRIS's land total; under site value a parcel's own share is not clipped and
+    may exceed the bound. Older runs fall back to the parcel's share."""
     land = df["taxable_land_value"]
     imp = df["taxable_improvement_value"]
     built = imp > 0
     # too few built parcels and the % would describe individual parcels
     if built.sum() < MIN_BUILT_FOR_CAP_PCT:
         return None
+    if "residual_at_cap" in df.columns:
+        return _pct(int(df.loc[built, "residual_at_cap"].sum()), int(built.sum()))
     share = land[built] / (land[built] + imp[built])
     return _pct(int((share >= cap - 0.001).sum()), int(built.sum()))
 

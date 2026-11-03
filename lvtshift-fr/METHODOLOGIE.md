@@ -266,7 +266,7 @@ référentiel :
 
 | Parcelle | Valeur du terrain |
 |---|---|
-| **Bâtie** | `marché − bâti` (résiduel), plancher à la valeur agricole €/m², part foncière bornée à [0,15 ; 0,85] (chaque écrêtement flaggé dans `lv_flag`) |
+| **Bâtie** | **valeur du site** (ci-dessous) : le terrain résiduel de chaque IRIS (`marché − bâti`, plancher à la valeur agricole €/m², part foncière bornée à [0,15 ; 0,85]) est réparti à nouveau selon la surface de la parcelle et la densité habituelle de la zone ; bâti au coût déprécié, valeur = terrain + bâti, sans bornage (`lv_flag` `built_site_value`) |
 | **Bâtie, plus grand bâtiment de type hangar** (CRD) | €/m² terrain à bâtir × `activity_land_ratio` (types professionnels) ou × 1 (salles de sport, annexes) × surface, plancher à la valeur agricole €/m² ; hors zone urbaine, seule une cour de 3 × la surface plancher prend ce prix. Valeur de marché = terrain + bâti déprécié ; ni prix résidentiel ni bornage (`lv_flag` `built_drc`) |
 | **Constructible vacante** (zone U/AUc) | €/m² terrain à bâtir DVF × surface (médiane cellule si ≥ 8 ventes, sinon médiane communale, sinon repli national EPTB) |
 | **Constructible différée** (AU/AUs) | idem × `au_strict_factor` (urbanisation différée) |
@@ -313,6 +313,117 @@ prend le prix du terrain à bâtir ; le reste est valorisé comme terre agricole
 propre coût (0,825 × le coût du logement) : bureaux et commerces se vendent, et
 une surface de prix DVF des locaux professionnels est la meilleure cible (§6,
 point 7). Les lieux de culte restent au résiduel au coût du logement.
+
+**Valeur du site des terrains bâtis** (`estimate.site_value_land`,
+`config.SITE_VALUE`).
+- **Le principe.** Un impôt sur la valeur foncière taxe le terrain comme s'il
+  était nu, à l'usage que permet l'urbanisme. Les Bodenrichtwerte allemands
+  sont définis pour le type et l'intensité d'usage habituels de la zone, et
+  l'impôt foncier du Bade-Wurtemberg (2025) vaut surface × cette valeur. La
+  Nouvelle-Galles du Sud évalue le terrain à son usage permis le plus
+  rémunérateur, le Danemark sur la plus grande des surfaces de plancher réelle
+  et permise. Dye et England (Lincoln Institute) en donnent la raison : l'impôt
+  n'est neutre que si la valeur imposable ne dépend pas de l'usage actuel.
+- **Ce que mesure le résiduel.** Le résiduel est une valeur d'usage actuel :
+  terrain = (prix − coût) × surface de plancher. Il suit donc la surface bâtie
+  sur la parcelle, et une maison basse reçoit une fraction du terrain d'un
+  immeuble sur une parcelle identique. Sur 8 591 ventes DVF de maisons dans neuf
+  communes, le terrain que paie le marché sous une maison croît avec la surface
+  de la parcelle (élasticité d'environ 0,46 dans une maille de 400 m) et non
+  avec la surface de plancher ; les élasticités du résiduel sont d'environ 0
+  et 1,0 (`docs/research/site-value-2026-11/04-dvf-tests.md`).
+
+Le résiduel ne fixe plus que le total de terrain de chaque IRIS. Dans l'IRIS
+(la commune, à défaut), le terrain des parcelles bâties évaluées au résiduel
+est réparti à nouveau : logements, bureaux et autres bâtiments. Les parcelles
+de type hangar (déjà évaluées sur leur surface, ci-dessus), le foncier public
+exonéré et les parcelles au plancher agricole restent hors de cette
+répartition, qui suit la règle :
+
+```
+poids   = surface utile de la parcelle × densité ^ 0,5
+densité = max(coefficient d'occupation réel, coefficient de référence de la zone)
+```
+
+- **Densité de référence.** C'est le 75ᵉ centile du coefficient d'occupation
+  réalisé (plancher du modèle ÷ parcelle) des parcelles réparties dans le même
+  libellé de zone du PLU (le type de zone, puis la commune, sous 20 parcelles).
+  Elle tient lieu de densité permise, qui n'existe pas en données ouvertes
+  structurées. Les zones d'habitat individuel vont de 0,2 à 0,9 (Lyon URi1a
+  0,93, Villeurbanne URi1a 0,78, Cahors Ub 0,47), les zones mixtes et
+  collectives de 1,4 à 6,6 (Paris UG 6,0, Lyon UCe2a 6,1).
+- **La densité à la racine carrée.** Les coefficients allemands de conversion
+  pour l'habitat font croître le terrain au m² de 0,45 à 0,54 % par 1 % de
+  coefficient d'occupation (WertR 2006, annexe 11). Une parcelle plus dense que
+  sa zone garde sa propre densité, au titre de l'usage existant légal (la
+  surface « réelle ou possible » danoise), mais à la racine carrée : un immeuble
+  quatre fois plus dense que son voisin, sur une parcelle identique, reçoit deux
+  fois son terrain, pas quatre.
+- **Surface utile.** C'est la surface de la parcelle, plafonnée au
+  99ᵉ centile de la commune, avec deux corrections là où le terrain en plus
+  n'est pas constructible :
+  - *Zones agricoles et naturelles (A, N).* Seule une cour de 3 × la surface
+    de plancher compte, comme pour les parcelles de type hangar. 84 % des plus
+    grandes parcelles de maisons de Cahors y sont, et une surface linéaire leur
+    donnait +149 %.
+  - *Terrain en surplus.* Sur une parcelle bâtie sous la référence d'une zone
+    d'habitat individuel (référence inférieure à 1), la surface au-delà de deux
+    fois la parcelle médiane de la zone compte pour un quart. Les terrains à
+    bâtir pour maisons se vendent bien moins que proportionnellement plus cher
+    quand ils s'agrandissent (EPTB : élasticité 0,45 à 477 m², 0,11 à
+    2 000 m² ; Combes, Duranton et Gobillon), et dans DVF un m² de jardin en
+    plus se vend 0,14 à 0,27 fois un m² de terrain à bâtir. La règle ne joue
+    pas dans les zones plus denses, où une grande parcelle porte un grand
+    bâtiment ; appliquée là, elle déplaçait du terrain des parcelles
+    d'immeubles vers les maisons.
+- **Bâti et valeur de marché.** Le bâti garde son coût déprécié, et la valeur
+  de marché devient terrain + bâti, sans bornage de la part foncière. Le site
+  peut valoir plus que la valeur de marché, fondée sur le plancher, de ce qui
+  s'y dresse : 11 % des parcelles réparties à Cahors, 27 % à Villeurbanne.
+
+La méthode figure dans la provenance de chaque fichier publié (`land_value`).
+`run_commune.py --land current` reproduit le résiduel à la densité existante,
+et `--site-elasticity` et `--site-ref-quantile` font varier les deux
+principaux paramètres.
+
+**Ce que cela change.** Le terrain passe, dans chaque IRIS, des bâtiments
+denses aux bâtiments peu denses. À Villeurbanne, par exemple :
+- les maisons passent de +21 % à +115 % au total ;
+- les petits immeubles de 2 à 4 logements, de 0 à +52 % ;
+- les grands immeubles, de −1 à −13 %.
+
+Les totaux par cinquième de revenu bougent peu, puisque les totaux de terrain
+par IRIS sont conservés. Les médianes des ménages baissent, la plupart des
+ménages vivant en immeuble. La part de l'impôt qui change de payeur double
+environ (Villeurbanne : 11,7 → 23,5 %). Les effets dans les autres communes
+figurent au §3.7.
+
+**Ce sur quoi on ne peut pas la vérifier.** La valeur du site ne s'observe pas
+dans les ventes de biens bâtis, dont le prix reflète ce qui est construit, non
+ce que la zone permet. Les seules preuves directes sont les rares ventes de
+terrains à bâtir nus et les ventes de biens destinés à la démolition ou à la
+reconstruction, que les données ouvertes ne repèrent pas. Les retrouver
+supposerait de relier DVF aux permis de démolir et de construire (Sitadel,
+SDES). Un seul contrôle a été fait : le terrain au m² de parcelle de la maison
+type face au prix des terrains à bâtir nus de la même commune. Là où ces
+terrains se vendent en nombre, l'écart est faible : Montreuil 2 183 € contre
+1 791 € (résiduel publié 1 936 €), Roubaix 422 € contre 394 €. À Lyon,
+Villeurbanne et Cahors, les rares ventes de terrains à bâtir sont atypiques et
+bien moins chères que le terrain bâti, même au résiduel (Lyon 735 € contre
+1 220 € au résiduel et 1 440 € ici) : le contrôle n'y dit rien. Le terrain au m²
+de la maison type bouge peu (+1 à +28 %) : le changement porte surtout sur les
+grandes parcelles et les maisons en zone dense. Les paramètres (la racine carrée, le
+75ᵉ centile, les règles du surplus et de la cour) viennent de barèmes allemands
+et d'études françaises sur les ventes de terrains ; aucun n'est estimé sur des
+ventes françaises de biens bâtis. Sensibilité (Lyon, Villeurbanne, Cahors) :
+- **Élasticité à la densité.** À 0,3 ou 0,7 au lieu de 0,5, la maison type
+  passe de +85 à +53 % à Lyon (+69 % en valeur centrale) et de +72 à +39 % à
+  Villeurbanne (+55 %).
+- **Densité de référence.** À la médiane au lieu du 75ᵉ centile, la maison
+  type est à +65 % à Lyon et +50 % à Villeurbanne.
+- **Le reste.** Sur ces variantes, les grands immeubles bougent de 1 à
+  8 points, les totaux par cinquième de revenu d'au plus 2, et la part de
+  l'impôt qui change de payeur reste entre 20 et 25 %.
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
 (`estimate.current_tax`) sur les **parcelles bâties uniquement**. La TFPB est un
@@ -846,6 +957,19 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   grande, non un foncier réellement supérieur à 85 %. Les deux étant corrigées,
   aucune commune n'a plus de la moitié de ses parcelles bâties à l'une ou l'autre
   borne (§3.7).
+- **Valeur du site** (`config.SITE_VALUE`, §3.4) :
+  - élasticité à la densité 0,5 (coefficients allemands de conversion,
+    0,45–0,54) ;
+  - densité de référence au 75ᵉ centile du coefficient d'occupation réalisé du
+    libellé de zone (au moins 20 parcelles, sinon type de zone, sinon commune) ;
+  - parcelle plafonnée au 99ᵉ centile de la commune ;
+  - terrain en surplus au-delà de 2 × la parcelle médiane de la zone compté
+    à 0,25, en zone d'habitat individuel (référence inférieure à 1) et sous la
+    référence seulement ;
+  - en zones A et N, une cour de 3 × la surface de plancher.
+
+  Chaque valeur est un jugement éclairé par les sources du §3.4 ; aucune n'est
+  estimée sur des ventes françaises de biens bâtis.
 - **Ratio split-rate** : 4:1 (terrain:bâti), scénario de référence.
 - **€/m² agricole** (SAFER, par département, agricole / naturel) : défaut
   0,64 / 0,49 ; Lot 0,45 / 0,35 ; Seine-St-Denis 1,00 / 0,60 ; Nord 0,85 / 0,50 ;
@@ -946,14 +1070,37 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      −62 % déprécié ou −60 % brut ; jusqu'à 14 points dans une commune
      industrielle isolée) : la baisse
      vient avant tout du foncier industriel bon marché.
-2. **Amplification du résiduel.** Terrain bâti = marché − bâti : les erreurs sur
-   le bâti sont amplifiées dans le résiduel terrain là où le bâti pèse lourd.
-   Atténué par le bornage [0,15 ; 0,85] et l'agrégation, et rendu visible par la
-   bande de sensibilité part-terrain ±10 pts publiée avec les chiffres clés de
-   chaque commune (`headline_sensitivity`, recalculée à recettes constantes à
-   chaque extrémité). Le foncier non bâti
-   **n'utilise pas** le résiduel : le message clé (le sous-utilisé paie plus) est
-   indépendant de la qualité des données bâti.
+2. **Terrain bâti : une valeur du site invérifiable directement, sur un total
+   résiduel.**
+   - **Pas de vérification directe.** La valeur du site (§3.4) ne peut pas être
+     vérifiée sur les ventes de biens bâtis ; les seules preuves directes sont
+     les rares ventes de terrains à bâtir nus et les ventes de biens destinés à
+     la démolition, difficiles à repérer dans les données ouvertes.
+   - **Paramètres de substitution.** La densité permise est approchée par la
+     densité réalisée au 75ᵉ centile de la zone, faute de règles du PLU
+     (hauteurs, reculs, protections patrimoniales) lisibles par machine à
+     l'échelle nationale. La racine carrée de la densité et les règles du
+     surplus et de la cour sont empruntées, non estimées.
+   - **Surface linéaire ailleurs.** Hors ces deux règles, le terrain est
+     linéaire en surface : une grande parcelle en zone dense est évaluée comme
+     un terrain à bâtir même là où sa forme ou son accès ne le permettraient
+     pas. Le dixième des maisons de Villeurbanne aux plus grandes parcelles paie
+     environ cinq fois l'impôt actuel (+394 %).
+   - **Report de paiement.** Beaucoup de ces propriétaires auraient besoin d'un
+     report de paiement, que prévoit la réforme du projet
+     (`/exonerations-protections`).
+   - **Ce qui dépend de ces choix.** Les résultats par catégorie pour les
+     maisons et les petits immeubles bougent le plus. Les totaux par cinquième
+     de revenu bougent peu : les totaux de terrain par IRIS sont conservés,
+     mais ces totaux restent ceux du résiduel.
+   - **Amplification du résiduel.** Les erreurs sur le bâti sont amplifiées
+     dans le résiduel là où le bâti pèse lourd. C'est atténué par le bornage
+     [0,15 ; 0,85], qui s'applique quand le total de l'IRIS est formé, et par
+     l'agrégation. C'est rendu visible par la bande de ±10 points de part
+     foncière (`headline_sensitivity`).
+   - **Foncier non bâti.** Le foncier non bâti **n'utilise pas** le résiduel :
+     le message clé (le sous-utilisé paie plus) est indépendant de la qualité
+     des données bâti.
 3. **Année de construction.** Issue du DPE (logements *résidentiels*
    diagnostiqués → biais de sélection) ; le repli médian communal s'applique au
    logement non diagnostiqué. Les bâtiments non résidentiels sans année BD TOPO

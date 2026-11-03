@@ -181,7 +181,41 @@ export default function MethodologiePage() {
             selon le niveau de prix des parcelles bâties de l&apos;IRIS. On soustrait ensuite cette
             valeur bâtie à la valeur de marché estimée par régression
             hédonique sur les ventes DVF des cinq dernières années. Le
-            résiduel est la valeur imputée du sol.
+            résiduel donne la valeur du sol de chaque quartier (IRIS), prise
+            dans son ensemble.
+          </p>
+
+          <p>
+            <strong>Le sol est ensuite évalué comme s&apos;il était nu.</strong>{" "}
+            Un impôt sur la valeur du sol taxe le terrain à l&apos;usage que
+            permet l&apos;urbanisme, non au bâtiment qui s&apos;y trouve : ainsi
+            le font l&apos;Allemagne (valeurs foncières de référence par zone),
+            le Bade-Wurtemberg depuis 2025, le Danemark ou la Nouvelle-Galles
+            du Sud. Or
+            le résiduel suit la surface bâtie : une maison basse y reçoit une
+            fraction du terrain d&apos;un immeuble posé sur une parcelle
+            identique. Sur les ventes de maisons, le prix du terrain croît
+            pourtant avec la surface de la parcelle, et non avec celle de la
+            maison. Dans chaque quartier, le sol est donc réparti à nouveau
+            selon la surface de chaque parcelle et la densité habituelle de sa
+            zone du PLU (le quart le plus dense de ce qui y est bâti), une
+            parcelle plus dense gardant la sienne mais à la racine carrée,
+            comme dans les barèmes allemands. Dans les zones d&apos;habitat
+            individuel, le jardin au-delà de deux parcelles types compte pour
+            un quart ; en zone agricole ou naturelle, seule une cour autour de
+            la maison compte. Le sol passe ainsi des immeubles denses aux
+            parcelles peu bâties : à Villeurbanne, les maisons paient au total
+            +115&nbsp;% au lieu de +21&nbsp;%, les grands immeubles
+            &minus;13&nbsp;% au lieu de &minus;1&nbsp;%.{" "}
+            <strong>Limite :</strong> la valeur du site ne peut pas se vérifier
+            sur les ventes de biens bâtis, qui reflètent ce qui est construit.
+            Les seules preuves directes sont les rares ventes de terrains à
+            bâtir nus et les ventes de biens destinés à la démolition, que les
+            données ouvertes ne permettent guère de repérer. Là où les terrains
+            nus se vendent en nombre (Montreuil, Roubaix), le terrain des
+            maisons au m² en est proche ; les paramètres, eux, sont empruntés à
+            des barèmes et à des études, non estimés sur les ventes
+            françaises.
           </p>
 
           <p>

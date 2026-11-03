@@ -491,3 +491,14 @@ def test_every_published_payload_passes_the_guards():
     assert files
     for f in files:
         ew.assert_aggregate_only(json.loads(f.read_text(encoding="utf-8")))
+
+
+def test_built_at_cap_counts_the_residual_clip_when_the_sidecar_has_it():
+    """Under site value a parcel's own land share is not clipped and may pass
+    the bound; the indicator must count the clip on the residual instead."""
+    n = 40
+    df = pd.DataFrame({"taxable_land_value": [95.0] * n,       # share 0.95 everywhere
+                       "taxable_improvement_value": [5.0] * n})
+    assert ew.built_at_cap_pct(df) == 100.0                      # old runs: by share
+    df["residual_at_cap"] = [True] * 4 + [False] * (n - 4)
+    assert ew.built_at_cap_pct(df) == 10.0                       # 4 of 40 residuals clipped

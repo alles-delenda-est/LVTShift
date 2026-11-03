@@ -367,6 +367,11 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
     # today's tax at the lower-bound professional share (baseline sensitivity)
     if "current_tax_low" in p.columns:
         side["current_tax_low"] = p["current_tax_low"].values
+    # residual land clipped at the upper land-share bound before any site-value
+    # re-sharing: the clip still shapes each IRIS's land total (export_web)
+    flag = p["lv_flag_current"] if "lv_flag_current" in p.columns else p.get("lv_flag")
+    if flag is not None:
+        side["residual_at_cap"] = flag.eq("built_clipped_high").values
     side.to_csv(Path(out_dir) / f"{name}.households.csv", index=False)
     # tie the sidecar to the exact export it belongs to (new_tax alone repeats
     # across parcels, so it cannot prove the rows line up)

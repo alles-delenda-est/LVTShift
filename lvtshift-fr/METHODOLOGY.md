@@ -239,7 +239,7 @@ each class is priced against the right benchmark:
 
 | Parcel | Land value |
 |---|---|
-| **Built** | `market − building` (residual), floored at the agricultural €/m², land share clipped to [0.15, 0.85] (every clip flagged in `lv_flag`) |
+| **Built** | **site value** (below): each IRIS's residual land (`market − building`, floored at the agricultural €/m², land share clipped to [0.15, 0.85]) is shared again by plot area and the zone's typical density; building at depreciated cost, value = land + building, no clip (`lv_flag` `built_site_value`) |
 | **Built, largest building shed-type** (DRC) | terrain-à-bâtir €/m² × `activity_land_ratio` (business types) or × 1 (sports halls, annexes) × parcel area, floored at the agricultural €/m²; outside urban zoning only a yard of 3 × floor area takes that price. Market value = land + depreciated building; no residential price, no clip (`lv_flag` `built_drc`) |
 | **Constructible vacant** (zone U/AUc) | DVF terrain-à-bâtir €/m² × area (cell median where ≥8 sales, else commune median, else EPTB national fallback) |
 | **Constructible deferred** (AU/AUs) | as above × `au_strict_factor` (development deferred) |
@@ -282,6 +282,104 @@ is priced as farmland (SAFER €/m²).
 own cost (0.825 × the housing cost): offices and shops do sell, and a
 business-premises price surface from DVF is the better target (§6, item 7).
 Religious buildings stay on the residual at the housing cost.
+
+**Site value of built land** (`estimate.site_value_land`, `config.SITE_VALUE`).
+- **The concept.** A land value tax taxes land as if vacant, at the use planning
+  allows. Germany's Bodenrichtwerte are defined for the zone's typical type and
+  intensity of use, and Baden-Württemberg's 2025 land tax is plot area × that
+  value. NSW values land at its most valuable permitted use, and Denmark on the
+  higher of actual and permitted floor area. Dye & England (Lincoln Institute)
+  give the reason: the tax is neutral only if the taxable value does not depend
+  on current use.
+- **What the residual measures instead.** The residual is a current-use value:
+  land = (price − cost) × floor area, so it follows the floor area that stands
+  on the plot, and a low house gets a fraction of the land of a block on an
+  identical plot. Tested on 8,591 DVF house sales in nine communes, the market's
+  land under a house rises with plot area (elasticity about 0.46 within a
+  400 m cell) and not with floor area; the residual's elasticities are about 0
+  and 1.0 (`docs/research/site-value-2026-11/04-dvf-tests.md`).
+
+The residual now only sets each IRIS's land total. Within the IRIS (the
+commune, where there is none) the land of the built parcels valued by the
+residual is shared again. Those are housing, offices and other buildings; the
+shared pool excludes shed-type parcels (already priced on their plot, above),
+exempt public property and parcels floored at the farmland value. The rule is:
+
+```
+weight  = effective plot × density ^ 0.5
+density = max(own floor-area ratio, reference floor-area ratio of the zone)
+```
+
+- **Reference density.** It is the 75th percentile of the realised floor-area
+  ratio (model floor area ÷ plot) of the pooled parcels in the same PLU zone
+  label (the zone type, then the commune, below 20 parcels). It stands in for
+  permitted density, which is not open data in structured form. Individual-housing
+  zones run 0.2–0.9 (Lyon URi1a 0.93, Villeurbanne URi1a 0.78, Cahors Ub 0.47),
+  mixed and collective zones 1.4–6.6 (Paris UG 6.0, Lyon UCe2a 6.1).
+- **Density at the square root.** German residential conversion coefficients
+  have land per m² of plot rising 0.45–0.54 % per 1 % of floor-area ratio
+  (WertR 2006, Anlage 11). A parcel denser than its zone keeps its own density,
+  as lawful existing use (Denmark's "actual or possible" floor area), but at the
+  square root: a block four times as dense as its neighbour on the same plot
+  gets twice its land, not four times.
+- **Effective plot.** This is the plot area, capped at the commune's 99th
+  percentile, with two corrections where the extra land is not building land:
+  - *Natural and agricultural zones (A, N).* Only a yard of 3 × floor area
+    counts, as for shed-type parcels. 84 % of Cahors's largest house plots lie
+    there, and linear plot area gave them +149 %.
+  - *Surplus garden land.* On a parcel built below the reference of a
+    house-scale zone (reference below 1), area beyond twice the zone's median
+    plot counts at a quarter. Vacant house plots sell for far less than
+    proportionally more as they grow (EPTB: elasticity 0.45 at 477 m², 0.11 at
+    2,000 m²; Combes, Duranton & Gobillon), and in DVF an extra m² of garden
+    sells for 0.14–0.27 of a building-plot m². The rule does not apply in denser
+    zones, where a large plot carries a large building; applied there, it moved
+    land from blocks' plots to houses.
+- **Building and market value.** The building keeps its depreciated cost, and
+  market value becomes land + building, with no land-share clip. The site can be
+  worth more than the floor-based market value of what stands on it: 11 % of the
+  re-shared parcels in Cahors and 27 % in Villeurbanne.
+
+The method is recorded in each payload's provenance (`land_value`).
+`run_commune.py --land current` reproduces the residual at the existing density,
+and `--site-elasticity` and `--site-ref-quantile` vary the two main parameters.
+
+**What it changes.** Land moves within each IRIS from dense buildings to
+low-density ones. In Villeurbanne, for example:
+- houses go from +21 % to +115 % in total;
+- small 2–4-dwelling buildings go from 0 to +52 %;
+- large blocks go from −1 to −13 %.
+
+Income-fifth totals barely move, because IRIS land totals are kept. Household
+medians fall, since most households live in blocks. The share of the levy that
+changes payer about doubles (Villeurbanne 11.7 → 23.5 %). Effects in the other
+communes are in §3.7.
+
+**What it cannot be checked against.** Site value is not observed in sales of
+built property, which price what stands on the plot, not what the zone allows.
+The only direct evidence is the rare sale of a vacant building plot, and
+teardown sales (a built parcel bought to demolish or rebuild), which open data
+do not flag. Finding them would mean linking DVF to demolition and building
+permits (SDES Sitadel). One check was run: the typical house's land per m² of
+plot against the vacant building-plot price in the same commune. Where such
+plots sell in numbers it is close: Montreuil €2,183 against €1,791 (published
+residual €1,936), Roubaix €422 against €394. In Lyon, Villeurbanne and Cahors
+the few building-plot sales are atypical and priced far below built land even
+under the residual (Lyon €735 against €1,220 under the residual and €1,440 here),
+so the check says nothing there. The typical house's land per m² moves little
+(+1 to +28 %): the change falls mostly on large plots and on houses in dense
+zones. The parameters (the square root, the 75th
+percentile, the surplus and yard rules) come from German tables and French
+plot-sale studies; none is estimated on French sales of built property.
+Sensitivity (Lyon, Villeurbanne, Cahors):
+- **Density elasticity.** At 0.3 or 0.7 instead of 0.5, the typical house goes
+  from +85 to +53 % in Lyon (+69 % central) and from +72 to +39 % in
+  Villeurbanne (+55 %).
+- **Reference density.** At the median instead of the 75th percentile, the
+  typical house is +65 % in Lyon and +50 % in Villeurbanne.
+- **Everything else.** Across these variants, large blocks move by 1–8
+  points, income-fifth totals by at most 2, and the share of the levy that
+  changes payer stays between 20 and 25 %.
 
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
 (`estimate.current_tax`) across **built parcels only**. TFPB is a built tax;
@@ -757,6 +855,17 @@ published file (CI test).
   prices on the larger BD TOPO floor area, not land genuinely above 85 %. With
   both corrected, no commune has more than half its built parcels at either
   bound (§3.7).
+- **Site value** (`config.SITE_VALUE`, §3.4):
+  - density elasticity 0.5 (German conversion coefficients, 0.45–0.54);
+  - reference density at the 75th percentile of the zone label's realised
+    floor-area ratio (at least 20 parcels, else zone type, else commune);
+  - plot capped at the commune's 99th percentile;
+  - surplus land beyond 2 × the zone's median plot at 0.25, in house-scale
+    zones (reference below 1) and on parcels below the reference only;
+  - in A and N zones, a yard of 3 × floor area.
+
+  Every value is a judgement informed by the sources cited in §3.4; none is
+  estimated on French sales of built property.
 - **Split-rate ratio**: 4:1 (land:improvement), headline scenario.
 - **Agricultural €/m²** (SAFER, by département, agricultural / natural): default
   0.64 / 0.49; Lot 0.45 / 0.35; Seine-St-Denis 1.00 / 0.60; Nord 0.85 / 0.50;
@@ -850,13 +959,33 @@ Ranked by how much they move published (category/quintile) results.
      or −60 % gross; up to 14 points in single industrial communes): the cut
      comes overwhelmingly
      from cheap industrial land.
-2. **Residual amplification.** Built-parcel land = market − building, so building
-   errors are amplified in the land residual where buildings are a large share of
-   value. Mitigated by the [0.15, 0.85] clip and aggregation, and made visible
-   by the land-share ±10 pt sensitivity band published with every commune's
-   headline figures (`headline_sensitivity`, re-solved revenue-neutral at each
-   end). Vacant land does **not** use the residual, so the LVT headline
-   (under-used land pays more) is unaffected by building-data quality.
+2. **Built land: a site value that cannot be checked directly, on a residual
+   total.**
+   - **No direct check.** Site value (§3.4) cannot be checked against sales of
+     built property; the only direct evidence is rare vacant building-plot sales
+     and teardown sales, which are hard to identify in open data.
+   - **Proxy parameters.** Permitted density is proxied by the zone's
+     75th-percentile realised density, because PLU rules (heights, setbacks,
+     heritage protections) are not machine-readable nationally. The square-root
+     density term and the surplus and yard rules are borrowed, not estimated.
+   - **Linear plot area elsewhere.** Outside the yard and surplus rules, land is
+     linear in plot area: a large plot in a dense zone is valued as a building
+     site even where its shape or access would not allow it. The largest-plot
+     tenth of Villeurbanne's houses pays about five times today's tax
+     (+394 %).
+   - **Deferral.** Many such owners would need a payment deferral, which the
+     project's reform includes (`/exonerations-protections`).
+   - **What moves with these choices.** Category results for houses and small
+     buildings move most. Income-fifth totals barely move: IRIS land totals
+     are kept, but those totals are still the residual's.
+   - **Residual amplification.** Building errors are amplified in the residual
+     wherever buildings are a large share of value. This is mitigated by the
+     [0.15, 0.85] clip, which applies when the IRIS total is formed, and by
+     aggregation. It is made visible by the ±10-point land-share band
+     (`headline_sensitivity`).
+   - **Vacant land.** Vacant land does **not** use the residual, so the
+     headline that under-used land pays more does not depend on building-data
+     quality.
 3. **Construction year.** From DPE (diagnosed *residential* dwellings → selection
    bias); the commune-median fallback applies to never-diagnosed housing.
    Non-residential buildings without a BD TOPO year are taken at mid-life, a

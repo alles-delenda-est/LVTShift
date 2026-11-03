@@ -593,7 +593,8 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     parcels keep their values and stay out of the pools).
     params: SITE_VALUE keys (config.SITE_VALUE by default).
 
-    Adds land_value_current and market_value_current (before re-sharing) and
+    Adds land_value_current, market_value_current and lv_flag_current
+    (before re-sharing) and
     site_density (the density used); updates land_value, improvement_value,
     market_value, land_share, land_share_raw and lv_flag ('built_site_value').
     """
@@ -613,6 +614,7 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     out = p.copy()
     out["land_value_current"] = out["land_value"]
     out["market_value_current"] = out["market_value"]
+    out["lv_flag_current"] = out["lv_flag"]
     out["site_density"] = np.nan
     area = pd.to_numeric(out["parcel_area_m2"], errors="coerce")
     floor = pd.to_numeric(out["floor_area_m2"], errors="coerce")

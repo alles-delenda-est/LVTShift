@@ -44,7 +44,8 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
 - **land value** = classify-then-price, then **site value** for built land. The
   residual (market − building) sets each IRIS's land total only; within the
   IRIS that land is shared again by plot area × max(own, zone-typical
-  floor-area ratio)^0.5, with surplus garden land in house zones at a quarter.
+  floor-area ratio)^0.5, with surplus garden land in house zones at a quarter
+  and only a yard in A/N zones.
   An LVT taxes land as if vacant at its permitted use; the residual follows
   the floor area standing on the plot (current use). Built parcels dominated
   by sheds, retail boxes, farm, sports or garage buildings: they
@@ -136,7 +137,10 @@ land-share band, so error propagates visibly rather than silently.
   parcels (houses +166 %), linear plot area let the largest plots absorb the
   pool (Cahors top decile +201 %), and a surplus-land discount applied in dense
   zones moved land from block plots to houses. Plattage evidence is about
-  single-house plots, so the discount now applies in house-scale zones only.
+  single-house plots, so the discount now applies in house-scale zones only;
+  in A/N zones, where most of Cahors's largest house plots lie, only a yard
+  counts, as already for sheds. Each fix came from looking at who gained, by
+  plot-size decile and zone, not from the headline figures.
 - **Parcels are not households.** A 200-flat block is one parcel, like a house.
   Parcel medians showed every Villeurbanne income quintile paying more while the
   poorest fifth as a group pays −7.9 % and its typical household −11.8 %, because
