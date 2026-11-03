@@ -15,7 +15,10 @@ import { shiftedPct } from "@/lib/shift";
  */
 export interface LegCounts {
   housesPayMore: number;
-  flatsPayLess: number;
+  /** Small buildings of 2–4 dwellings ("Condominium") paying less. */
+  smallBuildingsPayLess: number;
+  /** Large blocks of 5+ dwellings, where most flats are, paying less. */
+  blocksPayLess: number;
   poorestAnalysable: number;
   poorestPayLess: number;
   /** Territories where the poorest fifth's total change is below the richest fifth's. */
@@ -40,7 +43,8 @@ export interface ImpactSummary extends LegCounts {
 
 interface Inputs {
   house: number | null;
-  flat: number | null;
+  small: number | null;
+  block: number | null;
   q1: number | null;
   q5: number | null;
 }
@@ -57,7 +61,8 @@ function centralInputs(c: Commune): Inputs {
   const rows = c.kind === "territory" ? c.by_income_quintile_within : c.by_income_quintile;
   return {
     house: median(c.by_category, "Single Family Residential"),
-    flat: median(c.by_category, "Condominium"),
+    small: median(c.by_category, "Condominium"),
+    block: median(c.by_category, "Large Multi-Family (5+ units)"),
     q1: total(rows, 1),
     q5: total(rows, 5),
   };
@@ -67,7 +72,8 @@ function legInputs(c: Commune, leg: SensitivityLeg): Inputs {
   const rows = c.kind === "territory" ? leg.by_income_quintile_within : leg.by_income_quintile;
   return {
     house: median(leg.by_category, "Single Family Residential"),
-    flat: median(leg.by_category, "Condominium"),
+    small: median(leg.by_category, "Condominium"),
+    block: median(leg.by_category, "Large Multi-Family (5+ units)"),
     q1: total(rows, 1),
     q5: total(rows, 5),
   };
@@ -77,7 +83,8 @@ function count(inputs: Inputs[]): LegCounts {
   const analysable = inputs.filter((i) => i.q1 != null && i.q5 != null);
   return {
     housesPayMore: inputs.filter((i) => i.house != null && i.house > 0).length,
-    flatsPayLess: inputs.filter((i) => i.flat != null && i.flat < 0).length,
+    smallBuildingsPayLess: inputs.filter((i) => i.small != null && i.small < 0).length,
+    blocksPayLess: inputs.filter((i) => i.block != null && i.block < 0).length,
     poorestAnalysable: analysable.length,
     poorestPayLess: analysable.filter((i) => i.q1! < 0).length,
     poorestBelowRichest: analysable.filter((i) => i.q1! < i.q5!).length,

@@ -720,8 +720,8 @@ export default function MethodologiePage() {
               tous les logements occupés. En ville, elle est plus élevée que
               dans le cas central, et les ménages paient donc davantage : à
               Paris, le cinquième le plus modeste voit son impôt baisser de
-              17&nbsp;% dans le cas central et de 6&nbsp;% dans la variante
-              locale ; à Lyon, de 14&nbsp;% et de 3&nbsp;%. Dans les deux cas,
+              21&nbsp;% dans le cas central et de 11&nbsp;% dans la variante
+              locale ; à Lyon, de 17&nbsp;% et de 6&nbsp;%. Dans les deux cas,
               le cinquième le plus aisé paie le plus. Les nouvelles cotisations
               sont les mêmes : seul le point de départ change. Seuls les
               Fichiers fonciers, qui donnent la valeur réelle de chaque local,
@@ -800,11 +800,14 @@ export default function MethodologiePage() {
               marché et une valeur du bâti calculées toutes deux sur la surface
               habitable, des coûts de construction recalés et une
               valorisation propre aux locaux d&apos;activité, la part
-              foncière de Paris ressort à 75,8&nbsp;%, avec 5,6&nbsp;% des
-              parcelles bâties au plafond : elle est désormais mesurée.
-              Aucune commune n&apos;a plus de la moitié de ses parcelles
-              bâties au plafond (Neuilly-sur-Seine en a le plus,
-              25,3&nbsp;%). Lyon est à 60,0&nbsp;%. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
+              foncière de Paris ressort à 75,3&nbsp;%, avec 3,6&nbsp;% des
+              parcelles bâties dont le résiduel atteint le plafond : elle est
+              désormais mesurée. Aucune commune n&apos;a plus de la moitié de
+              ses parcelles bâties au plafond (Neuilly-sur-Seine en a le plus,
+              19,0&nbsp;%). Lyon est à 60,0&nbsp;%. Le plafond ne borne plus
+              que le résiduel, qui fixe le total de sol de chaque quartier :
+              le sol de chaque parcelle, évalué comme s&apos;il était nu, peut
+              ensuite le dépasser. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
               l&apos;indice Notaires-INSEE le plus local (appartements
               parisiens, départements de petite couronne, agglomération
               lyonnaise…), ce qui retire le pic de 2021–2022.
@@ -823,9 +826,9 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+7,6&nbsp;%), alors que ce groupe paie
-              6,3&nbsp;% de moins au total et que son ménage type paie
-              6,1&nbsp;% de moins : les grands immeubles, où vit la plupart de
+              plus pauvre en hausse (+4,5&nbsp;%), alors que ce groupe paie
+              6,1&nbsp;% de moins au total et que son ménage type paie
+              19,7&nbsp;% de moins : les grands immeubles, où vivent la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.

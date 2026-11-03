@@ -305,19 +305,35 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     tot = df["taxable_land_value"] + imp
     built = imp > 0
     share_b = (df.loc[built, "taxable_land_value"] / tot[built])
-    at_cap = float((share_b >= hi_b - 1e-3).mean() * 100) if built.any() else 0.0
-    at_floor = float((share_b <= lo_b + 1e-3).mean() * 100) if built.any() else 0.0
-    bound = max(at_cap, at_floor)
+    # Under site value a parcel's own share is not bounded and may pass either
+    # bound; the clip only shapes the residual that sets each IRIS's total, so
+    # count the residual's clip (households sidecar) and not the parcel's share.
+    side = path.with_name(f"{slug}.households.csv")
+    flags = (pd.read_csv(side, usecols=lambda c: c == "residual_at_cap")
+             if side.exists() else pd.DataFrame())
+    if "residual_at_cap" in flags.columns and len(flags) == len(df):
+        at_cap = (float(flags["residual_at_cap"].astype(bool)[built].mean() * 100)
+                  if built.any() else 0.0)
+        at_floor = None
+        text = (f"Parcelles bâties dont le résiduel atteint le plafond de part foncière "
+                f"({hi_b * 100:.0f} %) : {_fr(at_cap, 1)} % (valeur du site : la part "
+                f"de chaque parcelle n'est pas bornée).")
+    else:
+        at_cap = float((share_b >= hi_b - 1e-3).mean() * 100) if built.any() else 0.0
+        at_floor = float((share_b <= lo_b + 1e-3).mean() * 100) if built.any() else 0.0
+        text = (f"Parcelles bâties à la borne de part foncière : {_fr(at_cap, 1)} % au plafond "
+                f"({hi_b * 100:.0f} %), {_fr(at_floor, 1)} % au plancher ({lo_b * 100:.0f} %).")
+    bound = max(at_cap, at_floor or 0.0)
     checks.append(_chk(
         "land_share_clip", "validation", OK if bound <= CLIP_WARN_PCT else WARN,
-        (f"Parcelles bâties à la borne de part foncière : {_fr(at_cap, 1)}\u00a0% au plafond "
-         f"({hi_b * 100:.0f}\u00a0%), {_fr(at_floor, 1)}\u00a0% au plancher ({lo_b * 100:.0f}\u00a0%)."),
+        text,
         adaptation=(None if bound <= CLIP_WARN_PCT else
                     "La répartition terrain/bâti est fixée par la borne, pas "
                     "mesurée : l'impôt foncier y devient proportionnel à la valeur "
                     "vénale (effet de revalorisation). Résultats à présenter comme "
                     "tels ; lever la borne ou caler coûts/dépréciation."),
-        detail={"at_cap_pct": round(at_cap, 1), "at_floor_pct": round(at_floor, 1)}))
+        detail={"at_cap_pct": round(at_cap, 1),
+                "at_floor_pct": None if at_floor is None else round(at_floor, 1)}))
     return checks
 
 

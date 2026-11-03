@@ -113,6 +113,26 @@ def test_land_share_clip_warns_when_split_is_set_by_the_bound(tmp_path):
     assert clip["detail"]["at_cap_pct"] == round(100 * 8 / 9, 1)  # vacant row excluded
 
 
+def test_land_share_clip_counts_the_residual_under_site_value(tmp_path):
+    """Site-value shares may pass the bound; the sidecar's residual flag counts."""
+    import pandas as pd
+    n = 10
+    shares = pd.DataFrame({
+        "current_tax": [100.0] * n, "new_tax": [100.0] * n,
+        "taxable_land_value": [95.0] * 9 + [0.0],          # every share above 85 %
+        "taxable_improvement_value": [5.0] * 9 + [0.0],
+        "median_income": [None] * n,
+    })
+    shares.to_csv(tmp_path / "test.csv", index=False)
+    pd.DataFrame({"new_tax": [100.0] * n,
+                  "residual_at_cap": [True] + [False] * (n - 1)}).to_csv(
+        tmp_path / "test.households.csv", index=False)
+    clip = {c["check"]: c for c in pf.analyze_run(_Cfg(name="Test"),
+                                                   out_dir=str(tmp_path))}["land_share_clip"]
+    assert clip["severity"] == pf.OK
+    assert clip["detail"] == {"at_cap_pct": round(100 / 9, 1), "at_floor_pct": None}
+
+
 def test_probe_retries_transient_failures_but_not_404(monkeypatch):
     import urllib.error
     monkeypatch.setattr(pf.time, "sleep", lambda s: None)

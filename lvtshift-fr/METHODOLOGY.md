@@ -575,7 +575,7 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+7.6 % while the group as a whole pays −6.3 % and its typical household −6.1 %
++4.5 % while the group as a whole pays −6.1 % and its typical household −19.7 %
 (central baseline), because the large blocks, where most of its households live,
 gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
@@ -592,10 +592,12 @@ residential category, the typical household's change in euros: each parcel's
 change divided by its dwellings, median weighted by dwellings
 (`median_change_eur_per_dwelling`, with the category's `dwellings`). The
 parcel median in euros (`median_change_eur`) compares a whole block with one
-house: in Lyon a block's median change is +800 € against +267 € for a house,
-which reads as flats paying three times more when in percentage the block
-(+9.6 %) pays half what the house does (+20.6 %). Per dwelling the gap
-reverses: +34 € in a block against +287 € in a house. The site shows the
+house: in the October 2026 payloads, before site value, a Lyon block's median
+change was +800 € against +267 € for a house, which read as flats paying three
+times more when in percentage the block (+9.6 %) paid half what the house did
+(+20.6 %). Per dwelling the gap reversed: +34 € in a block against +287 € in a
+house. Since site value, a Lyon block's median parcel pays −718 € and its typical
+dwelling −103 €, a house +769 € and +800 €. The site shows the
 per-dwelling figure; without counts, it labels a building category's figure
 "par immeuble". The chart's percentage remains a parcel median, so the two
 figures can differ in sign, because large blocks weigh more in the
@@ -750,14 +752,49 @@ LVT bills are identical in both columns; only today's tax differs.
 
 **The professional share is the load-bearing uncertainty.** The local variant
 moves household results by about 10 points the other way from the retired raw
-proxy: Paris's poorest fifth −17.4 % central against −6.0 %, Lyon's −14.0 %
-against −3.0 %, the Paris ring's −7.4 % against +1.8 %; the Lyon ring barely
-moves (+0.7 % against +0.5 %). Under both published columns the gradient in
+proxy. On the 31 October 2026 payloads: Paris's poorest fifth −17.4 % central
+against −6.0 %, Lyon's −14.0 % against −3.0 %, the Paris ring's −7.4 % against
++1.8 %; the Lyon ring barely moved (+0.7 % against +0.5 %). Since site value:
+Paris −21.4 % against −10.6 %, Lyon −16.7 % against −5.8 %, the Paris ring
+−12.5 % against −2.3 %, the Lyon ring −8.9 % against −8.6 % (within-commune
+ranking for the rings). Under both published columns the gradient in
 Paris and Lyon is progressive: the richest fifth pays most. Under the local
 variant every income group in Paris and Lyon except the poorest pays more, and
 business premises pay markedly less. The 2.5 stays the central case because it
 is calibrated nationally; the local variant is calibrated commune by commune
 but on 2017 data and a proxy read at ± 5 points (§6, item 1).
+
+*Site value and the house classification (November 2026).* Every figure
+above predates both: the house category then held large buildings with one
+recorded dwelling or none, and built land followed the floor area on the plot
+(§3.1, §3.4). On the payloads published since (central case; median change by
+category, income-group totals, within-commune ranking for the rings):
+
+| | Shift, % of levy | Houses | 2–4 | 5+ | Commercial | Q1 / Q5 totals |
+|---|---|---|---|---|---|---|
+| Grenoble | 35.7 | +48.7 | +12.2 | −30.7 | +6.8 | −46.5 / −4.1 |
+| Annemasse | 25.0 | +97.2 | +23.7 | −21.1 | +8.1 | −12.3 / −4.0 |
+| Villeurbanne | 23.5 | +54.7 | +24.8 | −16.8 | +45.9 | −6.1 / +3.5 |
+| Roubaix | 29.1 | −15.5 | −14.7 | −27.2 | −16.0 | −26.9 / +43.9 |
+| Cahors | 23.3 | +3.5 | −7.5 | −20.8 | −12.5 | — / — |
+| Montreuil | 26.0 | +45.5 | +25.5 | −13.4 | +20.4 | −18.8 / +17.9 |
+| Figeac | 26.2 | −0.3 | −11.4 | −29.1 | −12.4 | — / — |
+| Sète | 26.0 | +30.9 | +1.0 | −28.0 | +29.0 | −16.5 / +11.1 |
+| La Rochelle | 31.9 | −5.4 | −14.6 | −30.5 | −6.8 | −19.9 / +0.5 |
+| Paris | 19.9 | +118.3 | +36.5 | −10.0 | +58.2 | −21.4 / +10.6 |
+| Lyon | 22.4 | +69.3 | +23.4 | −7.9 | +5.1 | −16.7 / +15.5 |
+| Paris extra-muros (petite couronne) | 27.3 | +31.1 | +13.6 | −21.8 | +20.2 | −12.5 / +6.8 |
+| Lyon extra-muros (Métropole hors Lyon) | 31.1 | +31.7 | +2.6 | −24.7 | −27.8 | −8.9 / +6.6 |
+
+- **Robust across the panel:** the poorest fifth pays less in every territory
+  with income groups and fares better than the richest; large blocks pay less
+  everywhere; industry pays much less.
+- **No longer panel-wide:** the richest fifth's total falls in Grenoble
+  (−4.1 %) and Annemasse (−4.0 %). Houses and small buildings pay more where
+  they sit among denser buildings (Paris houses +118 %) and less where the
+  housing stock is homogeneous (Roubaix, Figeac, La Rochelle).
+- **The levy that changes payer** roughly doubles (Paris 9.8 → 19.9 %, Lyon
+  10.5 → 22.4 %).
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (Saint-Fons
@@ -900,7 +937,7 @@ published file (CI test).
 - **Sign checks** — agricultural/natural land, outside the reform, bears none of
   the levy (1.1 % in Cahors before it was excluded); under-used constructible land pays *more* (the LVT
   incentive); the Montreuil income gradient is progressive (group totals,
-  central baseline: poorest fifth −12.2 %, richest +17.9 %).
+  central baseline: poorest fifth −18.8 %, richest +17.9 %).
 - **Today's-tax split** — the industrial reconstruction (WC75 ÷ 2020 rate),
   run on every commune in France, gives 5.7 % of the TFPB base, exactly the
   Cour des comptes figure; the CFE industrial line agrees commune by commune
@@ -921,9 +958,9 @@ Ranked by how much they move published (category/quintile) results.
      of the professional base nationally (8.6 % against the Cour des comptes'
      22 %). The published alternative is local: the business share implied by
      the 2017 taxe d'habitation (§3.5). It is higher than the central case in
-     the cities, so households pay more: Paris's poorest fifth goes from −17.4
-     to −6.0 %, Lyon's from −14.0 to −3.0 %, and Paris commercial bills from
-     −2.2 % to −34.2 % (median change; §3.7). The reform's new bills are the
+     the cities, so households pay more: Paris's poorest fifth goes from −21.4
+     to −10.6 %, Lyon's from −16.7 to −5.8 %, and Paris commercial bills from
+     +58.2 % to +7.3 % (median change; §3.7). The reform's new bills are the
      same in both cases; only the starting point moves. The undercount is
      not uniform: it is larger where many premises are vacant or occupied by
      public bodies and associations, as in Paris.

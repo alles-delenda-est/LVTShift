@@ -4,8 +4,8 @@ import type { CategoryRow } from "@/lib/types";
 
 // Honest, data-grounded callout for the pagers: the effect on an owner-occupier
 // is NOT uniform. It depends on the land share of the property and on the
-// commune. Small buildings of 2–4 dwellings ("Condominium") often pay less
-// (central case); individual-house owners on valuable plots often pay MORE, especially in
+// commune. Blocks of 5+ dwellings, where most flats are, pay less almost
+// everywhere (central case); individual-house owners on valuable plots often pay MORE, especially in
 // dense high-land-value communes. This component reads the real model figures
 // so the prose can never drift from what the model actually shows.
 
@@ -26,7 +26,7 @@ export default function ResidentialImpactCallout() {
       label,
       note,
       house: cat(c.by_category, "Single Family Residential"),
-      flat: cat(c.by_category, "Condominium"),
+      flat: cat(c.by_category, "Large Multi-Family (5+ units)"),
     };
   });
 
@@ -57,7 +57,7 @@ export default function ResidentialImpactCallout() {
                 Maison individuelle
               </th>
               <th scope="col" className="text-left text-xs font-semibold uppercase tracking-[0.1em] text-gris px-4 py-2">
-                Petit immeuble (2–4 logements)
+                Immeuble collectif (5+ logements)
               </th>
             </tr>
           </thead>
@@ -109,11 +109,11 @@ export default function ResidentialImpactCallout() {
         Toutes les variations médianes sont encadrées par la bande de
         sensibilité ±&thinsp;10&nbsp;points sur la part foncière. Chiffres du
         cas central : dans la variante locale sur la taxe actuelle, les hausses
-        sont plus fréquentes, surtout en ville. L&apos;appartement en
-        copropriété, dont le sol est partagé, paie moins dans la moitié environ
-        à deux tiers des territoires selon l&apos;hypothèse ; la maison
-        individuelle sur un terrain de valeur paie souvent davantage, surtout là
-        où le foncier est cher.{" "}
+        sont plus fréquentes, surtout en ville. Le sol étant évalué comme
+        s&apos;il était nu, l&apos;immeuble collectif, dont le sol est partagé
+        entre de nombreux logements, paie moins presque partout ; la maison
+        individuelle sur un terrain de valeur paie souvent davantage, surtout
+        là où le foncier est cher et les voisins plus denses.{" "}
         <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
           Voir chaque commune en détail →
         </a>

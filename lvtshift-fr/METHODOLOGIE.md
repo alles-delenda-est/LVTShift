@@ -645,8 +645,8 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +7,6 % alors que le groupe paie
-−6,3 % et son ménage type −6,1 % (base centrale), car les grands immeubles, où
+parcelle médiane du quintile le plus pauvre paie +4,5 % alors que le groupe paie
+−6,1 % et son ménage type −19,7 % (base centrale), car les grands immeubles, où
 vivent la plupart de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
@@ -662,12 +662,14 @@ pour chaque catégorie résidentielle, la variation en euros du ménage type : l
 variation de chaque parcelle divisée par son nombre de logements, médiane
 pondérée par les logements (`median_change_eur_per_dwelling`, avec les
 `dwellings` de la catégorie). La médiane par parcelle en euros
-(`median_change_eur`) compare un immeuble entier à une maison : à Lyon, la
-variation médiane d'un immeuble est de +800 € contre +267 € pour une maison, ce
-qui se lit comme des appartements payant trois fois plus, alors qu'en
-pourcentage l'immeuble (+9,6 %) paie deux fois moins que la maison (+20,6 %). Par
-logement, l'écart s'inverse : +34 € en immeuble collectif contre +287 € en
-maison. Le site affiche le chiffre par logement ; faute de décompte, il présente
+(`median_change_eur`) compare un immeuble entier à une maison : dans les
+fichiers d'octobre 2026, avant la valeur du site, la variation médiane d'un
+immeuble lyonnais était de +800 € contre +267 € pour une maison, ce qui se lisait
+comme des appartements payant trois fois plus, alors qu'en pourcentage
+l'immeuble (+9,6 %) payait deux fois moins que la maison (+20,6 %). Par logement,
+l'écart s'inversait : +34 € en immeuble collectif contre +287 € en maison. Depuis
+la valeur du site, la parcelle médiane d'un immeuble lyonnais paie −718 € et son
+logement type −103 €, une maison +769 € et +800 €. Le site affiche le chiffre par logement ; faute de décompte, il présente
 celui d'une catégorie d'immeubles comme « par immeuble ». Le pourcentage du
 graphique reste une médiane par parcelle : les deux chiffres peuvent donc
 différer de signe, car le grand immeuble pèse davantage dans la médiane par
@@ -838,15 +840,52 @@ actuelle diffère.
 
 **La part professionnelle est l'incertitude porteuse.** La variante locale
 déplace les résultats des ménages d'environ 10 points, dans le sens inverse de
-l'indicateur brut retiré : premier quintile parisien −17,4 % en central contre
-−6,0 %, lyonnais −14,0 % contre −3,0 %, couronne parisienne −7,4 % contre +1,8 % ;
-la couronne lyonnaise bouge à peine (+0,7 % contre +0,5 %). Dans les deux
+l'indicateur brut retiré. Dans les fichiers du 31 octobre 2026 : premier
+quintile parisien −17,4 % en central contre −6,0 %, lyonnais −14,0 % contre
+−3,0 %, couronne parisienne −7,4 % contre +1,8 % ; la couronne lyonnaise bougeait
+à peine (+0,7 % contre +0,5 %). Depuis la valeur du site : Paris −21,4 % contre
+−10,6 %, Lyon −16,7 % contre −5,8 %, couronne parisienne −12,5 % contre −2,3 %,
+couronne lyonnaise −8,9 % contre −8,6 % (classement dans chaque commune pour les
+couronnes). Dans les deux
 colonnes publiées, le gradient de Paris et de Lyon est progressif : le quintile
 le plus aisé paie le plus. Dans la variante locale, tous les groupes de revenu de
 Paris et de Lyon sauf le plus modeste paient plus, et les locaux professionnels
 nettement moins. Le facteur 2,5 reste le cas central, car il est calé à
 l'échelle nationale ; la variante locale est calée commune par commune, mais sur
 des données de 2017 et un indicateur lu à ± 5 points (§6, point 1).
+
+*Valeur du site et classement des maisons (novembre 2026).* Tous les chiffres
+ci-dessus précèdent ces deux changements : la catégorie des maisons comptait
+alors de grands bâtiments à un logement ou sans logement enregistré, et le
+terrain bâti suivait la surface de plancher (§3.1, §3.4). Dans les fichiers
+publiés depuis (cas central ; variation médiane par catégorie, totaux par groupe
+de revenu, classement dans chaque commune pour les couronnes) :
+
+| | Part déplacée, % du produit | Maisons | 2–4 | 5+ | Commerce | Totaux Q1 / Q5 |
+|---|---|---|---|---|---|---|
+| Grenoble | 35,7 | +48,7 | +12,2 | −30,7 | +6,8 | −46,5 / −4,1 |
+| Annemasse | 25,0 | +97,2 | +23,7 | −21,1 | +8,1 | −12,3 / −4,0 |
+| Villeurbanne | 23,5 | +54,7 | +24,8 | −16,8 | +45,9 | −6,1 / +3,5 |
+| Roubaix | 29,1 | −15,5 | −14,7 | −27,2 | −16,0 | −26,9 / +43,9 |
+| Cahors | 23,3 | +3,5 | −7,5 | −20,8 | −12,5 | — / — |
+| Montreuil | 26,0 | +45,5 | +25,5 | −13,4 | +20,4 | −18,8 / +17,9 |
+| Figeac | 26,2 | −0,3 | −11,4 | −29,1 | −12,4 | — / — |
+| Sète | 26,0 | +30,9 | +1,0 | −28,0 | +29,0 | −16,5 / +11,1 |
+| La Rochelle | 31,9 | −5,4 | −14,6 | −30,5 | −6,8 | −19,9 / +0,5 |
+| Paris | 19,9 | +118,3 | +36,5 | −10,0 | +58,2 | −21,4 / +10,6 |
+| Lyon | 22,4 | +69,3 | +23,4 | −7,9 | +5,1 | −16,7 / +15,5 |
+| Paris extra-muros (petite couronne) | 27,3 | +31,1 | +13,6 | −21,8 | +20,2 | −12,5 / +6,8 |
+| Lyon extra-muros (Métropole hors Lyon) | 31,1 | +31,7 | +2,6 | −24,7 | −27,8 | −8,9 / +6,6 |
+
+- **Robuste sur tout le panel :** le cinquième le plus modeste paie moins dans
+  chaque territoire découpé par revenu et s'en sort mieux que le plus aisé ; les
+  grands immeubles paient moins partout ; l'industrie paie beaucoup moins.
+- **Plus vrai partout :** le total du cinquième le plus aisé baisse à Grenoble
+  (−4,1 %) et à Annemasse (−4,0 %). Maisons et petits immeubles paient plus là
+  où ils côtoient des bâtiments plus denses (maisons parisiennes +118 %), et
+  moins là où le bâti est homogène (Roubaix, Figeac, La Rochelle).
+- **La part de l'impôt qui change de payeur** double environ (Paris 9,8 →
+  19,9 %, Lyon 10,5 → 22,4 %).
 
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
@@ -1007,7 +1046,7 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   porte rien du prélèvement (il en portait 1,1 % à Cahors avant son exclusion) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
   progressif (totaux de groupe, base centrale : quintile le plus pauvre
-  −12,2 %, le plus aisé +17,9 %).
+  −18,8 %, le plus aisé +17,9 %).
 - **Répartition de la taxe actuelle** — la reconstitution industrielle (WC75 ÷
   taux 2020), appliquée à toutes les communes de France, donne 5,7 % de la base
   TFPB, exactement le chiffre de la Cour des comptes ; la ligne industrielle de
@@ -1029,8 +1068,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      22 % pour la Cour des comptes). La variante publiée est locale : la part
      des entreprises qu'implique la taxe d'habitation de 2017 (§3.5). Elle
      dépasse le cas central dans les villes, et les ménages y paient donc plus :
-     le premier quintile parisien passe de −17,4 à −6,0 %, le lyonnais de −14,0
-     à −3,0 %, et les cotisations commerciales de Paris de −2,2 % à −34,2 %
+     le premier quintile parisien passe de −21,4 à −10,6 %, le lyonnais de −16,7
+     à −5,8 %, et les cotisations commerciales de Paris de +58,2 % à +7,3 %
      (variation médiane ; §3.7). Les nouvelles cotisations sont identiques dans
      les deux cas ; seul le point de départ bouge. Le sous-comptage n'est pas
      uniforme : il est plus fort là où beaucoup de locaux sont vacants ou
