@@ -47,30 +47,64 @@ USAGE_MAP = {
 }
 
 
-def _residential_cat(n_dwellings, n_levels) -> str:
-    """maison / appartement / immeuble_collectif from dwelling count, with a
-    storey-count fallback when BD TOPO has no nombre_de_logements."""
-    if pd.notna(n_dwellings):
+# Largest parcel floor area (BD TOPO footprint × storeys, gross) still read as
+# one house: ≈ 300 m² habitable at the measured 0.61 habitable ÷ BD TOPO ratio
+# for houses. Larger buildings with one recorded dwelling or none were 20 % of
+# Paris "houses" and 80 % of the category's tax before this bound.
+MAISON_MAX_FLOOR_M2 = 500.0
+
+
+def _residential_cat(n_dwellings, n_levels, floor_m2) -> str:
+    """maison / appartement / immeuble_collectif / dependance for a parcel whose
+    dominant building is residential or of undifferentiated use.
+
+    n_dwellings: BD TOPO nombre_de_logements, area-shared across parcels (NaN
+    when the building is unmatched to the fichiers fonciers). floor_m2: the
+    parcel's gross floor area, storeys imputed where BD TOPO has none.
+      * a recorded 0: the tax files hold no dwelling in it -> dependance;
+      * no count: a building above 2 storeys or MAISON_MAX_FLOOR_M2 is flats,
+        sized at the households sidecar's m² per dwelling; otherwise a house;
+      * at most one dwelling: a house, unless the building is larger than any
+        house (-> dependance: offices, mixed use or an unreliable count);
+      * otherwise by count: 2–4 appartement, 5+ immeuble_collectif.
+    """
+    floor = float(floor_m2) if pd.notna(floor_m2) else 0.0
+    large = floor > MAISON_MAX_FLOOR_M2
+    if pd.isna(n_dwellings):
+        if not large and not (pd.notna(n_levels) and n_levels >= 3):
+            return "maison"
+        n_dwellings = max(1.0, round(floor / rp.GROSS_M2_PER_DWELLING))
         if n_dwellings <= 1:
             return "maison"
-        if n_dwellings <= 4:
-            return "appartement"
-        return "immeuble_collectif"
-    return "appartement" if (pd.notna(n_levels) and n_levels >= 3) else "maison"
+    elif n_dwellings == 0:
+        return "dependance"
+    if n_dwellings <= 1:
+        return "dependance" if large else "maison"
+    if n_dwellings <= 4:
+        return "appartement"
+    return "immeuble_collectif"
 
 
 def derive_parcel_category(buildings: pd.DataFrame) -> pd.Series:
     """One category_fr per parcel, from its dominant (largest-floor) building."""
     b = buildings.copy()
-    b["floor"] = b["footprint_m2"] * b["n_levels"].fillna(1).clip(lower=1)
+    levels = pd.to_numeric(b["n_levels"], errors="coerce")
+    missing = levels.isna() | (levels <= 0)
+    if missing.any():            # same storey rule as improvement_value
+        levels = levels.mask(missing, estimate.impute_levels(b.loc[missing]))
+    b["levels"] = levels
+    b["floor"] = pd.to_numeric(b["footprint_m2"], errors="coerce").fillna(0.0) * levels
     dom = b.sort_values("floor").groupby("idpar").tail(1).set_index("idpar")
-    dwellings = b.groupby("idpar")["n_dwellings"].sum()
+    # min_count=1: a parcel with no count stays NaN rather than summing to 0
+    dwellings = b.groupby("idpar")["n_dwellings"].sum(min_count=1)
+    floor = b.groupby("idpar")["floor"].sum()
 
     cats = {}
     for idpar, row in dom.iterrows():
         u = row["usage"]
         if pd.isna(u) or u in ("Résidentiel", "Indifférencié"):
-            cats[idpar] = _residential_cat(dwellings.get(idpar), row["n_levels"])
+            cats[idpar] = _residential_cat(dwellings.get(idpar), row["levels"],
+                                           floor.get(idpar))
         else:
             cats[idpar] = USAGE_MAP.get(u, "dependance")
     return pd.Series(cats, name="category_fr")

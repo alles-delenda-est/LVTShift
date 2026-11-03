@@ -178,6 +178,30 @@ Buildings join parcels by **area-weighted
 intersection** (a building straddling a boundary credits each parcel by overlap
 share), not centroid.
 
+*Property categories* (`run_commune.derive_parcel_category`). Each parcel takes
+the category of its largest building by floor area (storeys imputed as above).
+Non-residential usages map directly: « Commercial et services » to commerce,
+« Industriel » to industrial, and Agricole, Annexe, Religieux and Sportif to
+« Autre bâtiment ». A residential or undifferentiated building is classed by
+its BD TOPO dwelling count, area-shared across parcels: 2–4 dwellings is a small
+building, 5 or more a large one, at most one a house. Three guards apply:
+- **A recorded 0** (the fichiers fonciers hold no dwelling in it) goes to
+  « Autre bâtiment ».
+- **At most one dwelling on more than 500 m² of BD TOPO floor area**
+  (`MAISON_MAX_FLOOR_M2`, about 300 m² habitable at the houses' 0.61 ratio) also
+  goes to « Autre bâtiment »: offices, mixed use or an unreliable count, not a
+  house.
+- **No count** (a building unmatched to the fichiers fonciers) is a house below
+  3 storeys and 500 m², and otherwise flats at 85 m² gross per dwelling, the
+  households sidecar's rule.
+
+Until November 2026 a missing count summed to zero, so every unmatched building
+became a house whatever its size. In Paris, "house" parcels with buildings worth
+over €1.5 M were a fifth of the category and carried 80 % of its tax (Lyon 67 %,
+Villeurbanne 62 %, Montreuil 47 %), so the published house figures mostly
+described them. The category sets the price surface (house or flat €/m², §3.3)
+and the published group. Today's tax follows building use, not category (§3.5).
+
 **3.2 Construction year (depreciation anchor)** — BD TOPO's `date_d_apparition`
 is a database first-appearance date, not a build year, and is often null (100 %
 of Cahors). We instead use the DPE `periode_construction` era band, mapped to a

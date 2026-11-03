@@ -197,6 +197,34 @@ rattachés aux parcelles par **intersection pondérée par la surface** (un bât
 à cheval sur une limite crédite chaque parcelle au prorata du recouvrement), et
 non par centroïde.
 
+*Catégories de biens* (`run_commune.derive_parcel_category`). Chaque parcelle
+prend la catégorie de son plus grand bâtiment en surface de plancher (étages
+imputés comme ci-dessus). Les usages non résidentiels se traduisent
+directement : « Commercial et services » en commerce, « Industriel » en
+industriel, et Agricole, Annexe, Religieux et Sportif en « Autre bâtiment ». Un
+bâtiment résidentiel ou indifférencié est classé selon son nombre de logements
+BD TOPO, réparti entre parcelles au prorata de la surface : 2 à 4 logements, un
+petit immeuble ; 5 ou plus, un immeuble collectif ; au plus un, une maison.
+Trois garde-fous s'appliquent :
+- **Un 0 enregistré** (les fichiers fonciers n'y comptent aucun logement) va en
+  « Autre bâtiment ».
+- **Au plus un logement sur plus de 500 m² de plancher BD TOPO**
+  (`MAISON_MAX_FLOOR_M2`, environ 300 m² habitables au ratio de 0,61 des
+  maisons) va aussi en « Autre bâtiment » : bureaux, usage mixte ou décompte peu
+  fiable, pas une maison.
+- **Sans décompte** (bâtiment non apparié aux fichiers fonciers), c'est une
+  maison sous 3 étages et 500 m², et sinon des appartements à 85 m² bruts par
+  logement, la règle du fichier annexe des ménages.
+
+Jusqu'en novembre 2026, un décompte manquant s'additionnait à zéro : tout
+bâtiment non apparié devenait une maison, quelle que soit sa taille. À Paris,
+les parcelles « maisons » dont le bâtiment valait plus de 1,5 M€ formaient un
+cinquième de la catégorie et portaient 80 % de son impôt (Lyon 67 %,
+Villeurbanne 62 %, Montreuil 47 %) : les chiffres publiés des maisons les
+décrivaient surtout. La catégorie fixe la surface de prix (€/m² de maison ou
+d'appartement, §3.3) et le groupe publié. La taxe actuelle suit l'usage des
+bâtiments, pas la catégorie (§3.5).
+
 **3.2 Année de construction (ancrage de la dépréciation)** — le
 `date_d_apparition` de BD TOPO est une date de première apparition en base, pas
 une année de construction, et est souvent nulle (100 % à Cahors). On utilise donc
