@@ -131,6 +131,13 @@ def test_land_share_clip_counts_the_residual_under_site_value(tmp_path):
                                                    out_dir=str(tmp_path))}["land_share_clip"]
     assert clip["severity"] == pf.OK
     assert clip["detail"] == {"at_cap_pct": round(100 / 9, 1), "at_floor_pct": None}
+    # a malformed flag column is not trusted: back to the share-based count
+    pd.DataFrame({"new_tax": [100.0] * n,
+                  "residual_at_cap": ["False", ""] + ["False"] * (n - 2)}).to_csv(
+        tmp_path / "test.households.csv", index=False)
+    clip = {c["check"]: c for c in pf.analyze_run(_Cfg(name="Test"),
+                                                   out_dir=str(tmp_path))}["land_share_clip"]
+    assert clip["detail"]["at_floor_pct"] is not None and clip["detail"]["at_cap_pct"] == 100.0
 
 
 def test_probe_retries_transient_failures_but_not_404(monkeypatch):

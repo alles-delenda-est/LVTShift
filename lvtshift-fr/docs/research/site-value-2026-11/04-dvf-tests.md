@@ -315,7 +315,7 @@ Sign agreement with R by commune (`signs.csv`), excluding B-raw, which is reject
 
 ## Files
 
-All files are in ``.
+The scripts and working files were kept outside the repository (not published).
 
 | File | Contents |
 |---|---|

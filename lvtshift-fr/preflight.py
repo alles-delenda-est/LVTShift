@@ -309,10 +309,14 @@ def analyze_run(cfg, out_dir: str = "output") -> list:
     # bound; the clip only shapes the residual that sets each IRIS's total, so
     # count the residual's clip (households sidecar) and not the parcel's share.
     side = path.with_name(f"{slug}.households.csv")
-    flags = (pd.read_csv(side, usecols=lambda c: c == "residual_at_cap")
+    flags = (pd.read_csv(side, usecols=lambda c: c == "residual_at_cap", dtype=str)
              if side.exists() else pd.DataFrame())
-    if "residual_at_cap" in flags.columns and len(flags) == len(df):
-        at_cap = (float(flags["residual_at_cap"].astype(bool)[built].mean() * 100)
+    # strict: True/False only, and the sidecar must have the export's rows
+    # (astype(bool) would read "False" or a blank as True)
+    flag = (flags["residual_at_cap"].map({"True": True, "False": False})
+            if "residual_at_cap" in flags.columns else None)
+    if flag is not None and len(flag) == len(df) and flag.notna().all():
+        at_cap = (float(flag.astype(bool)[built].mean() * 100)
                   if built.any() else 0.0)
         at_floor = None
         text = (f"Parcelles bâties dont le résiduel atteint le plafond de part foncière "
