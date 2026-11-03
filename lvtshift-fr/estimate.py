@@ -575,10 +575,12 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     the reference FAR being the ref_density_quantile of the pooled parcels'
     floor-area ratio in the same PLU zone label (zone type, then commune, where
     the label has fewer than min_zone_parcels). On a parcel built below that
-    density, plot area beyond surplus_plot_multiple × the zone's median plot
-    counts at surplus_plot_weight: a large garden is not as many building plots
-    (vacant plots sell for far less than proportionally more as they grow). A
-    parcel at or above the reference density uses its whole plot. The building keeps its
+    density in a house-scale zone (reference FAR below surplus_max_ref_far),
+    plot area beyond surplus_plot_multiple × the zone's median plot counts at
+    surplus_plot_weight: a large garden is not as many building plots (vacant
+    house plots sell for far less than proportionally more as they grow). In a
+    denser zone, or at or above the reference density, the whole plot counts.
+    The building keeps its
     depreciated replacement cost (`building_cost`) and market value becomes
     land + building, so land may exceed the old floor-proportional market value:
     no land-share clip applies to these parcels.
@@ -601,8 +603,9 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     min_n = int(prm["min_zone_parcels"])
     k_sur = float(prm["surplus_plot_multiple"])
     w_sur = float(prm["surplus_plot_weight"])
+    far_sur = float(prm["surplus_max_ref_far"])
     if not (0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0 and 0.5 <= q_cap <= 1.0
-            and min_n >= 1 and k_sur >= 1.0 and 0.0 <= w_sur <= 1.0):
+            and min_n >= 1 and k_sur >= 1.0 and 0.0 <= w_sur <= 1.0 and far_sur >= 0.0):
         raise ValueError(f"invalid SITE_VALUE parameters {prm}")
 
     out = p.copy()
@@ -627,7 +630,8 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     ref = _zone_quantile(far, zones, q_ref, min_n)
     typical_plot = _zone_quantile(area[pool], zones, 0.5, min_n)
     density = np.maximum(far, ref)
-    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(far < ref, 0.0)
+    house_scale = (far < ref) & (ref < far_sur)
+    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
     weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
 
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")

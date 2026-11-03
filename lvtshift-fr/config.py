@@ -611,6 +611,13 @@ SITE_VALUE = {
     # 0.14–0.27 of a building-plot m² (Lyon, Montreuil, Aulnay, Ormesson).
     "surplus_plot_multiple": 2.0,
     "surplus_plot_weight": 0.25,
+    # ...in house-scale zones only: those evidence (EPTB covers single-house
+    # plots; German size coefficients apply to one- and two-family land). In a
+    # denser zone a large plot carries a large building and keeps its full area.
+    # Model floor-area ratio (BD TOPO gross floor ÷ plot): individual-housing
+    # zones run 0.2–0.9 (Lyon URi1a 0.93, Villeurbanne 0.78, Cahors Ub 0.47),
+    # mixed and collective zones 1.4–6.6.
+    "surplus_max_ref_far": 1.0,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.
