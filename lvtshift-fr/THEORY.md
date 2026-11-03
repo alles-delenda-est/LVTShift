@@ -204,9 +204,9 @@ land-share band, so error propagates visibly rather than silently.
   uplift is a judgement, and Lyon coming out dearer than the Paris ring is
   probably a sample effect (bespoke Rhône houses vs outer-IdF catalogue houses).
   Panel communes outside the Paris and Lyon areas keep their single pilot costs.
-- **The 40–65 % band is a metro-wide reference, not a per-commune test.** 48
-  communes now sit above it, nearly all contiguous to Paris (itself 76 %), where
-  Gemini judges 65–75 % normal; only Cahors is below. Neuilly (78 %) and
+- **The 40–65 % band is a metro-wide reference, not a per-commune test.** 37
+  communes now sit above it, nearly all contiguous to Paris (itself 75 %), where
+  Gemini judges 65–75 % normal; Cahors and Limeil-Brévannes are below. Neuilly (78 %) and
   Fleurieu-sur-Saône (72 %) remain the ones to check.
 - **Maintained-stock parameters are judgement calls** (30-year cap, 1.2–2.5 ramp),
   informed by the literature but not estimated; a DPE condition signal would ground

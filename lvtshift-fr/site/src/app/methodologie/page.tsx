@@ -826,7 +826,7 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+4,5&nbsp;%), alors que ce groupe paie
+              plus pauvre en hausse (+4,6&nbsp;%), alors que ce groupe paie
               6,1&nbsp;% de moins au total et que son ménage type paie
               19,7&nbsp;% de moins : les grands immeubles, où vivent la plupart de
               ses ménages, sont les plus gagnants. Le nombre de logements vient
@@ -896,11 +896,11 @@ export default function MethodologiePage() {
               0,05 déplace la valeur bâti d&apos;environ 7&nbsp;%, qui se
               reporte sur le résiduel foncier. Le registre signale en WARN les
               communes dont la part foncière imputée sort de la fourchette
-              40–65&nbsp;% (48 au-dessus et 1 en dessous sur 188, dont Paris
-              et La Rochelle dans le panel). Cette fourchette est un repère à
-              l&apos;échelle d&apos;une métropole, pas un test que chaque
-              commune devrait passer : les communes limitrophes de Paris
-              (76&nbsp;%) se situent naturellement entre 65 et 75&nbsp;%, comme
+              40–65&nbsp;% (37 au-dessus et 2 en dessous sur 188, dont Paris,
+              La Rochelle et Cahors dans le panel). Cette fourchette est un
+              repère à l&apos;échelle d&apos;une métropole, pas un test que
+              chaque commune devrait passer : les communes limitrophes de Paris
+              (75&nbsp;%) se situent naturellement entre 65 et 75&nbsp;%, comme
               les quartiers d&apos;affaires de premier rang. Les bureaux restent
               valorisés au prix de vente des logements, faute d&apos;une
               surface de prix propre aux locaux professionnels. La bande

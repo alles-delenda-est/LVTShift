@@ -645,7 +645,7 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +4,5 % alors que le groupe paie
+parcelle médiane du quintile le plus pauvre paie +4,6 % alors que le groupe paie
 −6,1 % et son ménage type −19,7 % (base centrale), car les grands immeubles, où
 vivent la plupart de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
@@ -668,7 +668,7 @@ immeuble lyonnais était de +800 € contre +267 € pour une maison, ce qui se 
 comme des appartements payant trois fois plus, alors qu'en pourcentage
 l'immeuble (+9,6 %) payait deux fois moins que la maison (+20,6 %). Par logement,
 l'écart s'inversait : +34 € en immeuble collectif contre +287 € en maison. Depuis
-la valeur du site, la parcelle médiane d'un immeuble lyonnais paie −718 € et son
+la valeur du site, la parcelle médiane d'un immeuble lyonnais paie −720 € et son
 logement type −103 €, une maison +769 € et +800 €. Le site affiche le chiffre par logement ; faute de décompte, il présente
 celui d'une catégorie d'immeubles comme « par immeuble ». Le pourcentage du
 graphique reste une médiane par parcelle : les deux chiffres peuvent donc
@@ -689,10 +689,12 @@ les coûts recalés et la valorisation du non-résidentiel par type (§3.1, §3.
 §4), Paris ressort à **75,8 %** avec 5,6 % des parcelles bâties à la borne : sa
 part foncière est mesurée, non fixée par la borne. Aucune commune n'a plus de la
 moitié de ses parcelles bâties au plafond ; Neuilly-sur-Seine en a le plus
-(25,3 %), et le contrôle `land_share_clip` du preflight ne signale aucune
-commune. Lyon est à 60,0 %, la couronne parisienne à 65,3 % et la couronne
-lyonnaise à 55,4 %. Sur les 188 communes modélisées, 48 dépassent 65 % et 1 est
-sous 40 % (Cahors 38,0 %).
+(19,0 %), et le contrôle `land_share_clip` du preflight ne signale aucune
+commune. Lyon est à 60,0 %, la couronne parisienne à 63,5 % et la couronne
+lyonnaise à 55,2 %. Sur les 188 communes modélisées, 37 dépassent 65 % et 2 sont
+sous 40 % (Cahors 36,5 %, Limeil-Brévannes 39,2 %). Chiffres du calcul en valeur
+du site de novembre 2026 ; la borne n'encadre plus que le résiduel qui fixe le
+total de terrain de chaque IRIS, et la part d'une parcelle peut la dépasser.
 Le champ `headline.built_at_cap_pct` enregistre la part des parcelles bâties à
 la borne, et le site qualifie la part foncière de « plafonnée » quand elle
 atteint 50 %.
@@ -701,10 +703,10 @@ atteint 50 %.
 métropole (le patrimoine national de l'INSEE place les terrains bâtis à 51 % de
 la valeur terrains + logements fin 2023, 44 % pour les seuls ménages), non un test que
 chaque commune devrait passer. Les communes limitrophes de Paris (elle-même à
-76 %) se situent naturellement entre 65 et 75 %, et le terrain fait 65 à 75 %
+75 %) se situent naturellement entre 65 et 75 %, et le terrain fait 65 à 75 %
 de la valeur dans les quartiers de bureaux de premier rang (revue Gemini). La
-plupart des 48 communes au-dessus de 65 % sont des communes de petite couronne
-limitrophes de Paris (Puteaux 71,0 %, Saint-Cloud 76,8 %, Clichy 74,8 %,
+plupart des 37 communes au-dessus de 65 % sont des communes de petite couronne
+limitrophes de Paris (Puteaux 69,5 %, Saint-Cloud 75,3 %, Clichy 73,6 %,
 Courbevoie, Nanterre, Montreuil, Pantin…) ; le WARN du registre hors de la
 fourchette invite à regarder, il ne signale pas un échec.
 
@@ -844,7 +846,7 @@ l'indicateur brut retiré. Dans les fichiers du 31 octobre 2026 : premier
 quintile parisien −17,4 % en central contre −6,0 %, lyonnais −14,0 % contre
 −3,0 %, couronne parisienne −7,4 % contre +1,8 % ; la couronne lyonnaise bougeait
 à peine (+0,7 % contre +0,5 %). Depuis la valeur du site : Paris −21,4 % contre
-−10,6 %, Lyon −16,7 % contre −5,8 %, couronne parisienne −12,5 % contre −2,3 %,
+−10,6 %, Lyon −16,6 % contre −5,8 %, couronne parisienne −12,6 % contre −2,3 %,
 couronne lyonnaise −8,9 % contre −8,6 % (classement dans chaque commune pour les
 couronnes). Dans les deux
 colonnes publiées, le gradient de Paris et de Lyon est progressif : le quintile
@@ -863,19 +865,19 @@ de revenu, classement dans chaque commune pour les couronnes) :
 
 | | Part déplacée, % du produit | Maisons | 2–4 | 5+ | Commerce | Totaux Q1 / Q5 |
 |---|---|---|---|---|---|---|
-| Grenoble | 35,7 | +48,7 | +12,2 | −30,7 | +6,8 | −46,5 / −4,1 |
-| Annemasse | 25,0 | +97,2 | +23,7 | −21,1 | +8,1 | −12,3 / −4,0 |
+| Grenoble | 35,7 | +48,6 | +12,2 | −30,8 | +6,9 | −46,6 / −4,1 |
+| Annemasse | 25,0 | +97,3 | +22,8 | −21,1 | +8,1 | −12,3 / −4,0 |
 | Villeurbanne | 23,5 | +54,7 | +24,8 | −16,8 | +45,9 | −6,1 / +3,5 |
 | Roubaix | 29,1 | −15,5 | −14,7 | −27,2 | −16,0 | −26,9 / +43,9 |
-| Cahors | 23,3 | +3,5 | −7,5 | −20,8 | −12,5 | — / — |
+| Cahors | 23,0 | +2,6 | −6,8 | −21,7 | −11,9 | — / — |
 | Montreuil | 26,0 | +45,5 | +25,5 | −13,4 | +20,4 | −18,8 / +17,9 |
-| Figeac | 26,2 | −0,3 | −11,4 | −29,1 | −12,4 | — / — |
-| Sète | 26,0 | +30,9 | +1,0 | −28,0 | +29,0 | −16,5 / +11,1 |
-| La Rochelle | 31,9 | −5,4 | −14,6 | −30,5 | −6,8 | −19,9 / +0,5 |
-| Paris | 19,9 | +118,3 | +36,5 | −10,0 | +58,2 | −21,4 / +10,6 |
-| Lyon | 22,4 | +69,3 | +23,4 | −7,9 | +5,1 | −16,7 / +15,5 |
-| Paris extra-muros (petite couronne) | 27,3 | +31,1 | +13,6 | −21,8 | +20,2 | −12,5 / +6,8 |
-| Lyon extra-muros (Métropole hors Lyon) | 31,1 | +31,7 | +2,6 | −24,7 | −27,8 | −8,9 / +6,6 |
+| Figeac | 26,2 | −0,3 | −11,1 | −30,9 | −11,4 | — / — |
+| Sète | 26,0 | +30,8 | +1,2 | −28,0 | +29,0 | −16,5 / +11,1 |
+| La Rochelle | 31,9 | −5,4 | −14,7 | −30,5 | −6,8 | −19,9 / +0,4 |
+| Paris | 19,9 | +118,3 | +36,5 | −10,0 | +58,0 | −21,4 / +10,6 |
+| Lyon | 22,4 | +69,2 | +23,2 | −8,0 | +5,0 | −16,6 / +15,4 |
+| Paris extra-muros (petite couronne) | 27,3 | +31,0 | +13,5 | −21,9 | +20,2 | −12,6 / +6,8 |
+| Lyon extra-muros (Métropole hors Lyon) | 31,1 | +32,3 | +2,6 | −24,9 | −27,9 | −8,9 / +6,6 |
 
 - **Robuste sur tout le panel :** le cinquième le plus modeste paie moins dans
   chaque territoire découpé par revenu et s'en sort mieux que le plus aisé ; les
@@ -1068,8 +1070,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      22 % pour la Cour des comptes). La variante publiée est locale : la part
      des entreprises qu'implique la taxe d'habitation de 2017 (§3.5). Elle
      dépasse le cas central dans les villes, et les ménages y paient donc plus :
-     le premier quintile parisien passe de −21,4 à −10,6 %, le lyonnais de −16,7
-     à −5,8 %, et les cotisations commerciales de Paris de +58,2 % à +7,3 %
+     le premier quintile parisien passe de −21,4 à −10,6 %, le lyonnais de −16,6
+     à −5,8 %, et les cotisations commerciales de Paris de +58,0 % à +7,2 %
      (variation médiane ; §3.7). Les nouvelles cotisations sont identiques dans
      les deux cas ; seul le point de départ bouge. Le sous-comptage n'est pas
      uniforme : il est plus fort là où beaucoup de locaux sont vacants ou

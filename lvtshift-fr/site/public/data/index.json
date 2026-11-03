@@ -58,7 +58,7 @@
       "departement": "46",
       "parcels_modeled": 12209,
       "land_share_pct": 36.5,
-      "gross_pct_of_levy": 46.5
+      "gross_pct_of_levy": 46.0
     },
     {
       "n_communes_unique": 1,
@@ -82,7 +82,7 @@
       "departement": "46",
       "parcels_modeled": 7279,
       "land_share_pct": 43.8,
-      "gross_pct_of_levy": 52.5
+      "gross_pct_of_levy": 52.4
     },
     {
       "n_communes_unique": 1,
@@ -118,7 +118,7 @@
       "departement": "75",
       "parcels_modeled": 75081,
       "land_share_pct": 75.3,
-      "gross_pct_of_levy": 39.8
+      "gross_pct_of_levy": 39.7
     },
     {
       "n_communes_unique": 1,
@@ -142,7 +142,7 @@
       "departement": "92/93/94",
       "parcels_modeled": 559654,
       "land_share_pct": 63.5,
-      "gross_pct_of_levy": 54.6
+      "gross_pct_of_levy": 54.5
     },
     {
       "n_communes_unique": 56,
@@ -154,7 +154,7 @@
       "departement": "69",
       "parcels_modeled": 191984,
       "land_share_pct": 55.2,
-      "gross_pct_of_levy": 62.2
+      "gross_pct_of_levy": 62.1
     }
   ],
   "currency": "EUR"

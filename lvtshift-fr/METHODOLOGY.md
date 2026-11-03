@@ -575,7 +575,7 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+4.5 % while the group as a whole pays −6.1 % and its typical household −19.7 %
++4.6 % while the group as a whole pays −6.1 % and its typical household −19.7 %
 (central baseline), because the large blocks, where most of its households live,
 gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
@@ -596,7 +596,7 @@ house: in the October 2026 payloads, before site value, a Lyon block's median
 change was +800 € against +267 € for a house, which read as flats paying three
 times more when in percentage the block (+9.6 %) paid half what the house did
 (+20.6 %). Per dwelling the gap reversed: +34 € in a block against +287 € in a
-house. Since site value, a Lyon block's median parcel pays −718 € and its typical
+house. Since site value, a Lyon block's median parcel pays −720 € and its typical
 dwelling −103 €, a house +769 € and +800 €. The site shows the
 per-dwelling figure; without counts, it labels a building category's figure
 "par immeuble". The chart's percentage remains a parcel median, so the two
@@ -613,22 +613,25 @@ maintained-stock rule (§3.1) values such buildings at a 30-year effective age,
 which brought Paris to 83.3 % with 34.8 % of built parcels still at the bound.
 With both sides of the residual on habitable area, the calibrated costs and the
 per-type non-residential valuation (§3.1, §3.4, §4), Paris comes out at
-**75.8 %** with 5.6 % of built parcels at the bound: its land share is
-measured, not set by the cap. No commune has more than half its built parcels at
-the cap; Neuilly-sur-Seine has the most (25.3 %), and the preflight
-`land_share_clip` check warns nowhere. Lyon is at 60.0 %, the Paris ring 65.3 %
-and the Lyon ring 55.4 %. Across the 188 modelled communes, 48 lie above 65 %
-and 1 below 40 % (Cahors 38.0 %).
-`headline.built_at_cap_pct` records the share of built parcels at the bound,
-and the site labels the land share "plafonnée" when it is ≥ 50 %.
+**75.3 %** with 3.6 % of built parcels whose residual sits at the bound: its
+land share is measured, not set by the cap. No commune has more than half its
+built parcels at the cap; Neuilly-sur-Seine has the most (19.0 %), and the
+preflight `land_share_clip` check warns nowhere. Lyon is at 60.0 %, the Paris
+ring 63.5 % and the Lyon ring 55.2 %. Across the 188 modelled communes, 37 lie
+above 65 % and 2 below 40 % (Cahors 36.5 %, Limeil-Brévannes 39.2 %). Figures
+are from the November 2026 site-value run; under site value the clip bounds
+only the residual that sets each IRIS's land total, so a parcel's own share can
+pass it. `headline.built_at_cap_pct` records the share of built parcels whose
+residual is at the bound, and the site labels the land share "plafonnée" when it
+is ≥ 50 %.
 
 *The 40–65 % reference range.* It is a metro-wide benchmark (INSEE's national
 balance sheet puts built land at 51 % of land + dwellings at end-2023, 44 % for
 households alone), not a
-test each commune must pass. Communes contiguous to Paris (itself 76 %)
+test each commune must pass. Communes contiguous to Paris (itself 75 %)
 naturally sit at 65–75 %, and land is 65–75 % of value in prime office
-districts (Gemini review). Most of the 48 communes above 65 % are inner-ring
-communes next to Paris (Puteaux 71.0 %, Saint-Cloud 76.8 %, Clichy 74.8 %,
+districts (Gemini review). Most of the 37 communes above 65 % are inner-ring
+communes next to Paris (Puteaux 69.5 %, Saint-Cloud 75.3 %, Clichy 73.6 %,
 Courbevoie, Nanterre, Montreuil, Pantin…); the register's WARN outside the
 range is a prompt to look, not a failure.
 
@@ -755,8 +758,8 @@ moves household results by about 10 points the other way from the retired raw
 proxy. On the 31 October 2026 payloads: Paris's poorest fifth −17.4 % central
 against −6.0 %, Lyon's −14.0 % against −3.0 %, the Paris ring's −7.4 % against
 +1.8 %; the Lyon ring barely moved (+0.7 % against +0.5 %). Since site value:
-Paris −21.4 % against −10.6 %, Lyon −16.7 % against −5.8 %, the Paris ring
-−12.5 % against −2.3 %, the Lyon ring −8.9 % against −8.6 % (within-commune
+Paris −21.4 % against −10.6 %, Lyon −16.6 % against −5.8 %, the Paris ring
+−12.6 % against −2.3 %, the Lyon ring −8.9 % against −8.6 % (within-commune
 ranking for the rings). Under both published columns the gradient in
 Paris and Lyon is progressive: the richest fifth pays most. Under the local
 variant every income group in Paris and Lyon except the poorest pays more, and
@@ -772,19 +775,19 @@ category, income-group totals, within-commune ranking for the rings):
 
 | | Shift, % of levy | Houses | 2–4 | 5+ | Commercial | Q1 / Q5 totals |
 |---|---|---|---|---|---|---|
-| Grenoble | 35.7 | +48.7 | +12.2 | −30.7 | +6.8 | −46.5 / −4.1 |
-| Annemasse | 25.0 | +97.2 | +23.7 | −21.1 | +8.1 | −12.3 / −4.0 |
+| Grenoble | 35.7 | +48.6 | +12.2 | −30.8 | +6.9 | −46.6 / −4.1 |
+| Annemasse | 25.0 | +97.3 | +22.8 | −21.1 | +8.1 | −12.3 / −4.0 |
 | Villeurbanne | 23.5 | +54.7 | +24.8 | −16.8 | +45.9 | −6.1 / +3.5 |
 | Roubaix | 29.1 | −15.5 | −14.7 | −27.2 | −16.0 | −26.9 / +43.9 |
-| Cahors | 23.3 | +3.5 | −7.5 | −20.8 | −12.5 | — / — |
+| Cahors | 23.0 | +2.6 | −6.8 | −21.7 | −11.9 | — / — |
 | Montreuil | 26.0 | +45.5 | +25.5 | −13.4 | +20.4 | −18.8 / +17.9 |
-| Figeac | 26.2 | −0.3 | −11.4 | −29.1 | −12.4 | — / — |
-| Sète | 26.0 | +30.9 | +1.0 | −28.0 | +29.0 | −16.5 / +11.1 |
-| La Rochelle | 31.9 | −5.4 | −14.6 | −30.5 | −6.8 | −19.9 / +0.5 |
-| Paris | 19.9 | +118.3 | +36.5 | −10.0 | +58.2 | −21.4 / +10.6 |
-| Lyon | 22.4 | +69.3 | +23.4 | −7.9 | +5.1 | −16.7 / +15.5 |
-| Paris extra-muros (petite couronne) | 27.3 | +31.1 | +13.6 | −21.8 | +20.2 | −12.5 / +6.8 |
-| Lyon extra-muros (Métropole hors Lyon) | 31.1 | +31.7 | +2.6 | −24.7 | −27.8 | −8.9 / +6.6 |
+| Figeac | 26.2 | −0.3 | −11.1 | −30.9 | −11.4 | — / — |
+| Sète | 26.0 | +30.8 | +1.2 | −28.0 | +29.0 | −16.5 / +11.1 |
+| La Rochelle | 31.9 | −5.4 | −14.7 | −30.5 | −6.8 | −19.9 / +0.4 |
+| Paris | 19.9 | +118.3 | +36.5 | −10.0 | +58.0 | −21.4 / +10.6 |
+| Lyon | 22.4 | +69.2 | +23.2 | −8.0 | +5.0 | −16.6 / +15.4 |
+| Paris extra-muros (petite couronne) | 27.3 | +31.0 | +13.5 | −21.9 | +20.2 | −12.6 / +6.8 |
+| Lyon extra-muros (Métropole hors Lyon) | 31.1 | +32.3 | +2.6 | −24.9 | −27.9 | −8.9 / +6.6 |
 
 - **Robust across the panel:** the poorest fifth pays less in every territory
   with income groups and fares better than the richest; large blocks pay less
@@ -959,8 +962,8 @@ Ranked by how much they move published (category/quintile) results.
      22 %). The published alternative is local: the business share implied by
      the 2017 taxe d'habitation (§3.5). It is higher than the central case in
      the cities, so households pay more: Paris's poorest fifth goes from −21.4
-     to −10.6 %, Lyon's from −16.7 to −5.8 %, and Paris commercial bills from
-     +58.2 % to +7.3 % (median change; §3.7). The reform's new bills are the
+     to −10.6 %, Lyon's from −16.6 to −5.8 %, and Paris commercial bills from
+     +58.0 % to +7.2 % (median change; §3.7). The reform's new bills are the
      same in both cases; only the starting point moves. The undercount is
      not uniform: it is larger where many premises are vacant or occupied by
      public bodies and associations, as in Paris.
