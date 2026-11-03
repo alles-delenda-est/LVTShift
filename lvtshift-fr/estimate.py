@@ -545,6 +545,19 @@ def land_value_residual(p: pd.DataFrame, cfg,
 SITE_POOLED_FLAGS = frozenset({"built_residual", "built_clipped_high", "built_clipped_low"})
 
 
+def _zone_quantile(values: pd.Series, zones: list, q: float, min_n: int) -> pd.Series:
+    """Per-row quantile q of `values` within its zone: the finest of `zones`
+    (coarse to fine) whose group has at least min_n rows, else all rows."""
+    out = pd.Series(values.quantile(q), index=values.index)
+    for key in zones:                                  # coarse first, finest wins
+        known = key.notna()
+        n = key[known].map(key[known].value_counts())
+        ok = n[n >= min_n].index
+        by_zone = values[ok].groupby(key[ok]).quantile(q)
+        out = out.mask(key.index.isin(ok), key.map(by_zone))
+    return out
+
+
 def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
     """
     Land of built parcels as site value: as if vacant, at its zone's typical
@@ -556,12 +569,16 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     none) the residual land of the pooled parcels is kept as a total and shared
     again in proportion to
 
-        capped plot area × density ** density_elasticity,
+        effective plot area × density ** density_elasticity,
         density = max(own floor-area ratio, reference FAR),
 
     the reference FAR being the ref_density_quantile of the pooled parcels'
     floor-area ratio in the same PLU zone label (zone type, then commune, where
-    the label has fewer than min_zone_parcels). The building keeps its
+    the label has fewer than min_zone_parcels). On a parcel built below that
+    density, plot area beyond surplus_plot_multiple × the zone's median plot
+    counts at surplus_plot_weight: a large garden is not as many building plots
+    (vacant plots sell for far less than proportionally more as they grow). A
+    parcel at or above the reference density uses its whole plot. The building keeps its
     depreciated replacement cost (`building_cost`) and market value becomes
     land + building, so land may exceed the old floor-proportional market value:
     no land-share clip applies to these parcels.
@@ -582,8 +599,10 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     q_ref = float(prm["ref_density_quantile"])
     q_cap = float(prm["plot_cap_quantile"])
     min_n = int(prm["min_zone_parcels"])
-    if not (0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0
-            and 0.5 <= q_cap <= 1.0 and min_n >= 1):
+    k_sur = float(prm["surplus_plot_multiple"])
+    w_sur = float(prm["surplus_plot_weight"])
+    if not (0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0 and 0.5 <= q_cap <= 1.0
+            and min_n >= 1 and k_sur >= 1.0 and 0.0 <= w_sur <= 1.0):
         raise ValueError(f"invalid SITE_VALUE parameters {prm}")
 
     out = p.copy()
@@ -603,18 +622,13 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
 
     far = floor[pool] / area[pool]
     plot = area[pool].clip(upper=area[pool].quantile(q_cap))
-    ref = pd.Series(far.quantile(q_ref), index=far.index)
-    for col in ("zone_typ", "zone_libelle"):          # coarse first, finest wins
-        if col not in out.columns:
-            continue
-        key = out.loc[pool, col].astype("object")
-        known = key.notna()
-        n = key[known].map(key[known].value_counts())
-        ok = n[n >= min_n].index
-        by_zone = far[ok].groupby(key[ok]).quantile(q_ref)
-        ref = ref.mask(key.index.isin(ok), key.map(by_zone))
+    zones = [out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
+             if c in out.columns]
+    ref = _zone_quantile(far, zones, q_ref, min_n)
+    typical_plot = _zone_quantile(area[pool], zones, 0.5, min_n)
     density = np.maximum(far, ref)
-    weight = plot * density ** theta
+    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(far < ref, 0.0)
+    weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
 
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
              if "iris" in out.columns else pd.Series("_commune", index=far.index))

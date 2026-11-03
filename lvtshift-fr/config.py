@@ -603,6 +603,14 @@ SITE_VALUE = {
     # Plot areas above this quantile of the commune's pooled parcels are capped
     # (parks of horizontal copropriétés, estates with farmland attached).
     "plot_cap_quantile": 0.99,
+    # Surplus land: on a parcel built below its zone's reference density, plot
+    # area beyond this multiple of the zone's median plot (it could be split
+    # into that many typical plots) counts at surplus_plot_weight. Vacant plot
+    # prices rise far less than in proportion to size (EPTB: elasticity 0.11
+    # at 2 000 m²), and in DVF house sales an extra m² of garden is worth
+    # 0.14–0.27 of a building-plot m² (Lyon, Montreuil, Aulnay, Ormesson).
+    "surplus_plot_multiple": 2.0,
+    "surplus_plot_weight": 0.25,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

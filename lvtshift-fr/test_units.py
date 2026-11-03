@@ -1078,6 +1078,32 @@ def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
         _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)
 
 
+def test_site_value_discounts_surplus_land_on_under_built_plots_only():
+    p = _site_frame()
+    # zone median plot 500 m²: a 3 000 m² plot is 1 000 m² of building land
+    # (2 × 500) plus 2 000 m² of surplus counted at a quarter
+    p.loc[0, "parcel_area_m2"] = 3000.0           # the house: FAR 0.05, below the zone's 2
+    p.loc[2, "parcel_area_m2"] = 3000.0           # the block on the same plot size...
+    p.loc[2, "floor_area_m2"] = 12000.0           # ...at FAR 4, above the reference
+    extra = p.iloc[[1, 1]].assign(idpar=["B2", "B3"])          # keep the zone median at 500
+    p = pd.concat([p, extra], ignore_index=True)
+    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                       "plot_cap_quantile": 1.0})
+    lv = out.set_index("idpar")["land_value"]
+    # house: (1 000 + 0.25 × 2 000) × 2 ** 0.5; block B: 500 × 2 ** 0.5
+    assert abs(lv["H"] / lv["B"] - 1500.0 / 500.0) < 1e-9
+    # the dense block uses its whole plot: 3 000 × 4 ** 0.5 against 500 × 2 ** 0.5
+    assert abs(lv["D"] / lv["B"] - (3000.0 * 2.0) / (500.0 * 2 ** 0.5)) < 1e-9
+    # a weight of 1 switches the discount off
+    out1 = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+                                        "plot_cap_quantile": 1.0, "surplus_plot_weight": 1.0})
+    lv1 = out1.set_index("idpar")["land_value"]
+    assert abs(lv1["H"] / lv1["B"] - 3000.0 / 500.0) < 1e-9
+    for bad in ({"surplus_plot_multiple": 0.5}, {"surplus_plot_weight": -0.1},
+                {"surplus_plot_weight": 1.5}):
+        _assert_raises(ValueError, estimate.site_value_land, _site_frame(), bad)
+
+
 def test_site_value_without_pooled_parcels_is_a_no_op():
     p = _site_frame()
     p["lv_flag"] = "built_drc"

@@ -288,6 +288,8 @@ def main():
                          "the existing density (sensitivity)")
     ap.add_argument("--site-elasticity", type=float, default=None,
                     help="override SITE_VALUE density_elasticity (sensitivity)")
+    ap.add_argument("--site-ref-quantile", type=float, default=None,
+                    help="override SITE_VALUE ref_density_quantile (sensitivity)")
     ap.add_argument("--cache-dir", default=None,
                     help="cache raw downloads here (resumable batch runs); "
                          "default: env LVTFR_CACHE_DIR, else no cache")
@@ -299,8 +301,9 @@ def main():
     if args.land:
         import dataclasses
         cfg = dataclasses.replace(cfg, land_concept=args.land)
-    site_value = (None if args.site_elasticity is None
-                  else {"density_elasticity": args.site_elasticity})
+    site_value = {k: v for k, v in (("density_elasticity", args.site_elasticity),
+                                    ("ref_density_quantile", args.site_ref_quantile))
+                  if v is not None} or None
     print(f"=== {cfg.name} ({cfg.insee_code}, dep {cfg.departement}) ===")
     deflator = None if args.no_deflator else estimate.deflator_factors(cfg)
     if deflator:
