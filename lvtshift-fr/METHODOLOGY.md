@@ -602,8 +602,16 @@ per-dwelling figure; without counts, it labels a building category's figure
 "par immeuble". The chart's percentage remains a parcel median, so the two
 figures can differ in sign, because large blocks weigh more in the
 per-dwelling median (Roubaix, blocks: +7.2 % per parcel, −5 € per dwelling).
-The disclosure rule is the income groups' rule: at least 11 parcels, every
-parcel counted, no parcel holding more than half the dwellings.
+The disclosure rule is the income groups' rule: at least 11 parcels with
+dwellings, every parcel counted, no parcel holding more than a tenth of the
+dwellings (`MAX_DWELLING_SHARE`). It was half until November 2026: a
+dwelling-weighted median lands on any building with 45 % of the dwellings unless
+the rest are lopsided, which would have published that building's own change
+(security review, 2026-11-03; nothing published was blanked by the change). The
+same counts give each building category's share of dwellings paying more and the
+typical household's change in % (`share_dwellings_paying_more_pct`,
+`household_median_change_pct`), shown under the Résultats win/lose chart beside
+the share of parcels.
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
@@ -829,8 +837,8 @@ group of fewer than 11 parcels (`export_web.MIN_GROUP_PARCELS`) is merged with a
 neighbour: a building-share band with its smaller adjacent band, a property
 category with "Other". Blanking alone would not do, since the commune total
 minus the other groups would rebuild it. A group still too small (an income
-fifth, "Other", a very small commune) keeps its count but none of its figures; a fifth in which one building holds more than half the dwellings
-publishes no household figures. Bucket values in euros are rounded to the
+fifth, "Other", a very small commune) keeps its count but none of its figures; a fifth in which one building holds more than a tenth of the dwellings,
+or with fewer than 11 parcels holding dwellings, publishes no household figures. Bucket values in euros are rounded to the
 thousand. `assert_aggregate_only` enforces these rules on export and on every
 published file (CI test).
 

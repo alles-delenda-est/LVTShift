@@ -157,8 +157,13 @@ def weighted_median(values, weights):
 # Disclosure control for the per-quintile group figures: a group must hold at
 # least this many residential parcels, and no parcel more than this share of
 # its dwellings, or its total and household figures are left unpublished.
+# The share was 0.5 until November 2026: a dwelling-weighted median lands on a
+# building with 45 % of the dwellings unless 91 % of the rest sit on one side,
+# which would publish that building's own % and € change (security review,
+# 2026-11-03). At 0.1 nothing published at the time was blanked (largest
+# building: 6.4 % of a category's dwellings, 5.2 % of an income fifth's).
 MIN_GROUP_PARCELS = 11
-MAX_DWELLING_SHARE = 0.5
+MAX_DWELLING_SHARE = 0.1
 # Income fifths are built from IRIS medians (Filosofi): with fewer than two
 # distinct IRIS incomes per fifth, a "fifth" is one neighbourhood, so the
 # breakdown is not published (Cahors, Figeac). Stated, not left to qcut.
@@ -190,7 +195,9 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
     # every residential parcel must carry a count (a member commune without a
     # sidecar would otherwise drop out of the weights but not of the total)
-    if n is not None and len(rsub) >= MIN_GROUP_PARCELS and n.notna().all() and n.sum() > 0:
+    # parcels with no dwelling carry no weight: they must not make up the floor
+    if (n is not None and n.notna().all() and n.sum() > 0
+            and int((n > 0).sum()) >= MIN_GROUP_PARCELS):
         pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan)
         hh = weighted_median(pct, n)
         hh_median = None if hh is None else round(hh, 1)
@@ -355,6 +362,8 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
         return none
     n = sub["n_dwellings"]
     if not n.notna().all() or n.sum() <= 0 or float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
+        return none
+    if int((n > 0).sum()) < MIN_GROUP_PARCELS:   # empty parcels make up no floor
         return none
     per = sub["tax_change"] / n.where(n > 0)
     med = weighted_median(per, n)
