@@ -383,10 +383,16 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
 
 def _category_total(sub: pd.DataFrame) -> dict:
     """A category's total change: the sum of its parcels' changes, in % of
-    today's tax (None where today's tax is 0, vacant land) and in euros
-    (rounded to the thousand). The median shows the typical parcel; the total
-    shows where the levy goes (La Rochelle: houses −5.4 % at the median,
-    +14.7 % in total, because a minority on large plots pay much more).
+    today's tax, or in euros (rounded to the thousand) only where today's tax
+    is 0 (vacant land) and a % is undefined. The median shows the typical
+    parcel; the total shows where the levy goes (La Rochelle: houses −5.4 % at
+    the median, +14.7 % in total, because a minority on large plots pay much
+    more).
+
+    Never both: the reform is revenue-neutral, so euro totals of every
+    category sum to zero and a withheld one would be the others' sum, negated
+    (security review, 2026-11-04). A % alone gives nothing to subtract, since
+    no category's tax today is published.
 
     Withheld (None) for a group below MIN_GROUP_PARCELS or when one parcel
     carries more than MAX_PARCEL_TAX_SHARE of the category's tax today or
@@ -403,8 +409,9 @@ def _category_total(sub: pd.DataFrame) -> dict:
         if tot > 0 and float(col.max()) > MAX_PARCEL_TAX_SHARE * tot:
             return none
     chg = float(new.sum() - cur.sum())
-    return {"total_change_pct": _pct(chg, float(cur.sum())) if cur.sum() > 0 else None,
-            "total_change_eur": round(chg, -3)}
+    if cur.sum() > 0:
+        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None}
+    return {"total_change_pct": None, "total_change_eur": round(chg, -3)}
 
 
 def build_by_category(df: pd.DataFrame) -> list:
@@ -690,6 +697,10 @@ def _check_small_groups(payload: dict) -> None:
                 if r.get("quintile") in qs:
                     filled = [f for f in BAND_QUINTILE_KEYS[1:] if r.get(f) is not None]
                     assert not filled, f"sensitivity leg: small fifth {r['quintile']} publishes {filled}"
+    # euro totals sum to zero across categories: one hidden would be recoverable
+    for r in payload.get("by_category") or []:
+        assert r.get("total_change_pct") is None or r.get("total_change_eur") is None, \
+            f"by_category: {r.get('category')} publishes its total in both % and €"
 
 
 def assert_aggregate_only(payload: dict) -> None:

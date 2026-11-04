@@ -554,7 +554,7 @@ def test_category_total_shows_where_the_levy_goes():
     cat = ew.build_by_category(pd.DataFrame(rows))[0]
     assert cat["median_change_pct"] == -5.0
     assert cat["total_change_pct"] == round(100 * (16 * -50 + 4 * 600) / 20000, 1)   # +8.0
-    assert cat["total_change_eur"] == round(16 * -50 + 4 * 600, -3)
+    assert cat["total_change_eur"] is None            # % only where a % exists
 
 
 def test_category_total_withheld_when_one_parcel_dominates_and_in_euros_for_vacant_land():
@@ -570,3 +570,37 @@ def test_category_total_withheld_when_one_parcel_dominates_and_in_euros_for_vaca
     small = ew.build_by_category(pd.DataFrame([vac] * 5 + [dict(vac, property_category="Commercial",
                                                                   current_tax=100.0)] * 12))
     assert all(r["total_change_eur"] is None for r in small if r["parcels"] < 11)
+
+
+def test_a_withheld_category_total_cannot_be_recovered_from_the_others():
+    # revenue-neutral commune: houses +4,000 €, flats −1,500 €, one dominated
+    # industrial category −4,500 € (withheld), vacant land +2,000 €
+    house = dict(property_category="Single Family Residential", current_tax=1000.0,
+                 new_tax=1200.0, tax_change=200.0, tax_change_pct=20.0)
+    flat = dict(property_category="Condominium", current_tax=1000.0, new_tax=900.0,
+                tax_change=-100.0, tax_change_pct=-10.0)
+    ind = dict(property_category="Industrial", current_tax=1000.0, new_tax=1000.0,
+               tax_change=0.0, tax_change_pct=0.0)
+    big = dict(ind, current_tax=20000.0, new_tax=15500.0, tax_change=-4500.0,
+               tax_change_pct=-22.5)
+    vac = dict(property_category="Vacant Land", current_tax=0.0, new_tax=2000.0 / 12,
+               tax_change=2000.0 / 12, tax_change_pct=np.nan)
+    df = pd.DataFrame([house] * 20 + [flat] * 15 + [ind] * 15 + [big] + [vac] * 12)
+    assert abs(df["tax_change"].sum()) < 1e-6                  # neutral by construction
+    rows = {r["category"]: r for r in ew.build_by_category(df)}
+    assert rows["Industrial"]["total_change_pct"] is None      # withheld
+    # no category publishes both, and only vacant land (no % possible) gives euros
+    assert all(r["total_change_pct"] is None or r["total_change_eur"] is None
+               for r in rows.values())
+    assert [c for c, r in rows.items() if r["total_change_eur"] is not None] == ["Vacant Land"]
+    # so the euro sum of the published totals says nothing about the withheld one
+    payload_rows = list(rows.values())
+    bad = [dict(r) for r in payload_rows]
+    bad[0]["total_change_pct"], bad[0]["total_change_eur"] = 5.0, 1000.0
+    try:
+        ew._check_small_groups({"by_category": bad})
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("a row with both totals passed the guard")
+    ew._check_small_groups({"by_category": payload_rows})

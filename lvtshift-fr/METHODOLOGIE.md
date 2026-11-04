@@ -685,10 +685,15 @@ chaque catégorie d'immeubles, la part des logements qui paient davantage et la
 variation du ménage type en % (`share_dwellings_paying_more_pct`,
 `household_median_change_pct`), affichées sous le graphique des gagnants et
 perdants de la page Résultats, à côté de la part des parcelles. Chaque catégorie
-publie aussi sa **variation totale** (`total_change_pct`, et `total_change_eur`
-au millier d'euros) : les médianes peuvent toutes baisser à produit constant
-quand une minorité paie beaucoup plus (La Rochelle, maisons : −5,4 % en
-médiane, +14,7 % au total). Un total n'est pas publié quand une seule parcelle
+publie aussi sa **variation totale** (`total_change_pct`) : les médianes peuvent
+toutes baisser à produit constant quand une minorité paie beaucoup plus
+(La Rochelle, maisons : −5,4 % en médiane, +14,7 % au total). Le terrain nu, qui
+ne paie rien aujourd'hui et n'a donc pas de %, publie son total en euros
+(`total_change_eur`, au millier d'euros). Aucune catégorie ne publie les deux :
+la réforme étant à produit constant, les totaux en euros des catégories d'une
+commune ont une somme nulle, et un total masqué se déduirait des autres (revue
+de sécurité du 4 novembre 2026). Un % seul ne permet aucune soustraction, car
+l'impôt actuel d'aucune catégorie n'est publié. Un total n'est pas publié quand une seule parcelle
 porte plus d'un dixième de l'impôt de la catégorie, aujourd'hui ou après la
 réforme (`MAX_PARCEL_TAX_SHARE`), car il serait alors proche de sa propre
 variation.
