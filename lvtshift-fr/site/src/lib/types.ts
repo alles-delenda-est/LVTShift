@@ -118,6 +118,16 @@ export interface Commune {
       surplus_plot_multiple?: number; surplus_plot_weight?: number;
       surplus_max_ref_far?: number;
     };
+    /** social housing: whether the run modelled today's exemptions; the RPLS
+     *  dwellings and the shares exempt / QPV-abated today are null where the
+     *  social landlord category is not publishable (absent in older payloads) */
+    social_housing?: {
+      modelled: boolean; tax_year?: number | null;
+      /** the Social Housing category: shown, folded into « Autre bâtiment », or no such parcel */
+      category?: "shown" | "folded" | "none";
+      rpls_dwellings?: number | null;
+      exempt_dwellings_pct?: number | null; qpv_abated_dwellings_pct?: number | null;
+    };
     /** parcels treated as exempt public property (count only; absent in older payloads) */
     exempt_public_parcels?: number;
     farmland_excluded_parcels?: number;

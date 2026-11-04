@@ -13,29 +13,31 @@ describe("impactSummary on the published data", () => {
     expect(s.territories).toBe(13);
   });
 
-  it("matches the central-case figures in the November 2026 site-value payloads", () => {
+  // November 2026 social-housing payloads: social landlords' parcels left the
+  // household figures and today's exemptions raised everyone else's bill
+  it("matches the central-case figures in the November 2026 social-housing payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
-    expect(s.smallBuildingsPayLess).toBe(4);
+    expect(s.smallBuildingsPayLess).toBe(6);
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
     expect(s.poorestPayLess).toBe(11);
-    expect(s.poorestBelowRichest).toBe(11);
-    expect(s.houseMedianMin).toBe(-15.5); // Roubaix
-    expect(s.houseMedianMax).toBe(118.3); // Paris
-    expect(s.shiftMin).toBe(19.9); // Paris
-    expect(s.shiftMax).toBe(35.7); // Grenoble
+    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: −1.5 % vs −1.6 %
+    expect(s.houseMedianMin).toBe(-22.9); // Roubaix
+    expect(s.houseMedianMax).toBe(107); // Paris
+    expect(s.shiftMin).toBe(20.7); // Paris
+    expect(s.shiftMax).toBe(36.3); // Grenoble
   });
 
-  it("matches the local-variant figures in the November 2026 site-value payloads", () => {
+  it("matches the local-variant figures in the November 2026 social-housing payloads", () => {
     expect(s.alt).toEqual({
-      housesPayMore: 11, // all but Figeac and La Rochelle
-      smallBuildingsPayLess: 3,
-      blocksPayLess: 10, // Montreuil, Paris and Lyon turn positive
+      housesPayMore: 10,
+      smallBuildingsPayLess: 5,
+      blocksPayLess: 13,
       poorestAnalysable: 11,
-      poorestPayLess: 10, // Villeurbanne turns positive
-      poorestBelowRichest: 11,
+      poorestPayLess: 8,
+      poorestBelowRichest: 10, // Villeurbanne: +11.0 % vs +9.9 %
     });
-    expect(s.poorestBelowRichestBoth).toBe(11);
+    expect(s.poorestBelowRichestBoth).toBe(10);
   });
 });
 
