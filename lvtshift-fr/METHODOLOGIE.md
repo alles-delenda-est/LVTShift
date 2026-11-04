@@ -684,7 +684,14 @@ le changement n'a masqué aucun chiffre publié). Les mêmes décomptes donnent,
 chaque catégorie d'immeubles, la part des logements qui paient davantage et la
 variation du ménage type en % (`share_dwellings_paying_more_pct`,
 `household_median_change_pct`), affichées sous le graphique des gagnants et
-perdants de la page Résultats, à côté de la part des parcelles.
+perdants de la page Résultats, à côté de la part des parcelles. Chaque catégorie
+publie aussi sa **variation totale** (`total_change_pct`, et `total_change_eur`
+au millier d'euros) : les médianes peuvent toutes baisser à produit constant
+quand une minorité paie beaucoup plus (La Rochelle, maisons : −5,4 % en
+médiane, +14,7 % au total). Un total n'est pas publié quand une seule parcelle
+porte plus d'un dixième de l'impôt de la catégorie, aujourd'hui ou après la
+réforme (`MAX_PARCEL_TAX_SHARE`), car il serait alors proche de sa propre
+variation.
 
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en

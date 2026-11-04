@@ -543,3 +543,30 @@ def test_built_at_cap_counts_the_residual_clip_when_the_sidecar_has_it():
     assert ew.built_at_cap_pct(df) == 100.0                      # old runs: by share
     df["residual_at_cap"] = [True] * 4 + [False] * (n - 4)
     assert ew.built_at_cap_pct(df) == 10.0                       # 4 of 40 residuals clipped
+
+
+def test_category_total_shows_where_the_levy_goes():
+    # most houses pay a little less, a few pay much more: median down, total up
+    rows = ([dict(property_category="Single Family Residential", current_tax=1000.0,
+                  new_tax=950.0, tax_change=-50.0, tax_change_pct=-5.0)] * 16
+            + [dict(property_category="Single Family Residential", current_tax=1000.0,
+                    new_tax=1600.0, tax_change=600.0, tax_change_pct=60.0)] * 4)
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["median_change_pct"] == -5.0
+    assert cat["total_change_pct"] == round(100 * (16 * -50 + 4 * 600) / 20000, 1)   # +8.0
+    assert cat["total_change_eur"] == round(16 * -50 + 4 * 600, -3)
+
+
+def test_category_total_withheld_when_one_parcel_dominates_and_in_euros_for_vacant_land():
+    base = dict(property_category="Industrial", current_tax=1000.0, new_tax=900.0,
+                tax_change=-100.0, tax_change_pct=-10.0)
+    big = dict(base, current_tax=50000.0, new_tax=20000.0, tax_change=-30000.0, tax_change_pct=-60.0)
+    cat = ew.build_by_category(pd.DataFrame([base] * 15 + [big]))[0]
+    assert cat["total_change_pct"] is None and cat["total_change_eur"] is None
+    vac = dict(property_category="Vacant Land", current_tax=0.0, new_tax=200.0,
+               tax_change=200.0, tax_change_pct=np.nan)
+    v = ew.build_by_category(pd.DataFrame([vac] * 12))[0]
+    assert v["total_change_pct"] is None and v["total_change_eur"] == 2000.0
+    small = ew.build_by_category(pd.DataFrame([vac] * 5 + [dict(vac, property_category="Commercial",
+                                                                  current_tax=100.0)] * 12))
+    assert all(r["total_change_eur"] is None for r in small if r["parcels"] < 11)

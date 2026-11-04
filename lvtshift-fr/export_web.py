@@ -164,6 +164,10 @@ def weighted_median(values, weights):
 # building: 6.4 % of a category's dwellings, 5.2 % of an income fifth's).
 MIN_GROUP_PARCELS = 11
 MAX_DWELLING_SHARE = 0.1
+# A category's total change is published only if no parcel carries more than
+# this share of the category's tax, today or under the reform: otherwise the
+# total would be close to that one parcel's own change.
+MAX_PARCEL_TAX_SHARE = 0.1
 # Income fifths are built from IRIS medians (Filosofi): with fewer than two
 # distinct IRIS incomes per fifth, a "fifth" is one neighbourhood, so the
 # breakdown is not published (Cahors, Figeac). Stated, not left to qcut.
@@ -377,6 +381,32 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
     }
 
 
+def _category_total(sub: pd.DataFrame) -> dict:
+    """A category's total change: the sum of its parcels' changes, in % of
+    today's tax (None where today's tax is 0, vacant land) and in euros
+    (rounded to the thousand). The median shows the typical parcel; the total
+    shows where the levy goes (La Rochelle: houses −5.4 % at the median,
+    +14.7 % in total, because a minority on large plots pay much more).
+
+    Withheld (None) for a group below MIN_GROUP_PARCELS or when one parcel
+    carries more than MAX_PARCEL_TAX_SHARE of the category's tax today or
+    under the reform.
+    """
+    none = {"total_change_pct": None, "total_change_eur": None}
+    if _small(len(sub)) or not {"current_tax", "new_tax", "tax_change"} <= set(sub.columns):
+        return none
+    cur, new = sub["current_tax"].astype(float), sub["new_tax"].astype(float)
+    if not (np.isfinite(cur).all() and np.isfinite(new).all()):
+        return none
+    for col in (cur, new):
+        tot = float(col.sum())
+        if tot > 0 and float(col.max()) > MAX_PARCEL_TAX_SHARE * tot:
+            return none
+    chg = float(new.sum() - cur.sum())
+    return {"total_change_pct": _pct(chg, float(cur.sum())) if cur.sum() > 0 else None,
+            "total_change_eur": round(chg, -3)}
+
+
 def build_by_category(df: pd.DataFrame) -> list:
     n = len(df)
     # categories too small to publish join "Other" (blanking alone would leave
@@ -401,6 +431,7 @@ def build_by_category(df: pd.DataFrame) -> list:
             "count_paying_more": None if small else int((sub["tax_change"] > 0).sum()),
             "share_paying_more_pct": (None if small else
                                       _pct(int((sub["tax_change"] > 0).sum()), len(sub))),
+            **_category_total(sub),
             # residential only; None for other categories and older runs
             **_per_dwelling(sub),
         })
@@ -623,7 +654,7 @@ SMALL_GROUP_BLANK = {
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct", "median_change_eur_per_dwelling",
                     "household_median_change_pct", "share_dwellings_paying_more_pct",
-                    "dwellings"),
+                    "total_change_pct", "total_change_eur", "dwellings"),
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
                            "total_change_pct", "household_median_change_pct", "dwellings"),
 }

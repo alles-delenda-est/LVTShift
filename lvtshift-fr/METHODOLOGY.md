@@ -611,7 +611,13 @@ the rest are lopsided, which would have published that building's own change
 same counts give each building category's share of dwellings paying more and the
 typical household's change in % (`share_dwellings_paying_more_pct`,
 `household_median_change_pct`), shown under the Résultats win/lose chart beside
-the share of parcels.
+the share of parcels. Each category also publishes its **total change**
+(`total_change_pct`, and `total_change_eur` to the thousand): medians can all
+fall while the levy is unchanged when a minority pays much more (La Rochelle,
+houses: −5.4 % at the median, +14.7 % in total). A total is withheld when one
+parcel carries more than a tenth of the category's tax, today or under the
+reform (`MAX_PARCEL_TAX_SHARE`), since it would then be close to that parcel's
+own change.
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
