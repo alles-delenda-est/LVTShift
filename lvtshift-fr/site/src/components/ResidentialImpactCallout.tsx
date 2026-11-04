@@ -111,7 +111,7 @@ export default function ResidentialImpactCallout() {
         cas central : dans la variante locale sur la taxe actuelle, les hausses
         sont plus fréquentes, surtout en ville. Le sol étant évalué comme
         s&apos;il était nu, l&apos;immeuble collectif, dont le sol est partagé
-        entre de nombreux logements, paie moins presque partout ; la maison
+        entre de nombreux logements, paie moins partout ; la maison
         individuelle sur un terrain de valeur paie souvent davantage, surtout
         là où le foncier est cher et les voisins plus denses.{" "}
         <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">

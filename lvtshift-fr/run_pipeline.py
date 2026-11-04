@@ -24,6 +24,7 @@ from lvt.lvt_utils import model_split_rate_tax, save_standard_export  # noqa: E4
 
 import estimate  # noqa: E402
 from config import GRENOBLE as CFG, slug_of  # noqa: E402
+from social_housing import SOCIAL_CATEGORY_SHARE  # noqa: E402
 
 # French -> LVTShift standard property categories (exact strings from
 # lvt_utils.STANDARD_PROPERTY_CATEGORIES)
@@ -46,6 +47,24 @@ FR_RESIDENTIAL_CATEGORIES = [
     "Condominium",                     # appartement
     "Large Multi-Family (5+ units)",   # immeuble_collectif
 ]
+
+# Parcels held mainly by social landlords (social_housing.parcel_social): the
+# TFPB is not recoverable from tenants and social rents are capped, so the
+# reform's change falls on the landlord. A category of their own, outside the
+# residential set and so outside every household figure. Not an upstream
+# standard category (save_standard_export keeps it, with a warning).
+SOCIAL_CATEGORY = "Social Housing"
+SOCIAL_HOST_CATEGORIES = ("maison", "appartement", "immeuble_collectif", "dependance")
+
+
+def social_landlord_parcels(p: pd.DataFrame) -> pd.Series:
+    """True where social landlords hold at least SOCIAL_CATEGORY_SHARE of a
+    residential (or annex) parcel's housing floor."""
+    if "social_share" not in p.columns:
+        return pd.Series(False, index=p.index)
+    share = pd.to_numeric(p["social_share"], errors="coerce").fillna(0.0)
+    return (share >= SOCIAL_CATEGORY_SHARE) & p["category_fr"].isin(SOCIAL_HOST_CATEGORIES)
+
 
 # Unbuilt agricultural and natural land (PLU zones A and N, run_commune) is
 # outside the reform: it keeps today's TFPNB and its exemptions, so it takes no
@@ -93,7 +112,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         out_dir: str = "output", make_report: bool = True, cfg=CFG,
         deflator: dict | None = None,
         baseline_split: dict | None = None,
-        site_value: dict | None = None) -> pd.DataFrame:
+        site_value: dict | None = None,
+        social_summary: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
@@ -107,7 +127,10 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
        the commune's TFPB base (ingest.fetch_rei_baseline_split); when given,
        today's tax is calibrated by tax group, otherwise shared by floor area.
        site_value: overrides of config.SITE_VALUE (sensitivity runs); used when
-       cfg.land_concept is "site"."""
+       cfg.land_concept is "site".
+       social_summary: commune-level counts from social_housing.parcel_social,
+       recorded in the households meta (parcels then carry social_share,
+       hlm_tax_factor and landlord_key)."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
@@ -147,6 +170,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
                             if w_low else p["current_tax"])
 
     p["PROPERTY_CATEGORY"] = p["category_fr"].map(CATEGORY_MAP).fillna("other")
+    # after valuation: the category changes who bears the change, not the value
+    p.loc[social_landlord_parcels(p), "PROPERTY_CATEGORY"] = SOCIAL_CATEGORY
 
     # a single non-finite value would poison the solver's rates for everyone
     for col in ("market_value", "land_value", "improvement_value", "current_tax"):
@@ -221,7 +246,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
           f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
 
-    _write_households(p, buildings, out_dir, name, land_method(cfg, site_value))
+    _write_households(p, buildings, out_dir, name, land_method(cfg, site_value),
+                      social_summary)
     _write_baseline(p, baseline, out_dir, name)
     if make_report:
         _write_report(out, out_dir, cfg)
@@ -260,6 +286,8 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
     taxable = q["floor_area_m2"].fillna(0).to_numpy() > 0
     if "is_exempt_public" in p.columns:
         taxable &= ~p["is_exempt_public"].fillna(False).astype(bool).to_numpy()
+    # exempt or abated social housing floor is outside the REI base
+    q["floor_housing"] = q["floor_housing"].fillna(0) * _housing_factor(p).to_numpy()
     totals = {k: float(q.loc[taxable, f"floor_{k}"].fillna(0).sum())
               for k in estimate.BUCKETS}
     split, w, note = _weights_for(split, "professional", totals, M)
@@ -272,6 +300,14 @@ def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
     print(f"[{cfg.name}] baseline weights per m² vs housing: industrial "
           f"{w['industrial']:.2f}, professional {w['professional']:.2f} ({note})")
     return out
+
+
+def _housing_factor(p: pd.DataFrame) -> pd.Series:
+    """Today's TFPB weight of each parcel's housing floor (social_housing):
+    1 outside social housing, 0 for exempt dwellings, 0.7 for QPV-abated."""
+    if "hlm_tax_factor" not in p.columns:
+        return pd.Series(1.0, index=p.index)
+    return pd.to_numeric(p["hlm_tax_factor"], errors="coerce").fillna(1.0)
 
 
 def _weights_for(split: dict, pro_key: str, totals: dict, M: dict) -> tuple:
@@ -301,10 +337,11 @@ def _write_baseline(p: pd.DataFrame, baseline: dict, out_dir: str, name: str) ->
         tax = p["current_tax"]
         tot = float(tax.sum())
         shares = {}
+        floor = {k: p[f"floor_{k}"].fillna(0.0) for k in estimate.BUCKETS}
+        floor["housing"] = floor["housing"] * _housing_factor(p)   # taxable floor
         for k in estimate.BUCKETS:
-            f = p[f"floor_{k}"].fillna(0.0)
-            wf = sum(p[f"floor_{j}"].fillna(0.0) * baseline["weights"][j]
-                     for j in estimate.BUCKETS)
+            f = floor[k]
+            wf = sum(floor[j] * baseline["weights"][j] for j in estimate.BUCKETS)
             part = (tax * (f * baseline["weights"][k] / wf.where(wf > 0))).fillna(0.0)
             shares[k] = round(float(part.sum()) / tot, 4) if tot > 0 else None
         rec["achieved"] = shares
@@ -356,13 +393,27 @@ def land_method(cfg, site_value: dict | None = None) -> dict:
 
 
 def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
-                      name: str, land: dict | None = None) -> None:
+                      name: str, land: dict | None = None,
+                      social: dict | None = None) -> None:
     """Sidecar to the standard export (whose 16 columns are fixed upstream):
     same rows in the same order, with new_tax repeated so a reader can check
-    the alignment. Local only — output/ is git-ignored and never published."""
+    the alignment. Local only — output/ is git-ignored and never published.
+
+    Social landlords' dwellings are no household's: none on a Social Housing
+    parcel, and only the private share elsewhere. landlord_key (a hashed
+    label, reversible from the public SIREN list: it never leaves the
+    machine) lets the export count the landlords behind the category."""
     import hashlib
     import json
     side = dwellings_per_parcel(p, buildings)
+    if "social_share" in p.columns:
+        share = pd.to_numeric(p["social_share"], errors="coerce").fillna(0.0).clip(0, 1)
+        soc = (p["PROPERTY_CATEGORY"] == SOCIAL_CATEGORY).to_numpy()
+        side["n_dwellings"] = np.where(soc, 0.0, side["n_dwellings"] * (1.0 - share.to_numpy())
+                                       ).round(2)
+        side["social_share"] = share.round(4).values
+        side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
+                                        .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
     # today's tax at the lower-bound professional share (baseline sensitivity)
     if "current_tax_low" in p.columns:
@@ -380,6 +431,8 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
             "rows": int(len(side))}
     if land is not None:            # how built land was valued (export provenance)
         meta["land_value"] = land
+    if social is not None:          # commune-level social housing counts
+        meta["social_housing"] = social
     (Path(out_dir) / f"{name}.households.meta.json").write_text(
         json.dumps(meta) + "\n", encoding="utf-8")
     print(f"[{name}] dwellings: {side['n_dwellings'].sum():,.0f} "

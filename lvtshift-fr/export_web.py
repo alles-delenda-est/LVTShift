@@ -31,12 +31,25 @@ CATEGORY_LABELS_FR = {
     "Commercial": "Commerce",
     "Industrial": "Industriel",
     "Vacant Land": "Terrain nu / non bâti",
+    "Social Housing": "Logement social (bailleurs)",
     "Other": "Autre bâtiment",
     "other": "Autre bâtiment",
 }
+# Social Housing (run_pipeline.SOCIAL_CATEGORY) is not residential here: its
+# change falls on the landlord, so it stays out of every household figure.
 FR_RESIDENTIAL = {
     "Single Family Residential", "Condominium", "Large Multi-Family (5+ units)",
 }
+SOCIAL_CATEGORY = "Social Housing"
+# The Social Housing category, and the social housing counts in the
+# provenance, are published only where at least this many landlords hold its
+# parcels and none carries more than MAX_LANDLORD_SHARE of its tax, today or
+# under the reform: otherwise a figure would describe one or two named
+# businesses (RPLS diffusion rules: no statistic identifying a landlord; the
+# two rules are those of French business statistics' secrecy). Otherwise the
+# category joins "Other".
+MIN_SOCIAL_LANDLORDS = 3
+MAX_LANDLORD_SHARE = 0.85
 
 
 def _slug(cfg) -> str:
@@ -133,6 +146,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
     if "residual_at_cap" in side.columns:
         df = df.assign(residual_at_cap=_strict_flag(side["residual_at_cap"],
                                                     side_path.name).to_numpy())
+    if "landlord_key" in side.columns:      # hashed label: for counting landlords only
+        keys = side["landlord_key"].fillna("").astype(str).to_numpy()
+        df = df.assign(landlord_key=keys)
     return df
 
 
@@ -414,8 +430,64 @@ def _category_total(sub: pd.DataFrame) -> dict:
     return {"total_change_pct": None, "total_change_eur": round(chg, -3)}
 
 
+def social_landlords(df: pd.DataFrame) -> int:
+    """Distinct landlords behind the Social Housing parcels (0 without keys)."""
+    if "landlord_key" not in df.columns:
+        return 0
+    keys = df.loc[df["property_category"] == SOCIAL_CATEGORY, "landlord_key"]
+    return int(keys[keys.fillna("").astype(str) != ""].nunique())
+
+
+# Every tax the dominance test reads: today's under both baselines (in a
+# baseline leg, current_tax is the variant and current_tax_central the
+# central one) and the reform's, so every leg takes the same decision.
+DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax")
+
+
+def social_disclosable(df: pd.DataFrame) -> bool:
+    """May the Social Housing figures be published? At least
+    MIN_SOCIAL_LANDLORDS landlords, none holding more than MAX_LANDLORD_SHARE
+    of the category's tax today (under either baseline) or under the reform
+    (parcels of unknown landlord count in the total, never as a landlord)."""
+    if social_landlords(df) < MIN_SOCIAL_LANDLORDS:
+        return False
+    sub = df[df["property_category"] == SOCIAL_CATEGORY]
+    key = sub["landlord_key"].fillna("").astype(str)
+    for col in DOMINANCE_TAX_COLS:
+        if col not in sub.columns:
+            continue
+        tax = sub[col].astype(float)
+        tot = float(tax.sum())
+        if tot > 0 and float(tax[key != ""].groupby(key[key != ""]).sum().max()) \
+                > MAX_LANDLORD_SHARE * tot:
+            return False
+    return True
+
+
+def _median_change_pct(sub: pd.DataFrame):
+    """Median % change, a parcel that pays nothing today counting as a rise
+    (or a fall) of unbounded size rather than being left out: social housing
+    exempt today all goes from 0 € to a land tax. None when the median itself
+    falls on such a parcel (vacant land) or nothing is defined."""
+    pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).astype(float)
+    if {"current_tax", "tax_change"} <= set(sub.columns):
+        zero = sub["current_tax"].astype(float) <= 0
+        chg = sub["tax_change"].astype(float)
+        pct = pct.mask(zero & (chg > 0), np.inf).mask(zero & (chg < 0), -np.inf) \
+                 .mask(zero & (chg == 0), 0.0)
+    pct = pct.dropna()
+    if not len(pct):
+        return None
+    med = float(np.median(pct.to_numpy()))
+    return round(med, 1) if math.isfinite(med) else None
+
+
 def build_by_category(df: pd.DataFrame) -> list:
     n = len(df)
+    # Social Housing that would describe one or two landlords: into "Other"
+    if (df["property_category"] == SOCIAL_CATEGORY).any() and not social_disclosable(df):
+        df = df.assign(property_category=df["property_category"].replace(
+            SOCIAL_CATEGORY, "Other"))
     # categories too small to publish join "Other" (blanking alone would leave
     # their counts recoverable from the commune totals)
     sizes = df["property_category"].value_counts()
@@ -425,15 +497,14 @@ def build_by_category(df: pd.DataFrame) -> list:
             ~df["property_category"].isin(tiny), "Other"))
     out = []
     for cat, sub in df.groupby("property_category"):
-        chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
         small = _small(len(sub))
+        med_pct = _median_change_pct(sub)
         out.append({
             "category": cat,
             "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
             "parcels": int(len(sub)),
             "share_of_parcels_pct": _pct(len(sub), n),
-            "median_change_pct": (round(float(chg_pct.median()), 1)
-                                  if len(chg_pct) and not small else None),
+            "median_change_pct": None if small else med_pct,
             "median_change_eur": None if small else round(float(sub["tax_change"].median()), 0),
             "count_paying_more": None if small else int((sub["tax_change"] > 0).sum()),
             "share_paying_more_pct": (None if small else
@@ -573,7 +644,8 @@ def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False,
     base = land + float(df["taxable_improvement_value"].sum())
     share = land / base if base else 0.0
     new = df["new_tax"].to_numpy(dtype=float)
-    low = df.assign(current_tax=df["current_tax_low"])
+    # the central baseline rides along, so the leg folds what the central rows fold
+    low = df.assign(current_tax=df["current_tax_low"], current_tax_central=df["current_tax"])
     return {
         "pro_scale_central": M["pro_undercount_scale"],
         "pro_scale_low": M["pro_undercount_scale_low"],
@@ -628,7 +700,7 @@ MEMBER_KEYS = {
 }
 PARCEL_ID_RE = re.compile(r"\b\d[\dAB]\d{3}[0-9]{3}[0-9A-Z]{2}\d{4}\b")
 IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
-FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$")
+FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$", "landlord_key")
 
 
 def _check_leg(g: dict, what: str) -> None:
@@ -703,6 +775,38 @@ def _check_small_groups(payload: dict) -> None:
             f"by_category: {r.get('category')} publishes its total in both % and €"
 
 
+SOCIAL_PROVENANCE_KEYS = {"modelled", "tax_year", "category", "rpls_dwellings",
+                          "exempt_dwellings_pct", "qpv_abated_dwellings_pct"}
+SOCIAL_COUNT_FIELDS = ("rpls_dwellings", "exempt_dwellings_pct", "qpv_abated_dwellings_pct")
+# the landlord key is 12 hex characters: no string of that shape may appear
+_LANDLORD_KEY_SHAPE = re.compile(r'"[0-9a-f]{12}"')
+
+
+def _check_social(payload: dict) -> None:
+    """Social housing guard: the provenance block holds known scalar keys only,
+    its counts only where the Social Housing category is shown, and no
+    sensitivity leg shows a category the central rows do not."""
+    soc = (payload.get("provenance") or {}).get("social_housing")
+    central = {r.get("category") for r in payload.get("by_category") or []}
+    if soc is not None:
+        assert isinstance(soc, dict) and set(soc) <= SOCIAL_PROVENANCE_KEYS, \
+            f"unexpected social_housing keys: {set(soc) - SOCIAL_PROVENANCE_KEYS if isinstance(soc, dict) else soc}"
+        assert all(v is None or isinstance(v, (bool, str, int, float)) for v in soc.values()), \
+            "non-scalar value in social_housing"
+        assert soc.get("category") in (None, "shown", "folded", "none"), \
+            f"unknown social_housing category {soc.get('category')!r}"
+        if soc.get("category") != "shown" or SOCIAL_CATEGORY not in central:
+            filled = [k for k in SOCIAL_COUNT_FIELDS if soc.get(k) is not None]
+            assert not filled, f"social_housing publishes {filled} without a published category"
+    if payload.get("by_category") is None:      # a partial payload (tests): no rows to match
+        return
+    legs = [(payload.get("headline_sensitivity") or {}).get(x) for x in ("base", "low", "high")]
+    legs += [(payload.get("baseline_sensitivity") or {}).get(x) for x in ("central", "low")]
+    for leg in legs:
+        extra = {r.get("category") for r in (leg or {}).get("by_category") or []} - central
+        assert not extra, f"sensitivity leg shows categories the central rows do not: {extra}"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -738,9 +842,11 @@ def assert_aggregate_only(payload: dict) -> None:
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
+    _check_social(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
+    assert not _LANDLORD_KEY_SHAPE.search(blob), "a landlord-key-shaped string leaked into payload"
     # value-level guard: no cadastral parcel id (14 chars, e.g. 75101000AB0002)
     # or 9-digit IRIS code may appear anywhere, whatever the key is called
     assert not PARCEL_ID_RE.search(blob), "a parcel id leaked into payload"
@@ -816,6 +922,53 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     return out
 
 
+SOCIAL_COUNTS = ("rpls_dwellings", "exempt_dwellings", "qpv_abated_dwellings")
+
+
+def load_social_counts(commune_key: str, out_dir: str = "output") -> dict | None:
+    """The run's commune-level social housing counts (households meta), or
+    None for a run that did not model social housing. Integers only."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.households.meta.json"
+    rec = json.loads(path.read_text("utf-8")) if path.exists() else {}
+    soc = rec.get("social_housing") if isinstance(rec, dict) else None
+    if soc is None:
+        return None
+    if not isinstance(soc, dict):
+        raise ValueError(f"{path}: invalid social_housing record")
+    out = {}
+    for k in SOCIAL_COUNTS + ("tax_year",):
+        v = soc.get(k)
+        if isinstance(v, bool) or not isinstance(v, int) or v < 0:
+            raise ValueError(f"{path}: social_housing.{k} must be a count, got {v!r}")
+        out[k] = v
+    if out["exempt_dwellings"] + out["qpv_abated_dwellings"] > out["rpls_dwellings"]:
+        raise ValueError(f"{path}: social_housing counts do not add up")
+    return out
+
+
+def social_provenance(counts: list, df: pd.DataFrame, by_category: list) -> dict:
+    """Published social housing summary: modelled or not; whether the Social
+    Housing category is shown, folded into "Other" (too few landlords, one
+    dominant, or too few parcels) or absent; and where it is shown, the RPLS
+    dwellings and the shares exempt and QPV-abated today (whole communes)."""
+    if not counts or any(c is None for c in counts):
+        return {"modelled": False}
+    tot = {k: sum(c[k] for c in counts) for k in SOCIAL_COUNTS}
+    years = {c["tax_year"] for c in counts}
+    shown = any(r.get("category") == SOCIAL_CATEGORY for r in by_category)
+    present = bool((df["property_category"] == SOCIAL_CATEGORY).any())
+    out = {"modelled": True, "tax_year": years.pop() if len(years) == 1 else None,
+           "category": "shown" if shown else "folded" if present else "none",
+           "rpls_dwellings": None,
+           "exempt_dwellings_pct": None, "qpv_abated_dwellings_pct": None}
+    if shown and social_disclosable(df) and tot["rpls_dwellings"] > 0:
+        out["rpls_dwellings"] = tot["rpls_dwellings"]
+        out["exempt_dwellings_pct"] = _pct(tot["exempt_dwellings"], tot["rpls_dwellings"])
+        out["qpv_abated_dwellings_pct"] = _pct(tot["qpv_abated_dwellings"], tot["rpls_dwellings"])
+    return out
+
+
 def _territory_land_method(present: list, out_dir: str) -> dict:
     """The members' common land method, else 'mixed' (parameters dropped)."""
     recs = [load_land_method(k, out_dir) for k in present]
@@ -839,6 +992,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     cfg = COMMUNES[commune_key]
     df = load_parcels(commune_key, out_dir)
     baseline = load_baseline(commune_key, out_dir)
+    by_category = build_by_category(df)
     return {
         "commune_key": commune_key,
         "kind": "commune",
@@ -849,7 +1003,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         "model_type": f"split_rate:{cfg.split_rate_ratio}",
         "headline": build_headline(df),
         "headline_sensitivity": build_headline_sensitivity(df, cfg.split_rate_ratio),
-        "by_category": build_by_category(df),
+        "by_category": by_category,
         "by_income_quintile": build_by_income_quintile(df),
         "by_improvement_ratio": build_buckets(df),
         "baseline_sensitivity": build_baseline_sensitivity(
@@ -860,6 +1014,8 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "activity_land_ratio": getattr(cfg, "activity_land_ratio", None),
             "current_tax_baseline": baseline,
             "land_value": load_land_method(commune_key, out_dir),
+            "social_housing": social_provenance(
+                [load_social_counts(commune_key, out_dir)], df, by_category),
             "land_share_bounds": list(cfg.land_share_bounds),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
@@ -996,6 +1152,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
     members.sort(key=lambda m: m["neutral_levy_eur"], reverse=True)
     within, within_cov = build_by_income_quintile_within(df)
     tb = _territory_baseline(present, out_dir)
+    by_category = build_by_category(df)
     return {
         "commune_key": territory_key,
         "kind": "territory",
@@ -1006,7 +1163,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         "model_type": f"split_rate:{ratio}",
         "headline": build_headline(df),
         "headline_sensitivity": build_territory_sensitivity(df, ratio),
-        "by_category": build_by_category(df),
+        "by_category": by_category,
         # metro-wide quintiles: IRIS incomes ranked across the whole ring
         "by_income_quintile": build_by_income_quintile(df),
         # same, ranked inside each commune (isolates within-jurisdiction incidence)
@@ -1027,6 +1184,8 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
             "current_tax_baseline": tb,
             "land_value": _territory_land_method(present, out_dir),
+            "social_housing": social_provenance(
+                [load_social_counts(k, out_dir) for k in present], df, by_category),
             "exempt_public_parcels": df.attrs.get("exempt_parcels", 0),
             "farmland_excluded_parcels": df.attrs.get("farmland_excluded_parcels", 0),
             "land_share_bounds": list(COMMUNES[present[0]].land_share_bounds),

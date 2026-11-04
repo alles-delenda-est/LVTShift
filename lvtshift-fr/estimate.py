@@ -786,7 +786,8 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
                 category_weights: dict | None = None,
                 category_col: str = "category_fr",
                 exempt_col: str | None = "is_exempt_public",
-                bucket_weights: dict | None = None) -> pd.DataFrame:
+                bucket_weights: dict | None = None,
+                housing_factor_col: str | None = "hlm_tax_factor") -> pd.DataFrame:
     """Distribute the commune's foncier-bâti (FB) produit across parcels.
 
     THE honestly-flagged weak link (replaced by Fichiers-Fonciers parcel VLC when
@@ -815,6 +816,13 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
       matches the commune's official REI split (industrial establishments,
       professional premises, housing + other). This is the published baseline;
       plain floor area remains the fallback when the REI lines are missing.
+
+    * **Social housing exemptions** (``housing_factor_col``, from
+      social_housing.parcel_social): the weight of a parcel's housing floor is
+      multiplied by its factor (0 where every dwelling is exempt, 0.7 where all
+      are abated in a QPV), so the housing group's produit falls on taxable
+      floor only, as in the REI. On the plain floor-area baseline, which has no
+      housing floor of its own, the factor applies to the whole parcel.
     """
     out = p.copy()
     w = out[list(vlc_proxy_cols)].prod(axis=1).fillna(0.0).clip(lower=0)
@@ -824,6 +832,11 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         w = w.where(~out[exempt_col].fillna(False).astype(bool), 0.0)
     if category_weights and category_col in out.columns:   # sensitivity only
         w = w * out[category_col].map(category_weights).fillna(1.0)
+    hf = None
+    if housing_factor_col and housing_factor_col in out.columns:
+        hf = pd.to_numeric(out[housing_factor_col], errors="coerce").fillna(1.0)
+        if not ((hf >= 0) & (hf <= 1)).all():
+            raise ValueError(f"{housing_factor_col} must lie in [0, 1]")
     if bucket_weights:      # calibrated baseline: weighted floor by tax group
         bad = {k: v for k, v in bucket_weights.items()
                if not (np.isfinite(float(v)) and float(v) > 0)}
@@ -834,8 +847,17 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         if all(c in out.columns for c in cols):
             wf = sum(out[f"floor_{k}"].fillna(0.0) * float(bucket_weights[k])
                      for k in BUCKETS)
+            taxed = wf
+            if hf is not None:      # exempt / abated social housing floor
+                taxed = wf - out["floor_housing"].fillna(0.0) * float(
+                    bucket_weights["housing"]) * (1.0 - hf)
             # parcels with a building but no grouped floor keep plain floor area
-            w = w.where(wf <= 0, wf.where(w > 0, 0.0))
+            w = w.where(wf <= 0, taxed.clip(lower=0.0).where(w > 0, 0.0))
+            if hf is not None:
+                w = w.where(wf > 0, w * hf)
+            hf = None
+    if hf is not None:              # plain floor area: the factor on the whole parcel
+        w = w * hf
     total = w.sum()
     if commune_tfpb_produit > 0 and not (np.isfinite(total) and total > 0):
         raise ValueError(f"current-tax weights sum to {total}: cannot share the produit")

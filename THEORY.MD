@@ -89,6 +89,19 @@ both, giving ranges where they differ.
   collective block. The richest fifth's total falls in Grenoble and Annemasse, so
   "the richest fifth pays more" is no longer a panel-wide claim. Income-fifth
   totals barely move, as IRIS land totals are kept.
+- Who bears a change decides which chart shows it (Nov 2026). Social landlords
+  pay the TFPB and cannot pass it to tenants, so their parcels left the household
+  figures for a « Logement social (bailleurs) » category, and their exemptions
+  today now count. The poorest fifth's totals became less favourable where social
+  estates house many of the poorest: the estates were dense blocks that gain, and
+  that gain now goes to landlords. "The poorest fare better than the richest" fell
+  from 11 to 10 of 11 territories (Villeurbanne: −1.5 % against −1.6 %). The
+  protections page had promised that "no protection is removed"; ending the HLM
+  exemption made that false, so the page now says what ends and why. Prose claims
+  must be re-read whenever the model's scope changes, not only when counts move.
+- A disclosure rule must hold for every artefact, not just the payloads: a
+  folded commune's figures turned up in a reviewer's reply copied into the
+  research folder, and in a test fixture.
 
 ## Open Questions
 
@@ -98,8 +111,11 @@ both, giving ranges where they differ.
   and teardown sales measure it. The density elasticity moves the typical house
   by ±15–17 points in Lyon and Villeurbanne: house figures are the least robust
   on the site.
-- Draft #58 (flats vs houses across both building categories) predates site
-  value and needs rebasing on it.
+- Draft #58 (flats vs houses across both building categories) is largely
+  superseded by #67's per-dwelling figures.
+- Should the site quantify what the end of HLM exemptions costs landlords per
+  commune? Only commune totals are publishable, and only with three landlords and
+  no dominant one; Cahors and Figeac show none.
 - Will the departement field reliably distinguish communes with the same name?
   Currently displayed in the select option as "(93)" etc. — but may need INSEE code
   as the authoritative disambiguator if multiple communes share a name across departments.
