@@ -248,6 +248,18 @@ DATA_SOURCES = {
                      "attachments/rei_2017_fichier_notice_trace_zip"),
     "pm_catalog": ("https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
                    "fichiers-des-locaux-et-des-parcelles-des-personnes-morales/attachments"),
+    # SDES RPLS, « Données détaillées au logement » (DiDo; Licence Ouverte; one
+    # row per social dwelling, Lambert-93 coordinates). DEPCOM takes the data
+    # codes (arrondissements for Paris / Lyon). `rows` gives the count, checked
+    # against the CSV; the CSV answers 400 « Le fichier est vide » for 0 rows.
+    # Diffusion rules: social_housing.py docstring.
+    "rpls_rows": ("https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/"
+                  "datafiles/f3c2f2cb-8fb1-40fd-8733-964247744c9a/rows?millesime={millesime}"
+                  "&pageSize=10&columns=DEPCOM&DEPCOM=eq:{code}"),
+    "rpls_csv": ("https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/"
+                 "datafiles/f3c2f2cb-8fb1-40fd-8733-964247744c9a/csv?millesime={millesime}"
+                 "&withColumnName=true&withColumnDescription=false&withColumnUnit=false"
+                 "&DEPCOM=eq:{code}&columns={columns}"),
     # Notaires-INSEE « indice des prix des logements anciens » (IPLA), quarterly,
     # base 100 = 2015, série brute, via the INSEE BDM SDMX API (no key). One
     # series per idbank; see PRICE_INDEX_IDBANKS for the geography mapping.
