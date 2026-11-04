@@ -14,33 +14,33 @@
     "land_share_pct": 60.0,
     "built_at_cap_pct": 0.0,
     "neutral_levy_eur": 362922188.0,
-    "gross_shifted_eur": 162480222.9568616,
-    "net_shifted_eur": 81240111.47843081,
-    "gross_pct_of_levy": 44.8,
-    "net_pct_of_levy": 22.4,
-    "gross_bps_of_base": 12.1,
+    "gross_shifted_eur": 166516191.93715447,
+    "net_shifted_eur": 83258095.96857727,
+    "gross_pct_of_levy": 45.9,
+    "net_pct_of_levy": 22.9,
+    "gross_bps_of_base": 12.4,
     "currency": "EUR"
   },
   "headline_sensitivity": {
     "delta_pt": 10.0,
     "base": {
       "land_share_pct": 60.0,
-      "gross_pct_of_levy": 44.8,
-      "net_pct_of_levy": 22.4,
-      "median_change_pct_residential": 3.8,
-      "share_paying_more_pct": 58.8,
+      "gross_pct_of_levy": 45.9,
+      "net_pct_of_levy": 22.9,
+      "median_change_pct_residential": 0.7,
+      "share_paying_more_pct": 57.2,
       "by_category": [
         {
           "category": "Large Multi-Family (5+ units)",
-          "median_change_pct": -8.0,
-          "median_change_eur": -720.0,
-          "share_paying_more_pct": 39.7
+          "median_change_pct": -11.1,
+          "median_change_eur": -1051.0,
+          "share_paying_more_pct": 35.3
         },
         {
           "category": "Single Family Residential",
-          "median_change_pct": 69.2,
-          "median_change_eur": 769.0,
-          "share_paying_more_pct": 77.4
+          "median_change_pct": 60.8,
+          "median_change_eur": 701.0,
+          "share_paying_more_pct": 75.2
         },
         {
           "category": "Vacant Land",
@@ -50,85 +50,91 @@
         },
         {
           "category": "Condominium",
-          "median_change_pct": 23.2,
-          "median_change_eur": 512.0,
-          "share_paying_more_pct": 64.2
+          "median_change_pct": 18.3,
+          "median_change_eur": 419.0,
+          "share_paying_more_pct": 61.6
         },
         {
           "category": "Commercial",
-          "median_change_pct": 5.0,
-          "median_change_eur": 170.0,
-          "share_paying_more_pct": 52.2
+          "median_change_pct": 4.7,
+          "median_change_eur": 166.0,
+          "share_paying_more_pct": 52.1
+        },
+        {
+          "category": "Social Housing",
+          "median_change_pct": 21.9,
+          "median_change_eur": 1308.0,
+          "share_paying_more_pct": 61.0
         },
         {
           "category": "Other",
-          "median_change_pct": 17.3,
-          "median_change_eur": 175.0,
-          "share_paying_more_pct": 56.1
+          "median_change_pct": 13.1,
+          "median_change_eur": 130.0,
+          "share_paying_more_pct": 54.5
         },
         {
           "category": "Industrial",
           "median_change_pct": -84.7,
-          "median_change_eur": -4936.0,
+          "median_change_eur": -4966.0,
           "share_paying_more_pct": 6.0
         }
       ],
       "by_income_quintile": [
         {
           "quintile": 1,
-          "median_change_pct": -9.4,
-          "median_change_pct_residential": -8.5,
-          "total_change_pct": -16.6,
-          "household_median_change_pct": -31.4
+          "median_change_pct": -11.1,
+          "median_change_pct_residential": -10.2,
+          "total_change_pct": -12.5,
+          "household_median_change_pct": -29.0
         },
         {
           "quintile": 2,
-          "median_change_pct": -5.4,
-          "median_change_pct_residential": -4.5,
-          "total_change_pct": -6.1,
-          "household_median_change_pct": -17.9
+          "median_change_pct": -7.3,
+          "median_change_pct_residential": -7.7,
+          "total_change_pct": -9.1,
+          "household_median_change_pct": -21.7
         },
         {
           "quintile": 3,
-          "median_change_pct": 2.5,
-          "median_change_pct_residential": 1.8,
-          "total_change_pct": 0.4,
-          "household_median_change_pct": -15.4
+          "median_change_pct": 0.6,
+          "median_change_pct_residential": -0.1,
+          "total_change_pct": -3.1,
+          "household_median_change_pct": -18.6
         },
         {
           "quintile": 4,
-          "median_change_pct": 7.3,
-          "median_change_pct_residential": 6.9,
-          "total_change_pct": 4.9,
-          "household_median_change_pct": -8.2
+          "median_change_pct": 4.1,
+          "median_change_pct_residential": 2.7,
+          "total_change_pct": 2.1,
+          "household_median_change_pct": -11.3
         },
         {
           "quintile": 5,
-          "median_change_pct": 14.7,
-          "median_change_pct_residential": 14.7,
-          "total_change_pct": 15.4,
-          "household_median_change_pct": 3.0
+          "median_change_pct": 10.9,
+          "median_change_pct_residential": 10.2,
+          "total_change_pct": 10.8,
+          "household_median_change_pct": -1.3
         }
       ]
     },
     "low": {
       "land_share_pct": 50.0,
-      "gross_pct_of_levy": 42.0,
-      "net_pct_of_levy": 21.0,
-      "median_change_pct_residential": 4.4,
-      "share_paying_more_pct": 59.4,
+      "gross_pct_of_levy": 43.2,
+      "net_pct_of_levy": 21.6,
+      "median_change_pct_residential": 1.3,
+      "share_paying_more_pct": 57.5,
       "by_category": [
         {
           "category": "Large Multi-Family (5+ units)",
-          "median_change_pct": -6.4,
-          "median_change_eur": -586.0,
-          "share_paying_more_pct": 40.9
+          "median_change_pct": -9.8,
+          "median_change_eur": -929.0,
+          "share_paying_more_pct": 36.2
         },
         {
           "category": "Single Family Residential",
-          "median_change_pct": 65.1,
-          "median_change_eur": 723.0,
-          "share_paying_more_pct": 77.7
+          "median_change_pct": 57.1,
+          "median_change_eur": 660.0,
+          "share_paying_more_pct": 75.3
         },
         {
           "category": "Vacant Land",
@@ -138,85 +144,91 @@
         },
         {
           "category": "Condominium",
-          "median_change_pct": 22.3,
-          "median_change_eur": 484.0,
-          "share_paying_more_pct": 64.6
+          "median_change_pct": 17.5,
+          "median_change_eur": 397.0,
+          "share_paying_more_pct": 61.9
         },
         {
           "category": "Commercial",
-          "median_change_pct": 2.5,
-          "median_change_eur": 73.0,
-          "share_paying_more_pct": 51.3
+          "median_change_pct": 2.3,
+          "median_change_eur": 71.0,
+          "share_paying_more_pct": 51.2
+        },
+        {
+          "category": "Social Housing",
+          "median_change_pct": 22.2,
+          "median_change_eur": 1357.0,
+          "share_paying_more_pct": 61.6
         },
         {
           "category": "Other",
-          "median_change_pct": 15.7,
-          "median_change_eur": 153.0,
-          "share_paying_more_pct": 56.0
+          "median_change_pct": 11.1,
+          "median_change_eur": 107.0,
+          "share_paying_more_pct": 54.2
         },
         {
           "category": "Industrial",
           "median_change_pct": -84.0,
-          "median_change_eur": -4932.0,
+          "median_change_eur": -4944.0,
           "share_paying_more_pct": 6.0
         }
       ],
       "by_income_quintile": [
         {
           "quintile": 1,
-          "median_change_pct": -8.6,
-          "median_change_pct_residential": -7.5,
-          "total_change_pct": -15.2,
-          "household_median_change_pct": -28.5
+          "median_change_pct": -10.6,
+          "median_change_pct_residential": -9.6,
+          "total_change_pct": -11.4,
+          "household_median_change_pct": -26.9
         },
         {
           "quintile": 2,
-          "median_change_pct": -4.4,
-          "median_change_pct_residential": -3.4,
-          "total_change_pct": -4.8,
-          "household_median_change_pct": -15.9
+          "median_change_pct": -6.7,
+          "median_change_pct_residential": -6.7,
+          "total_change_pct": -7.8,
+          "household_median_change_pct": -19.2
         },
         {
           "quintile": 3,
-          "median_change_pct": 2.7,
-          "median_change_pct_residential": 2.4,
-          "total_change_pct": 1.2,
-          "household_median_change_pct": -13.4
+          "median_change_pct": 1.1,
+          "median_change_pct_residential": 0.4,
+          "total_change_pct": -2.3,
+          "household_median_change_pct": -16.8
         },
         {
           "quintile": 4,
-          "median_change_pct": 7.5,
-          "median_change_pct_residential": 7.4,
-          "total_change_pct": 5.6,
-          "household_median_change_pct": -6.6
+          "median_change_pct": 4.5,
+          "median_change_pct_residential": 3.2,
+          "total_change_pct": 2.7,
+          "household_median_change_pct": -9.8
         },
         {
           "quintile": 5,
-          "median_change_pct": 14.5,
-          "median_change_pct_residential": 14.7,
-          "total_change_pct": 15.5,
-          "household_median_change_pct": 4.1
+          "median_change_pct": 10.7,
+          "median_change_pct_residential": 10.3,
+          "total_change_pct": 10.9,
+          "household_median_change_pct": -0.2
         }
       ]
     },
     "high": {
       "land_share_pct": 70.0,
-      "gross_pct_of_levy": 47.0,
-      "net_pct_of_levy": 23.5,
-      "median_change_pct_residential": 3.3,
-      "share_paying_more_pct": 58.5,
+      "gross_pct_of_levy": 48.0,
+      "net_pct_of_levy": 24.0,
+      "median_change_pct_residential": 0.3,
+      "share_paying_more_pct": 57.0,
       "by_category": [
         {
           "category": "Large Multi-Family (5+ units)",
-          "median_change_pct": -9.0,
-          "median_change_eur": -823.0,
-          "share_paying_more_pct": 38.7
+          "median_change_pct": -12.1,
+          "median_change_eur": -1145.0,
+          "share_paying_more_pct": 34.7
         },
         {
           "category": "Single Family Residential",
-          "median_change_pct": 72.4,
-          "median_change_eur": 805.0,
-          "share_paying_more_pct": 77.2
+          "median_change_pct": 63.9,
+          "median_change_eur": 740.0,
+          "share_paying_more_pct": 75.1
         },
         {
           "category": "Vacant Land",
@@ -226,64 +238,70 @@
         },
         {
           "category": "Condominium",
-          "median_change_pct": 23.6,
-          "median_change_eur": 526.0,
-          "share_paying_more_pct": 63.9
+          "median_change_pct": 18.8,
+          "median_change_eur": 432.0,
+          "share_paying_more_pct": 61.3
         },
         {
           "category": "Commercial",
-          "median_change_pct": 6.8,
-          "median_change_eur": 236.0,
-          "share_paying_more_pct": 53.2
+          "median_change_pct": 6.7,
+          "median_change_eur": 234.0,
+          "share_paying_more_pct": 53.0
+        },
+        {
+          "category": "Social Housing",
+          "median_change_pct": 21.8,
+          "median_change_eur": 1317.0,
+          "share_paying_more_pct": 60.2
         },
         {
           "category": "Other",
-          "median_change_pct": 18.2,
-          "median_change_eur": 188.0,
-          "share_paying_more_pct": 56.3
+          "median_change_pct": 14.5,
+          "median_change_eur": 146.0,
+          "share_paying_more_pct": 54.7
         },
         {
           "category": "Industrial",
-          "median_change_pct": -85.3,
-          "median_change_eur": -4958.0,
+          "median_change_pct": -85.5,
+          "median_change_eur": -4995.0,
           "share_paying_more_pct": 6.0
         }
       ],
       "by_income_quintile": [
         {
           "quintile": 1,
-          "median_change_pct": -9.9,
-          "median_change_pct_residential": -9.1,
-          "total_change_pct": -17.8,
-          "household_median_change_pct": -33.6
+          "median_change_pct": -11.4,
+          "median_change_pct_residential": -10.8,
+          "total_change_pct": -13.3,
+          "household_median_change_pct": -30.5
         },
         {
           "quintile": 2,
-          "median_change_pct": -6.1,
-          "median_change_pct_residential": -5.3,
-          "total_change_pct": -7.1,
-          "household_median_change_pct": -19.6
+          "median_change_pct": -8.0,
+          "median_change_pct_residential": -8.3,
+          "total_change_pct": -10.1,
+          "household_median_change_pct": -23.2
         },
         {
           "quintile": 3,
-          "median_change_pct": 2.1,
-          "median_change_pct_residential": 1.3,
-          "total_change_pct": -0.3,
-          "household_median_change_pct": -16.9
+          "median_change_pct": 0.4,
+          "median_change_pct_residential": -0.5,
+          "total_change_pct": -3.7,
+          "household_median_change_pct": -20.0
         },
         {
           "quintile": 4,
-          "median_change_pct": 6.9,
-          "median_change_pct_residential": 6.3,
-          "total_change_pct": 4.4,
-          "household_median_change_pct": -9.5
+          "median_change_pct": 3.8,
+          "median_change_pct_residential": 2.5,
+          "total_change_pct": 1.6,
+          "household_median_change_pct": -12.4
         },
         {
           "quintile": 5,
-          "median_change_pct": 14.7,
-          "median_change_pct_residential": 14.6,
-          "total_change_pct": 15.3,
-          "household_median_change_pct": 2.4
+          "median_change_pct": 11.1,
+          "median_change_pct_residential": 10.1,
+          "total_change_pct": 10.7,
+          "household_median_change_pct": -2.2
         }
       ]
     }
@@ -292,34 +310,34 @@
     {
       "category": "Large Multi-Family (5+ units)",
       "label_fr": "Immeuble collectif (5+ logements)",
-      "parcels": 13302,
-      "share_of_parcels_pct": 43.0,
-      "median_change_pct": -8.0,
-      "median_change_eur": -720.0,
-      "count_paying_more": 5276,
-      "share_paying_more_pct": 39.7,
-      "total_change_pct": -8.2,
+      "parcels": 12034,
+      "share_of_parcels_pct": 38.9,
+      "median_change_pct": -11.1,
+      "median_change_eur": -1051.0,
+      "count_paying_more": 4244,
+      "share_paying_more_pct": 35.3,
+      "total_change_pct": -9.7,
       "total_change_eur": null,
-      "median_change_eur_per_dwelling": -103.0,
-      "household_median_change_pct": -15.1,
-      "share_dwellings_paying_more_pct": 31.8,
-      "dwellings": 281571
+      "median_change_eur_per_dwelling": -124.0,
+      "household_median_change_pct": -16.8,
+      "share_dwellings_paying_more_pct": 29.4,
+      "dwellings": 236393
     },
     {
       "category": "Single Family Residential",
       "label_fr": "Maison individuelle",
-      "parcels": 6278,
-      "share_of_parcels_pct": 20.3,
-      "median_change_pct": 69.2,
-      "median_change_eur": 769.0,
-      "count_paying_more": 4860,
-      "share_paying_more_pct": 77.4,
-      "total_change_pct": 176.6,
+      "parcels": 6216,
+      "share_of_parcels_pct": 20.1,
+      "median_change_pct": 60.8,
+      "median_change_eur": 701.0,
+      "count_paying_more": 4677,
+      "share_paying_more_pct": 75.2,
+      "total_change_pct": 158.3,
       "total_change_eur": null,
-      "median_change_eur_per_dwelling": 800.0,
-      "household_median_change_pct": 67.8,
-      "share_dwellings_paying_more_pct": 77.5,
-      "dwellings": 5812
+      "median_change_eur_per_dwelling": 730.0,
+      "household_median_change_pct": 59.5,
+      "share_dwellings_paying_more_pct": 75.4,
+      "dwellings": 5756
     },
     {
       "category": "Vacant Land",
@@ -340,29 +358,45 @@
     {
       "category": "Condominium",
       "label_fr": "Petit immeuble (2–4 logements)",
-      "parcels": 3054,
-      "share_of_parcels_pct": 9.9,
-      "median_change_pct": 23.2,
-      "median_change_eur": 512.0,
-      "count_paying_more": 1960,
-      "share_paying_more_pct": 64.2,
-      "total_change_pct": 60.9,
+      "parcels": 2938,
+      "share_of_parcels_pct": 9.5,
+      "median_change_pct": 18.3,
+      "median_change_eur": 419.0,
+      "count_paying_more": 1811,
+      "share_paying_more_pct": 61.6,
+      "total_change_pct": 55.3,
       "total_change_eur": null,
-      "median_change_eur_per_dwelling": 140.0,
-      "household_median_change_pct": 16.9,
-      "share_dwellings_paying_more_pct": 60.7,
-      "dwellings": 7652
+      "median_change_eur_per_dwelling": 105.0,
+      "household_median_change_pct": 12.3,
+      "share_dwellings_paying_more_pct": 58.1,
+      "dwellings": 7316
     },
     {
       "category": "Commercial",
       "label_fr": "Commerce",
       "parcels": 2838,
       "share_of_parcels_pct": 9.2,
-      "median_change_pct": 5.0,
-      "median_change_eur": 170.0,
-      "count_paying_more": 1482,
-      "share_paying_more_pct": 52.2,
+      "median_change_pct": 4.7,
+      "median_change_eur": 166.0,
+      "count_paying_more": 1478,
+      "share_paying_more_pct": 52.1,
       "total_change_pct": -8.8,
+      "total_change_eur": null,
+      "median_change_eur_per_dwelling": null,
+      "household_median_change_pct": null,
+      "share_dwellings_paying_more_pct": null,
+      "dwellings": null
+    },
+    {
+      "category": "Social Housing",
+      "label_fr": "Logement social (bailleurs)",
+      "parcels": 1494,
+      "share_of_parcels_pct": 4.8,
+      "median_change_pct": 21.9,
+      "median_change_eur": 1308.0,
+      "count_paying_more": 912,
+      "share_paying_more_pct": 61.0,
+      "total_change_pct": 11.5,
       "total_change_eur": null,
       "median_change_eur_per_dwelling": null,
       "household_median_change_pct": null,
@@ -372,13 +406,13 @@
     {
       "category": "Other",
       "label_fr": "Autre bâtiment",
-      "parcels": 1326,
-      "share_of_parcels_pct": 4.3,
-      "median_change_pct": 17.3,
-      "median_change_eur": 175.0,
-      "count_paying_more": 744,
-      "share_paying_more_pct": 56.1,
-      "total_change_pct": 51.5,
+      "parcels": 1278,
+      "share_of_parcels_pct": 4.1,
+      "median_change_pct": 13.1,
+      "median_change_eur": 130.0,
+      "count_paying_more": 696,
+      "share_paying_more_pct": 54.5,
+      "total_change_pct": 47.5,
       "total_change_eur": null,
       "median_change_eur_per_dwelling": null,
       "household_median_change_pct": null,
@@ -391,7 +425,7 @@
       "parcels": 267,
       "share_of_parcels_pct": 0.9,
       "median_change_pct": -84.7,
-      "median_change_eur": -4936.0,
+      "median_change_eur": -4966.0,
       "count_paying_more": 16,
       "share_paying_more_pct": 6.0,
       "total_change_pct": -77.3,
@@ -406,52 +440,52 @@
     {
       "quintile": 1,
       "median_income_eur": 21200.0,
-      "median_change_pct": -9.4,
-      "median_change_pct_residential": -8.5,
-      "total_change_pct": -16.6,
-      "household_median_change_pct": -31.4,
+      "median_change_pct": -11.1,
+      "median_change_pct_residential": -10.2,
+      "total_change_pct": -12.5,
+      "household_median_change_pct": -29.0,
       "parcels": 6108,
-      "dwellings": 63228
+      "dwellings": 43291
     },
     {
       "quintile": 2,
       "median_income_eur": 24000.0,
-      "median_change_pct": -5.4,
-      "median_change_pct_residential": -4.5,
-      "total_change_pct": -6.1,
-      "household_median_change_pct": -17.9,
+      "median_change_pct": -7.3,
+      "median_change_pct_residential": -7.7,
+      "total_change_pct": -9.1,
+      "household_median_change_pct": -21.7,
       "parcels": 6012,
-      "dwellings": 66468
+      "dwellings": 55807
     },
     {
       "quintile": 3,
       "median_income_eur": 26450.0,
-      "median_change_pct": 2.5,
-      "median_change_pct_residential": 1.8,
-      "total_change_pct": 0.4,
-      "household_median_change_pct": -15.4,
+      "median_change_pct": 0.6,
+      "median_change_pct_residential": -0.1,
+      "total_change_pct": -3.1,
+      "household_median_change_pct": -18.6,
       "parcels": 5897,
-      "dwellings": 55737
+      "dwellings": 49712
     },
     {
       "quintile": 4,
       "median_income_eur": 28430.0,
-      "median_change_pct": 7.3,
-      "median_change_pct_residential": 6.9,
-      "total_change_pct": 4.9,
-      "household_median_change_pct": -8.2,
+      "median_change_pct": 4.1,
+      "median_change_pct_residential": 2.7,
+      "total_change_pct": 2.1,
+      "household_median_change_pct": -11.3,
       "parcels": 6006,
-      "dwellings": 49574
+      "dwellings": 44232
     },
     {
       "quintile": 5,
       "median_income_eur": 32600.0,
-      "median_change_pct": 14.7,
-      "median_change_pct_residential": 14.7,
-      "total_change_pct": 15.4,
-      "household_median_change_pct": 3.0,
+      "median_change_pct": 10.9,
+      "median_change_pct_residential": 10.2,
+      "total_change_pct": 10.8,
+      "household_median_change_pct": -1.3,
       "parcels": 5890,
-      "dwellings": 54064
+      "dwellings": 51155
     }
   ],
   "by_improvement_ratio": [
@@ -461,7 +495,7 @@
       "parcels": 3848,
       "value_eur": 1490694000.0,
       "value_pct_of_base": 1.1,
-      "share_of_gross_change_pct": 3.6
+      "share_of_gross_change_pct": 3.5
     },
     {
       "bucket": "lt10",
@@ -469,7 +503,7 @@
       "parcels": 1380,
       "value_eur": 7679603000.0,
       "value_pct_of_base": 5.7,
-      "share_of_gross_change_pct": 16.0
+      "share_of_gross_change_pct": 15.6
     },
     {
       "bucket": "r10_25",
@@ -477,7 +511,7 @@
       "parcels": 4106,
       "value_eur": 12810782000.0,
       "value_pct_of_base": 9.6,
-      "share_of_gross_change_pct": 14.8
+      "share_of_gross_change_pct": 14.3
     },
     {
       "bucket": "r25_50",
@@ -485,7 +519,7 @@
       "parcels": 15045,
       "value_eur": 76271072000.0,
       "value_pct_of_base": 57.0,
-      "share_of_gross_change_pct": 29.7
+      "share_of_gross_change_pct": 30.4
     },
     {
       "bucket": "ge50",
@@ -493,7 +527,7 @@
       "parcels": 6534,
       "value_eur": 35531637000.0,
       "value_pct_of_base": 26.6,
-      "share_of_gross_change_pct": 36.0
+      "share_of_gross_change_pct": 36.3
     }
   ],
   "baseline_sensitivity": {
@@ -502,22 +536,22 @@
     "low_source": "th2017",
     "central": {
       "land_share_pct": 60.0,
-      "gross_pct_of_levy": 44.8,
-      "net_pct_of_levy": 22.4,
-      "median_change_pct_residential": 3.8,
-      "share_paying_more_pct": 58.8,
+      "gross_pct_of_levy": 45.9,
+      "net_pct_of_levy": 22.9,
+      "median_change_pct_residential": 0.7,
+      "share_paying_more_pct": 57.2,
       "by_category": [
         {
           "category": "Large Multi-Family (5+ units)",
-          "median_change_pct": -8.0,
-          "median_change_eur": -720.0,
-          "share_paying_more_pct": 39.7
+          "median_change_pct": -11.1,
+          "median_change_eur": -1051.0,
+          "share_paying_more_pct": 35.3
         },
         {
           "category": "Single Family Residential",
-          "median_change_pct": 69.2,
-          "median_change_eur": 769.0,
-          "share_paying_more_pct": 77.4
+          "median_change_pct": 60.8,
+          "median_change_eur": 701.0,
+          "share_paying_more_pct": 75.2
         },
         {
           "category": "Vacant Land",
@@ -527,85 +561,91 @@
         },
         {
           "category": "Condominium",
-          "median_change_pct": 23.2,
-          "median_change_eur": 512.0,
-          "share_paying_more_pct": 64.2
+          "median_change_pct": 18.3,
+          "median_change_eur": 419.0,
+          "share_paying_more_pct": 61.6
         },
         {
           "category": "Commercial",
-          "median_change_pct": 5.0,
-          "median_change_eur": 170.0,
-          "share_paying_more_pct": 52.2
+          "median_change_pct": 4.7,
+          "median_change_eur": 166.0,
+          "share_paying_more_pct": 52.1
+        },
+        {
+          "category": "Social Housing",
+          "median_change_pct": 21.9,
+          "median_change_eur": 1308.0,
+          "share_paying_more_pct": 61.0
         },
         {
           "category": "Other",
-          "median_change_pct": 17.3,
-          "median_change_eur": 175.0,
-          "share_paying_more_pct": 56.1
+          "median_change_pct": 13.1,
+          "median_change_eur": 130.0,
+          "share_paying_more_pct": 54.5
         },
         {
           "category": "Industrial",
           "median_change_pct": -84.7,
-          "median_change_eur": -4936.0,
+          "median_change_eur": -4966.0,
           "share_paying_more_pct": 6.0
         }
       ],
       "by_income_quintile": [
         {
           "quintile": 1,
-          "median_change_pct": -9.4,
-          "median_change_pct_residential": -8.5,
-          "total_change_pct": -16.6,
-          "household_median_change_pct": -31.4
+          "median_change_pct": -11.1,
+          "median_change_pct_residential": -10.2,
+          "total_change_pct": -12.5,
+          "household_median_change_pct": -29.0
         },
         {
           "quintile": 2,
-          "median_change_pct": -5.4,
-          "median_change_pct_residential": -4.5,
-          "total_change_pct": -6.1,
-          "household_median_change_pct": -17.9
+          "median_change_pct": -7.3,
+          "median_change_pct_residential": -7.7,
+          "total_change_pct": -9.1,
+          "household_median_change_pct": -21.7
         },
         {
           "quintile": 3,
-          "median_change_pct": 2.5,
-          "median_change_pct_residential": 1.8,
-          "total_change_pct": 0.4,
-          "household_median_change_pct": -15.4
+          "median_change_pct": 0.6,
+          "median_change_pct_residential": -0.1,
+          "total_change_pct": -3.1,
+          "household_median_change_pct": -18.6
         },
         {
           "quintile": 4,
-          "median_change_pct": 7.3,
-          "median_change_pct_residential": 6.9,
-          "total_change_pct": 4.9,
-          "household_median_change_pct": -8.2
+          "median_change_pct": 4.1,
+          "median_change_pct_residential": 2.7,
+          "total_change_pct": 2.1,
+          "household_median_change_pct": -11.3
         },
         {
           "quintile": 5,
-          "median_change_pct": 14.7,
-          "median_change_pct_residential": 14.7,
-          "total_change_pct": 15.4,
-          "household_median_change_pct": 3.0
+          "median_change_pct": 10.9,
+          "median_change_pct_residential": 10.2,
+          "total_change_pct": 10.8,
+          "household_median_change_pct": -1.3
         }
       ]
     },
     "low": {
       "land_share_pct": 60.0,
-      "gross_pct_of_levy": 48.0,
-      "net_pct_of_levy": 24.0,
-      "median_change_pct_residential": 14.8,
-      "share_paying_more_pct": 65.0,
+      "gross_pct_of_levy": 48.8,
+      "net_pct_of_levy": 24.4,
+      "median_change_pct_residential": 11.6,
+      "share_paying_more_pct": 63.3,
       "by_category": [
         {
           "category": "Large Multi-Family (5+ units)",
-          "median_change_pct": 1.3,
-          "median_change_eur": 115.0,
-          "share_paying_more_pct": 51.6
+          "median_change_pct": -2.0,
+          "median_change_eur": -185.0,
+          "share_paying_more_pct": 47.4
         },
         {
           "category": "Single Family Residential",
-          "median_change_pct": 95.2,
-          "median_change_eur": 918.0,
-          "share_paying_more_pct": 83.5
+          "median_change_pct": 85.5,
+          "median_change_eur": 867.0,
+          "share_paying_more_pct": 81.7
         },
         {
           "category": "Vacant Land",
@@ -615,64 +655,70 @@
         },
         {
           "category": "Condominium",
-          "median_change_pct": 37.6,
-          "median_change_eur": 724.0,
-          "share_paying_more_pct": 71.1
+          "median_change_pct": 32.1,
+          "median_change_eur": 644.0,
+          "share_paying_more_pct": 68.7
         },
         {
           "category": "Commercial",
-          "median_change_pct": -20.4,
-          "median_change_eur": -1428.0,
-          "share_paying_more_pct": 39.8
+          "median_change_pct": -20.5,
+          "median_change_eur": -1439.0,
+          "share_paying_more_pct": 39.7
+        },
+        {
+          "category": "Social Housing",
+          "median_change_pct": 34.2,
+          "median_change_eur": 1809.0,
+          "share_paying_more_pct": 67.6
         },
         {
           "category": "Other",
-          "median_change_pct": 31.1,
-          "median_change_eur": 371.0,
-          "share_paying_more_pct": 61.6
+          "median_change_pct": 26.1,
+          "median_change_eur": 279.0,
+          "share_paying_more_pct": 60.0
         },
         {
           "category": "Industrial",
           "median_change_pct": -85.6,
-          "median_change_eur": -5445.0,
+          "median_change_eur": -5480.0,
           "share_paying_more_pct": 6.0
         }
       ],
       "by_income_quintile": [
         {
           "quintile": 1,
-          "median_change_pct": -1.3,
-          "median_change_pct_residential": 2.2,
-          "total_change_pct": -5.8,
-          "household_median_change_pct": -22.1
+          "median_change_pct": -3.0,
+          "median_change_pct_residential": 0.9,
+          "total_change_pct": -1.3,
+          "household_median_change_pct": -20.4
         },
         {
           "quintile": 2,
-          "median_change_pct": 4.3,
-          "median_change_pct_residential": 6.8,
-          "total_change_pct": 5.3,
-          "household_median_change_pct": -7.5
+          "median_change_pct": 1.9,
+          "median_change_pct_residential": 3.0,
+          "total_change_pct": 2.0,
+          "household_median_change_pct": -11.5
         },
         {
           "quintile": 3,
-          "median_change_pct": 11.9,
-          "median_change_pct_residential": 13.4,
-          "total_change_pct": 12.1,
-          "household_median_change_pct": -5.9
+          "median_change_pct": 9.6,
+          "median_change_pct_residential": 10.8,
+          "total_change_pct": 8.3,
+          "household_median_change_pct": -9.5
         },
         {
           "quintile": 4,
-          "median_change_pct": 16.8,
-          "median_change_pct_residential": 18.3,
-          "total_change_pct": 16.6,
-          "household_median_change_pct": 2.8
+          "median_change_pct": 13.4,
+          "median_change_pct_residential": 14.3,
+          "total_change_pct": 13.6,
+          "household_median_change_pct": -0.4
         },
         {
           "quintile": 5,
-          "median_change_pct": 22.6,
-          "median_change_pct_residential": 24.1,
-          "total_change_pct": 26.8,
-          "household_median_change_pct": 13.3
+          "median_change_pct": 18.5,
+          "median_change_pct_residential": 19.7,
+          "total_change_pct": 21.9,
+          "household_median_change_pct": 9.0
         }
       ]
     }
@@ -700,6 +746,14 @@
       "surplus_max_ref_far": 1.0,
       "surplus_plot_multiple": 2.0,
       "surplus_plot_weight": 0.25
+    },
+    "social_housing": {
+      "modelled": true,
+      "tax_year": 2025,
+      "category": "shown",
+      "rpls_dwellings": 56434,
+      "exempt_dwellings_pct": 31.6,
+      "qpv_abated_dwellings_pct": 22.2
     },
     "land_share_bounds": [
       0.15,

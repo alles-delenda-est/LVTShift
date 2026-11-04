@@ -295,7 +295,10 @@ export default function Home() {
                     que ses voisins, paie moins dans{" "}
                     {impact.smallBuildingsPayLess} territoires seulement.
                   </>
-                )}
+                )}{" "}
+                Les logements sociaux ne sont pas comptés parmi les ménages :
+                leur taxe foncière n&apos;étant pas récupérable sur les
+                locataires, sa variation pèse sur les bailleurs.
               </p>
             </div>
 
@@ -319,9 +322,10 @@ export default function Home() {
             locale, tirée de la taxe d&apos;habitation de 2017, la place plus
             haut que notre estimation centrale dans presque toutes les villes
             modélisées : les ménages paieraient alors aujourd&apos;hui moins, et
-            la réforme leur serait moins favorable. Le classement, lui, ne
-            change pas : les plus modestes s&apos;en sortent mieux que les plus
-            aisés dans les deux cas. Les résultats présentent les deux
+            la réforme leur serait moins favorable. Le classement, lui, change
+            peu : les plus modestes s&apos;en sortent mieux que les plus aisés
+            dans {impact.poorestBelowRichestBoth} des {impact.poorestAnalysable}{" "}
+            territoires, dans les deux cas. Les résultats présentent les deux
             hypothèses côte à côte.
           </p>
 

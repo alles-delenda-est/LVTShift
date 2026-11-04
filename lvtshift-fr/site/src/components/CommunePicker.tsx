@@ -22,6 +22,7 @@ import WinLoseSplit from "@/components/charts/WinLoseSplit";
 import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
 import TerritoryMembers from "@/components/TerritoryMembers";
+import SocialHousingNote from "@/components/SocialHousingNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
 
 /** Caption under charts that carry the ±10 pt land-share whiskers. */
@@ -267,6 +268,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               }}
             />
             <BandNote />
+            <SocialHousingNote commune={commune} />
           </section>
 
           {/* 5. Income quintile chart (or explanatory note if unavailable) */}
@@ -300,7 +302,9 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               compte (clients, salariés, locataires ou propriétaires) est
               difficile à estimer, même à comportements inchangés, et
               indissociable des effets dynamiques de la réforme. Ce point pourra
-              être traité dans une seconde phase.
+              être traité dans une seconde phase. La variation de l&apos;impôt des
+              bailleurs sociaux n&apos;est pas non plus attribuée aux ménages qui
+              y habitent : elle n&apos;est pas récupérable sur leurs loyers.
             </p>
           </section>
 

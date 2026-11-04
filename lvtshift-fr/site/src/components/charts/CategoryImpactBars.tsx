@@ -238,7 +238,10 @@ export default function CategoryImpactBars({
   const totalTick = makeTotalTick(sortedData);
   const hasTotals = sortedData.some((r) => totalText(r) !== "—");
   const colWidth = narrow ? 58 : 80;
-  const vacant = sortedData.find((r) => r.isNull);
+  const vacant = sortedData.find((r) => r.isNull && r.category === "Vacant Land");
+  // another category whose median falls on a parcel paying 0 € today (social
+  // housing exempt today, on an exact even split)
+  const otherNull = sortedData.find((r) => r.isNull && r.category !== "Vacant Land");
   const perDwelling = sortedData.some((r) => categoryAmount(r).basis === "dwelling");
 
   return (
@@ -343,6 +346,13 @@ export default function CategoryImpactBars({
           variation en pourcentage n&apos;est pas définie. Les chiffres
           indiqués sont en euros : la hausse médiane par parcelle et, en total,
           les nouvelles cotisations de toute la catégorie.
+        </p>
+      )}
+      {otherNull && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          * {otherNull.label_fr}&nbsp;: la parcelle médiane ne paie rien
+          aujourd&apos;hui (exonérée), donc la variation médiane en pourcentage
+          n&apos;est pas définie ; elle est donnée en euros.
         </p>
       )}
       {perDwelling && (
