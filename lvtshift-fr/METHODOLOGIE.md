@@ -675,8 +675,28 @@ graphique reste une médiane par parcelle : les deux chiffres peuvent donc
 différer de signe, car le grand immeuble pèse davantage dans la médiane par
 logement (Roubaix, immeubles collectifs : +7,2 % par parcelle, −5 € par
 logement). La règle de diffusion est celle des groupes de revenu : au moins
-11 parcelles, toutes décomptées, aucune ne réunissant plus de la moitié des
-logements.
+11 parcelles portant des logements, toutes décomptées, aucune ne réunissant plus
+d'un dixième des logements (`MAX_DWELLING_SHARE`). La limite était de la moitié
+jusqu'en novembre 2026 : une médiane pondérée par les logements tombe sur tout
+immeuble qui en porte 45 %, sauf si les autres sont très déséquilibrés, ce qui
+aurait publié la variation de cet immeuble (revue de sécurité du 3 novembre 2026 ;
+le changement n'a masqué aucun chiffre publié). Les mêmes décomptes donnent, pour
+chaque catégorie d'immeubles, la part des logements qui paient davantage et la
+variation du ménage type en % (`share_dwellings_paying_more_pct`,
+`household_median_change_pct`), affichées sous le graphique des gagnants et
+perdants de la page Résultats, à côté de la part des parcelles. Chaque catégorie
+publie aussi sa **variation totale** (`total_change_pct`) : les médianes peuvent
+toutes baisser à produit constant quand une minorité paie beaucoup plus
+(La Rochelle, maisons : −5,4 % en médiane, +14,7 % au total). Le terrain nu, qui
+ne paie rien aujourd'hui et n'a donc pas de %, publie son total en euros
+(`total_change_eur`, au millier d'euros). Aucune catégorie ne publie les deux :
+la réforme étant à produit constant, les totaux en euros des catégories d'une
+commune ont une somme nulle, et un total masqué se déduirait des autres (revue
+de sécurité du 4 novembre 2026). Un % seul ne permet aucune soustraction, car
+l'impôt actuel d'aucune catégorie n'est publié. Un total n'est pas publié quand une seule parcelle
+porte plus d'un dixième de l'impôt de la catégorie, aujourd'hui ou après la
+réforme (`MAX_PARCEL_TAX_SHARE`), car il serait alors proche de sa propre
+variation.
 
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
@@ -926,7 +946,8 @@ adjacente la plus petite, une catégorie de bien avec « Autres ». Un simple
 masquage ne suffirait pas, puisque le total de la commune moins les autres
 groupes le reconstituerait. Un groupe resté trop petit (quintile de revenu,
 « Autres », très petite commune) garde son effectif mais aucune de ses valeurs ; un quintile où un seul immeuble porte plus
-de la moitié des logements ne publie pas ses chiffres par ménage. Les valeurs en
+d'un dixième des logements, ou qui compte moins de 11 parcelles portant des
+logements, ne publie pas ses chiffres par ménage. Les valeurs en
 euros des tranches sont arrondies au millier. `assert_aggregate_only` vérifie
 ces règles à l'export et sur chaque fichier publié (test CI).
 

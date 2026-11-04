@@ -8,7 +8,8 @@
  * categories appear first — the honesty rule applied to sort order.
  *
  * Caption names "Maison individuelle" (Single Family Residential) and
- * its specific share.
+ * its specific share. The bars count parcels, so a block of flats counts once;
+ * under the chart, each building category also gets its figures per dwelling.
  */
 
 import {
@@ -22,7 +23,12 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { PublishedCategoryRow } from "@/lib/types";
-import { pct } from "@/lib/format";
+import { eurosExact, pct, signedPct } from "@/lib/format";
+
+/** "+42 €", "−103 €" (true minus), as the other signed figures. */
+function signedEuros(n: number): string {
+  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${eurosExact(Math.abs(n))}`;
+}
 import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
 import { useNarrow } from "./useNarrow";
 
@@ -48,7 +54,7 @@ function Legend() {
         gap: "0.25rem 1.25rem",
       }}
     >
-      <span><span aria-hidden="true" style={swatch(ROUGE)} />Part des parcelles qui paient davantage</span>
+      <span><span aria-hidden="true" style={swatch(ROUGE)} />Part des parcelles qui paient davantage (un immeuble compte pour une parcelle)</span>
       <span><span aria-hidden="true" style={swatch(MARINE)} />Paient moins ou autant</span>
     </p>
   );
@@ -130,6 +136,12 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
     ? `Parmi les maisons individuelles, ${pct(sfr.share_paying_more_pct)} paient davantage.`
     : null;
 
+  /* Building categories: the same result counted per dwelling, not per parcel */
+  const BUILDINGS = ["Condominium", "Large Multi-Family (5+ units)"];
+  const perDwelling = byCategory.filter(
+    (r) => BUILDINGS.includes(r.category) && r.share_dwellings_paying_more_pct != null,
+  );
+
   const BAR_HEIGHT = 34;
   const chartHeight = data.length * BAR_HEIGHT + 64;
 
@@ -197,6 +209,33 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
         </BarChart>
       </ResponsiveContainer>
 
+      {perDwelling.length > 0 && (
+        <div
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.8125rem",
+            color: ENCRE,
+            marginTop: "0.5rem",
+            lineHeight: 1.6,
+          }}
+        >
+          {perDwelling.map((r) => (
+            <p key={r.category}>
+              <strong>{r.label_fr}, par logement&nbsp;:</strong>{" "}
+              {pct(r.share_dwellings_paying_more_pct ?? null)} des logements paient davantage
+              {r.household_median_change_pct != null && (
+                <>
+                  {" "}; le ménage type voit son impôt varier de{" "}
+                  {signedPct(r.household_median_change_pct)}
+                  {r.median_change_eur_per_dwelling != null &&
+                    ` (${signedEuros(r.median_change_eur_per_dwelling)} par an)`}
+                </>
+              )}
+              .
+            </p>
+          ))}
+        </div>
+      )}
       {caption && (
         <p
           style={{

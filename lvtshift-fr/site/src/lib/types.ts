@@ -42,8 +42,17 @@ export interface CategoryRow {
   /** Null for a category below the disclosure minimum (count only). */
   median_change_pct: number | null; median_change_eur: number | null;
   count_paying_more: number | null; share_paying_more_pct: number | null;
+  /** The category's total change: sum of new bills against today's, in % (null
+   *  where today's tax is 0) and in € (absent in older payloads; null when
+   *  one parcel would dominate the total). */
+  total_change_pct?: number | null;
+  total_change_eur?: number | null;
   /** Typical household's change in €, residential categories only (absent in older payloads). */
   median_change_eur_per_dwelling?: number | null;
+  /** Typical household's change in %, parcels weighted by dwellings (absent in older payloads). */
+  household_median_change_pct?: number | null;
+  /** % of the category's dwellings in parcels that pay more (absent in older payloads). */
+  share_dwellings_paying_more_pct?: number | null;
   dwellings?: number | null;
 }
 /** A category whose figures are published (see lib/disclosure). */

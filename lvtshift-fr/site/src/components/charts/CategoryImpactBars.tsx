@@ -13,6 +13,10 @@
  * modelled tax is 0 € so the % change is undefined) are kept visible:
  * zero-width bar at the reference line, the median change in euros in the
  * value column, and a footnote saying why.
+ *
+ * A second column gives the category's total change: medians can all fall
+ * while the levy stays the same, when a minority pays much more (La Rochelle:
+ * houses −5.4 % at the median, +14.7 % in total).
  */
 
 import { ReactElement } from "react";
@@ -29,7 +33,7 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { BandCategoryRow, PublishedCategoryRow } from "@/lib/types";
-import { pct, signedPct, signedPctAxis, eurosExact } from "@/lib/format";
+import { pct, signedPct, signedPctAxis, euros, eurosExact } from "@/lib/format";
 import { bandSpan, byKey } from "@/lib/band";
 import { categoryAmount, BASIS_LABEL } from "@/lib/categoryAmount";
 import { symmetricAxis } from "@/lib/axis";
@@ -79,6 +83,9 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
         {absEur}
       </p>
       <p>Paie davantage&nbsp;: {pct(row.share_paying_more_pct)}</p>
+      {totalText(row) !== "—" && (
+        <p>Variation totale de la catégorie&nbsp;: {totalText(row)}</p>
+      )}
       {row.bandLo !== null && row.bandHi !== null && (
         <p style={{ color: GRIS_PALE }}>
           Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedPct(row.bandLo)}{" "}
@@ -101,6 +108,41 @@ function valueText(row: ProcessedRow): string {
   if (!row.isNull) return signedPct(row.median_change_pct);
   const sign = row.median_change_eur > 0 ? "+" : row.median_change_eur < 0 ? "−" : "";
   return `${sign}${eurosExact(Math.abs(row.median_change_eur))}*`;
+}
+
+/** The category's total change: % where today's tax is positive, else € (vacant land). */
+function totalText(row: PublishedCategoryRow): string {
+  if (row.total_change_pct != null) return signedPct(row.total_change_pct);
+  const e = row.total_change_eur;
+  if (e == null) return "—";
+  return `${e > 0 ? "+" : e < 0 ? "−" : ""}${euros(Math.abs(e))}*`;
+}
+
+function totalColour(row: PublishedCategoryRow): string {
+  const v = row.total_change_pct ?? row.total_change_eur;
+  return v == null || row.total_change_pct == null ? ENCRE : v >= 0 ? ROUGE : GREEN;
+}
+
+function makeTotalTick(data: ProcessedRow[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function TotalTick(props: any): ReactElement<SVGElement> {
+    const row = data.find((r) => r.label_fr === props.payload?.value);
+    if (!row) return <g />;
+    return (
+      <text
+        x={props.x + 6}
+        y={props.y}
+        textAnchor="start"
+        dominantBaseline="central"
+        fontSize={11}
+        fontWeight={400}
+        fill={totalColour(row)}
+        fontFamily="var(--font-body)"
+      >
+        {totalText(row)}
+      </text>
+    );
+  };
 }
 
 function makeValueTick(data: ProcessedRow[]) {
@@ -174,7 +216,14 @@ export default function CategoryImpactBars({
   const minVal = nonNull.length ? Math.min(...nonNull) : -10;
   const maxVal = nonNull.length ? Math.max(...nonNull) : 10;
   const absMax = Math.max(Math.abs(minVal), Math.abs(maxVal), 5);
-  const axis = symmetricAxis(absMax, { headroom: 1.05, maxTicksPerSide: narrow ? 2 : 4 });
+  // phones with the totals column: one tick each side keeps the labels apart
+  const hasTotalsForAxis = byCategory.some(
+    (r) => r.total_change_pct != null || r.total_change_eur != null,
+  );
+  const axis = symmetricAxis(absMax, {
+    headroom: 1.05,
+    maxTicksPerSide: narrow ? (hasTotalsForAxis ? 1 : 2) : 4,
+  });
   const domain: [number, number] = [-axis.lim, axis.lim];
 
   const cellFill = (entry: ProcessedRow): string => {
@@ -186,11 +235,32 @@ export default function CategoryImpactBars({
   const chartHeight = sortedData.length * BAR_HEIGHT + 64;
 
   const valueTick = makeValueTick(sortedData);
+  const totalTick = makeTotalTick(sortedData);
+  const hasTotals = sortedData.some((r) => totalText(r) !== "—");
+  const colWidth = narrow ? 58 : 80;
   const vacant = sortedData.find((r) => r.isNull);
   const perDwelling = sortedData.some((r) => categoryAmount(r).basis === "dwelling");
 
   return (
-    <figure aria-label="Variation médiane de l'impôt par catégorie de bien">
+    <figure aria-label="Variation médiane et totale de l'impôt par catégorie de bien">
+    {hasTotals && (
+      <div
+        aria-hidden="true"
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          paddingRight: 4,
+          fontFamily: "var(--font-body)",
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: GRIS,
+        }}
+      >
+        <span style={{ width: colWidth, paddingLeft: 6 }}>Médiane</span>
+        <span style={{ width: colWidth, paddingLeft: 6 }}>Total</span>
+      </div>
+    )}
     <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         layout="vertical"
@@ -222,11 +292,23 @@ export default function CategoryImpactBars({
           orientation="right"
           type="category"
           dataKey="label_fr"
-          width={narrow ? 64 : 80}
+          width={colWidth}
           tick={valueTick}
           axisLine={false}
           tickLine={false}
         />
+        {hasTotals && (
+          <YAxis
+            yAxisId="totals"
+            orientation="right"
+            type="category"
+            dataKey="label_fr"
+            width={colWidth}
+            tick={totalTick}
+            axisLine={false}
+            tickLine={false}
+          />
+        )}
         <Tooltip
           content={<CatTooltip />}
           cursor={{ fill: "rgba(0,0,0,0.04)" }}
@@ -250,22 +332,34 @@ export default function CategoryImpactBars({
       </BarChart>
     </ResponsiveContainer>
       <figcaption className="sr-only">
-        {sortedData.map((r) => `${r.label_fr} : ${valueText(r)}`).join(" ; ")}
+        {sortedData
+          .map((r) => `${r.label_fr} : médiane ${valueText(r)}, total ${totalText(r)}`)
+          .join(" ; ")}
       </figcaption>
       {vacant && (
         <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
           * {vacant.label_fr}&nbsp;: la taxe actuelle modélisée est de 0&nbsp;€
           (le non-bâti relève de la TFPNB, hors du périmètre modélisé), donc la
-          variation en pourcentage n&apos;est pas définie. Le chiffre indiqué est
-          la hausse médiane en euros par parcelle.
+          variation en pourcentage n&apos;est pas définie. Les chiffres
+          indiqués sont en euros : la hausse médiane par parcelle et, en total,
+          les nouvelles cotisations de toute la catégorie.
         </p>
       )}
       {perDwelling && (
         <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
-          Les pourcentages sont des médianes par parcelle ; au survol, les
-          montants des catégories résidentielles sont par logement. Un immeuble
-          compte pour une parcelle dans le premier cas et pour tous ses logements
-          dans le second : les deux chiffres peuvent donc être de signe opposé.
+          Chaque barre donne la variation médiane par parcelle : un immeuble y
+          compte pour une seule parcelle, quel que soit son nombre de logements.
+          Pour les logements, le montant au survol est celui du ménage type, en
+          euros par logement et par an.
+          {hasTotals && (
+            <>
+              {" "}La colonne «&nbsp;Total&nbsp;» donne la variation de
+              l&apos;impôt de toute la catégorie : les médianes peuvent baisser
+              partout quand une minorité de parcelles paie beaucoup plus, à
+              produit constant. Un tiret signale un total non publié, parce
+              qu&apos;une seule parcelle en porterait l&apos;essentiel.
+            </>
+          )}
         </p>
       )}
     </figure>
