@@ -705,8 +705,8 @@ logements du RPLS, placés sur une parcelle à 98,8 % ; 22,7 % sont exonérés e
 (`legal_report.md` §6.2). Montreuil : 23,7 % des 18 755 exonérés et 41,8 %
 abattus ; Villeurbanne : 25,3 % des 21 711 exonérés et 21,2 % abattus. À
 Montreuil, la part de l'impôt actuel des parcelles sociales baisse de 23 % (65
-d'entre elles ne paient rien aujourd'hui), celle de toutes les autres parcelles
-augmente de 5,2 %, et la catégorie paie −4,2 % au total après la réforme : les
+d'entre elles ne paient rien aujourd'hui), les autres parcelles payant la
+différence, et la catégorie paie −4,2 % au total après la réforme : les
 résidences denses gagnent à un impôt foncier, même une fois leurs exonérations
 supprimées. La catégorie Logement social figure dans 11 des 13 territoires
 publiés ; à Cahors et Figeac, elle rejoint « Autre » par les règles de diffusion.

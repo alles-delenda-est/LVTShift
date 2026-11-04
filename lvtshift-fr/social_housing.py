@@ -244,24 +244,35 @@ def fetch_rpls(cfg, millesime: str = RPLS_MILLESIME) -> pd.DataFrame:
     """
     frames = []
     for code in data_codes_of(cfg):
+        rows_url = SRC["rpls_rows"].format(millesime=millesime, code=code)
         try:
-            meta = json.loads(ingest._get(SRC["rpls_rows"].format(
-                millesime=millesime, code=code)))
-            total = int(meta["total"])
+            total = int(json.loads(ingest._get(rows_url))["total"])
+            if total < 0:
+                raise ValueError("negative count")
         except (ValueError, KeyError, TypeError) as exc:
+            ingest._evict_cache(rows_url)       # never replay an error body
             raise ingest.IngestUnavailable(
                 "SDES RPLS", f"décompte illisible pour {code} ({type(exc).__name__})") from exc
         if total == 0:
             continue
-        body = ingest._get(SRC["rpls_csv"].format(
-            millesime=millesime, code=code, columns=",".join(RPLS_COLS)), timeout=300)
-        df = pd.read_csv(io.BytesIO(body), sep=";", dtype=str, keep_default_na=False,
-                         encoding="utf-8")
+        csv_url = SRC["rpls_csv"].format(millesime=millesime, code=code,
+                                         columns=",".join(RPLS_COLS))
+        body = ingest._get(csv_url, timeout=300)
+        try:
+            df = pd.read_csv(io.BytesIO(body), sep=";", dtype=str, keep_default_na=False,
+                             encoding="utf-8")
+        except (ValueError, pd.errors.ParserError) as exc:
+            ingest._evict_cache(csv_url)
+            raise ingest.IngestUnavailable("SDES RPLS", f"CSV illisible pour {code}") from exc
+        problem = None
         if list(df.columns) != RPLS_COLS:
-            raise ingest.IngestUnavailable("SDES RPLS", f"colonnes inattendues pour {code}")
-        if len(df) != total or not df["DEPCOM"].eq(code).all():
-            raise ingest.IngestUnavailable(
-                "SDES RPLS", f"{len(df)} lignes pour {code}, {total} annoncées")
+            problem = f"colonnes inattendues pour {code}"
+        elif len(df) != total or not df["DEPCOM"].eq(code).all():
+            problem = f"{len(df)} lignes pour {code}, {total} annoncées"
+        if problem:
+            ingest._evict_cache(csv_url)
+            ingest._evict_cache(rows_url)
+            raise ingest.IngestUnavailable("SDES RPLS", problem)
         frames.append(df)
     if not frames:
         return pd.DataFrame(columns=RPLS_COLS)
