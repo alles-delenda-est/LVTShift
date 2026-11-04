@@ -40,7 +40,14 @@ française.
 | Répartition de la taxe actuelle | REI (DGFiP), via OFGL `rei` : `E11` (base TFPB), `WC75` (compensation de la division par deux des valeurs industrielles en 2021), `T29`, `T29_1`, `X503` (bases brutes de CFE) ; taux de TFPB 2020 d'OFGL `base-fiscale-simplifiee` | API Opendatasoft par `idcom` | REI 2025 ; taux 2020 | parts industrielle / professionnelle / logement de la base TFPB, par commune (§3.5) |
 | Géométrie IRIS | Contours IRIS (IGN) | WFS `STATISTICALUNITS.IRIS:contours_iris` | courant | rattachement parcelle → IRIS pour le revenu |
 | Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 (voir §6.8) | analyse distributive (quintiles) |
-| Foncier public exonéré | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | zips annuels via le catalogue data.economie.gouv.fr | situation 2025 | repérer le foncier public manifestement exonéré de TFPB (§3.5) |
+| Foncier public exonéré | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | zips annuels via le catalogue data.economie.gouv.fr | situation 2025 | repérer le foncier public manifestement exonéré de TFPB ; parcelles des bailleurs sociaux (§3.5) |
+| Logements sociaux | SDES RPLS, « Données détaillées au logement » | API DiDo par `DEPCOM` (décompte, puis CSV de 13 colonnes) | 1er janvier 2025 | financement, dates, convention, QPV et coordonnées de chaque logement social : exonérations et abattement actuels (§3.5) |
+
+Le RPLS est assorti de règles de diffusion (décret 2009-1485, rappelées dans son
+dictionnaire) : aucune statistique permettant d'identifier un bailleur, aucun
+chiffre sur moins de 11 logements à une échelle inférieure à la commune, pas de
+rediffusion des lignes. Les lignes restent dans le cache local ; seuls des
+agrégats communaux sont publiés (§3.5).
 
 Toutes sous Licence Ouverte / Etalab. Les URL exactes sont dans
 `config.DATA_SOURCES`.
@@ -591,6 +598,127 @@ fichiers fonciers le permettraient.
 `--no-exemptions` désactive à la fois l'exonération du foncier public et celle
 des bâtiments ruraux, et reproduit le calcul sans signalement.
 
+**Logement social** (`social_housing.py` ; recherches dans
+`docs/research/hlm-2026-11/`). Aujourd'hui, les art. 1384 A (constructions neuves
+et VEFA) et 1384 C (acquisitions) du CGI exonèrent les logements locatifs sociaux
+conventionnés financés par un prêt réglementé pendant 15 ans à compter de
+l'année qui suit l'achèvement ou l'acquisition, 25 ans si la décision de
+financement date du 1er juillet 2004 au 31 décembre 2026 ; l'art. 1388 bis abat
+de 30 % la base des logements HLM et SEM imposables situés dans un quartier
+prioritaire (QPV) de 2024, pour les impositions 2025 à 2030. Le produit du REI
+exclut les bases exonérées et abattues (`E11` est la base après elles, `E13` les
+cotisations émises) : le modèle répartit donc l'impôt actuel sur la seule surface
+imposable. La réforme met fin aux deux régimes : les bailleurs sociaux paient
+l'impôt sur le sol comme tout propriétaire.
+
+*Quelles parcelles* (`social_parcels`). D'après le fichier des personnes morales,
+par département : une société est un organisme HLM si la plupart de ses lignes
+portent le groupe 5 (« office HLM » ; le code est saisi ligne par ligne, et les
+vrais organismes en ont environ 95 %), si elle a une forme juridique HLM (SA
+5546/5646, coopérative 5547/5647, OPHLM 7371) ou si c'est un EPIC local (4140)
+nommé comme un office public de l'habitat (l'OPH de la Métropole de Lyon est codé
+groupe 9) ; une SEM si la plupart de ses lignes portent le groupe 6 ou si elle a
+une forme de SEM. Les sociétés de logement intermédiaire (In'li) ne sont jamais
+sociales. Un bailleur détient un local quand il y a un droit dont le titulaire
+paie la TFPB (P, U, E, R, W), sauf la pleine propriété d'un local donné à bail à
+un autre (le terrain d'une commune sous bail emphytéotique à un office est celui
+de l'office). Une **résidence** est une parcelle où le bailleur détient des locaux
+et le sol.
+
+*Quels logements, quel régime* (`dwelling_status`, `fetch_rpls`). Le RPLS donne
+une ligne par logement social, avec ses coordonnées mais sans parcelle ni
+bailleur. Pour l'imposition 2025, un logement est exonéré s'il est conventionné
+(`CONV` = 1), financé par PLAI, PLUS, PLS ou un autre prêt aidé postérieur à 1977
+(`FINAN_CODE` 10, 11, 13, 14, 49), et si son délai a commencé en 2010 ou après
+(15 ans), ou dès 2005 avec une convention datée de juillet 2004 à 2026 (25 ans ;
+pour un départ en 2005–06, la convention doit dater de 2005, car elle peut suivre
+la décision de quelques mois ; sans date de convention, à partir de 2007). Le
+délai part de l'achèvement (`CONSTRUCT`) pour le neuf et la VEFA, de l'entrée dans
+le patrimoine du bailleur (`PATRIMOINE`) pour les acquisitions, sauf pour les
+**transferts entre bailleurs**, qui n'ouvrent pas de nouvelle exonération
+(art. 1384 C ; la convention suit le logement, CCH L. 353-4) : une acquisition
+dont la convention est antérieure de plus de 2 ans à l'entrée est un transfert,
+et son délai part du plus tardif de l'achèvement et de la convention. L'année de
+première location (`LOCAT`) ne sert qu'en repli, sans date de convention :
+certains bailleurs y déclarent la première location du bâtiment, pas sa première
+location sociale. À Montreuil, 1 167 transferts apparents selon `LOCAT` sont
+financés par des prêts créés après leur année `LOCAT` (PLUS, depuis 1999), et
+1 288 ont été conventionnés dans les 3 ans suivant leur entrée : ce sont des
+acquisitions, exonérées. Le PLA ordinaire (`FINAN_CODE` 12) n'est jamais exonéré
+en 2025 : le PLUS l'a remplacé en 1999, donc toute décision est antérieure à
+juillet 2004 et ses 15 ans (20 avec la majoration environnementale) ont pris fin
+en 2024 au plus tard. Le PLI (16) et le PCL (17) sont des loyers intermédiaires.
+Un logement imposable en QPV (`PLG_QP24` « QN… ») bénéficie de l'abattement s'il
+est conventionné ou financé avant 1977 par un prêt HLM (50–55, 99), qui ouvrait
+l'ancienne exonération de l'art. 1384.
+
+*Placer les logements* (`parcel_social` ; sources_report §4). Chaque point
+d'adresse du RPLS va à la parcelle la plus proche où un bailleur social détient
+des locaux ou le sol, dans un rayon de 30 m (96 % et 94 % des logements à
+Montreuil et Villeurbanne), sinon à la parcelle qui le contient (la plus proche à
+15 m). Le point d'adresse tombe souvent sur une parcelle voisine de la même
+résidence : les parcelles contiguës (à 2 m) **d'un même bailleur** forment donc
+une résidence, qui prend le facteur de ses logements pondéré par la surface
+habitable (0 exonéré, 0,7 abattu, 1 imposable). Deux résidences voisines de
+bailleurs différents restent distinctes ; une parcelle de bailleur inconnu
+rejoint une résidence contiguë sans jamais en relier deux. Sur une résidence,
+toute la surface de logement est sociale (celle d'une SEM seulement si sa
+résidence porte des logements du RPLS : les SEM ne sont qu'en partie sociales) ;
+ailleurs, la part sociale est la surface habitable du RPLS rapportée à 0,72 × la
+surface brute de logement de la BD TOPO, plafonnée à 1 (0,70–0,75 mesurés par
+résidence), avec le facteur des logements de la parcelle. La surface de logement
+d'une parcelle pèse alors 1 − part × (1 − facteur) dans l'impôt actuel
+(`estimate.current_tax`, `hlm_tax_factor`), dans le total logement de la
+calibration par groupe et dans les parts atteintes : le produit que retirent les
+exonérations retombe sur les autres surfaces imposables, comme dans le REI. Les
+cotisations de la réforme n'en dépendent pas.
+
+*Qui supporte la variation.* La TFPB n'est pas une charge récupérable (décret
+82-955, annexe VIII) et les loyers conventionnés sont plafonnés (CCH
+L. 353-9-3) : la variation sur le logement social pèse sur le bailleur, une
+entreprise. Les parcelles dont la surface de logement est sociale pour moitié au
+moins, et résidentielles ou annexes par l'usage, forment la catégorie **Logement
+social (bailleurs)**, hors de l'ensemble résidentiel et donc de tout chiffre par
+ménage ou par revenu. Ailleurs, seule la part privée des logements compte dans
+les pondérations par ménage. La catégorie est attribuée après l'évaluation et ne
+change aucune valeur.
+
+*Diffusion* (`export_web`). La catégorie Logement social, et les décomptes
+communaux de logements du RPLS exonérés et abattus aujourd'hui, ne sont publiés
+que si au moins 3 bailleurs en détiennent les parcelles et qu'aucun n'en porte
+plus de 85 % de l'impôt, aujourd'hui ou après la réforme (`MIN_SOCIAL_LANDLORDS`,
+`MAX_LANDLORD_SHARE`, les deux règles du secret statistique des entreprises) ;
+sinon, la catégorie rejoint « Autre ». Les sorties locales du calcul gardent une
+clé de bailleur par parcelle, pour compter seulement : une empreinte du SIREN,
+que la liste publique des SIREN permettrait de retrouver, et qui n'atteint donc
+jamais les données publiées. Aucun SIREN, nom ou ligne du RPLS n'est publié, et
+seuls des chiffres communaux le sont. Comparer les données d'une commune où la
+catégorie est regroupée avec celles d'avant la modélisation du logement social
+montre combien de parcelles ont quitté les lignes résidentielles pour « Autre » :
+un nombre de parcelles, largement déductible du
+fichier public de la DGFiP, sans aucun chiffre en € ou en % (revue de sécurité
+du 4 novembre 2026).
+
+*Résultats* (calcul du 4 novembre 2026). Sur les 188 communes, 1,11 million de
+logements du RPLS, placés sur une parcelle à 98,8 % ; 22,7 % sont exonérés en
+2025 et 29,7 % abattus, face à une estimation nationale de 20 à 25 % exonérés
+(`legal_report.md` §6.2). Montreuil : 23,7 % des 18 755 exonérés et 41,8 %
+abattus ; Villeurbanne : 25,3 % des 21 711 exonérés et 21,2 % abattus. À
+Montreuil, la part de l'impôt actuel des parcelles sociales baisse de 23 % (65
+d'entre elles ne paient rien aujourd'hui), celle de toutes les autres parcelles
+augmente de 5,2 %, et la catégorie paie −4,2 % au total après la réforme : les
+résidences denses gagnent à un impôt foncier, même une fois leurs exonérations
+supprimées. La catégorie Logement social figure dans 11 des 13 territoires
+publiés ; à Cahors et Figeac, elle rejoint « Autre » par les règles de diffusion.
+Retirer les résidences sociales des chiffres par ménage rend le total du
+cinquième le plus modeste moins favorable là où elles logent beaucoup des plus
+modestes (Villeurbanne −6,1 % → −1,5 %, Montreuil −18,8 % → −8,4 %) : le gain des
+résidences revient aux bailleurs. La médiane d'une catégorie compte désormais
+une parcelle qui ne paie rien aujourd'hui comme une hausse, et non comme
+indéfinie (§3.7).
+
+`--no-social-housing` reproduit le calcul sans le logement social.
+
 **3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
 fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
@@ -696,7 +824,12 @@ de sécurité du 4 novembre 2026). Un % seul ne permet aucune soustraction, car
 l'impôt actuel d'aucune catégorie n'est publié. Un total n'est pas publié quand une seule parcelle
 porte plus d'un dixième de l'impôt de la catégorie, aujourd'hui ou après la
 réforme (`MAX_PARCEL_TAX_SHARE`), car il serait alors proche de sa propre
-variation.
+variation. La médiane en % d'une catégorie compte une parcelle qui ne paie rien
+aujourd'hui comme une hausse (ou une baisse) sans borne, au lieu de l'écarter :
+sinon, le logement social exonéré aujourd'hui, qui passe tout entier de 0 € à un
+impôt foncier, sortirait de la médiane de sa propre catégorie. Si la médiane
+tombe elle-même sur une telle parcelle (terrain nu, ou partage à égalité), aucun
+% n'est publié et la médiane en euros s'affiche.
 
 **Part foncière parisienne et borne de 85 %.** Avec la règle d'origine (linéaire
 jusqu'à un plancher de 25 %), un immeuble parisien d'environ 95 ans, entretenu en
@@ -1047,6 +1180,18 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   (`alt_source`, indicateur brut × 1,0 en repli), calculée à chaque passage et
   publiée à côté du cas central ; pondérations au m² plafonnées à 5 × le
   logement ; parts industrielle + professionnelle plafonnées à 75 %.
+- **Logement social** (`social_housing.py`, §3.5) : imposition 2025, RPLS au
+  1er janvier 2025, fichier des personnes morales 2025 ; exonéré 15 ans, ou 25
+  avec une convention datée du 1er juillet 2004 au 31 décembre 2026 (dès 2005
+  pour un départ en 2005–06 ; sans convention, à partir de 2007) ; facteur QPV
+  0,7 ; transfert quand la convention précède de plus de 2 ans l'entrée dans le
+  patrimoine ; code groupe à la majorité des lignes ; rattachement à 30 m d'une
+  parcelle sociale, sinon 15 m ; résidences à 2 m, un bailleur chacune ;
+  habitable ÷ brut 0,72 ; catégorie Logement social dès la moitié de la surface
+  de logement ; publiée avec au moins 3 bailleurs et aucun au-delà de 85 % de
+  l'impôt de la catégorie. Les durées et le taux QPV sont la loi ; le reste
+  relève du jugement, vérifié sur Montreuil et Villeurbanne
+  (`docs/research/hlm-2026-11/`).
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
   existantes et la part laissée de côté : dans le 92/93/94 il n'y a pas de strate
@@ -1260,10 +1405,9 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     agricoles (art. 1382 6° CGI) sont repérés par l'usage BD TOPO et le zonage
     PLU, non par leur usage réel : un hangar agricole non renseigné en zone urbaine
     reste imposé, et des dépendances de parcs en zone N sont exonérées (§3.5). Les
-    exonérations temporaires (logement social neuf, art. 1384 A CGI ; abattement QPV) ne sont
-    pas identifiables en données ouvertes : l'état initial surestime encore la
-    cotisation actuelle des HLM exonérés et la sous-estime ailleurs (sensible en
-    Seine-Saint-Denis).
+    exonérations et l'abattement QPV du logement social sont modélisés depuis
+    novembre 2026 (§3.5 et point 14) ; les autres exonérations temporaires
+    (deux ans du neuf privé, délibérations locales) ne le sont pas.
 12. **Mutations DVF multi-locaux.** Les locaux annexes (Dépendance) et les
     lignes hors commune gardent leur valeur dans le prix de la mutation mais
     sont exclus de la somme des surfaces, surestimant le €/m² là où les annexes
@@ -1277,6 +1421,28 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (l'avertissement de config.py). Il n'y a pas encore de manifeste (source,
     URL, date, empreinte) : les exécutions sont reproductibles comme commandes,
     pas comme données.
+14. **Le logement social est modélisé par appariement spatial, non à partir
+    des fichiers fiscaux.** Le RPLS n'a ni parcelle ni bailleur : les logements
+    sont placés par point d'adresse, et les logements d'une résidence partagent
+    un même facteur d'exonération, juste au total mais flou entre les parcelles
+    d'une résidence. La règle repose sur des indicateurs : la date de convention
+    tient lieu de date de décision de financement (15 ou 25 ans) et indique si
+    une acquisition est un transfert entre bailleurs ; le RPLS renseigne l'année
+    de première location de façon inégale. Non observables : la majoration
+    environnementale de 5 ans (art. 1384 A I bis), les déclarations tardives
+    (art. 1406), les suppressions locales (art. 1384 C III), et la signature par
+    chaque bailleur de la convention QPV (supposée partout ; les variables REI
+    `G211`/`G213` permettraient de la calibrer). Le RPLS exclut les
+    logements-foyers et résidences sociales : leurs parcelles comptent comme
+    sociales quand un bailleur social les détient, au plein taux actuel. Les
+    parcelles mixtes (VEFA en copropriété) reçoivent une part sociale tirée de la
+    surface habitable du RPLS rapportée à la surface BD TOPO. MAJIC a environ un
+    an de retard sur le neuf : quelques logements récents tombent sur des
+    parcelles sans droit d'un bailleur social. Du fait des dégrèvements d'État
+    remboursés aux bailleurs après les rôles (art. 1391 E et C, environ 4 à 5 %
+    de la TFPB des HLM), l'état initial fondé sur le REI surestime un peu ce que
+    paient les bailleurs. Les enregistrements d'exonération des Fichiers fonciers
+    remplaceraient tout cela (§7).
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

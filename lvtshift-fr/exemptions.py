@@ -153,10 +153,13 @@ def _norm(label: str) -> str:
 # Expected header fragments at key positions (schema-drift guard): a reordered
 # or renamed column must fail loudly rather than misread rights or owners.
 _HEADER_CHECK = {"dep": "departement", "code_droit": "droit", "siren": "siren",
-                 "forme": "forme", "denomination": "denomination"}
+                 "groupe": "groupe", "forme": "forme", "denomination": "denomination"}
 
 
-def _read_member(z: zipfile.ZipFile, name: str, cols: list) -> pd.DataFrame:
+def _read_member(z: zipfile.ZipFile, name: str, cols: list,
+                 keep: list = KEEP) -> pd.DataFrame:
+    """The `keep` columns of one zip member; those absent from this file's
+    layout (unit keys in the parcels file) come back empty."""
     info = z.getinfo(name)
     if info.file_size > MAX_MEMBER_BYTES:          # decompression-bomb guard
         raise ingest.IngestUnavailable(
@@ -170,15 +173,19 @@ def _read_member(z: zipfile.ZipFile, name: str, cols: list) -> pd.DataFrame:
         if frag not in _norm(header[cols.index(col)]):
             raise ingest.IngestUnavailable(
                 "DGFiP personnes morales", f"{name}: colonne {col!r} inattendue")
-    idx = [cols.index(c) for c in KEEP]
+    idx = [cols.index(c) for c in keep if c in cols]
     df = pd.read_csv(z.open(name), sep=";", dtype=str, keep_default_na=False,
                      encoding="utf-8", header=0, usecols=idx)
     df.columns = [cols[i] for i in sorted(idx)]
-    return df[KEEP]
+    for c in keep:
+        if c not in df.columns:
+            df[c] = ""
+    return df[keep]
 
 
-def fetch_rows(dep: str, year: int = PM_YEAR) -> pd.DataFrame:
-    """All rights rows (NB and B) for one département, with `src` and `idpar`."""
+def fetch_rows(dep: str, year: int = PM_YEAR, keep: list = KEEP) -> pd.DataFrame:
+    """All rights rows (NB and B) for one département, with `src` and `idpar`.
+    `keep`: the columns read (default: those the public-property rule needs)."""
     dep = str(dep).strip().upper()
     att = _attachments(year)
     n = _dep_number(dep)
@@ -193,7 +200,7 @@ def fetch_rows(dep: str, year: int = PM_YEAR) -> pd.DataFrame:
             for name in z.namelist():
                 m = pat.search(name.rsplit("/", 1)[-1])
                 if m and m.group(1) == kind:
-                    frames.append(_read_member(z, name, cols).assign(src=kind))
+                    frames.append(_read_member(z, name, cols, keep).assign(src=kind))
     if not any((f["src"] == "B").any() for f in frames) or \
             not any((f["src"] == "NB").any() for f in frames):
         raise ingest.IngestUnavailable("DGFiP personnes morales",
