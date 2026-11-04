@@ -438,16 +438,22 @@ def social_landlords(df: pd.DataFrame) -> int:
     return int(keys[keys.fillna("").astype(str) != ""].nunique())
 
 
+# Every tax the dominance test reads: today's under both baselines (in a
+# baseline leg, current_tax is the variant and current_tax_central the
+# central one) and the reform's, so every leg takes the same decision.
+DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax")
+
+
 def social_disclosable(df: pd.DataFrame) -> bool:
     """May the Social Housing figures be published? At least
     MIN_SOCIAL_LANDLORDS landlords, none holding more than MAX_LANDLORD_SHARE
-    of the category's tax today or under the reform (parcels of unknown
-    landlord count in the total, never as a landlord)."""
+    of the category's tax today (under either baseline) or under the reform
+    (parcels of unknown landlord count in the total, never as a landlord)."""
     if social_landlords(df) < MIN_SOCIAL_LANDLORDS:
         return False
     sub = df[df["property_category"] == SOCIAL_CATEGORY]
     key = sub["landlord_key"].fillna("").astype(str)
-    for col in ("current_tax", "new_tax"):
+    for col in DOMINANCE_TAX_COLS:
         if col not in sub.columns:
             continue
         tax = sub[col].astype(float)
@@ -638,7 +644,8 @@ def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False,
     base = land + float(df["taxable_improvement_value"].sum())
     share = land / base if base else 0.0
     new = df["new_tax"].to_numpy(dtype=float)
-    low = df.assign(current_tax=df["current_tax_low"])
+    # the central baseline rides along, so the leg folds what the central rows fold
+    low = df.assign(current_tax=df["current_tax_low"], current_tax_central=df["current_tax"])
     return {
         "pro_scale_central": M["pro_undercount_scale"],
         "pro_scale_low": M["pro_undercount_scale_low"],
@@ -768,6 +775,38 @@ def _check_small_groups(payload: dict) -> None:
             f"by_category: {r.get('category')} publishes its total in both % and €"
 
 
+SOCIAL_PROVENANCE_KEYS = {"modelled", "tax_year", "category", "rpls_dwellings",
+                          "exempt_dwellings_pct", "qpv_abated_dwellings_pct"}
+SOCIAL_COUNT_FIELDS = ("rpls_dwellings", "exempt_dwellings_pct", "qpv_abated_dwellings_pct")
+# the landlord key is 12 hex characters: no string of that shape may appear
+_LANDLORD_KEY_SHAPE = re.compile(r'"[0-9a-f]{12}"')
+
+
+def _check_social(payload: dict) -> None:
+    """Social housing guard: the provenance block holds known scalar keys only,
+    its counts only where the Social Housing category is shown, and no
+    sensitivity leg shows a category the central rows do not."""
+    soc = (payload.get("provenance") or {}).get("social_housing")
+    central = {r.get("category") for r in payload.get("by_category") or []}
+    if soc is not None:
+        assert isinstance(soc, dict) and set(soc) <= SOCIAL_PROVENANCE_KEYS, \
+            f"unexpected social_housing keys: {set(soc) - SOCIAL_PROVENANCE_KEYS if isinstance(soc, dict) else soc}"
+        assert all(v is None or isinstance(v, (bool, str, int, float)) for v in soc.values()), \
+            "non-scalar value in social_housing"
+        assert soc.get("category") in (None, "shown", "folded", "none"), \
+            f"unknown social_housing category {soc.get('category')!r}"
+        if soc.get("category") != "shown" or SOCIAL_CATEGORY not in central:
+            filled = [k for k in SOCIAL_COUNT_FIELDS if soc.get(k) is not None]
+            assert not filled, f"social_housing publishes {filled} without a published category"
+    if payload.get("by_category") is None:      # a partial payload (tests): no rows to match
+        return
+    legs = [(payload.get("headline_sensitivity") or {}).get(x) for x in ("base", "low", "high")]
+    legs += [(payload.get("baseline_sensitivity") or {}).get(x) for x in ("central", "low")]
+    for leg in legs:
+        extra = {r.get("category") for r in (leg or {}).get("by_category") or []} - central
+        assert not extra, f"sensitivity leg shows categories the central rows do not: {extra}"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -803,9 +842,11 @@ def assert_aggregate_only(payload: dict) -> None:
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
+    _check_social(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
+    assert not _LANDLORD_KEY_SHAPE.search(blob), "a landlord-key-shaped string leaked into payload"
     # value-level guard: no cadastral parcel id (14 chars, e.g. 75101000AB0002)
     # or 9-digit IRIS code may appear anywhere, whatever the key is called
     assert not PARCEL_ID_RE.search(blob), "a parcel id leaked into payload"

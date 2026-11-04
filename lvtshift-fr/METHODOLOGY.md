@@ -625,8 +625,9 @@ dwellings, 98.8 % placed on a parcel; 22.7 % are exempt in 2025 and 29.7 %
 abated, against a national estimate of 20–25 % exempt (`legal_report.md` §6.2).
 Montreuil: 23.7 % of 18,755 exempt and 41.8 % abated; Villeurbanne: 25.3 % of
 21,711 exempt and 21.2 % abated. In Montreuil the social parcels' share of
-today's tax falls by 23 % (65 of them pay nothing today), every other parcel's
-rises 5.2 %, and the category pays −4.2 % in total under the reform: dense
+today's tax falls by 23 % (65 of them pay nothing today), the other parcels
+making up the difference, and the category pays −4.2 % in total under the
+reform: dense
 estates gain from a land tax even once their exemptions end. The Social Housing
 category is shown in 11 of the 13 published territories; in Cahors and Figeac it
 joins "Other" under the disclosure rules. Taking social estates out of the

@@ -337,6 +337,63 @@ def test_social_category_needs_three_landlords_and_counts_rises_from_zero():
     assert "Social Housing" not in {r["category"] for r in ew.build_by_category(dominant)}
 
 
+def test_the_fold_is_decided_once_for_every_baseline():
+    import export_web as ew
+    df = _cat_rows(15, ["a", "b", "c"]).assign(current_tax_low=lambda d: d["current_tax"])
+    assert ew.social_disclosable(df)
+    # landlord a dominates today's tax under the variant baseline only
+    soc = df["property_category"] == "Social Housing"
+    df.loc[soc & (df["landlord_key"] != "a"), "current_tax_low"] = 1.0
+    df.loc[soc & (df["landlord_key"] == "a"), "current_tax_low"] = 500.0
+    assert not ew.social_disclosable(df)
+    # the variant leg sees the central baseline too, so it folds as well
+    leg = df.assign(current_tax=df["current_tax_low"], current_tax_central=df["current_tax"])
+    assert not ew.social_disclosable(leg)
+
+
+def test_the_payload_guard_covers_the_social_housing_block():
+    import export_web as ew
+    shown = {"by_category": [{"category": "Social Housing", "parcels": 20}],
+             "provenance": {"social_housing": {"modelled": True, "tax_year": 2025,
+                                               "category": "shown", "rpls_dwellings": 900,
+                                               "exempt_dwellings_pct": 30.0,
+                                               "qpv_abated_dwellings_pct": 5.0}}}
+    ew._check_social(shown)
+    bad = [
+        # counts where the category is folded
+        {**shown, "provenance": {"social_housing": {**shown["provenance"]["social_housing"],
+                                                    "category": "folded"}}},
+        # counts with no Social Housing row
+        {**shown, "by_category": [{"category": "Other", "parcels": 20}]},
+        # an unknown key, a nested value
+        {**shown, "provenance": {"social_housing": {"modelled": True, "landlords": 3}}},
+        {**shown, "provenance": {"social_housing": {"modelled": True, "category": ["shown"]}}},
+        # a leg showing a category the central rows fold
+        {**shown, "by_category": [{"category": "Other", "parcels": 20}],
+         "provenance": {"social_housing": {"modelled": True, "category": "folded"}},
+         "baseline_sensitivity": {"low": {"by_category": [{"category": "Social Housing"}]}}},
+    ]
+    for payload in bad:
+        with pytest.raises(AssertionError):
+            ew._check_social(payload)
+    assert ew._LANDLORD_KEY_SHAPE.search(json.dumps({"x": sh._landlord_key("1")}))
+    assert not ew._LANDLORD_KEY_SHAPE.search(json.dumps({"commune_key": "paris-extra-muros"}))
+
+
+def test_a_bad_rpls_answer_is_never_replayed_from_the_cache(tmp_path, monkeypatch):
+    import hashlib
+
+    class Cfg:
+        insee_code, data_codes = "99001", ("99001",)
+    monkeypatch.setattr(ingest, "CACHE_DIR", str(tmp_path))
+    url = sh.SRC["rpls_rows"].format(millesime=sh.RPLS_MILLESIME, code="99001")
+    cached = tmp_path / hashlib.sha256(url.encode()).hexdigest()
+    cached.write_bytes(b'{"code": 500, "message": "erreur"}')   # a JSON error body
+    with pytest.raises(ingest.IngestUnavailable):
+        sh.fetch_rpls(Cfg)
+    assert not cached.exists()
+
+
 def test_social_provenance_is_withheld_below_three_landlords():
     import export_web as ew
     counts = [{"tax_year": 2025, "rpls_dwellings": 900, "exempt_dwellings": 300,
