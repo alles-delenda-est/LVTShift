@@ -1281,7 +1281,15 @@ Ranked by how much they move published (category/quintile) results.
     The RPLS leaves out logements-foyers and résidences sociales: their parcels
     count as social when a social landlord holds them, at today's full rate.
     Mixed parcels (VEFA in a condominium) take a social share from the RPLS
-    habitable area against the BD TOPO floor. MAJIC lags new builds by about a
+    habitable area against the BD TOPO floor. Where that share is under half,
+    the parcel stays residential and its whole change counts in the household
+    figures, the landlord's part included (its lost exemption shows as a rise
+    for the building's households). Such parcels carry 8–14 % of residential
+    tax today in Montreuil, Annemasse and Villeurbanne; attributing only the
+    private share to households would move an income fifth's total by 0.2 to
+    1.4 points, mostly downwards, and flats' category total by under 1 point.
+    Not corrected: it needs the landlord's part of each parcel's tax in the
+    run outputs. MAJIC lags new builds by about a
     year, so some recent dwellings land on parcels with no social right. On
     State dégrèvements refunded to landlords after the rolls (art. 1391 E and
     C, about 4–5 % of HLM TFPB), the REI-based baseline slightly overstates what

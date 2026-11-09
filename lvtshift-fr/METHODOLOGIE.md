@@ -1436,7 +1436,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     logements-foyers et résidences sociales : leurs parcelles comptent comme
     sociales quand un bailleur social les détient, au plein taux actuel. Les
     parcelles mixtes (VEFA en copropriété) reçoivent une part sociale tirée de la
-    surface habitable du RPLS rapportée à la surface BD TOPO. MAJIC a environ un
+    surface habitable du RPLS rapportée à la surface BD TOPO. Quand cette part
+    est inférieure à la moitié, la parcelle reste résidentielle et toute sa
+    variation compte dans les chiffres par ménage, part du bailleur comprise
+    (la fin de son exonération apparaît comme une hausse pour les ménages de
+    l'immeuble). Ces parcelles portent 8 à 14 % de l'impôt résidentiel actuel à
+    Montreuil, Annemasse et Villeurbanne ; n'attribuer aux ménages que la part
+    privée déplacerait le total d'un cinquième de revenu de 0,2 à 1,4 point, le
+    plus souvent à la baisse, et le total de la catégorie des immeubles de moins
+    d'un point. Non corrigé : il faudrait la part du bailleur dans l'impôt de
+    chaque parcelle parmi les sorties du calcul. MAJIC a environ un
     an de retard sur le neuf : quelques logements récents tombent sur des
     parcelles sans droit d'un bailleur social. Du fait des dégrèvements d'État
     remboursés aux bailleurs après les rôles (art. 1391 E et C, environ 4 à 5 %
