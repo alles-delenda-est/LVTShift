@@ -237,6 +237,7 @@ export default function CategoryImpactBars({
   const valueTick = makeValueTick(sortedData);
   const totalTick = makeTotalTick(sortedData);
   const hasTotals = sortedData.some((r) => totalText(r) !== "—");
+  const withheldTotal = hasTotals && sortedData.some((r) => totalText(r) === "—");
   const colWidth = narrow ? 58 : 80;
   const vacant = sortedData.find((r) => r.isNull);
   const perDwelling = sortedData.some((r) => categoryAmount(r).basis === "dwelling");
@@ -351,13 +352,17 @@ export default function CategoryImpactBars({
           compte pour une seule parcelle, quel que soit son nombre de logements.
           Pour les logements, le montant au survol est celui du ménage type, en
           euros par logement et par an.
-          {hasTotals && (
+        </p>
+      )}
+      {hasTotals && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          La colonne «&nbsp;Total&nbsp;» donne la variation de l&apos;impôt de
+          toute la catégorie : les médianes peuvent baisser partout quand une
+          minorité de parcelles paie beaucoup plus, à produit constant.
+          {withheldTotal && (
             <>
-              {" "}La colonne «&nbsp;Total&nbsp;» donne la variation de
-              l&apos;impôt de toute la catégorie : les médianes peuvent baisser
-              partout quand une minorité de parcelles paie beaucoup plus, à
-              produit constant. Un tiret signale un total non publié, parce
-              qu&apos;une seule parcelle en porterait l&apos;essentiel.
+              {" "}Un tiret signale un total non publié : une seule parcelle y
+              pèserait plus d&apos;un dixième.
             </>
           )}
         </p>

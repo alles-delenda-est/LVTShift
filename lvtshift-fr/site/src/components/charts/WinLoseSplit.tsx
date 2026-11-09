@@ -24,13 +24,13 @@ import {
 import type { TooltipProps } from "recharts";
 import type { PublishedCategoryRow } from "@/lib/types";
 import { eurosExact, pct, signedPct } from "@/lib/format";
+import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
+import { useNarrow } from "./useNarrow";
 
 /** "+42 €", "−103 €" (true minus), as the other signed figures. */
 function signedEuros(n: number): string {
   return `${n > 0 ? "+" : n < 0 ? "−" : ""}${eurosExact(Math.abs(n))}`;
 }
-import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
-import { useNarrow } from "./useNarrow";
 
 /** Colour key: the chart previously had none. */
 function Legend() {
