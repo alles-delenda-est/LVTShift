@@ -126,8 +126,7 @@ def test_export_publishes_the_steps_and_guards_them(tmp_path):
     # guards: partial steps, steps that do not add up, non-numbers
     good = {"parcels": 50, "total_change_pct": 5.0, "step_revaluation_pct": 2.0,
             "step_land_pct": 3.0, "step_exemptions_pct": 0.0}
-    for bad in ({"by_category": [good, {**good, "step_revaluation_pct": None,
-                                        "step_land_pct": None, "step_exemptions_pct": None}]},
+    for bad in ({"by_category": [{**good, "total_change_pct": None}]},
                 {"by_category": [{**good, "step_land_pct": 9.0}]},
                 {"by_income_quintile": [{**good, "step_land_pct": "3"}]},
                 {"by_income_quintile": [{**good, "step_land_pct": float("inf")}]}):

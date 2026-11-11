@@ -40,9 +40,8 @@ export default function StepsTable({ byCategory, byQuintile }: StepsTableProps) 
   if (!t.categories.length && !t.quintiles.length) {
     return (
       <p className="text-sm text-gris font-body max-w-3xl leading-relaxed">
-        Décomposition non disponible pour cette commune : l&apos;une des
-        catégories est trop concentrée sur un petit nombre de biens pour être
-        publiée.
+        Décomposition non disponible pour cette commune : ses groupes sont
+        trop petits, ou trop concentrés sur quelques biens, pour être publiés.
       </p>
     );
   }

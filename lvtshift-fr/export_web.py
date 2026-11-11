@@ -553,11 +553,6 @@ def build_by_category(df: pd.DataFrame) -> list:
             # residential only; None for other categories and older runs
             **_per_dwelling(sub),
         })
-    # each step is revenue-neutral across categories: with one row's steps
-    # withheld, the others would give its weight away. All rows or none.
-    if any(r["step_revaluation_pct"] is None for r in out):
-        for r in out:
-            r.update(NO_STEPS)
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
 
@@ -855,8 +850,12 @@ def _check_social(payload: dict) -> None:
 
 def _check_steps(payload: dict) -> None:
     """Decomposition guard: steps are bounded numbers published only beside
-    their group's total, add up to it (to rounding), and come for every
-    category row or none."""
+    their group's total and add up to it (to rounding).
+
+    Each step is revenue-neutral across categories, one equation per step.
+    Weighted by the categories' taxes today, which are never published, the
+    equations cannot recover a withheld row: the protection the totals rely on
+    (security review, 2026-11-04)."""
     for key in ("by_category", "by_income_quintile", "by_income_quintile_within"):
         rows = payload.get(key) or []
         for r in rows:
@@ -869,10 +868,6 @@ def _check_steps(payload: dict) -> None:
             tot = r.get("total_change_pct")
             assert isinstance(tot, (int, float)) and abs(sum(vals) - tot) <= 0.3, \
                 f"{key}: steps {vals} do not add up to the total {tot}"
-        if key == "by_category" and rows:
-            shown = [r.get("step_revaluation_pct") is not None for r in rows]
-            assert all(shown) or not any(shown), \
-                "by_category: steps for some categories only (one could be recovered)"
 
 
 def assert_aggregate_only(payload: dict) -> None:
