@@ -241,8 +241,9 @@ def test_weighted_median():
 
 
 def test_quintile_totals_and_households_tell_the_group_story():
-    # each group: twelve houses at +10 %, three 10-flat blocks at −20 % -> the
+    # each group: twelve houses at +10 %, nine 10-flat blocks at −20 % -> the
     # median parcel pays more, but the group and the typical household pay less
+    # (each block under a tenth of the group's dwellings: MAX_DWELLING_SHARE)
     houses = dict(property_category="Single Family Residential", current_tax=1000.0,
                   tax_change=100.0, tax_change_pct=10.0, n_dwellings=1.0)
     block = dict(property_category="Large Multi-Family (5+ units)", current_tax=20000.0,
@@ -251,13 +252,13 @@ def test_quintile_totals_and_households_tell_the_group_story():
                 tax_change=-2500.0, tax_change_pct=-50.0, n_dwellings=0.0)
     rows = []
     for q in range(5):   # two IRIS incomes per group (MIN_IRIS_INCOMES)
-        for i, r in enumerate([houses] * 12 + [block] * 3 + [shop]):
+        for i, r in enumerate([houses] * 12 + [block] * 9 + [shop]):
             rows.append({**r, "median_income": 20000.0 + 1000 * q + 500 * (i % 2)})
     q1 = ew.build_by_income_quintile(pd.DataFrame(rows))[0]
     assert q1["median_change_pct_residential"] == 10.0
-    assert q1["total_change_pct"] == round(100 * (1200 - 12000) / 72000, 1)  # shop excluded
+    assert q1["total_change_pct"] == round(100 * (1200 - 36000) / 192000, 1)  # shop excluded
     assert q1["household_median_change_pct"] == -20.0
-    assert q1["dwellings"] == 42
+    assert q1["dwellings"] == 102
     # older runs without dwelling counts: household figure unset, not guessed
     q1 = ew.build_by_income_quintile(pd.DataFrame(rows).drop(columns="n_dwellings"))[0]
     assert q1["household_median_change_pct"] is None and q1["total_change_pct"] is not None
@@ -278,9 +279,12 @@ def test_category_euros_per_dwelling():
     assert blk["median_change_eur"] > cats["Single Family Residential"]["median_change_eur"]
     assert blk["median_change_eur_per_dwelling"] == round(850.0 / 20, 0)   # 42 €
     assert blk["dwellings"] == 240
+    assert blk["household_median_change_pct"] == 9.6
+    assert blk["share_dwellings_paying_more_pct"] == 100.0
     assert cats["Single Family Residential"]["median_change_eur_per_dwelling"] == 267.0
     assert cats["Commercial"]["median_change_eur_per_dwelling"] is None
     assert cats["Commercial"]["dwellings"] is None
+    assert cats["Commercial"]["share_dwellings_paying_more_pct"] is None
     # older runs without counts, a missing count, or one dominant block: unset
     old = {c["category"]: c for c in ew.build_by_category(df.drop(columns="n_dwellings"))}
     assert old["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
@@ -292,6 +296,41 @@ def test_category_euros_per_dwelling():
     dom.loc[12, "n_dwellings"] = 1000.0
     dom = {c["category"]: c for c in ew.build_by_category(dom)}
     assert dom["Large Multi-Family (5+ units)"]["median_change_eur_per_dwelling"] is None
+    assert dom["Large Multi-Family (5+ units)"]["share_dwellings_paying_more_pct"] is None
+    assert dom["Large Multi-Family (5+ units)"]["household_median_change_pct"] is None
+
+
+def test_per_dwelling_figures_need_eleven_parcels_with_dwellings():
+    # nine empty parcels plus two blocks reach 11 parcels but describe two buildings
+    rows = ([dict(property_category="Large Multi-Family (5+ units)", tax_change=0.0,
+                  tax_change_pct=0.0, n_dwellings=0.0)] * 9
+            + [dict(property_category="Large Multi-Family (5+ units)", tax_change=-500.0,
+                    tax_change_pct=-10.0, n_dwellings=50.0)] * 2)
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["household_median_change_pct"] is None
+    assert cat["share_dwellings_paying_more_pct"] is None
+    assert cat["median_change_eur_per_dwelling"] is None
+
+
+def test_per_dwelling_figures_blank_a_building_with_over_a_tenth_of_dwellings():
+    rows = ([dict(property_category="Large Multi-Family (5+ units)", tax_change=100.0,
+                  tax_change_pct=5.0, n_dwellings=10.0)] * 15
+            + [dict(property_category="Large Multi-Family (5+ units)", tax_change=-900.0,
+                    tax_change_pct=-12.0, n_dwellings=30.0)])        # 30 of 180 dwellings
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["household_median_change_pct"] is None and cat["dwellings"] is None
+
+
+def test_category_share_of_dwellings_paying_more_weights_by_dwellings():
+    # most parcels (houses) pay more, but most dwellings (in blocks) pay less
+    rows = ([dict(property_category="Condominium", tax_change=50.0, tax_change_pct=5.0,
+                  n_dwellings=2.0)] * 10
+            + [dict(property_category="Condominium", tax_change=-80.0, tax_change_pct=-8.0,
+                    n_dwellings=4.0)] * 5)
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["share_paying_more_pct"] == round(100 * 10 / 15, 1)       # parcels: 66.7
+    assert cat["share_dwellings_paying_more_pct"] == 50.0               # 20 of 40 dwellings
+    assert cat["household_median_change_pct"] == -8.0
 
 
 def test_households_sidecar_must_match_its_run(tmp_path, monkeypatch):
@@ -333,14 +372,16 @@ def test_quintile_group_figures_withheld_for_small_or_dominated_groups():
                             current_tax=9000.0, tax_change=-900.0, tax_change_pct=-10.0,
                             n_dwellings=block_flats, median_income=20000.0 + 10 * q + 5))
         return pd.DataFrame(out)
-    ok = ew.build_by_income_quintile(rows(20, 10.0))[0]
+    ok = ew.build_by_income_quintile(rows(20, 2.0))[0]            # block = 2/22
     assert ok["household_median_change_pct"] == 5.0 and ok["total_change_pct"] is not None
+    tenth = ew.build_by_income_quintile(rows(20, 10.0))[0]        # block = 10/30, over a tenth
+    assert tenth["household_median_change_pct"] is None and tenth["total_change_pct"] is None
     small = ew.build_by_income_quintile(rows(5, 10.0))[0]           # 6 parcels
     assert small["total_change_pct"] is None and small["dwellings"] is None
     dominated = ew.build_by_income_quintile(rows(20, 50.0))[0]       # block = 50/70
     assert dominated["household_median_change_pct"] is None
     assert dominated["dwellings"] is None and dominated["total_change_pct"] is None
-    partial = ew.build_by_income_quintile(rows(20, 10.0, nan_count=True))[0]
+    partial = ew.build_by_income_quintile(rows(20, 2.0, nan_count=True))[0]
     assert partial["household_median_change_pct"] is None
     assert partial["total_change_pct"] is not None
 
@@ -502,3 +543,64 @@ def test_built_at_cap_counts_the_residual_clip_when_the_sidecar_has_it():
     assert ew.built_at_cap_pct(df) == 100.0                      # old runs: by share
     df["residual_at_cap"] = [True] * 4 + [False] * (n - 4)
     assert ew.built_at_cap_pct(df) == 10.0                       # 4 of 40 residuals clipped
+
+
+def test_category_total_shows_where_the_levy_goes():
+    # most houses pay a little less, a few pay much more: median down, total up
+    rows = ([dict(property_category="Single Family Residential", current_tax=1000.0,
+                  new_tax=950.0, tax_change=-50.0, tax_change_pct=-5.0)] * 16
+            + [dict(property_category="Single Family Residential", current_tax=1000.0,
+                    new_tax=1600.0, tax_change=600.0, tax_change_pct=60.0)] * 4)
+    cat = ew.build_by_category(pd.DataFrame(rows))[0]
+    assert cat["median_change_pct"] == -5.0
+    assert cat["total_change_pct"] == round(100 * (16 * -50 + 4 * 600) / 20000, 1)   # +8.0
+    assert cat["total_change_eur"] is None            # % only where a % exists
+
+
+def test_category_total_withheld_when_one_parcel_dominates_and_in_euros_for_vacant_land():
+    base = dict(property_category="Industrial", current_tax=1000.0, new_tax=900.0,
+                tax_change=-100.0, tax_change_pct=-10.0)
+    big = dict(base, current_tax=50000.0, new_tax=20000.0, tax_change=-30000.0, tax_change_pct=-60.0)
+    cat = ew.build_by_category(pd.DataFrame([base] * 15 + [big]))[0]
+    assert cat["total_change_pct"] is None and cat["total_change_eur"] is None
+    vac = dict(property_category="Vacant Land", current_tax=0.0, new_tax=200.0,
+               tax_change=200.0, tax_change_pct=np.nan)
+    v = ew.build_by_category(pd.DataFrame([vac] * 12))[0]
+    assert v["total_change_pct"] is None and v["total_change_eur"] == 2000.0
+    small = ew.build_by_category(pd.DataFrame([vac] * 5 + [dict(vac, property_category="Commercial",
+                                                                  current_tax=100.0)] * 12))
+    assert all(r["total_change_eur"] is None for r in small if r["parcels"] < 11)
+
+
+def test_a_withheld_category_total_cannot_be_recovered_from_the_others():
+    # revenue-neutral commune: houses +4,000 €, flats −1,500 €, one dominated
+    # industrial category −4,500 € (withheld), vacant land +2,000 €
+    house = dict(property_category="Single Family Residential", current_tax=1000.0,
+                 new_tax=1200.0, tax_change=200.0, tax_change_pct=20.0)
+    flat = dict(property_category="Condominium", current_tax=1000.0, new_tax=900.0,
+                tax_change=-100.0, tax_change_pct=-10.0)
+    ind = dict(property_category="Industrial", current_tax=1000.0, new_tax=1000.0,
+               tax_change=0.0, tax_change_pct=0.0)
+    big = dict(ind, current_tax=20000.0, new_tax=15500.0, tax_change=-4500.0,
+               tax_change_pct=-22.5)
+    vac = dict(property_category="Vacant Land", current_tax=0.0, new_tax=2000.0 / 12,
+               tax_change=2000.0 / 12, tax_change_pct=np.nan)
+    df = pd.DataFrame([house] * 20 + [flat] * 15 + [ind] * 15 + [big] + [vac] * 12)
+    assert abs(df["tax_change"].sum()) < 1e-6                  # neutral by construction
+    rows = {r["category"]: r for r in ew.build_by_category(df)}
+    assert rows["Industrial"]["total_change_pct"] is None      # withheld
+    # no category publishes both, and only vacant land (no % possible) gives euros
+    assert all(r["total_change_pct"] is None or r["total_change_eur"] is None
+               for r in rows.values())
+    assert [c for c, r in rows.items() if r["total_change_eur"] is not None] == ["Vacant Land"]
+    # so the euro sum of the published totals says nothing about the withheld one
+    payload_rows = list(rows.values())
+    bad = [dict(r) for r in payload_rows]
+    bad[0]["total_change_pct"], bad[0]["total_change_eur"] = 5.0, 1000.0
+    try:
+        ew._check_small_groups({"by_category": bad})
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("a row with both totals passed the guard")
+    ew._check_small_groups({"by_category": payload_rows})

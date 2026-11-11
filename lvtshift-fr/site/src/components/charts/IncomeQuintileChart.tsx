@@ -189,10 +189,7 @@ function QuintileCaption({ isTotal, hasHousehold }: { isTotal: boolean; hasHouse
           groupe — chaque parcelle compte autant de fois qu&apos;elle a de
           logements.
         </>
-      )}{" "}
-      Une simple médiane par parcelle compterait un immeuble de 200 logements
-      une seule fois, comme une maison&nbsp;: elle peut montrer la plupart des
-      parcelles en hausse alors que le groupe, dans son ensemble, paie moins.
+      )}
     </p>
   );
 }

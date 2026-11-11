@@ -157,8 +157,17 @@ def weighted_median(values, weights):
 # Disclosure control for the per-quintile group figures: a group must hold at
 # least this many residential parcels, and no parcel more than this share of
 # its dwellings, or its total and household figures are left unpublished.
+# The share was 0.5 until November 2026: a dwelling-weighted median lands on a
+# building with 45 % of the dwellings unless 91 % of the rest sit on one side,
+# which would publish that building's own % and € change (security review,
+# 2026-11-03). At 0.1 nothing published at the time was blanked (largest
+# building: 6.4 % of a category's dwellings, 5.2 % of an income fifth's).
 MIN_GROUP_PARCELS = 11
-MAX_DWELLING_SHARE = 0.5
+MAX_DWELLING_SHARE = 0.1
+# A category's total change is published only if no parcel carries more than
+# this share of the category's tax, today or under the reform: otherwise the
+# total would be close to that one parcel's own change.
+MAX_PARCEL_TAX_SHARE = 0.1
 # Income fifths are built from IRIS medians (Filosofi): with fewer than two
 # distinct IRIS incomes per fifth, a "fifth" is one neighbourhood, so the
 # breakdown is not published (Cahors, Figeac). Stated, not left to qcut.
@@ -190,7 +199,9 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
     # every residential parcel must carry a count (a member commune without a
     # sidecar would otherwise drop out of the weights but not of the total)
-    if n is not None and len(rsub) >= MIN_GROUP_PARCELS and n.notna().all() and n.sum() > 0:
+    # parcels with no dwelling carry no weight: they must not make up the floor
+    if (n is not None and n.notna().all() and n.sum() > 0
+            and int((n > 0).sum()) >= MIN_GROUP_PARCELS):
         pct = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan)
         hh = weighted_median(pct, n)
         hh_median = None if hh is None else round(hh, 1)
@@ -329,27 +340,78 @@ def build_buckets(df: pd.DataFrame) -> list:
     return out
 
 
-def _per_dwelling(sub: pd.DataFrame) -> tuple:
-    """Typical household's change in euros for a residential category, and its
-    dwelling count: each parcel's change shared over its dwellings, weighted by
-    dwellings. A parcel median in euros compares a whole block of flats with one
-    house (Lyon: +800 € per block against +267 € per house), so the site shows
-    this figure instead.
+DWELLING_FIELDS = ("median_change_eur_per_dwelling", "household_median_change_pct",
+                   "share_dwellings_paying_more_pct", "dwellings")
+
+
+def _per_dwelling(sub: pd.DataFrame) -> dict:
+    """A residential category's figures per dwelling rather than per parcel,
+    each parcel weighted by its dwellings:
+      * median_change_eur_per_dwelling: the typical household's change in euros
+        (the parcel's change shared over its dwellings);
+      * household_median_change_pct: the typical household's change in %;
+      * share_dwellings_paying_more_pct: % of dwellings in parcels paying more;
+      * dwellings: the count.
+    A parcel figure counts a 200-flat block once, like a house (Lyon: +800 € per
+    block against +267 € per house), so the site shows these beside it.
 
     Same disclosure rule as the income groups: every parcel must carry a count,
     the group must reach MIN_GROUP_PARCELS, and no parcel may hold more than
-    MAX_DWELLING_SHARE of its dwellings. Otherwise (None, None).
+    MAX_DWELLING_SHARE of its dwellings. Otherwise every field is None.
     """
+    none = dict.fromkeys(DWELLING_FIELDS)
     if "n_dwellings" not in sub.columns or len(sub) < MIN_GROUP_PARCELS:
-        return None, None
+        return none
     if not sub["property_category"].isin(FR_RESIDENTIAL).all():
-        return None, None
+        return none
     n = sub["n_dwellings"]
     if not n.notna().all() or n.sum() <= 0 or float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
-        return None, None
+        return none
+    if int((n > 0).sum()) < MIN_GROUP_PARCELS:   # empty parcels make up no floor
+        return none
     per = sub["tax_change"] / n.where(n > 0)
     med = weighted_median(per, n)
-    return (None if med is None else round(med, 0)), int(round(float(n.sum())))
+    pct = weighted_median(sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan), n)
+    more = float(n[sub["tax_change"] > 0].sum())
+    return {
+        "median_change_eur_per_dwelling": None if med is None else round(med, 0),
+        "household_median_change_pct": None if pct is None else round(pct, 1),
+        "share_dwellings_paying_more_pct": _pct(more, float(n.sum())),
+        "dwellings": int(round(float(n.sum()))),
+    }
+
+
+def _category_total(sub: pd.DataFrame) -> dict:
+    """A category's total change: the sum of its parcels' changes, in % of
+    today's tax, or in euros (rounded to the thousand) only where today's tax
+    is 0 (vacant land) and a % is undefined. The median shows the typical
+    parcel; the total shows where the levy goes (La Rochelle: houses −5.4 % at
+    the median, +14.7 % in total, because a minority on large plots pay much
+    more).
+
+    Never both: the reform is revenue-neutral, so euro totals of every
+    category sum to zero and a withheld one would be the others' sum, negated
+    (security review, 2026-11-04). A % alone gives nothing to subtract, since
+    no category's tax today is published.
+
+    Withheld (None) for a group below MIN_GROUP_PARCELS or when one parcel
+    carries more than MAX_PARCEL_TAX_SHARE of the category's tax today or
+    under the reform.
+    """
+    none = {"total_change_pct": None, "total_change_eur": None}
+    if _small(len(sub)) or not {"current_tax", "new_tax", "tax_change"} <= set(sub.columns):
+        return none
+    cur, new = sub["current_tax"].astype(float), sub["new_tax"].astype(float)
+    if not (np.isfinite(cur).all() and np.isfinite(new).all()):
+        return none
+    for col in (cur, new):
+        tot = float(col.sum())
+        if tot > 0 and float(col.max()) > MAX_PARCEL_TAX_SHARE * tot:
+            return none
+    chg = float(new.sum() - cur.sum())
+    if cur.sum() > 0:
+        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None}
+    return {"total_change_pct": None, "total_change_eur": round(chg, -3)}
 
 
 def build_by_category(df: pd.DataFrame) -> list:
@@ -365,7 +427,6 @@ def build_by_category(df: pd.DataFrame) -> list:
     for cat, sub in df.groupby("property_category"):
         chg_pct = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
         small = _small(len(sub))
-        per_dwelling, dwellings = _per_dwelling(sub)
         out.append({
             "category": cat,
             "label_fr": CATEGORY_LABELS_FR.get(cat, str(cat)),
@@ -377,9 +438,9 @@ def build_by_category(df: pd.DataFrame) -> list:
             "count_paying_more": None if small else int((sub["tax_change"] > 0).sum()),
             "share_paying_more_pct": (None if small else
                                       _pct(int((sub["tax_change"] > 0).sum()), len(sub))),
+            **_category_total(sub),
             # residential only; None for other categories and older runs
-            "median_change_eur_per_dwelling": per_dwelling,
-            "dwellings": dwellings,
+            **_per_dwelling(sub),
         })
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
@@ -599,7 +660,8 @@ SMALL_GROUP_BLANK = {
     "by_improvement_ratio": ("value_eur", "value_pct_of_base", "share_of_gross_change_pct"),
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct", "median_change_eur_per_dwelling",
-                    "dwellings"),
+                    "household_median_change_pct", "share_dwellings_paying_more_pct",
+                    "total_change_pct", "total_change_eur", "dwellings"),
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
                            "total_change_pct", "household_median_change_pct", "dwellings"),
 }
@@ -635,6 +697,10 @@ def _check_small_groups(payload: dict) -> None:
                 if r.get("quintile") in qs:
                     filled = [f for f in BAND_QUINTILE_KEYS[1:] if r.get(f) is not None]
                     assert not filled, f"sensitivity leg: small fifth {r['quintile']} publishes {filled}"
+    # euro totals sum to zero across categories: one hidden would be recoverable
+    for r in payload.get("by_category") or []:
+        assert r.get("total_change_pct") is None or r.get("total_change_eur") is None, \
+            f"by_category: {r.get('category')} publishes its total in both % and €"
 
 
 def assert_aggregate_only(payload: dict) -> None:

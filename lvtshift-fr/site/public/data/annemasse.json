@@ -298,7 +298,11 @@
       "median_change_eur": 249.0,
       "count_paying_more": 1351,
       "share_paying_more_pct": 100.0,
+      "total_change_pct": null,
+      "total_change_eur": 1309000.0,
       "median_change_eur_per_dwelling": null,
+      "household_median_change_pct": null,
+      "share_dwellings_paying_more_pct": null,
       "dwellings": null
     },
     {
@@ -310,7 +314,11 @@
       "median_change_eur": 816.0,
       "count_paying_more": 915,
       "share_paying_more_pct": 85.0,
+      "total_change_pct": 138.7,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": 849.0,
+      "household_median_change_pct": 94.9,
+      "share_dwellings_paying_more_pct": 85.2,
       "dwellings": 991
     },
     {
@@ -322,7 +330,11 @@
       "median_change_eur": -2077.0,
       "count_paying_more": 209,
       "share_paying_more_pct": 26.4,
+      "total_change_pct": -17.3,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": -182.0,
+      "household_median_change_pct": -25.3,
+      "share_dwellings_paying_more_pct": 21.2,
       "dwellings": 17744
     },
     {
@@ -334,7 +346,11 @@
       "median_change_eur": 142.0,
       "count_paying_more": 211,
       "share_paying_more_pct": 53.3,
+      "total_change_pct": -16.4,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": null,
+      "household_median_change_pct": null,
+      "share_dwellings_paying_more_pct": null,
       "dwellings": null
     },
     {
@@ -346,7 +362,11 @@
       "median_change_eur": 468.0,
       "count_paying_more": 263,
       "share_paying_more_pct": 67.8,
+      "total_change_pct": 52.1,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": 158.0,
+      "household_median_change_pct": 18.8,
+      "share_dwellings_paying_more_pct": 64.7,
       "dwellings": 977
     },
     {
@@ -358,7 +378,11 @@
       "median_change_eur": 298.0,
       "count_paying_more": 125,
       "share_paying_more_pct": 63.5,
+      "total_change_pct": null,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": null,
+      "household_median_change_pct": null,
+      "share_dwellings_paying_more_pct": null,
       "dwellings": null
     },
     {
@@ -370,7 +394,11 @@
       "median_change_eur": -2311.0,
       "count_paying_more": 3,
       "share_paying_more_pct": 5.1,
+      "total_change_pct": null,
+      "total_change_eur": null,
       "median_change_eur_per_dwelling": null,
+      "household_median_change_pct": null,
+      "share_dwellings_paying_more_pct": null,
       "dwellings": null
     }
   ],
