@@ -166,8 +166,8 @@ export default function Home() {
           <div className="mt-8 border-l-4 border-rouge pl-5 max-w-2xl">
             <p className="font-body text-base text-encre leading-relaxed">
               <strong>
-                La réforme proposée est à recettes constantes &mdash; ce
-                n&apos;est pas une hausse déguisée.
+                La réforme proposée est à recettes constantes &mdash; il
+                n&apos;y a aucune hausse déguisée.
               </strong>{" "}
               Le total perçu ne change pas : les taux sont recalculés
               mécaniquement pour produire{" "}

@@ -229,13 +229,17 @@ export default function MethodologiePage() {
             pas le résiduel marché&nbsp;&minus;&nbsp;bâti, dont la fiabilité
             serait nulle en l&apos;absence de bâtiment.{" "}
             <strong>Les terres agricoles et naturelles non bâties</strong>{" "}
-            (zones A et N du PLU) sont ensuite exclues de la réforme : elles
-            continuent de payer la taxe foncière sur les propriétés non bâties
-            actuelle, avec ses exonérations, et ne prennent aucune part du
-            nouvel impôt. Elles ne figurent donc pas dans les résultats
-            publiés. Le terrain constructible non bâti reste, lui, dans la
-            réforme, de même qu&apos;une parcelle non bâtie dont le zonage
-            n&apos;est pas connu (valorisée au barème agricole).
+            (zones A et N du PLU), de faible valeur au regard du reste
+            (environ 3,5&nbsp;% de la base à l&apos;échelle nationale), sont
+            ensuite exclues de la réforme : elles continuent de payer la taxe
+            foncière sur les propriétés non bâties actuelle, avec ses
+            exonérations, et ne prennent aucune part du nouvel impôt. Elles ne
+            figurent donc pas dans les résultats publiés. Le terrain
+            constructible non bâti est, lui, bien entendu compris dans la
+            réforme : l&apos;inciter à être bâti en est l&apos;un des
+            principaux objets. Il en va de même d&apos;une parcelle non bâtie
+            dont le zonage n&apos;est pas connu (valorisée au barème
+            agricole).
           </p>
 
           <p>

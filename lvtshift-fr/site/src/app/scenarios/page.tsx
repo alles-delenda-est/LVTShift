@@ -406,9 +406,14 @@ export default function ScenariosPage() {
           <strong className="font-semibold">Les forêts ne sont pas comptées dans ce calcul.</strong>{" "}
           Leur prix de vente inclut le bois sur pied, qui n&apos;est pas du sol.
           Même à ce prix, elles ajouteraient au plus{" "}
-          {num(farm.forest_upper_meur / 1000)}&nbsp;Md€ et baisseraient encore le
-          taux d&apos;environ{" "}
-          {num((100 * farm.forest_upper_meur) / (base.taxable_meur + farm.value_meur + farm.forest_upper_meur), 1)}&nbsp;%.
+          {num(farm.forest_upper_meur / 1000)}&nbsp;Md€, et le taux moyen du
+          scénario&nbsp;1, terres agricoles comprises, passerait de{" "}
+          {farm.s1_rate_if_included_pct.toLocaleString("fr-FR")}&nbsp;% à environ{" "}
+          {num(
+            (farm.s1_rate_if_included_pct * (base.taxable_meur + farm.value_meur)) /
+              (base.taxable_meur + farm.value_meur + farm.forest_upper_meur),
+            2,
+          )}&nbsp;%.
         </p>
         <p className="font-body text-base text-encre leading-relaxed mb-3">
           Autres limites : la valeur des terrains bâtis de {base.year} est
