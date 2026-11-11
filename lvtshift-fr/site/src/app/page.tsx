@@ -85,14 +85,16 @@ export default function Home() {
                 avec des taux votés séparément : un premier pas peut être,
                 dans les limites fixées par la loi actuelle, de baisser le taux
                 de la TFPB et d&apos;augmenter celui de la TFPNB, mais ce sera
-                imparfait et incomplet. La réforme modélisée ici va
-                plus loin : elle assoit la taxe foncière de chaque parcelle sur
-                la <strong>valeur de son sol</strong>, ce qui suppose de
-                construire une base foncière par une loi de finances (voir{" "}
+                imparfait et incomplet. La réforme proposée va plus loin :
+                une <strong>taxe foncière sur la valeur nue (TFVN)</strong>,
+                assise sur la valeur du terrain nu de chaque parcelle, ce qui
+                suppose de construire une base foncière par une loi de finances
+                (voir{" "}
                 <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
                   la voie juridique
                 </Link>
-                ).
+                ). Les résultats par commune la simulent à deux taux : le bâti y
+                reste imposé, à un taux quatre fois plus faible que le sol.
               </p>
             </div>
           </div>

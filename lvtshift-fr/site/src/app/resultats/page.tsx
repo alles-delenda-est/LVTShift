@@ -21,9 +21,10 @@ export default function ResultatsPage() {
           Résultats par commune
         </h2>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed">
-          Sélectionnez une commune pour explorer les effets simulés d&apos;une
-          réforme de la taxe foncière vers une taxation de la valeur des
-          terrains, à recettes constantes. Les résultats sont exprimés en
+          Sélectionnez une commune pour explorer les effets simulés de la
+          taxe foncière sur la valeur nue (TFVN), à recettes constantes. Elle y
+          est simulée à deux taux : le sol est imposé quatre fois plus que le
+          bâti, qui continue de payer. Les résultats sont exprimés en
           variation médiane et en proportion de parcelles concernées.
         </p>
       </div>

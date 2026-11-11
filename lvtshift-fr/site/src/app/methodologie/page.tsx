@@ -150,6 +150,13 @@ export default function MethodologiePage() {
           journalistes, décideurs et pairs qui souhaitent évaluer la rigueur du
           travail.
         </p>
+        <p className="font-body text-base text-gris max-w-2xl leading-relaxed mt-3">
+          La réforme étudiée est une taxe foncière sur la valeur nue (TFVN),
+          assise sur la valeur du terrain nu. Dans les résultats par commune,
+          elle est simulée à deux taux, le sol étant imposé quatre fois plus
+          que le bâti ; les scénarios nationaux, eux, l&apos;assoient sur le
+          seul sol.
+        </p>
       </div>
 
       {/* ── Section (a) : Imputation ──────────────────────────────────── */}
@@ -187,8 +194,9 @@ export default function MethodologiePage() {
 
           <p>
             <strong>Le sol est ensuite évalué comme s&apos;il était nu.</strong>{" "}
-            Un impôt sur la valeur du sol taxe le terrain à l&apos;usage que
-            permet l&apos;urbanisme, non au bâtiment qui s&apos;y trouve : ainsi
+            La TFVN, comme tout impôt sur la valeur du sol, taxe le terrain à
+            l&apos;usage que permet l&apos;urbanisme, non au bâtiment qui
+            s&apos;y trouve : ainsi
             le font l&apos;Allemagne (valeurs foncières de référence par zone),
             le Bade-Wurtemberg depuis 2025, le Danemark ou la Nouvelle-Galles
             du Sud. Or

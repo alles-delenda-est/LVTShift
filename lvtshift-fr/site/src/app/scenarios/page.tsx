@@ -16,7 +16,7 @@ import {
 export const metadata = {
   title: "Scénarios de remplacement — Pour une terre productive",
   description:
-    "Ce qu'un impôt sur la valeur du sol devrait rapporter pour remplacer, à recettes égales, la taxe foncière, les droits de mutation et les impôts sur les revenus et plus-values immobiliers.",
+    "Ce que la taxe foncière sur la valeur nue (TFVN) devrait rapporter pour remplacer, à recettes égales, la taxe foncière, les droits de mutation et les impôts sur les revenus et plus-values immobiliers.",
 };
 
 const SCENARIO_OF: Record<YieldTax["scenario"], string> = {
@@ -75,7 +75,7 @@ export default function ScenariosPage() {
       <div className="mb-8 border-b border-lisere pb-6">
         <p className="text-xs uppercase tracking-[0.18em] text-gris mb-2">Scénarios de remplacement</p>
         <h2 className="font-display text-2xl md:text-[1.75rem] font-medium text-marine leading-tight mb-3">
-          Quels impôts l&apos;impôt sur la valeur du sol remplacerait-il ?
+          Quels impôts la TFVN remplacerait-elle ?
         </h2>
         <p className="font-body text-base text-gris max-w-3xl leading-relaxed">
           La réforme est à recettes égales : chaque euro levé sur la valeur du
@@ -120,9 +120,9 @@ export default function ScenariosPage() {
             <li key={sc}>
               <strong className="font-semibold">{SCENARIO_LABELS[sc].short} — {SCENARIO_LABELS[sc].long.replace(/^\+ /, "")}.</strong>{" "}
               {sc === "S1" &&
-                "Les impôts qui frappent directement la propriété et son achat. La taxe d'habitation sur les résidences secondaires y figure parce qu'elle est, comme la taxe foncière, un impôt local sur un logement, payé le plus souvent par son propriétaire. Les droits de mutation pénalisent chaque déménagement et rendent départements et communes dépendants du marché immobilier : leur produit a baissé de près d'un tiers entre 2022 et 2024. Un impôt sur le sol est stable et prévisible, et ne dépend pas de la fréquence des ventes."}
+                "Les impôts qui frappent directement la propriété et son achat. La taxe d'habitation sur les résidences secondaires y figure parce qu'elle est, comme la taxe foncière, un impôt local sur un logement, payé le plus souvent par son propriétaire. Les droits de mutation pénalisent chaque déménagement et rendent départements et communes dépendants du marché immobilier : leur produit a baissé de près d'un tiers entre 2022 et 2024. La TFVN est stable et prévisible, et ne dépend pas de la fréquence des ventes."}
               {sc === "S2" &&
-                "S'y ajoutent l'impôt sur le revenu et les prélèvements sociaux sur les plus-values immobilières des particuliers : une part de ces gains vient de la hausse du prix du terrain, que l'impôt sur le sol capterait chaque année plutôt qu'à la vente. Ces impôts sont eux aussi très irréguliers (−40 % entre 2022 et 2024) : un prélèvement annuel sur le sol donnerait à l'État des recettes plus stables. L'IFI peut y être ajouté : c'est un choix politique plus qu'un calcul, car il frappe aussi les bâtiments."}
+                "S'y ajoutent l'impôt sur le revenu et les prélèvements sociaux sur les plus-values immobilières des particuliers : une part de ces gains vient de la hausse du prix du terrain, que la TFVN capterait chaque année plutôt qu'à la vente. Ces impôts sont eux aussi très irréguliers (−40 % entre 2022 et 2024) : un prélèvement annuel sur le sol donnerait à l'État des recettes plus stables. L'IFI peut y être ajouté : c'est un choix politique plus qu'un calcul, car il frappe aussi les bâtiments."}
               {sc === "S3" &&
                 "S'y ajoutent l'impôt sur le revenu et les prélèvements sociaux sur les loyers perçus par les particuliers. Ce scénario va le plus loin : il remplace une partie de l'imposition du revenu du capital immobilier par celle de sa composante foncière. Il rétablit aussi la neutralité entre location et propriété : aujourd'hui, le bailleur paie l'impôt sur ses loyers, alors que le propriétaire occupant ne paie rien sur le loyer qu'il n'a pas à verser ; en contrepartie, les propriétaires occupants paient davantage. Seul le sol restant taxé, investir dans le bâti locatif — construire, rénover — devient en principe plus rentable. L'effet sur l'offre de logements reste incertain en France : les avantages fiscaux accordés aux bailleurs se sont jusqu'ici surtout retrouvés dans le prix des biens et des terrains. Ce scénario fait aussi disparaître le mécanisme fiscal du déficit foncier : les travaux ne seront plus déductibles, mais les loyers qu'ils permettent d'obtenir ne seront plus imposés."}
             </li>
@@ -137,7 +137,7 @@ export default function ScenariosPage() {
           les particuliers : impôt sur le revenu et prélèvements sociaux sur
           leurs plus-values et leurs loyers, et IFI. Les sociétés continuent de
           payer l&apos;impôt sur les sociétés sur leurs propres loyers et
-          plus-values. Or l&apos;impôt sur le sol frappe tous les terrains, et
+          plus-values. Or la TFVN frappe tous les terrains, et
           ceux des sociétés, entreprises publiques comprises, représentent{" "}
           {Math.round(base.companies_meur / 1000).toLocaleString("fr-FR").replace(/\s/g, "\u00a0")}&nbsp;Md€,
           soit {base.companies_share_pct.toLocaleString("fr-FR")}&nbsp;% de la

@@ -12,7 +12,7 @@ export default function OutilsExistantsPage() {
     <PagerLayout
       eyebrow="Outils existants"
       title="Pourquoi pas seulement muscler les outils existants ?"
-      lede="Les dispositifs actuels contre la rétention foncière existent — mais ils sont étroits, optionnels et faciles à contourner. Un impôt foncier en est la version systémique."
+      lede="Les dispositifs actuels contre la rétention foncière existent — mais ils sont étroits, optionnels et faciles à contourner. La taxe foncière sur la valeur nue (TFVN) en est la version systémique."
     >
       <Content />
     </PagerLayout>
