@@ -22,7 +22,7 @@ export default function ResultatsPage() {
         </h2>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed">
           Sélectionnez une commune pour explorer les effets simulés de la
-          taxe foncière sur la valeur nue (TFVN), à recettes constantes. Elle y
+          taxe sur la valeur du terrain nu (TVTN), à recettes constantes. Elle y
           est simulée à deux taux : le sol est imposé quatre fois plus que le
           bâti, qui continue de payer. Les résultats sont exprimés en
           variation médiane et en proportion de parcelles concernées.

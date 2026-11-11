@@ -86,8 +86,8 @@ export default function Home() {
                 dans les limites fixées par la loi actuelle, de baisser le taux
                 de la TFPB et d&apos;augmenter celui de la TFPNB, mais ce sera
                 imparfait et incomplet. La réforme proposée va plus loin :
-                une <strong>taxe foncière sur la valeur nue (TFVN)</strong>,
-                assise sur la valeur du terrain nu de chaque parcelle, ce qui
+                une <strong>taxe sur la valeur du terrain nu (TVTN)</strong>{" "}
+                de chaque parcelle, ce qui
                 suppose de construire une base foncière par une loi de finances
                 (voir{" "}
                 <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
