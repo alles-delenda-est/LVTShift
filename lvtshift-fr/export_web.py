@@ -1124,7 +1124,12 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     if land["concept"] == "current":
         return {"concept": "current"}
     out = {"concept": "site"}
-    for k in sorted(SITE_VALUE):
+    # the density rule is a word; runs from before it existed used "max_own"
+    rule = land.get("density_rule", "max_own")
+    if rule not in ("zone", "max_own"):
+        raise ValueError(f"{path}: unknown land_value.density_rule {rule!r}")
+    out["density_rule"] = rule
+    for k in sorted(set(SITE_VALUE) - {"density_rule"}):
         v = land.get(k)
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")

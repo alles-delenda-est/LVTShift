@@ -620,6 +620,11 @@ SITE_VALUE = {
     # Land per m² of plot against floor-area ratio: German residential
     # conversion coefficients (WertR 2006 Anl. 11) imply 0.45–0.54.
     "density_elasticity": 0.5,
+    # Permitted use (decision of 2026-11-11): every built plot at its zone's
+    # reference density, whatever stands on it. "max_own" restores the earlier
+    # rule, max(own floor-area ratio, reference), which lent a plot built
+    # above its zone's density its own: a trace of current use.
+    "density_rule": "zone",
     # Reference density: this quantile of the realised floor-area ratio of the
     # pooled parcels in the same PLU zone label (permitted density is not open
     # data in structured form; the typical upper end of what was built stands in).

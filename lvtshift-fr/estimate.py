@@ -570,16 +570,20 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     again in proportion to
 
         effective plot area × density ** density_elasticity,
-        density = max(own floor-area ratio, reference FAR),
+        density = reference FAR of the parcel's zone (permitted use),
 
     the reference FAR being the ref_density_quantile of the pooled parcels'
     floor-area ratio in the same PLU zone label (zone type, then commune, where
-    the label has fewer than min_zone_parcels). On a parcel built below that
-    density in a house-scale zone (reference FAR below surplus_max_ref_far),
-    plot area beyond surplus_plot_multiple × the zone's median plot counts at
-    surplus_plot_weight: a large garden is not as many building plots (vacant
-    house plots sell for far less than proportionally more as they grow). In a
-    denser zone, or at or above the reference density, the whole plot counts.
+    the label has fewer than min_zone_parcels): the stand-in for the density
+    the zone permits, which open data do not give in structured form. What
+    stands on the plot does not enter: a block and a house on identical plots
+    of one zone get the same land. (density_rule "max_own", the rule until
+    2026-11-11, used max(own floor-area ratio, reference FAR), lending a plot
+    built above its zone's density its own.) In a house-scale zone (reference
+    FAR below surplus_max_ref_far), plot area beyond surplus_plot_multiple ×
+    the zone's median plot counts at surplus_plot_weight: a large plot is not
+    as many building plots (vacant house plots sell for far less than
+    proportionally more as they grow). In a denser zone the whole plot counts.
     In agricultural or natural zones (A, N), where the rest of a plot cannot
     be built on, only a yard of DRC_CURTILAGE_FACTOR × floor area counts, as
     for shed-type parcels. The building keeps its
@@ -607,6 +611,9 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     k_sur = float(prm["surplus_plot_multiple"])
     w_sur = float(prm["surplus_plot_weight"])
     far_sur = float(prm["surplus_max_ref_far"])
+    rule = prm.get("density_rule", "zone")
+    if rule not in ("zone", "max_own"):
+        raise ValueError(f"unknown density_rule {rule!r}")
     if not (0.0 <= theta <= 1.0 and 0.0 < q_ref < 1.0 and 0.5 <= q_cap <= 1.0
             and min_n >= 1 and k_sur >= 1.0 and 0.0 <= w_sur <= 1.0 and far_sur >= 0.0):
         raise ValueError(f"invalid SITE_VALUE parameters {prm}")
@@ -639,8 +646,12 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
              if c in out.columns]
     ref = _zone_quantile(far, zones, q_ref, min_n)
     typical_plot = _zone_quantile(plot, zones, 0.5, min_n)
-    density = np.maximum(far, ref)
-    house_scale = (far < ref) & (ref < far_sur)
+    if rule == "zone":          # permitted use: the zone's density, not the plot's
+        density = ref
+        house_scale = ref < far_sur
+    else:
+        density = np.maximum(far, ref)
+        house_scale = (far < ref) & (ref < far_sur)
     surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
     weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
 
