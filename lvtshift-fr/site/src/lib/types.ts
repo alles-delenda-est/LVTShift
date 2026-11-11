@@ -118,6 +118,14 @@ export interface Commune {
       surplus_plot_multiple?: number; surplus_plot_weight?: number;
       surplus_max_ref_far?: number;
     };
+    /** the tax on non-agricultural unbuilt land (TFPNB, TAFNB) that the reform
+     *  replaces: whether the run counted it, the amount, the non-agricultural
+     *  share of the commune's TFPNB (communes only) and the part shared over
+     *  houses' large gardens (absent in older payloads) */
+    unbuilt_tax?: {
+      replaced: boolean; amount_eur?: number; non_agricultural_share?: number;
+      garden_share?: number;
+    };
     /** social housing: whether the run modelled today's exemptions; the RPLS
      *  dwellings and the shares exempt / QPV-abated today are null where the
      *  social landlord category is not publishable (absent in older payloads) */

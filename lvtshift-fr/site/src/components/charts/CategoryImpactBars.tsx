@@ -14,6 +14,11 @@
  * zero-width bar at the reference line, the median change in euros in the
  * value column, and a footnote saying why.
  *
+ * Where the run counts the unbuilt-land tax the reform replaces, vacant land
+ * has a real percentage, usually far off the scale of the other categories
+ * (today's tax rests on 1961 cadastral values): its bar is cut at the edge,
+ * its value shown as a multiple, and a note gives the euro median.
+ *
  * A second column gives the category's total change: medians can all fall
  * while the levy stays the same, when a minority pays much more (La Rochelle:
  * houses −5.4 % at the median, +14.7 % in total).
@@ -33,7 +38,9 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { BandCategoryRow, PublishedCategoryRow } from "@/lib/types";
-import { pct, signedPct, signedPctAxis, euros, eurosExact } from "@/lib/format";
+import {
+  MULTIPLE_FROM_PCT, pct, signedChange, signedPctAxis, euros, eurosExact,
+} from "@/lib/format";
 import { bandSpan, byKey } from "@/lib/band";
 import { categoryAmount, BASIS_LABEL } from "@/lib/categoryAmount";
 import { symmetricAxis } from "@/lib/axis";
@@ -43,8 +50,10 @@ import { useNarrow } from "./useNarrow";
 /* ── extended row ─────────────────────────────────────────────────── */
 
 interface ProcessedRow extends PublishedCategoryRow {
-  barValue: number;   // median_change_pct ?? 0
+  barValue: number;   // median_change_pct ?? 0, cut at the axis limit when off scale
   isNull: boolean;
+  /** A rise too large for the axis (vacant land): bar cut short, value as a multiple. */
+  offScale: boolean;
   /** ±10 pt land-share band: whisker [below, above] and its ends */
   err: [number, number] | null;
   bandLo: number | null;
@@ -76,7 +85,7 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
       <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{row.label_fr}</p>
       <p>
         Variation médiane, par parcelle&nbsp;:{" "}
-        {row.isNull ? "n. d." : signedPct(row.median_change_pct)}
+        {row.isNull ? "n. d." : signedChange(row.median_change_pct)}
       </p>
       <p>
         En montant, {BASIS_LABEL[amount.basis]}&nbsp;: {sign}
@@ -88,8 +97,8 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
       )}
       {row.bandLo !== null && row.bandHi !== null && (
         <p style={{ color: GRIS_PALE }}>
-          Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedPct(row.bandLo)}{" "}
-          à {signedPct(row.bandHi)}
+          Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedChange(row.bandLo)}{" "}
+          à {signedChange(row.bandHi)}
         </p>
       )}
     </div>
@@ -105,14 +114,14 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
 ────────────────────────────────────────────────────────────────────── */
 
 function valueText(row: ProcessedRow): string {
-  if (!row.isNull) return signedPct(row.median_change_pct);
+  if (!row.isNull) return signedChange(row.median_change_pct) + (row.offScale ? "†" : "");
   const sign = row.median_change_eur > 0 ? "+" : row.median_change_eur < 0 ? "−" : "";
   return `${sign}${eurosExact(Math.abs(row.median_change_eur))}*`;
 }
 
 /** The category's total change: % where today's tax is positive, else € (vacant land). */
 function totalText(row: PublishedCategoryRow): string {
-  if (row.total_change_pct != null) return signedPct(row.total_change_pct);
+  if (row.total_change_pct != null) return signedChange(row.total_change_pct);
   const e = row.total_change_eur;
   if (e == null) return "—";
   return `${e > 0 ? "+" : e < 0 ? "−" : ""}${euros(Math.abs(e))}*`;
@@ -150,7 +159,7 @@ function makeValueTick(data: ProcessedRow[]) {
   return function ValueTick(props: any): ReactElement<SVGElement> {
     const row = data.find((r) => r.label_fr === props.payload?.value);
     if (!row) return <g />;
-    const fill = row.isNull ? ENCRE : row.barValue >= 0 ? ROUGE : GREEN;
+    const fill = row.isNull ? ENCRE : (row.median_change_pct ?? 0) >= 0 ? ROUGE : GREEN;
     return (
       <text
         x={props.x + 6}
@@ -172,6 +181,8 @@ function makeValueTick(data: ProcessedRow[]) {
 
 export interface CategoryImpactBarsProps {
   byCategory: PublishedCategoryRow[];
+  /** True when the run counts the unbuilt-land tax the reform replaces. */
+  unbuiltReplaced?: boolean;
   /** Low / high legs of the ±10 pt land-share band (optional). */
   band?: {
     low?: BandCategoryRow[] | null;
@@ -181,6 +192,7 @@ export interface CategoryImpactBarsProps {
 
 export default function CategoryImpactBars({
   byCategory,
+  unbuiltReplaced = false,
   band,
 }: CategoryImpactBarsProps) {
   const narrow = useNarrow();
@@ -194,11 +206,13 @@ export default function CategoryImpactBars({
         low.get(row.category)?.median_change_pct,
         high.get(row.category)?.median_change_pct,
       );
+      const offScale = (row.median_change_pct ?? 0) >= MULTIPLE_FROM_PCT;
       return {
         ...row,
         barValue: row.median_change_pct ?? 0,
         isNull: row.median_change_pct === null,
-        err: span?.err ?? null,
+        offScale,
+        err: offScale ? null : (span?.err ?? null),
         bandLo: span?.lo ?? null,
         bandHi: span?.hi ?? null,
       };
@@ -209,9 +223,10 @@ export default function CategoryImpactBars({
       return b.barValue - a.barValue;
     });
 
-  /* Symmetric axis on round ticks (labels live in their own column) */
+  /* Symmetric axis on round ticks (labels live in their own column); a rise
+     too large for the scale is left out of it and its bar cut at the limit */
   const nonNull = sortedData
-    .filter((r) => !r.isNull)
+    .filter((r) => !r.isNull && !r.offScale)
     .flatMap((r) => [r.barValue, r.bandLo ?? r.barValue, r.bandHi ?? r.barValue]);
   const minVal = nonNull.length ? Math.min(...nonNull) : -10;
   const maxVal = nonNull.length ? Math.max(...nonNull) : 10;
@@ -225,6 +240,7 @@ export default function CategoryImpactBars({
     maxTicksPerSide: narrow ? (hasTotalsForAxis ? 1 : 2) : 4,
   });
   const domain: [number, number] = [-axis.lim, axis.lim];
+  for (const r of sortedData) if (r.offScale) r.barValue = axis.lim;
 
   const cellFill = (entry: ProcessedRow): string => {
     if (entry.isNull) return GRIS_PALE;
@@ -240,6 +256,10 @@ export default function CategoryImpactBars({
   const withheldTotal = hasTotals && sortedData.some((r) => totalText(r) === "—");
   const colWidth = narrow ? 58 : 80;
   const vacant = sortedData.find((r) => r.isNull && r.category === "Vacant Land");
+  const offScale = sortedData.filter((r) => r.offScale);
+  const vacantTaxed = unbuiltReplaced
+    ? sortedData.find((r) => !r.isNull && r.category === "Vacant Land")
+    : undefined;
   // another category whose median falls on a parcel paying 0 € today (social
   // housing exempt today, on an exact even split)
   const otherNull = sortedData.find((r) => r.isNull && r.category !== "Vacant Land");
@@ -337,7 +357,7 @@ export default function CategoryImpactBars({
     </ResponsiveContainer>
       <figcaption className="sr-only">
         {sortedData
-          .map((r) => `${r.label_fr} : médiane ${valueText(r)}, total ${totalText(r)}`)
+          .map((r) => `${r.label_fr} : médiane ${valueText(r).replace("†", "")}, total ${totalText(r)}`)
           .join(" ; ")}
       </figcaption>
       {vacant && (
@@ -347,6 +367,24 @@ export default function CategoryImpactBars({
           variation en pourcentage n&apos;est pas définie. Les chiffres
           indiqués sont en euros : la hausse médiane par parcelle et, en total,
           les nouvelles cotisations de toute la catégorie.
+        </p>
+      )}
+      {offScale.length > 0 && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          † Barre coupée au bord du graphique : la hausse dépasse l&apos;échelle.
+          «&nbsp;×3&nbsp;» signifie que l&apos;impôt est multiplié par trois.
+        </p>
+      )}
+      {vacantTaxed && (
+        <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
+          {vacantTaxed.label_fr}&nbsp;: ces terrains ne paient aujourd&apos;hui
+          que la taxe foncière sur les propriétés non bâties et sa taxe
+          additionnelle, que la réforme remplace. Assises sur des valeurs
+          cadastrales de 1961, elles sont très faibles : la hausse est donc
+          forte en proportion, pour un montant médian de{" "}
+          {eurosExact(Math.abs(vacantTaxed.median_change_eur))} par parcelle et
+          par an. Faute de données par parcelle, le modèle répartit la taxe
+          actuelle selon la surface : ce chiffre est une moyenne communale.
         </p>
       )}
       {otherNull && (

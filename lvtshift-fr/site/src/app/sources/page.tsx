@@ -49,6 +49,12 @@ const DATA_SOURCES: {
     licence: "Licence Ouverte / Etalab",
   },
   {
+    name: "REI 2025 — foncier non bâti",
+    source: "DGFiP, via OFGL (jeu rei)",
+    role: "Bases et produits de la taxe foncière sur les propriétés non bâties et de sa taxe additionnelle (TAFNB) : part non agricole que la réforme remplace, ajoutée aux recettes maintenues constantes",
+    licence: "Licence Ouverte / Etalab",
+  },
+  {
     name: "REI 2025 — répartition de la base",
     source: "DGFiP, via OFGL (jeux rei et base-fiscale-simplifiee)",
     role: "Base TFPB (E11), compensation de l'abattement industriel (WC75), bases brutes de CFE (T29, T29_1, X503) et taux de TFPB 2020 : parts industrielle, professionnelle et logement de la taxe actuelle, commune par commune",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { euros, pct, signedPct, signedPctAxis } from "@/lib/format";
+import { euros, pct, signedChange, signedPct, signedPctAxis } from "@/lib/format";
 
 const NBSP = " "; // espace insécable
 describe("french formatters", () => {
@@ -15,6 +15,17 @@ describe("french formatters", () => {
   it("signs percentages with a true minus sign", () => {
     expect(signedPct(6.3)).toBe(`+6,3${NBSP}%`);
     expect(signedPct(-10.1)).toBe(`−10,1${NBSP}%`);
+  });
+});
+
+describe("signedChange", () => {
+  it("keeps a percentage below the threshold and switches to a multiple from it", () => {
+    expect(signedChange(-84.7)).toBe(`−84,7${NBSP}%`);
+    expect(signedChange(199.9)).toBe(`+199,9${NBSP}%`);
+    expect(signedChange(200)).toBe("×3,0");
+    expect(signedChange(249.2)).toBe("×3,5");
+    expect(signedChange(4584.2)).toBe("×47");
+    expect(signedChange(null)).toBe("n. d.");
   });
 });
 
