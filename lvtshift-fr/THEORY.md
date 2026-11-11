@@ -55,6 +55,9 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   classified by legal constructibility (GPU zoning) and priced against
   terrain-à-bâtir comparables or SAFER farmland. Unbuilt A/N land is then
   left out of the reform: it keeps today's TFPNB (decision D6, 2026-10-29).
+  The TFPNB and TAFNB on the other unbuilt land are replaced (decision of
+  2026-11-11): that amount, rebuilt from the REI, joins the levy and is
+  today's tax on vacant plots and on houses' ground beyond five ares.
   That was nearly free in revenue terms (1 % of the levy in Cahors) but it
   changes the published picture in rural communes, where farmland parcels
   outnumbered the built stock and dominated "who pays more".
@@ -155,6 +158,15 @@ land-share band, so error propagates visibly rather than silently.
 - **Pooling incomes across jurisdictions manufactures a false gradient.** Ranked
   ring-wide, the Lyon ring looks regressive; ranked within each commune it is
   progressive. Each commune keeps its own levy, so territories publish both views.
+- **A tax left out of scope still has to be someone's bill today** (Nov
+  2026). Vacant land showed a modelled tax of 0 because the TFPNB was "out of
+  scope", while the national scenarios said the reform replaced it. Counting
+  it turned a rise from nothing into a multiple (about ×3 to ×50 by commune):
+  the 1961 cadastral values make today's tax tiny, so the multiple is large
+  and the euros modest. A reviewer's confident explanation (a local surcharge)
+  failed on the data; its side remark (large gardens pay this tax too) was the
+  one that mattered, and moved a median of 37 % of the amount off vacant
+  plots.
 - **Ownership rules need the *right* holder, not every holder.** A domaine national
   is State property managed under droit Z by a public agency; reading the agency
   as a blocking owner kept Saint-Cloud's park taxable (23 % of its LVT levy).
@@ -204,6 +216,11 @@ land-share band, so error propagates visibly rather than silently.
   points more (Paris −27.6/+3.9 vs −17.4/+18.9). New bills are the same either
   way; only the starting point moves. One national multiplier cannot fit every
   commune; the per-parcel VLC in the Fichiers fonciers is the real fix.
+- **Today's tax on unbuilt land is a commune total shared by area.** Its real
+  split between parcels is not open data, many building-less parcels in towns
+  are slivers or yards that may pay nothing, and quarries and rail land get no
+  share. Vacant land's multiple is a commune average and probably overstates
+  the rise of true building plots.
 - **Social housing's exemptions rest on proxies.** The convention date stands in
   for the financing decision (15 or 25 years) and marks transfers; the RPLS has
   no parcel, so an estate's dwellings share one factor; foyers and résidences

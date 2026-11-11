@@ -843,6 +843,7 @@ def assert_aggregate_only(payload: dict) -> None:
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
     _check_social(payload)
+    _check_unbuilt(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
@@ -976,6 +977,62 @@ def _territory_land_method(present: list, out_dir: str) -> dict:
     return first if all(r == first for r in recs) else {"concept": "mixed"}
 
 
+UNBUILT_KEYS = {"replaced", "amount_eur", "non_agricultural_share", "garden_share"}
+
+
+def load_unbuilt(commune_key: str, out_dir: str = "output") -> dict:
+    """The unbuilt-land tax the run replaced (baseline sidecar): whether the
+    TFPNB and TAFNB on non-agricultural unbuilt land joined the levy, the
+    amount (public REI figures), the non-agricultural share of the commune's
+    TFPNB and the part shared over houses' large gardens. Older runs, and
+    runs without it, report replaced: False. Scalars only, validated."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.baseline.json"
+    rec = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    un = rec.get("unbuilt") if isinstance(rec, dict) else None
+    if un is None:
+        return {"replaced": False}
+    if not isinstance(un, dict) or not isinstance(un.get("replaced"), bool):
+        raise ValueError(f"{path}: invalid unbuilt record")
+    if not un["replaced"]:
+        return {"replaced": False}
+    amount = un.get("amount_eur")
+    if isinstance(amount, bool) or not isinstance(amount, (int, float)) \
+            or not math.isfinite(amount) or amount <= 0:
+        raise ValueError(f"{path}: unbuilt.amount_eur must be a positive amount, got {amount!r}")
+    out = {"replaced": True, "amount_eur": round(float(amount), 0)}
+    for k in ("non_agricultural_share", "garden_share"):
+        v = un.get(k)
+        if isinstance(v, bool) or not isinstance(v, (int, float)) \
+                or not math.isfinite(v) or not 0 <= v <= 1:
+            raise ValueError(f"{path}: unbuilt.{k} must lie in [0, 1], got {v!r}")
+        out[k] = round(float(v), 3)
+    return out
+
+
+def _territory_unbuilt(present: list, out_dir: str) -> dict:
+    """Sum of the members' replaced amounts; replaced only if every modelled
+    member replaced it (a territory mixing both would mix two levies)."""
+    recs = [load_unbuilt(k, out_dir) for k in present]
+    if not recs or not all(r["replaced"] for r in recs):
+        return {"replaced": False}
+    amount = sum(r["amount_eur"] for r in recs)
+    return {"replaced": True, "amount_eur": round(amount, 0),
+            "garden_share": round(sum(r["garden_share"] * r["amount_eur"] for r in recs) / amount, 3)}
+
+
+def _check_unbuilt(payload: dict) -> None:
+    """Guard for the provenance block on the unbuilt-land tax replaced."""
+    un = (payload.get("provenance") or {}).get("unbuilt_tax")
+    if un is None:
+        return
+    assert isinstance(un, dict) and set(un) <= UNBUILT_KEYS, \
+        f"unexpected unbuilt_tax keys: {set(un) - UNBUILT_KEYS if isinstance(un, dict) else un}"
+    assert isinstance(un.get("replaced"), bool), "unbuilt_tax.replaced must be a boolean"
+    assert all(isinstance(v, (bool, int, float)) for v in un.values()), \
+        "non-scalar value in unbuilt_tax"
+
+
 def _territory_baseline(present: list, out_dir: str) -> dict:
     """'calibrated' only if every modelled member is; else 'mixed' or 'floor_area'.
     The alternative's source is the members' common one, else 'mixed'."""
@@ -1013,6 +1070,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
             "house_cost_eur_m2": getattr(cfg, "house_cost_eur_m2", None),
             "activity_land_ratio": getattr(cfg, "activity_land_ratio", None),
             "current_tax_baseline": baseline,
+            "unbuilt_tax": load_unbuilt(commune_key, out_dir),
             "land_value": load_land_method(commune_key, out_dir),
             "social_housing": social_provenance(
                 [load_social_counts(commune_key, out_dir)], df, by_category),
@@ -1183,6 +1241,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
             "house_cost_eur_m2": TERRITORY_HOUSE_COST_EUR_M2.get(territory_key),
             "activity_land_ratio": TERRITORY_ACTIVITY_LAND_RATIO.get(territory_key),
             "current_tax_baseline": tb,
+            "unbuilt_tax": _territory_unbuilt(present, out_dir),
             "land_value": _territory_land_method(present, out_dir),
             "social_housing": social_provenance(
                 [load_social_counts(k, out_dir) for k in present], df, by_category),

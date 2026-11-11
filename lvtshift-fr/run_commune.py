@@ -300,6 +300,10 @@ def main():
     ap.add_argument("--no-social-housing", action="store_true",
                     help="don't model social housing's exemptions today nor its "
                          "landlord category (before/after comparison)")
+    ap.add_argument("--no-unbuilt-tax", action="store_true",
+                    help="don't replace the tax on non-agricultural unbuilt land "
+                         "(TFPNB, TAFNB): building-less parcels then pay nothing "
+                         "today in the model (before/after comparison)")
     ap.add_argument("--no-deflator", action="store_true",
                     help="don't deflate DVF prices to the reference year "
                          "(for the before/after comparison)")
@@ -348,14 +352,23 @@ def main():
             print(f"  [{cfg.name}] baseline split unavailable ({exc}); "
                   f"today's tax shared by floor area")
 
+    # The reform replaces the TFPNB and TAFNB on non-agricultural unbuilt land
+    unbuilt = None
+    if not args.no_unbuilt_tax:
+        try:
+            unbuilt = ingest.fetch_rei_unbuilt_replaced(cfg, layers=tuple(args.layers))
+        except ingest.IngestUnavailable as exc:
+            print(f"  [{cfg.name}] unbuilt-land tax unavailable ({exc}); "
+                  f"nothing replaced, building-less parcels pay 0 today")
+
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
                  deflator=deflator, baseline_split=split, site_value=site_value,
-                 social_summary=social_summary)
+                 social_summary=social_summary, unbuilt_replaced=unbuilt)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")
-    rev_ok = abs(out["new_tax"].sum() / tfpb - 1) < 0.01
+    rev_ok = abs(out["new_tax"].sum() / out["current_tax"].sum() - 1) < 0.01
     print(f"revenue neutrality within 1%: {rev_ok}")
     chg = out.groupby("property_category")["tax_change_pct"].median().round(1)
     print("median tax change % by category:\n", chg.to_string())

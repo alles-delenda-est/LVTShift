@@ -203,9 +203,13 @@ export CSV seul : `run(..., make_report=False)`.
   de chaque couronne, davantage dans une commune industrielle isolée
   (Saint-Fons 8, Tremblay-en-France 12, Marcy-l'Étoile 14 au coût brut).
 - **Taxe actuelle (maillon porteur).** La TFPB est un impôt sur le
-  **bâti** : les parcelles non bâties portent **zéro** taxe actuelle
-  (elles relèvent de la TFPNB, hors cible) — elles passent de ~0 à une LVT
-  positive. Au sein de chaque groupe de locaux (industriel, professionnel,
+  **bâti** : les parcelles non bâties n'en portent aucune part. Elles paient
+  aujourd'hui la TFPNB et sa taxe additionnelle, que la réforme remplace sur le
+  non-bâti non agricole : ce montant (REI) s'ajoute aux recettes maintenues
+  constantes et est réparti selon la surface sur les terrains nus et sur le
+  terrain des maisons au-delà de cinq ares. Sa répartition réelle entre
+  parcelles n'est pas une donnée ouverte : la variation du terrain nu est une
+  moyenne communale. Au sein de chaque groupe de locaux (industriel, professionnel,
   logement), le produit reste réparti à la seule surface plancher, qui ignore
   la catégorie cadastrale et les coefficients de pondération de surface.
   Choix assumé : **pas** de calage sur la valeur de marché (la VLC 1970 est

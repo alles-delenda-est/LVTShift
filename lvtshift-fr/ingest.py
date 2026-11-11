@@ -767,6 +767,88 @@ def _rei_baseline_split(cfg) -> dict:
     return out
 
 
+# REI lines of the taxe foncière sur les propriétés non bâties (FNB) and of its
+# additional tax (TAFNB, CGI art. 1519 I), by beneficiary layer: TFPNB net
+# base and amount, TAFNB net bases and amounts (the Métropole du Grand Paris
+# reports its own). The TAFNB is levied by the commune or by its EPCI.
+_TFPNB_LINES = {
+    "Commune": {"base": "B11", "amount": "B13", "tafnb_amount": ("B13TAFNB",)},
+    "GFP": {"base": "B31", "amount": "B33", "tafnb_amount": ("B33TAFNB", "B33MGPTAFNB")},
+}
+_TAFNB_BASES = ("B11TAFNB", "B31TAFNB", "B31MGPTAFNB")
+
+
+def fetch_rei_unbuilt_replaced(cfg, layers=("Commune", "GFP"),
+                               year: int | None = None) -> dict:
+    """
+    The tax on non-agricultural unbuilt land that the reform replaces: the
+    non-agricultural share of the commune's TFPNB, plus the TAFNB.
+
+    No source publishes the TFPNB by kind of land. The TAFNB is assessed on
+    cadastral groups 7 and 10–13 only (quarries, building plots, amenity land,
+    railways, sols; BOI-IF-AUT-80), so TAFNB base ÷ TFPNB base is the
+    non-agricultural share of the base, and of the amount since one rate
+    applies to every group (docs/research/tfpnb_farm_split.py, which rebuilds
+    the national split the same way). Agricultural and natural land keeps its
+    TFPNB, outside the reform.
+
+    Returns {"amount": €, "tfpnb": €, "tafnb": €, "non_agricultural_share":
+    float, "year": int} over the beneficiary `layers` held revenue-neutral.
+    Raises IngestUnavailable when the commune has no TFPNB line for the year
+    (the caller then replaces nothing and says so).
+    """
+    year = int(year or cfg.reference_year)
+    wanted = sorted({v for spec in _TFPNB_LINES.values()
+                     for v in (spec["base"], spec["amount"], *spec["tafnb_amount"])}
+                    | set(_TAFNB_BASES))
+    vars_sql = ",".join(f'"{v}"' for v in wanted)
+    rei = {}
+    try:
+        rows = _ofgl_records(SRC["ofgl_rei"], f'idcom="{cfg.insee_code}" and annee="{year}" '
+                                              f'and var in ({vars_sql})', "var,valeur")
+    except IngestUnavailable:
+        raise
+    except Exception as exc:     # any malformed answer: replace nothing, never crash
+        raise IngestUnavailable("REI", f"TFPNB for {cfg.insee_code}: "
+                                       f"{type(exc).__name__}: {exc}") from exc
+    for r in rows:
+        var = r.get("var")
+        if var in rei:
+            raise IngestUnavailable("REI", f"duplicate REI line {var} for {cfg.insee_code}")
+        val = _num(r.get("valeur"))
+        if val is not None and val < 0:
+            raise IngestUnavailable("REI", f"negative REI line {var} for {cfg.insee_code}")
+        rei[var] = val or 0.0
+    if not any(rei.get(_TFPNB_LINES[k]["base"]) for k in _TFPNB_LINES):
+        raise IngestUnavailable("REI", f"no TFPNB base {year} for {cfg.insee_code}")
+    tafnb_base = sum(rei.get(v, 0.0) for v in _TAFNB_BASES)
+    # The art. 1396 surcharge on building land raises the commune's base but
+    # neither the EPCI's nor the TAFNB's, so it would be counted as farmland.
+    # No modelled commune showed it in 2025 (docs/research/tfpnb-2026-11/).
+    b_com, b_gfp = rei.get("B11", 0.0), rei.get("B31", 0.0)
+    if b_gfp > 0 and b_com > 1.01 * b_gfp:
+        print(f"  [warn] [{cfg.name}] commune TFPNB base exceeds the EPCI's by "
+              f"{100 * (b_com / b_gfp - 1):.0f}%: a building-land surcharge (CGI 1396) "
+              f"may be undercounted in the amount replaced")
+    tfpnb = tafnb = total = 0.0
+    for layer in layers:
+        spec = _TFPNB_LINES.get(layer)
+        if spec is None:          # a layer with no unbuilt-land tax line (syndicates…)
+            continue
+        base, amount = rei.get(spec["base"], 0.0), rei.get(spec["amount"], 0.0)
+        share = min(1.0, tafnb_base / base) if base > 0 else 0.0
+        tfpnb += share * amount
+        total += amount
+        tafnb += sum(rei.get(v, 0.0) for v in spec["tafnb_amount"])
+    out = {"amount": tfpnb + tafnb, "tfpnb": tfpnb, "tafnb": tafnb,
+           "non_agricultural_share": (tfpnb / total) if total > 0 else 0.0,
+           "year": year}
+    print(f"  [{cfg.name}] unbuilt-land tax replaced {year}: €{out['amount']:,.0f} "
+          f"(TFPNB €{tfpnb:,.0f}, {100 * out['non_agricultural_share']:.0f}% of the "
+          f"commune's; TAFNB €{tafnb:,.0f})")
+    return out
+
+
 _TH2017: dict | None = None
 
 
