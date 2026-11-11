@@ -70,6 +70,15 @@ def test_plain_baseline_and_missing_prices():
         with pytest.raises(ValueError):
             estimate.revalued_tax(p, 1e6, bad)
     assert estimate.revalued_tax(p, 0.0, 0.5).sum() == 0.0
+    # nothing taxable: a loud failure, as for today's tax
+    with pytest.raises(ValueError):
+        estimate.revalued_tax(p.assign(hlm_tax_factor=0.0, is_exempt_public=True), 1e6, 0.5)
+    g = _parcels()
+    for bad_w in ({**W, "housing": -1.0}, {"housing": 1.0}):
+        with pytest.raises(ValueError):
+            estimate.revalued_tax(g, 1e6, 0.5, bucket_weights=bad_w)
+    with pytest.raises(ValueError):
+        estimate.revalued_tax(g.assign(floor_professional=-1.0), 1e6, 0.5, bucket_weights=W)
 
 
 def test_taxable_share_today():
@@ -78,6 +87,13 @@ def test_taxable_share_today():
     # mixed block: 80 % housing at the QPV factor 0.7 → 1 − 0.3 × 0.8
     assert k.tolist() == pytest.approx([1, 1, 0.76, 1, 1, 1, 1, 1, 0])
     assert (estimate.taxable_share_today(p.drop(columns="hlm_tax_factor")) == 1).all()
+    # a social landlord's shop-only parcel keeps its whole base, as today; so
+    # does unbuilt land; a building with no grouped floor takes the factor whole
+    q = p.assign(hlm_tax_factor=0.0)
+    k = estimate.taxable_share_today(q)
+    assert k[4] == 1.0 and k[5] == 1.0 and k[7] == 1.0
+    r = q.assign(floor_housing=0.0, floor_professional=0.0, floor_industrial=0.0)
+    assert estimate.taxable_share_today(r)[0] == 0.0
 
 
 def test_pipeline_writes_the_three_steps_and_each_holds_the_levy(tmp_path):

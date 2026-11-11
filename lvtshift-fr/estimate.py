@@ -917,8 +917,16 @@ def revalued_tax(p: pd.DataFrame, commune_tfpb_produit: float,
     price = _price_index(p, elasticity)
     cols = [f"floor_{k}" for k in BUCKETS]
     zero = pd.Series(0.0, index=p.index)
+    if bucket_weights:      # the same checks as current_tax
+        bad = {k: v for k, v in bucket_weights.items()
+               if not (np.isfinite(float(v)) and float(v) > 0)}
+        if bad or set(bucket_weights) != set(BUCKETS):
+            raise ValueError(f"bucket weights must be finite and positive for "
+                             f"{BUCKETS}, got {bucket_weights}")
     if bucket_weights and all(c in p.columns for c in cols):
-        f = {k: p[f"floor_{k}"].fillna(0.0).clip(lower=0) for k in BUCKETS}
+        f = {k: pd.to_numeric(p[f"floor_{k}"], errors="coerce").fillna(0.0) for k in BUCKETS}
+        if any((v < 0).any() for v in f.values()):
+            raise ValueError("revalued tax: negative floor area in a tax group")
         wf = sum(f[k] * float(bucket_weights[k]) for k in BUCKETS)
         grouped = built & (wf > 0)
         fixed = ((f["industrial"] * float(bucket_weights["industrial"])
@@ -930,8 +938,10 @@ def revalued_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         fixed, housing = zero, (floor * hf).where(built, 0.0)
         new_housing = (floor * hf * price).where(built, 0.0)
     total = float(fixed.sum() + housing.sum())
-    if commune_tfpb_produit <= 0 or total <= 0:
+    if commune_tfpb_produit <= 0:
         return zero
+    if not (np.isfinite(total) and total > 0):
+        raise ValueError(f"revalued-tax weights sum to {total}: cannot share the produit")
     h_amount = commune_tfpb_produit * float(housing.sum()) / total
     out = commune_tfpb_produit * fixed / total
     if h_amount > 0:
@@ -952,16 +962,21 @@ def taxable_share_today(p: pd.DataFrame,
     if not housing_factor_col or housing_factor_col not in p.columns:
         return pd.Series(1.0, index=p.index)
     hf = pd.to_numeric(p[housing_factor_col], errors="coerce").fillna(1.0).clip(0, 1)
-    if "floor_housing" in p.columns:
-        floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
-        share = (pd.to_numeric(p["floor_housing"], errors="coerce").fillna(0.0)
-                 / floor.where(floor > 0)).fillna(1.0).clip(0, 1)
-        # a parcel with a building but no grouped floor: the factor on the whole
-        share = share.where(pd.to_numeric(p["floor_housing"], errors="coerce").fillna(0) > 0,
-                            1.0)
+    floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
+    cols = [f"floor_{k}" for k in BUCKETS]
+    if all(c in p.columns for c in cols):
+        f = {k: pd.to_numeric(p[f"floor_{k}"], errors="coerce").fillna(0.0).clip(lower=0)
+             for k in BUCKETS}
+        grouped = sum(f.values()) > 0
+        # as current_tax: grouped floor → the factor on the housing floor only
+        # (a shop-only parcel keeps its whole base); no grouped floor → on
+        # the whole parcel
+        share = (f["housing"] / floor.where(floor > 0)).fillna(0.0).clip(0, 1)             .where(grouped, 1.0)
     else:
         share = pd.Series(1.0, index=p.index)
-    return 1.0 - (1.0 - hf) * share
+    k = 1.0 - (1.0 - hf) * share
+    # the exemptions are on built property: unbuilt land keeps its whole base
+    return k.where(floor > 0, 1.0)
 
 
 # Gardens attached to a house are part of the built property up to five ares
