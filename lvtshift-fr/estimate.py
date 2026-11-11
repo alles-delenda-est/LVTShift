@@ -904,6 +904,8 @@ def unbuilt_tax(p: pd.DataFrame, amount: float, in_reform: pd.Series,
     if amount == 0:
         return zero
     area = pd.to_numeric(p["parcel_area_m2"], errors="coerce").fillna(0.0).clip(lower=0.0)
+    if not np.isfinite(area).all():
+        raise ValueError("unbuilt-land tax: non-finite parcel area")
     built = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0) > 0
     inside = pd.Series(np.asarray(in_reform, dtype=bool), index=p.index)
     w = area.where(~built & inside, 0.0)

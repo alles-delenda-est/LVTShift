@@ -53,7 +53,9 @@ def test_replaced_amount_handles_the_grand_paris_and_caps_the_share(monkeypatch)
 
 
 def test_replaced_amount_fails_loudly_on_missing_or_bad_lines(monkeypatch):
-    for lines in ({}, {"B13": 10.0}, {"B11": 100.0, "B13": -5.0}):
+    for lines in ({}, {"B13": 10.0}, {"B11": 100.0, "B13": -5.0},
+                  {"B11": 100.0, "B13": "80000"}, {"B11": 100.0, "B13": float("nan")},
+                  {"B11": 100.0, "B13": float("inf")}):
         _rei(monkeypatch, lines)
         with pytest.raises(ingest.IngestUnavailable):
             ingest.fetch_rei_unbuilt_replaced(Cfg)
@@ -61,6 +63,15 @@ def test_replaced_amount_fails_loudly_on_missing_or_bad_lines(monkeypatch):
         {"var": "B11", "valeur": 1.0}, {"var": "B11", "valeur": 2.0}])
     with pytest.raises(ingest.IngestUnavailable):
         ingest.fetch_rei_unbuilt_replaced(Cfg)
+    # malformed rows fail as unavailable, never as a crash
+    for rows in ([["B11", 1.0]], [{"var": ["B11"], "valeur": 1.0}], {"results": []},
+                 [{"var": "X99", "valeur": 1.0}]):
+        monkeypatch.setattr(ingest, "_ofgl_records", lambda *a, _r=rows, **k: _r)
+        with pytest.raises(ingest.IngestUnavailable):
+            ingest.fetch_rei_unbuilt_replaced(Cfg)
+    # a null value is an absent line, read as zero
+    _rei(monkeypatch, {"B11": 100.0, "B13": 50.0, "B11TAFNB": None})
+    assert ingest.fetch_rei_unbuilt_replaced(Cfg)["amount"] == 0.0
 
 
 def _parcels():
@@ -95,6 +106,8 @@ def test_unbuilt_tax_degenerate_cases():
     for bad in (-1.0, float("nan"), float("inf")):
         with pytest.raises(ValueError):
             estimate.unbuilt_tax(p, bad, every)
+    with pytest.raises(ValueError):
+        estimate.unbuilt_tax(p.assign(parcel_area_m2=[float("inf")] + [1.0] * 6), 100.0, every)
 
 
 def test_pipeline_adds_the_replaced_tax_to_the_levy_and_to_todays_bills(tmp_path):
@@ -153,7 +166,11 @@ def test_export_reports_what_was_replaced_and_guards_the_block(tmp_path, monkeyp
     t = ew._territory_unbuilt(["zz", "yy"], str(tmp_path))
     assert t["replaced"] and t["amount_eur"] == 389146.0 and 0.1 < t["garden_share"] < 0.358
     ew._check_unbuilt({"provenance": {"unbuilt_tax": t}})
+    ew._check_unbuilt({"provenance": {"unbuilt_tax": {"replaced": False}}})
     for bad in ({"replaced": True, "parcels": [1, 2]}, {"replaced": "yes"},
-                {"replaced": True, "owner": "x"}):
+                {"replaced": True, "owner": "x"}, {**t, "garden_share": 5},
+                {**t, "amount_eur": -1.0}, {**t, "amount_eur": float("nan")},
+                {**t, "amount_eur": 1e15}, {**t, "amount_eur": 1234.5},
+                {"replaced": False, "amount_eur": 1000.0}):
         with pytest.raises(AssertionError):
             ew._check_unbuilt({"provenance": {"unbuilt_tax": bad}})

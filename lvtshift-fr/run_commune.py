@@ -360,6 +360,12 @@ def main():
         except ingest.IngestUnavailable as exc:
             print(f"  [{cfg.name}] unbuilt-land tax unavailable ({exc}); "
                   f"nothing replaced, building-less parcels pay 0 today")
+        # 0.02–2.9 % of the built tax across the 188 communes: far above that,
+        # the REI answer is wrong, not the commune
+        if unbuilt and not unbuilt["amount"] <= rp.MAX_UNBUILT_SHARE_OF_TFPB * tfpb:
+            print(f"  [{cfg.name}] unbuilt-land tax €{unbuilt['amount']:,.0f} implausible "
+                  f"against €{tfpb:,.0f} of TFPB; nothing replaced")
+            unbuilt = None
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,

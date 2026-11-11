@@ -811,11 +811,20 @@ def fetch_rei_unbuilt_replaced(cfg, layers=("Commune", "GFP"),
     except Exception as exc:     # any malformed answer: replace nothing, never crash
         raise IngestUnavailable("REI", f"TFPNB for {cfg.insee_code}: "
                                        f"{type(exc).__name__}: {exc}") from exc
+    if not isinstance(rows, list):
+        raise IngestUnavailable("REI", f"TFPNB for {cfg.insee_code}: malformed answer")
     for r in rows:
-        var = r.get("var")
+        var = r.get("var") if isinstance(r, dict) else None
+        if not isinstance(var, str) or var not in wanted:
+            raise IngestUnavailable("REI", f"unexpected REI row for {cfg.insee_code}")
         if var in rei:
             raise IngestUnavailable("REI", f"duplicate REI line {var} for {cfg.insee_code}")
-        val = _num(r.get("valeur"))
+        raw = r.get("valeur")
+        val = _num(raw)
+        # a missing value is an absent line; text, NaN or infinity is a bad
+        # answer, never silently read as zero
+        if raw is not None and val is None:
+            raise IngestUnavailable("REI", f"non-numeric REI line {var} for {cfg.insee_code}")
         if val is not None and val < 0:
             raise IngestUnavailable("REI", f"negative REI line {var} for {cfg.insee_code}")
         rei[var] = val or 0.0

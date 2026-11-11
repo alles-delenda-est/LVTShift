@@ -1029,8 +1029,18 @@ def _check_unbuilt(payload: dict) -> None:
     assert isinstance(un, dict) and set(un) <= UNBUILT_KEYS, \
         f"unexpected unbuilt_tax keys: {set(un) - UNBUILT_KEYS if isinstance(un, dict) else un}"
     assert isinstance(un.get("replaced"), bool), "unbuilt_tax.replaced must be a boolean"
-    assert all(isinstance(v, (bool, int, float)) for v in un.values()), \
-        "non-scalar value in unbuilt_tax"
+    if not un["replaced"]:
+        assert set(un) == {"replaced"}, "unbuilt_tax carries figures but replaced is false"
+        return
+    amount = un.get("amount_eur")
+    assert isinstance(amount, (int, float)) and not isinstance(amount, bool) \
+        and math.isfinite(amount) and 0 < amount < 1e10 and float(amount).is_integer(), \
+        f"unbuilt_tax.amount_eur must be a whole positive amount, got {amount!r}"
+    for k in ("non_agricultural_share", "garden_share"):
+        if k in un:
+            v = un[k]
+            assert isinstance(v, (int, float)) and not isinstance(v, bool) \
+                and math.isfinite(v) and 0 <= v <= 1, f"unbuilt_tax.{k} must lie in [0, 1], got {v!r}"
 
 
 def _territory_baseline(present: list, out_dir: str) -> dict:

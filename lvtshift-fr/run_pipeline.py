@@ -66,6 +66,10 @@ def social_landlord_parcels(p: pd.DataFrame) -> pd.Series:
     return (share >= SOCIAL_CATEGORY_SHARE) & p["category_fr"].isin(SOCIAL_HOST_CATEGORIES)
 
 
+# The unbuilt-land tax replaced is 0.02–2.9 % of a commune's built tax in the
+# REI 2025; an amount above this share of it is a bad answer (run_commune).
+MAX_UNBUILT_SHARE_OF_TFPB = 0.1
+
 # Unbuilt agricultural and natural land (PLU zones A and N, run_commune) is
 # outside the reform: it keeps today's TFPNB and its exemptions, so it takes no
 # share of the land tax. Parcels holding only farm buildings are unbuilt here,
