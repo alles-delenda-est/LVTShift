@@ -143,10 +143,10 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
             raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
                              f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
-    steps = [c for c in STEP_TAX_COLS if c in side.columns]
-    if steps and len(steps) != len(STEP_TAX_COLS):
-        raise ValueError(f"{side_path.name}: decomposition columns incomplete ({steps})")
-    for col in steps:
+    # new_tax_kept (the TVTN with today's exemptions) stays in the sidecar,
+    # never read: with the reform's bills it gives away the tax on exempt
+    # social housing (security review, 2026-11-11)
+    for col in [c for c in STEP_TAX_COLS if c in side.columns]:
         v = side[col].to_numpy(float)
         cur = df["current_tax"].to_numpy(float)
         if not (np.isfinite(v).all() and (v >= -0.01).all()
@@ -222,7 +222,12 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         cur = rsub["current_tax"].sum(min_count=1)
         if np.isfinite(chg) and np.isfinite(cur) and rsub["tax_change"].notna().all():
             total = _pct(float(chg), float(cur))
-            if total is not None:
+            dominated = any(
+                float(rsub[c].astype(float).sum()) > 0
+                and float(rsub[c].astype(float).max())
+                > MAX_PARCEL_TAX_SHARE * float(rsub[c].astype(float).sum())
+                for c in ("current_tax", "new_tax") + STEP_TAX_COLS if c in rsub.columns)
+            if total is not None and not dominated:
                 steps = _steps(rsub)
     hh_median, dwellings = None, None
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
@@ -412,26 +417,42 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
     }
 
 
-# The decomposition's intermediate bills (run_pipeline, METHODOLOGY §3.6):
-# housing at market values, then the land tax with today's exemptions.
-STEP_TAX_COLS = ("revalued_tax", "new_tax_kept")
-STEP_KEYS = ("step_revaluation_pct", "step_land_pct", "step_exemptions_pct")
+# The decomposition's intermediate bill (run_pipeline, METHODOLOGY §3.6):
+# today's tax with housing at market values. The pipeline's second one, the
+# TVTN with today's social housing exemptions, is never published: between
+# it and the reform every unexempt bill scales by one factor, which a row of
+# houses gives away, and with the published levy that factor yields the tax
+# on exempt social housing, one landlord's or one parcel's in places
+# (security review, 2026-11-11). Step 2 therefore includes the end of the
+# exemptions.
+STEP_TAX_COLS = ("revalued_tax",)
+STEP_KEYS = ("step_revaluation_pct", "step_land_pct")
 NO_STEPS = dict.fromkeys(STEP_KEYS)
+# a step beyond this (in % of today's tax) is a group almost untaxed today
+STEP_MAX_PCT = 1_000_000
 
 
 def _steps(sub: pd.DataFrame) -> dict:
-    """A group's change split into three steps, each in % of the group's tax
+    """A group's change split into two steps, each in % of the group's tax
     today, so they add up to its total change (to rounding): housing brought
-    to market values, the land tax with today's social housing exemptions,
-    and the end of those exemptions. Group totals, not medians, because only
-    totals add up. Empty for an older run or a group untaxed today."""
+    to market values, then the move to the TVTN (end of the social housing
+    exemptions included). Group totals, not medians, because only totals add
+    up. Empty for an older run, a member without the column, a group untaxed
+    today, or a step out of bounds."""
     cols = ("current_tax",) + STEP_TAX_COLS + ("new_tax",)
     if not set(cols) <= set(sub.columns):
         return dict(NO_STEPS)
-    tot = [float(sub[c].astype(float).sum()) for c in cols]
-    if not (all(np.isfinite(tot)) and tot[0] > 0):
+    v = sub[list(cols)].astype(float)
+    # a territory member from an older run has blanks, which sums would skip
+    if not np.isfinite(v.to_numpy()).all():
         return dict(NO_STEPS)
-    return {k: _pct(tot[i + 1] - tot[i], tot[0]) for i, k in enumerate(STEP_KEYS)}
+    tot = v.sum().tolist()
+    if not tot[0] > 0:
+        return dict(NO_STEPS)
+    out = {k: _pct(tot[i + 1] - tot[i], tot[0]) for i, k in enumerate(STEP_KEYS)}
+    if any(x is None or not abs(x) < STEP_MAX_PCT for x in out.values()):
+        return dict(NO_STEPS)
+    return out
 
 
 def _category_total(sub: pd.DataFrame) -> dict:
@@ -481,7 +502,7 @@ def social_landlords(df: pd.DataFrame) -> int:
 # baseline leg, current_tax is the variant and current_tax_central the
 # central one) and the reform's, so every leg takes the same decision.
 DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax",
-                      "revalued_tax", "new_tax_kept")
+                      "revalued_tax")
 
 
 def social_disclosable(df: pd.DataFrame) -> bool:
@@ -863,11 +884,12 @@ def _check_steps(payload: dict) -> None:
             if all(v is None for v in vals):
                 continue
             assert all(isinstance(v, (int, float)) and not isinstance(v, bool)
-                       and math.isfinite(v) and abs(v) < 10_000 for v in vals), \
-                f"{key}: steps must all be finite numbers, got {vals}"
+                       and math.isfinite(v) and abs(v) < STEP_MAX_PCT for v in vals), (
+                f"{key}: steps must all be finite numbers, got {vals}")
             tot = r.get("total_change_pct")
-            assert isinstance(tot, (int, float)) and abs(sum(vals) - tot) <= 0.3, \
-                f"{key}: steps {vals} do not add up to the total {tot}"
+            assert (isinstance(tot, (int, float)) and not isinstance(tot, bool)
+                    and math.isfinite(tot) and abs(sum(vals) - tot) <= 0.3), (
+                f"{key}: steps {vals} do not add up to the total {tot}")
 
 
 def assert_aggregate_only(payload: dict) -> None:

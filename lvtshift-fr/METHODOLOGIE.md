@@ -788,11 +788,11 @@ fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'expo
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
 (surcouche de localisation monétaire du rapport amont).
 
-*Décomposition en trois étapes* (`estimate.revalued_tax`,
-`estimate.taxable_share_today`, `export_web._steps`). Une partie de la
-variation de chaque groupe tient au remplacement d'une base de 1970, non à
-l'imposition du sol. Deux impôts intermédiaires, chacun au produit
-d'aujourd'hui, la décomposent :
+*Décomposition* (`estimate.revalued_tax`, `estimate.taxable_share_today`,
+`export_web._steps`). Une partie de la variation de chaque groupe tient au
+remplacement d'une base de 1970, non à l'imposition du sol. La chaîne calcule
+deux impôts intermédiaires, chacun au produit d'aujourd'hui ; seul le premier
+est publié :
 
 1. **Les logements aux valeurs de marché** (`revalued_tax`) : l'impôt bâti
    d'aujourd'hui, la part du groupe des logements étant répartie selon la
@@ -810,21 +810,32 @@ d'aujourd'hui, la décomposent :
    loyers aux prix proche de 0,8. La simulation de la révision par l'IPP
    (rapport n° 29, 2020) suppose 1 au sein d'une commune. Gemini proposait
    0,55, sans source ; nous ne l'avons pas retenu.
-2. **La TFVN, exonérations d'aujourd'hui maintenues** (`new_tax_kept`) : la même
-   résolution à 4:1, sur des valeurs du sol et du bâti multipliées par la
-   part que les règles actuelles du logement social laissent imposable,
-   1 − (1 − facteur) × part de logement du plancher.
+2. **La TVTN, exonérations d'aujourd'hui maintenues** (`new_tax_kept`, local
+   seulement) : la même résolution à 4:1, sur des valeurs du sol et du bâti
+   multipliées par la part que les règles actuelles du logement social
+   laissent imposable, 1 − (1 − facteur) × part de logement du plancher.
 3. **La réforme** (`new_tax`), qui met aussi fin à ces exonérations.
 
-Chaque étape est publiée, par catégorie et par groupe de revenu, en % de
-l'impôt actuel du groupe : les trois s'additionnent à sa variation totale (aux
-arrondis près). Ce sont des totaux, non des médianes, parce que seuls les
-totaux s'additionnent. Les étapes d'une catégorie sont retenues avec son
-total. Chaque étape est neutre en recettes entre catégories, mais pondérée
-par l'impôt actuel des catégories, qui n'est jamais publié : les lignes
-publiées ne permettent pas de retrouver une ligne retenue. La règle de
-dominance (aucune parcelle au-dessus du dixième de l'impôt d'une catégorie)
-et celle des bailleurs sociaux portent sur les quatre impôts.
+Deux étapes sont publiées, par catégorie et par groupe de revenu, en % de
+l'impôt actuel du groupe, et s'additionnent à sa variation totale (aux
+arrondis près) : les logements aux valeurs de marché (1 contre aujourd'hui),
+et le passage à la TVTN (la réforme contre 1), qui comprend la fin des
+exonérations du logement social. L'impôt 2 n'est jamais publié ni lu par
+l'export : entre lui et la réforme, l'impôt de toute parcelle non exonérée
+est multiplié par un même facteur, que n'importe quelle ligne de maisons
+révélerait ; avec le produit publié, ce facteur donne en euros l'impôt sur le
+logement social exonéré, celui d'un seul bailleur ou d'une seule parcelle
+dans certaines communes (revue de sécurité du 11 novembre 2026). Il ne sert
+qu'à l'analyse interne.
+
+Les étapes sont des totaux, non des médianes, parce que seuls les totaux
+s'additionnent. Les étapes d'un groupe sont retenues avec son total, ou
+quand une parcelle porte plus du dixième de l'impôt du groupe, aujourd'hui,
+selon l'impôt 1 ou après la réforme (groupes de revenu compris). Chaque étape
+est neutre en recettes entre catégories, mais pondérée par l'impôt actuel des
+catégories, qui n'est jamais publié : les lignes publiées ne permettent pas
+de retrouver une ligne retenue. La règle des bailleurs sociaux porte aussi
+sur l'impôt 1.
 
 Ce que la première étape n'est pas : notre « aujourd'hui » est lui-même une
 estimation selon la surface (§3.5), sans élément de situation ni de confort,

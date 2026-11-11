@@ -971,7 +971,8 @@ def taxable_share_today(p: pd.DataFrame,
         # as current_tax: grouped floor → the factor on the housing floor only
         # (a shop-only parcel keeps its whole base); no grouped floor → on
         # the whole parcel
-        share = (f["housing"] / floor.where(floor > 0)).fillna(0.0).clip(0, 1)             .where(grouped, 1.0)
+        share = ((f["housing"] / floor.where(floor > 0)).fillna(0.0).clip(0, 1)
+                 .where(grouped, 1.0))
     else:
         share = pd.Series(1.0, index=p.index)
     k = 1.0 - (1.0 - hf) * share

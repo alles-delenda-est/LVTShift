@@ -1,12 +1,11 @@
 /**
  * Decomposition table data: the reform's change for each group split into
- * three steps that add up to its total (export_web._steps):
+ * two steps that add up to its total (export_web._steps):
  *   1. today's tax with housing brought to market values (no other change);
- *   2. the land tax (TFVN), today's social housing exemptions kept;
- *   3. the end of those exemptions.
+ *   2. the move to the land tax (TVTN), end of the social housing
+ *      exemptions included.
  * Each step is in % of the group's tax today. Rows without steps (withheld,
- * older payloads) are left out; the exemptions column is shown only where
- * some group has a non-zero value.
+ * older payloads) are left out.
  */
 
 import type { CategoryRow, QuintileRow } from "./types";
@@ -17,26 +16,21 @@ export interface StepRow {
   sublabel?: string;
   revaluation: number;
   land: number;
-  exemptions: number;
   total: number;
 }
 
 export interface StepTable {
   categories: StepRow[];
   quintiles: StepRow[];
-  showExemptions: boolean;
 }
 
-type WithSteps = Pick<
-  CategoryRow,
-  "total_change_pct" | "step_revaluation_pct" | "step_land_pct" | "step_exemptions_pct"
->;
+type WithSteps = Pick<CategoryRow, "total_change_pct" | "step_revaluation_pct" | "step_land_pct">;
 
 function steps(r: WithSteps) {
-  const { step_revaluation_pct: a, step_land_pct: b, step_exemptions_pct: c, total_change_pct: t } = r;
-  if (a == null || b == null || c == null || t == null) return null;
-  if (![a, b, c, t].every(Number.isFinite)) return null;
-  return { revaluation: a, land: b, exemptions: c, total: t };
+  const { step_revaluation_pct: a, step_land_pct: b, total_change_pct: t } = r;
+  if (a == null || b == null || t == null) return null;
+  if (![a, b, t].every(Number.isFinite)) return null;
+  return { revaluation: a, land: b, total: t };
 }
 
 const QUINTILE_LABEL = ["", "Revenus les plus modestes", "Revenus modestes", "Revenus médians",
@@ -62,6 +56,5 @@ export function stepTable(
         ...s,
       });
   }
-  const showExemptions = [...categories, ...quintiles].some((r) => r.exemptions !== 0);
-  return { categories, quintiles, showExemptions };
+  return { categories, quintiles };
 }

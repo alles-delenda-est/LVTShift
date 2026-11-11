@@ -310,7 +310,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             </p>
           </section>
 
-          {/* 5a. Where the change comes from: revaluation vs the TFVN */}
+          {/* 5a. Where the change comes from: revaluation vs the TVTN */}
           <section aria-labelledby="section-etapes">
             <h3
               id="section-etapes"
@@ -319,17 +319,17 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               D&apos;où viennent les écarts ?
             </h3>
             <p className="text-sm text-encre font-body mb-3 max-w-3xl leading-relaxed">
-              Une partie des écarts ne tient pas à la TFVN : elle vient de ce que
+              Une partie des écarts ne tient pas à la TVTN : elle vient de ce que
               la taxe foncière des logements repose encore sur des valeurs
-              locatives de 1970. Le tableau sépare trois étapes, chacune à
+              locatives de 1970. Le tableau sépare deux étapes, chacune à
               recettes constantes : <strong>1.</strong> l&apos;impôt d&apos;aujourd&apos;hui,
               réparti entre les logements selon leur valeur de marché actuelle,
               sans rien changer d&apos;autre (ce qu&apos;apporterait, en ordre de
               grandeur, la révision des valeurs locatives des logements, repoussée à 2031) ;{" "}
-              <strong>2.</strong> le passage à la TFVN, exonérations des logements
-              sociaux maintenues ; <strong>3.</strong> la fin de ces exonérations.
-              Chaque case est en % de l&apos;impôt actuel du groupe ; les étapes
-              s&apos;additionnent au total.
+              <strong>2.</strong> le passage à la TVTN, qui met aussi fin aux
+              exonérations des logements sociaux. Chaque case est en % de
+              l&apos;impôt actuel du groupe ; les deux étapes s&apos;additionnent
+              au total.
             </p>
             <StepsTable
               byCategory={publishedCategories(commune.by_category)}

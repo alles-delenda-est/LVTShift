@@ -243,7 +243,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
 
     # Decomposition (METHODOLOGY §3.6): today → housing at market values →
     # land tax with today's social housing exemptions → the reform, which also
-    # ends them. Each step holds the same revenue.
+    # ends them. Each step holds the same revenue. Only the first bill is
+    # published; new_tax_kept stays local (export_web.STEP_TAX_COLS).
     p["revalued_tax"] = estimate.revalued_tax(
         p, commune_tfpb_produit, REVALUATION["rent_price_elasticity"],
         bucket_weights=baseline["weights"]) + p["unbuilt_tax_today"]
@@ -495,7 +496,8 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
         side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
                                         .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
-    # the decomposition's two intermediate bills (METHODOLOGY §3.6)
+    # the decomposition's two intermediate bills (METHODOLOGY §3.6); new_tax_kept
+    # is for private analysis only, never read by the export
     for col in ("revalued_tax", "new_tax_kept"):
         if col in p.columns:
             side[col] = p[col].values

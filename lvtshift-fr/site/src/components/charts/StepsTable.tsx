@@ -2,9 +2,9 @@
 
 /**
  * StepsTable — where each group's change comes from: housing brought to
- * market values, the move to the TFVN (social housing exemptions kept), and
- * the end of those exemptions. Each cell is in % of the group's tax today, so
- * a row adds up to its total. Pure HTML, styled like BaselineRange.
+ * market values, then the move to the TVTN (end of the social housing
+ * exemptions included). Each cell is in % of the group's tax today, so a row
+ * adds up to its total. Pure HTML, styled like BaselineRange.
  */
 
 import type { CategoryRow, QuintileRow } from "@/lib/types";
@@ -47,10 +47,7 @@ export default function StepsTable({ byCategory, byQuintile }: StepsTableProps) 
   }
   const cols: { key: keyof StepRow; label: string; sub: string }[] = [
     { key: "revaluation", label: "1. Valeurs de marché", sub: "logements, à règles inchangées" },
-    { key: "land", label: "2. Passage à la TFVN", sub: "exonérations HLM maintenues" },
-    ...(t.showExemptions
-      ? [{ key: "exemptions" as const, label: "3. Fin des exonérations HLM", sub: "et de l’abattement QPV" }]
-      : []),
+    { key: "land", label: "2. Passage à la TVTN", sub: "fin des exonérations HLM comprise" },
   ];
   const head = (label: string, sub: string, total = false) => (
     <>

@@ -1,6 +1,6 @@
-"""Offline tests for the decomposition of the reform into three steps:
-housing brought to market values, the land tax with today's exemptions, and
-the end of the social housing exemptions (METHODOLOGY §3.6).
+"""Offline tests for the decomposition of the reform: housing at market values,
+then the move to the TVTN; the pipeline's local-only bill with today's exemptions
+kept (METHODOLOGY §3.6).
 
 Run: python -m pytest -q test_revaluation.py
 """
@@ -141,7 +141,7 @@ def test_export_publishes_the_steps_and_guards_them(tmp_path):
     ew._check_steps({"by_category": rows})
     # guards: partial steps, steps that do not add up, non-numbers
     good = {"parcels": 50, "total_change_pct": 5.0, "step_revaluation_pct": 2.0,
-            "step_land_pct": 3.0, "step_exemptions_pct": 0.0}
+            "step_land_pct": 3.0}
     for bad in ({"by_category": [{**good, "total_change_pct": None}]},
                 {"by_category": [{**good, "step_land_pct": 9.0}]},
                 {"by_income_quintile": [{**good, "step_land_pct": "3"}]},
@@ -155,3 +155,30 @@ def test_export_publishes_the_steps_and_guards_them(tmp_path):
     s.to_csv(side, index=False)
     with pytest.raises(ValueError):
         ew.load_parcels(key, str(tmp_path))
+
+
+def test_the_kept_exemptions_bill_is_never_read_and_steps_are_robust(tmp_path):
+    import export_web as ew
+    import run_pipeline as rp
+    from config import COMMUNES
+    from test_farmland import _world
+    key = next(k for k, c in COMMUNES.items() if rp.slug_of(c) == rp.slug_of(rp.CFG))
+    parcels, buildings, dvf = _world()
+    rp.run(parcels, buildings, dvf, 2_000_000.0, out_dir=str(tmp_path), make_report=False)
+    df = ew.load_parcels(key, str(tmp_path))
+    # the TVTN-with-exemptions bill gives away the tax on exempt social
+    # housing: it never leaves the sidecar
+    assert "new_tax_kept" not in df.columns
+    assert ew.STEP_KEYS == ("step_revaluation_pct", "step_land_pct")
+    assert "new_tax_kept" not in ew.DOMINANCE_TAX_COLS
+    # a member without the column (older run) blanks the steps, never skews them
+    mixed = df.assign(revalued_tax=df["revalued_tax"].where(df.index % 2 == 0))
+    assert ew._steps(mixed) == ew.NO_STEPS
+    # a group almost untaxed today: no steps rather than a crash
+    tiny = df.assign(current_tax=1e-12, revalued_tax=1e-12, new_tax=df["new_tax"] + 1e6)
+    assert ew._steps(tiny) == ew.NO_STEPS
+    # booleans and non-finite totals are refused
+    good = {"parcels": 50, "step_revaluation_pct": 2.0, "step_land_pct": 3.0}
+    for tot in (True, float("nan")):
+        with pytest.raises(AssertionError):
+            ew._check_steps({"by_category": [{**good, "total_change_pct": tot}]})

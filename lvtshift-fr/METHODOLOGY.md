@@ -701,10 +701,10 @@ revenue-neutral land/improvement millages at the configured ratio (default 4:1).
 Output is written by `save_standard_export`; euro charts by `charts_fr`
 (currency-localised wrapper over the upstream report).
 
-*Decomposition into three steps* (`estimate.revalued_tax`,
-`estimate.taxable_share_today`, `export_web._steps`). Part of each group's
-change comes from replacing a 1970 base, not from taxing land. Two
-intermediate bills, each holding the same revenue as today, split the change:
+*Decomposition* (`estimate.revalued_tax`, `estimate.taxable_share_today`,
+`export_web._steps`). Part of each group's change comes from replacing a 1970
+base, not from taxing land. The pipeline writes two intermediate bills, each
+holding the same revenue as today; only the first is published:
 
 1. **Housing at market values** (`revalued_tax`): today's built tax with the
    housing group's amount re-shared by taxable housing floor ×
@@ -720,19 +720,29 @@ intermediate bills, each holding the same revenue as today, split the change:
    rent-to-price elasticity near 0.8. The IPP's simulation of the revision
    (rapport n° 29, 2020) assumes 1 within a commune. Gemini suggested 0.55
    without a source; we did not use it.
-2. **The TFVN, today's exemptions kept** (`new_tax_kept`): the same 4:1 solve,
-   on land and improvement values scaled by the share today's social housing
-   rules leave taxable, 1 − (1 − factor) × housing share of the floor.
+2. **The TVTN, today's exemptions kept** (`new_tax_kept`, local only): the
+   same 4:1 solve, on land and improvement values scaled by the share today's
+   social housing rules leave taxable, 1 − (1 − factor) × housing share of
+   the floor.
 3. **The reform** (`new_tax`), which also ends those exemptions.
 
-Each step is published, per category and per income group, as a % of the
-group's tax today, so the three add up to its total change (to rounding).
-They are totals, not medians, because only totals add up. A category's steps
-are withheld with its total. Each step is revenue-neutral across categories,
-but weighted by the categories' taxes today, which are never published, so
-the published rows cannot recover a withheld one. The
-dominance rule (no parcel above a tenth of a category's tax) and the social
-landlord rule are tested on all four bills.
+Two steps are published, per category and per income group, as a % of the
+group's tax today, adding up to its total change (to rounding): housing at
+market values (1 against today), and the move to the TVTN (the reform
+against 1), which includes the end of the social housing exemptions. Bill 2
+is never published nor read by the export: between it and the reform every
+unexempt parcel's bill scales by one factor, which any row of houses would
+give away, and with the published levy that factor yields the euro tax on
+exempt social housing, one landlord's or one parcel's in some communes
+(security review, 2026-11-11). It serves private analysis only.
+
+The steps are totals, not medians, because only totals add up. A group's
+steps are withheld with its total, or when one parcel carries more than a
+tenth of the group's tax today, under bill 1 or under the reform (income
+groups included). Each step is revenue-neutral across categories, but
+weighted by the categories' taxes today, which are never published, so the
+published rows cannot recover a withheld one. The social landlord rule is
+tested on bill 1 as well.
 
 What the first step is not: our "today" is itself a floor-area estimate
 (§3.5), with no location or comfort element, whereas the 1970 values carry

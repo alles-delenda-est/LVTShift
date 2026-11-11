@@ -405,17 +405,17 @@ export default function MethodologiePage() {
 
       <section aria-labelledby="decomposition" className="mb-12 border-t border-lisere pt-10">
         <h3 id="decomposition" className="font-display text-xl font-medium text-marine mb-4">
-          Révision des valeurs locatives ou TFVN : séparer les effets
+          Révision des valeurs locatives ou TVTN : séparer les effets
         </h3>
         <div className="font-body text-base text-encre leading-relaxed space-y-4 max-w-3xl">
           <p>
             La taxe foncière des logements repose encore sur des valeurs
             locatives de 1970. Leur révision, votée en 2020 et repoussée aux
             bases de 2031, redistribuerait à elle seule une partie de
-            l&apos;impôt. Pour ne pas attribuer à la TFVN ce qu&apos;une
+            l&apos;impôt. Pour ne pas attribuer à la TVTN ce qu&apos;une
             simple mise à jour apporterait, chaque page de commune décompose
-            la variation de chaque groupe en trois étapes, toutes à recettes
-            constantes :
+            la variation de chaque groupe en deux étapes, toutes deux à
+            recettes constantes :
           </p>
           <ol className="list-decimal pl-6 space-y-2">
             <li>
@@ -428,17 +428,17 @@ export default function MethodologiePage() {
               d&apos;aujourd&apos;hui.
             </li>
             <li>
-              <strong>Le passage à la TFVN</strong>, au même produit, les
-              exonérations des logements sociaux étant maintenues.
-            </li>
-            <li>
-              <strong>La fin de ces exonérations</strong> et de
-              l&apos;abattement en quartier prioritaire.
+              <strong>Le passage à la TVTN</strong>, au même produit, qui met
+              aussi fin aux exonérations des logements sociaux et à
+              l&apos;abattement en quartier prioritaire. Nous ne publions pas
+              ces deux effets séparément : dans les communes où peu de
+              bailleurs sociaux sont exonérés, l&apos;écart entre eux
+              révélerait l&apos;impôt de l&apos;un d&apos;entre eux.
             </li>
           </ol>
           <p>
             Chaque étape est exprimée en % de l&apos;impôt actuel du groupe :
-            les trois s&apos;additionnent à sa variation totale. Les loyers
+            les deux s&apos;additionnent à sa variation totale. Les loyers
             variant moins que les prix d&apos;un quartier à l&apos;autre (le
             rendement locatif brut baisse quand le prix monte), la valeur au
             m² y entre atténuée : une hausse de 10&nbsp;% du prix au m² compte

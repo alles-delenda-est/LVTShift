@@ -83,9 +83,11 @@ household and income figure, as businesses' premises already were.
 (poorer neighbourhoods pay less) bundles three things: replacing a 1970 base
 with current values, taxing land rather than buildings, and ending social
 housing exemptions. The housing revision (RVLLH, due in the 2031 bases) would
-deliver the first alone, so the TFVN can only claim what remains. Each commune
-page now splits every group's change into those three revenue-neutral steps
-(decision of 2026-11-11). The first step is measured against our floor-area
+deliver the first alone, so the TVTN can only claim what remains. Each commune
+page now splits every group's change into two revenue-neutral steps, the
+revision's stand-in and the TVTN (decision of 2026-11-11); the end of the
+exemptions stays inside the second, because publishing it apart would reveal
+what exempt social landlords would pay, one landlord's in small communes. The first step is measured against our floor-area
 estimate of today, not the real 1970 values, so it is a stand-in for the
 revision, with rents assumed to rise at 0.8 times prices.
 
@@ -206,7 +208,7 @@ land-share band, so error propagates visibly rather than silently.
 ## Open questions / where the theory might break
 
 - **How much of the progressivity is the revision's?** If the first step
-  carries most of the fall for the poorest groups, the case for the TFVN
+  carries most of the fall for the poorest groups, the case for the TVTN
   rests on its incentive to build and on the end of exemptions, not on
   fairness. Our floor-area baseline has no location element, unlike the 1970
   values, so it may overstate the first step; the IPP's simulation (poorest
