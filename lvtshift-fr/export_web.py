@@ -82,7 +82,7 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
     if "is_farmland_excluded" in df.columns:
         farm = _strict_flag(df["is_farmland_excluded"], path.name)
         paying = [c for c in ("current_tax", "new_tax", "taxable_improvement_value")
-                  if c in df.columns]
+                  + STEP_TAX_COLS if c in df.columns]
         if paying and (df.loc[farm, paying].abs().sum(axis=1) > 0).any():
             raise ValueError(f"{path.name}: rows flagged as excluded farmland pay tax "
                              f"or carry a building")
@@ -143,6 +143,17 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
             raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
                              f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
+    steps = [c for c in STEP_TAX_COLS if c in side.columns]
+    if steps and len(steps) != len(STEP_TAX_COLS):
+        raise ValueError(f"{side_path.name}: decomposition columns incomplete ({steps})")
+    for col in steps:
+        v = side[col].to_numpy(float)
+        cur = df["current_tax"].to_numpy(float)
+        if not (np.isfinite(v).all() and (v >= -0.01).all()
+                and abs(v.sum() - cur.sum()) <= max(1.0, 1e-6 * abs(cur.sum()))):
+            raise ValueError(f"{side_path.name}: {col} is not a revenue-neutral, "
+                             f"non-negative re-share of {path.name}")
+        df = df.assign(**{col: np.clip(v, 0.0, None)})
     if "residual_at_cap" in side.columns:
         df = df.assign(residual_at_cap=_strict_flag(side["residual_at_cap"],
                                                     side_path.name).to_numpy())
@@ -205,12 +216,14 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
     sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
     rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-    total = None
+    total, steps = None, dict(NO_STEPS)
     if {"current_tax", "tax_change"} <= set(rsub.columns) and len(rsub) >= MIN_GROUP_PARCELS:
         chg = rsub["tax_change"].sum(min_count=1)
         cur = rsub["current_tax"].sum(min_count=1)
         if np.isfinite(chg) and np.isfinite(cur) and rsub["tax_change"].notna().all():
             total = _pct(float(chg), float(cur))
+            if total is not None:
+                steps = _steps(rsub)
     hh_median, dwellings = None, None
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
     # every residential parcel must carry a count (a member commune without a
@@ -226,6 +239,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         # building's own: publish nothing household-level then
         if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
             hh_median, dwellings, total = None, None, None
+            steps = dict(NO_STEPS)
     if _small(len(sub)):
         sp = sp.iloc[:0]
     if _small(len(rsub)):
@@ -236,6 +250,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
         "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
         "total_change_pct": total,
+        **steps,
         "household_median_change_pct": hh_median,
         "parcels": int(len(sub)),
         "dwellings": dwellings,
@@ -397,6 +412,28 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
     }
 
 
+# The decomposition's intermediate bills (run_pipeline, METHODOLOGY §3.6):
+# housing at market values, then the land tax with today's exemptions.
+STEP_TAX_COLS = ("revalued_tax", "new_tax_kept")
+STEP_KEYS = ("step_revaluation_pct", "step_land_pct", "step_exemptions_pct")
+NO_STEPS = dict.fromkeys(STEP_KEYS)
+
+
+def _steps(sub: pd.DataFrame) -> dict:
+    """A group's change split into three steps, each in % of the group's tax
+    today, so they add up to its total change (to rounding): housing brought
+    to market values, the land tax with today's social housing exemptions,
+    and the end of those exemptions. Group totals, not medians, because only
+    totals add up. Empty for an older run or a group untaxed today."""
+    cols = ("current_tax",) + STEP_TAX_COLS + ("new_tax",)
+    if not set(cols) <= set(sub.columns):
+        return dict(NO_STEPS)
+    tot = [float(sub[c].astype(float).sum()) for c in cols]
+    if not (all(np.isfinite(tot)) and tot[0] > 0):
+        return dict(NO_STEPS)
+    return {k: _pct(tot[i + 1] - tot[i], tot[0]) for i, k in enumerate(STEP_KEYS)}
+
+
 def _category_total(sub: pd.DataFrame) -> dict:
     """A category's total change: the sum of its parcels' changes, in % of
     today's tax, or in euros (rounded to the thousand) only where today's tax
@@ -414,20 +451,22 @@ def _category_total(sub: pd.DataFrame) -> dict:
     carries more than MAX_PARCEL_TAX_SHARE of the category's tax today or
     under the reform.
     """
-    none = {"total_change_pct": None, "total_change_eur": None}
+    none = {"total_change_pct": None, "total_change_eur": None, **NO_STEPS}
     if _small(len(sub)) or not {"current_tax", "new_tax", "tax_change"} <= set(sub.columns):
         return none
     cur, new = sub["current_tax"].astype(float), sub["new_tax"].astype(float)
     if not (np.isfinite(cur).all() and np.isfinite(new).all()):
         return none
-    for col in (cur, new):
+    # one parcel dominating any of the bills would make the figures its own
+    for col in [cur, new] + [sub[c].astype(float) for c in STEP_TAX_COLS if c in sub.columns]:
         tot = float(col.sum())
         if tot > 0 and float(col.max()) > MAX_PARCEL_TAX_SHARE * tot:
             return none
     chg = float(new.sum() - cur.sum())
     if cur.sum() > 0:
-        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None}
-    return {"total_change_pct": None, "total_change_eur": round(chg, -3)}
+        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None,
+                **_steps(sub)}
+    return {"total_change_pct": None, "total_change_eur": round(chg, -3), **NO_STEPS}
 
 
 def social_landlords(df: pd.DataFrame) -> int:
@@ -441,7 +480,8 @@ def social_landlords(df: pd.DataFrame) -> int:
 # Every tax the dominance test reads: today's under both baselines (in a
 # baseline leg, current_tax is the variant and current_tax_central the
 # central one) and the reform's, so every leg takes the same decision.
-DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax")
+DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax",
+                      "revalued_tax", "new_tax_kept")
 
 
 def social_disclosable(df: pd.DataFrame) -> bool:
@@ -513,6 +553,11 @@ def build_by_category(df: pd.DataFrame) -> list:
             # residential only; None for other categories and older runs
             **_per_dwelling(sub),
         })
+    # each step is revenue-neutral across categories: with one row's steps
+    # withheld, the others would give its weight away. All rows or none.
+    if any(r["step_revaluation_pct"] is None for r in out):
+        for r in out:
+            r.update(NO_STEPS)
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
 
@@ -560,7 +605,7 @@ BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
                       "share_paying_more_pct")
 QUINTILE_KEYS = {"quintile", "median_income_eur", "median_change_pct",
                  "median_change_pct_residential", "total_change_pct",
-                 "household_median_change_pct", "parcels", "dwellings"}
+                 "household_median_change_pct", "parcels", "dwellings", *STEP_KEYS}
 BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential",
                       "total_change_pct", "household_median_change_pct")
 
@@ -733,9 +778,10 @@ SMALL_GROUP_BLANK = {
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct", "median_change_eur_per_dwelling",
                     "household_median_change_pct", "share_dwellings_paying_more_pct",
-                    "total_change_pct", "total_change_eur", "dwellings"),
+                    "total_change_pct", "total_change_eur", "dwellings") + STEP_KEYS,
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
-                           "total_change_pct", "household_median_change_pct", "dwellings"),
+                           "total_change_pct", "household_median_change_pct",
+                           "dwellings") + STEP_KEYS,
 }
 
 
@@ -807,6 +853,28 @@ def _check_social(payload: dict) -> None:
         assert not extra, f"sensitivity leg shows categories the central rows do not: {extra}"
 
 
+def _check_steps(payload: dict) -> None:
+    """Decomposition guard: steps are bounded numbers published only beside
+    their group's total, add up to it (to rounding), and come for every
+    category row or none."""
+    for key in ("by_category", "by_income_quintile", "by_income_quintile_within"):
+        rows = payload.get(key) or []
+        for r in rows:
+            vals = [r.get(k) for k in STEP_KEYS]
+            if all(v is None for v in vals):
+                continue
+            assert all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                       and math.isfinite(v) and abs(v) < 10_000 for v in vals), \
+                f"{key}: steps must all be finite numbers, got {vals}"
+            tot = r.get("total_change_pct")
+            assert isinstance(tot, (int, float)) and abs(sum(vals) - tot) <= 0.3, \
+                f"{key}: steps {vals} do not add up to the total {tot}"
+        if key == "by_category" and rows:
+            shown = [r.get("step_revaluation_pct") is not None for r in rows]
+            assert all(shown) or not any(shown), \
+                "by_category: steps for some categories only (one could be recovered)"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -844,6 +912,7 @@ def assert_aggregate_only(payload: dict) -> None:
     _check_small_groups(payload)
     _check_social(payload)
     _check_unbuilt(payload)
+    _check_steps(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"

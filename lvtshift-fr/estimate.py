@@ -865,6 +865,105 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
     return out
 
 
+def _price_index(p: pd.DataFrame, elasticity: float) -> pd.Series:
+    """(market value per m² of floor)^elasticity, the relative rental value of
+    a parcel's floor. A parcel with no usable price takes the commune median,
+    so a gap in the hedonic surface never zeroes its tax."""
+    floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
+    mv = pd.to_numeric(p["market_value"], errors="coerce")
+    ppm2 = (mv / floor.where(floor > 0)).where(lambda s: np.isfinite(s) & (s > 0))
+    med = float(ppm2.median()) if ppm2.notna().any() else 1.0
+    return ppm2.fillna(med) ** float(elasticity)
+
+
+def revalued_tax(p: pd.DataFrame, commune_tfpb_produit: float,
+                 elasticity: float,
+                 bucket_weights: dict | None = None,
+                 exempt_col: str | None = "is_exempt_public",
+                 housing_factor_col: str | None = "hlm_tax_factor") -> pd.Series:
+    """Today's built tax with the housing base brought to market values: the
+    first step of the decomposition (METHODOLOGY §3.6), a stand-in for the
+    pending revision of housing rental values (RVLLH), not a model of it.
+
+    Only the housing group's amount moves; the industrial and professional
+    groups keep today's shares (professional premises were revised in 2017,
+    and the RVLLH keeps each group's share through neutralisation). Within
+    housing, each parcel's weight becomes
+
+        taxable housing floor × (market value per m²)^elasticity
+
+    instead of taxable housing floor alone. Elasticity below 1 because rents
+    rise less than prices from one district to the next (lower yields where
+    prices are high): a rental value is not a capital value. Exemptions and
+    abatements stay as today (``housing_factor_col``), since a revaluation
+    does not change who is exempt.
+
+    Parcels with a building but no grouped floor keep their share unchanged.
+    On the plain floor-area baseline (no REI split) there are no groups, so
+    the whole built tax is re-weighted the same way. Returns the built tax
+    per parcel; it sums to ``commune_tfpb_produit``.
+    """
+    if not (np.isfinite(elasticity) and 0 <= elasticity <= 1):
+        raise ValueError(f"revaluation elasticity must lie in [0, 1], got {elasticity}")
+    floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0).clip(lower=0)
+    built = floor > 0
+    if exempt_col and exempt_col in p.columns:
+        built &= ~p[exempt_col].fillna(False).astype(bool)
+    hf = pd.Series(1.0, index=p.index)
+    if housing_factor_col and housing_factor_col in p.columns:
+        hf = pd.to_numeric(p[housing_factor_col], errors="coerce").fillna(1.0)
+        if not ((hf >= 0) & (hf <= 1)).all():
+            raise ValueError(f"{housing_factor_col} must lie in [0, 1]")
+    price = _price_index(p, elasticity)
+    cols = [f"floor_{k}" for k in BUCKETS]
+    zero = pd.Series(0.0, index=p.index)
+    if bucket_weights and all(c in p.columns for c in cols):
+        f = {k: p[f"floor_{k}"].fillna(0.0).clip(lower=0) for k in BUCKETS}
+        wf = sum(f[k] * float(bucket_weights[k]) for k in BUCKETS)
+        grouped = built & (wf > 0)
+        fixed = ((f["industrial"] * float(bucket_weights["industrial"])
+                  + f["professional"] * float(bucket_weights["professional"]))
+                 .where(grouped, floor * hf).where(built, 0.0))
+        housing = (f["housing"] * float(bucket_weights["housing"]) * hf).where(grouped, 0.0)
+        new_housing = (f["housing"] * hf * price).where(grouped, 0.0)
+    else:
+        fixed, housing = zero, (floor * hf).where(built, 0.0)
+        new_housing = (floor * hf * price).where(built, 0.0)
+    total = float(fixed.sum() + housing.sum())
+    if commune_tfpb_produit <= 0 or total <= 0:
+        return zero
+    h_amount = commune_tfpb_produit * float(housing.sum()) / total
+    out = commune_tfpb_produit * fixed / total
+    if h_amount > 0:
+        nh = float(new_housing.sum())
+        if not (np.isfinite(nh) and nh > 0):
+            raise ValueError("revalued housing weights do not sum to a positive amount")
+        out = out + h_amount * new_housing / nh
+    if not (np.isfinite(out).all() and (out >= 0).all()):
+        raise ValueError("revalued tax: non-finite or negative share")
+    return out
+
+
+def taxable_share_today(p: pd.DataFrame,
+                        housing_factor_col: str | None = "hlm_tax_factor") -> pd.Series:
+    """Share of each parcel's value that today's social housing rules leave
+    taxable: 1 − (1 − factor) × housing share of its floor. Used to solve the
+    land tax with today's exemptions kept (decomposition, second step)."""
+    if not housing_factor_col or housing_factor_col not in p.columns:
+        return pd.Series(1.0, index=p.index)
+    hf = pd.to_numeric(p[housing_factor_col], errors="coerce").fillna(1.0).clip(0, 1)
+    if "floor_housing" in p.columns:
+        floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
+        share = (pd.to_numeric(p["floor_housing"], errors="coerce").fillna(0.0)
+                 / floor.where(floor > 0)).fillna(1.0).clip(0, 1)
+        # a parcel with a building but no grouped floor: the factor on the whole
+        share = share.where(pd.to_numeric(p["floor_housing"], errors="coerce").fillna(0) > 0,
+                            1.0)
+    else:
+        share = pd.Series(1.0, index=p.index)
+    return 1.0 - (1.0 - hf) * share
+
+
 # Gardens attached to a house are part of the built property up to five ares
 # (BOFiP BOI-IF-TFB-10-10-40, « dépendance indispensable et immédiate »);
 # beyond, the ground is unbuilt amenity land (cadastral group 11), which pays
