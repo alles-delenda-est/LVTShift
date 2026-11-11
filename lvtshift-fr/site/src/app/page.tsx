@@ -93,8 +93,8 @@ export default function Home() {
                 <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
                   la voie juridique
                 </Link>
-                ). Les résultats par commune la simulent à deux taux : le bâti y
-                reste imposé, à un taux quatre fois plus faible que le sol.
+                ). Le bâti n&apos;est plus imposé : seul le sol l&apos;est,
+                à sa valeur indépendamment de ce qui y est construit.
               </p>
             </div>
           </div>

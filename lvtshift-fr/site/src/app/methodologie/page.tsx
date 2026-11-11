@@ -151,11 +151,11 @@ export default function MethodologiePage() {
           travail.
         </p>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed mt-3">
-          La réforme étudiée est une taxe sur la valeur du terrain nu (TVTN).
-          Dans les résultats par commune,
-          elle est simulée à deux taux, le sol étant imposé quatre fois plus
-          que le bâti ; les scénarios nationaux, eux, l&apos;assoient sur le
-          seul sol.
+          La réforme étudiée est une taxe sur la valeur du terrain nu (TVTN) :
+          seul le sol est imposé, à sa valeur comme s&apos;il était nu, quel que
+          soit ce qui y est construit ; le bâti ne l&apos;est plus. Les
+          résultats par commune comme les scénarios nationaux l&apos;assoient
+          sur le seul sol.
         </p>
       </div>
 
@@ -390,15 +390,22 @@ export default function MethodologiePage() {
 
           <div className="border-l-4 border-lisere pl-5 text-sm text-gris">
             <strong className="font-semibold text-encre">
-              Bande de sensibilité ±&thinsp;10 points de pourcentage.
+              Bande de sensibilité : coût du bâti ±&thinsp;20&nbsp;%.
             </strong>{" "}
-            L&apos;hypothèse de part foncière est la principale source
-            d&apos;incertitude du modèle. Tous les résultats de titre sont
-            accompagnés d&apos;une fourchette calculée en faisant varier la
-            part foncière de ±&thinsp;10 points : si la part imputée est de
-            60&nbsp;%, les chiffres sont vérifiés à 50&nbsp;% et 70&nbsp;%.
-            Cette bande n&apos;est pas une correction — c&apos;est une
-            mesure explicite de l&apos;incertitude.
+            Le sol des parcelles bâties est ce qui reste de la valeur de marché
+            une fois le bâti déduit, quartier par quartier : le coût du bâti
+            est donc la principale incertitude sur sa valeur. Tous les
+            résultats de titre sont accompagnés d&apos;une fourchette où ce
+            coût est relevé ou abaissé de 20&nbsp;% ; le sol bâti de chaque
+            quartier baisse ou monte d&apos;autant, le terrain non bâti, évalué
+            sur les ventes de terrains, ne bouge pas. Avec un impôt sur le seul
+            sol, faire varier toute la valeur du sol dans la même proportion ne
+            changerait aucun avis d&apos;imposition : la fourchette porte donc
+            sur ce qui en change la répartition. Elle ne couvre pas la
+            répartition du sol entre parcelles d&apos;un même quartier, selon la
+            densité permise, autre source d&apos;incertitude. Cette bande
+            n&apos;est pas une correction — c&apos;est une mesure explicite de
+            l&apos;incertitude.
           </div>
         </div>
       </section>
@@ -1036,7 +1043,7 @@ export default function MethodologiePage() {
               les quartiers d&apos;affaires de premier rang. Les bureaux restent
               valorisés au prix de vente des logements, faute d&apos;une
               surface de prix propre aux locaux professionnels. La bande
-              de sensibilité ±&thinsp;10 points encadre cette incertitude dans
+              de sensibilité sur le coût du bâti encadre cette incertitude dans
               tous les résultats publiés : chiffres clés, catégories de bien
               et quintiles de revenu, où elle apparaît en traits fins autour
               de chaque barre.

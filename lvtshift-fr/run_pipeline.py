@@ -20,10 +20,11 @@ import pandas as pd
 LVTSHIFT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(LVTSHIFT))
 
-from lvt.lvt_utils import model_split_rate_tax, save_standard_export  # noqa: E402
+from lvt.lvt_utils import (model_full_building_abatement, model_split_rate_tax,  # noqa: E402
+                           save_standard_export)
 
 import estimate  # noqa: E402
-from config import GRENOBLE as CFG, REVALUATION, slug_of  # noqa: E402
+from config import GRENOBLE as CFG, REVALUATION, model_label, slug_of  # noqa: E402
 from social_housing import SOCIAL_CATEGORY_SHARE  # noqa: E402
 
 # French -> LVTShift standard property categories (exact strings from
@@ -75,6 +76,38 @@ MAX_UNBUILT_SHARE_OF_TFPB = 0.1
 # share of the land tax. Parcels holding only farm buildings are unbuilt here,
 # since those buildings are dropped as TFPB-exempt (CGI 1382 6°).
 FARMLAND_TYPES = frozenset({"agricultural", "natural"})
+
+
+def solve_reform(df: pd.DataFrame, land_col: str, imp_col: str, levy: float,
+                 ratio: float | None, flag_col: str | None) -> tuple:
+    """The revenue-neutral reform through the upstream solvers, unmodified.
+
+    ratio None: land only (the TVTN), upstream model_full_building_abatement
+    at 100 %, so buildings are untaxed. A number: upstream
+    model_split_rate_tax at that land ÷ building rate ratio.
+
+    Returns (land_millage, improvement_millage, revenue, frame) with new_tax,
+    taxable_land_value and taxable_improvement_value set as the split-rate
+    solver sets them (the improvement base is still reported, untaxed).
+    """
+    if ratio is not None:
+        return model_split_rate_tax(
+            df=df, land_value_col=land_col, improvement_value_col=imp_col,
+            current_revenue=levy, land_improvement_ratio=ratio,
+            exemption_flag_col=flag_col)
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):     # upstream prints a summary
+        mill, revenue, out = model_full_building_abatement(
+            df=df, land_value_col=land_col, improvement_value_col=imp_col,
+            current_revenue=levy, abatement_percentage=1.0,
+            exemption_flag_col=flag_col)
+    inside = (pd.to_numeric(out[flag_col], errors="coerce").fillna(0) == 0
+              if flag_col else pd.Series(True, index=out.index))
+    out["taxable_land_value"] = pd.to_numeric(out[land_col], errors="coerce").fillna(0).where(inside, 0.0)
+    out["taxable_improvement_value"] = (
+        pd.to_numeric(out[imp_col], errors="coerce").fillna(0).where(inside, 0.0))
+    return mill, 0.0, revenue, out
 
 
 def farmland_excluded(p: pd.DataFrame) -> pd.Series:
@@ -229,14 +262,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
                              | p["is_farmland_excluded"].astype(bool)).astype(int)
     else:
         p["outside_levy"] = p["is_farmland_excluded"]
-    land_mill, imp_mill, revenue, p = model_split_rate_tax(
-        df=p,
-        land_value_col="land_value",
-        improvement_value_col="improvement_value",
-        current_revenue=levy,
-        land_improvement_ratio=cfg.split_rate_ratio,
-        exemption_flag_col="outside_levy",
-    )
+    land_mill, imp_mill, revenue, p = solve_reform(
+        p, "land_value", "improvement_value", levy, cfg.split_rate_ratio, "outside_levy")
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
@@ -283,7 +310,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     out = save_standard_export(
         df=p, city=name,
         output_path=f"{out_dir}/{name}.csv",
-        model_type=f"split_rate:{cfg.split_rate_ratio}",
+        model_type=model_label(cfg),
         land_millage=land_mill, improvement_millage=imp_mill,
         exempt_flag_col=exempt_col,
     )
@@ -495,6 +522,12 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
         side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
                                         .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
+    # each parcel's IRIS (the income merge leaves it blank where Filosofi has
+    # no figure): the building-cost band shocks IRIS land totals. Local only;
+    # the export's guard keeps IRIS codes out of every payload
+    iris = p["iris"] if "iris" in p.columns else p.get("cell")
+    if iris is not None:
+        side["iris"] = iris.astype(str).values
     # the decomposition's intermediate bill (METHODOLOGY §3.6)
     if "revalued_tax" in p.columns:
         side["revalued_tax"] = p["revalued_tax"].values

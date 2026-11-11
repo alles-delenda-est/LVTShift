@@ -68,7 +68,7 @@ function makeTooltip(isTotal: boolean) {
         </p>
         {row.bandLo !== null && row.bandHi !== null && (
           <p style={{ color: GRIS_PALE }}>
-            Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedPct(row.bandLo)}{" "}
+            Fourchette (coût du bâti ±20&nbsp;%)&nbsp;: {signedPct(row.bandLo)}{" "}
             à {signedPct(row.bandHi)}
           </p>
         )}
@@ -198,7 +198,7 @@ function QuintileCaption({ isTotal, hasHousehold }: { isTotal: boolean; hasHouse
 
 export interface IncomeQuintileChartProps {
   quintiles: QuintileRow[] | null;
-  /** Low / high legs of the ±10 pt land-share band (optional). */
+  /** Low / high legs of the sensitivity band (optional). */
   band?: {
     low?: BandQuintileRow[] | null;
     high?: BandQuintileRow[] | null;

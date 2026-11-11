@@ -12,17 +12,18 @@ code fait foi** — maintenir ce document à jour.
 
 Estimer, parcelle par parcelle, la redistribution **à recettes constantes** de la
 *taxe foncière sur les propriétés bâties* (TFPB) d'une commune si elle basculait
-vers une LVT à taux différenciés (split-rate), sur **données ouvertes
-uniquement**. La France n'évalue pas séparément terrain et bâti : la valeur du
+vers un impôt sur la seule valeur du sol (la TVTN, taxe sur la valeur du
+terrain nu), sur **données ouvertes uniquement**. La France n'évalue pas séparément terrain et bâti : la valeur du
 terrain par parcelle est donc **imputée**, avec des marges d'erreur explicites.
 Les résultats sont reportés par **catégorie de bien** et **quintile de revenu**,
 jamais comme des montants individuels.
 
 Sur le plan technique, il s'agit d'un fork de l'outil américain LVTShift : le code
 FR de `lvtshift-fr/` fabrique les colonnes d'entrée attendues par LVTShift à
-partir des données ouvertes françaises, puis appelle son solveur
-(`model_split_rate_tax`) et son export (`save_standard_export`) **sans les
-modifier**. Les améliorations amont profitent ainsi automatiquement à la version
+partir des données ouvertes françaises, puis appelle ses solveurs
+(`model_full_building_abatement` à 100 % pour l'impôt sur le seul sol,
+`model_split_rate_tax` si un ratio est configuré) et son export
+(`save_standard_export`) **sans les modifier**. Les améliorations amont profitent ainsi automatiquement à la version
 française.
 
 ## 2. Sources de données
@@ -783,10 +784,20 @@ indéfinie (§3.7).
 
 `--no-social-housing` reproduit le calcul sans le logement social.
 
-**3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
-fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
-est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
-(surcouche de localisation monétaire du rapport amont).
+**3.6 Solveur : le seul sol** — la réforme n'impose que le sol (décision du
+11 novembre 2026 ; jusque-là, un split-rate 4:1, le sol imposé quatre fois plus
+que le bâti, était publié). `run_pipeline.solve_reform` appelle le
+`model_full_building_abatement` amont avec un abattement de 100 % : un taux
+unique sur le sol, neutre en recettes, le bâti n'étant plus imposé ; les biens
+exonérés et les terres agricoles exclues restent hors du champ. Le sol est la
+valeur de site (§3.4), évaluée comme si le terrain était nu à la densité type
+de sa zone : deux parcelles identiques d'un même IRIS paient la même chose,
+quoi qu'il y soit construit ; mais le total foncier d'un IRIS reste le
+résiduel de ce qui y est bâti, et une parcelle bâtie au-delà de la densité
+type de sa zone compte à sa propre densité. Donner un nombre à
+`split_rate_ratio` rétablit le modèle split-rate, par le `model_split_rate_tax`
+amont. L'export est écrit par `save_standard_export` ; les graphiques en euros
+par `charts_fr` (surcouche de localisation monétaire du rapport amont).
 
 *Décomposition* (`estimate.revalued_tax`, `export_web._steps`). Une partie de la variation de chaque groupe tient au
 remplacement d'une base de 1970, non à l'imposition du sol. Un impôt
@@ -867,7 +878,7 @@ arrondissement (75101–75120, 69381–69389). La configuration porte les deux :
 codes de données. Chaque collecteur parcourt les codes de données (les requêtes
 spatiales se font une emprise d'arrondissement à la fois, de sorte qu'un bâtiment
 en limite n'est attribué qu'aux parcelles qu'il recouvre), les tables sont
-empilées en une seule commune et **un** split-rate neutre en recettes est résolu
+empilées en une seule commune et **un** impôt foncier neutre en recettes est résolu
 pour la ville — comme l'impôt réel, à taux unique. Les DPE rattachés au code de la
 ville sont également récupérés.
 
@@ -876,25 +887,41 @@ et *Lyon extra-muros* (les 57 autres communes de la Métropole de Lyon ; liste f
 dans `territories.py`) — ne sont **pas** un impôt métropolitain. Chaque commune
 membre est résolue sur son propre produit REI et reste à recettes constantes
 (`run_territory.py`, un processus par commune) ; `export_web.build_territory_payload`
-agrège ensuite les résultats par parcelle. La bande de sensibilité ±10 pt est
-recalculée commune par commune (chacune inclinée autour de sa propre part
-foncière) avant agrégation ; les quintiles de revenu sont classés sur toute la
+agrège ensuite les résultats par parcelle. La bande de sensibilité est
+recalculée commune par commune, chacune sur son propre produit, avant
+agrégation ; les quintiles de revenu sont classés sur toute la
 couronne. Une commune en échec figure dans le champ `coverage`, jamais imputée.
 Montreuil et Villeurbanne apparaissent seules et dans leur couronne ; les totaux du
 panel sur le site ne les comptent qu'une fois.
 
 **Bande de sensibilité.** La valeur du sol étant imputée, chaque chiffre publié porte
-une bande de ±10 pt de part foncière : la part foncière agrégée est abaissée puis
-relevée de 10 points (valeurs terrain et bâti de chaque parcelle mises à l'échelle
-uniformément, base totale et produit constants) et le solveur amont est relancé
-(`export_web._tilted_change`). La bande est publiée pour les chiffres clés **et** pour
+une bande. Avec un impôt sur le seul sol, multiplier le sol de chaque parcelle
+par un même facteur ne change aucun avis d'imposition : la bande du modèle
+split-rate (part foncière ±10 points, sol et bâti de chaque parcelle mis à
+l'échelle uniformément ; `export_web._tilted_change`, conservée pour les
+résolutions split-rate) ne montrerait aucune incertitude. La bande de l'impôt
+sur le sol fait varier ce qui en change la répartition : la valeur du bâti
+±20 % (`config.BUILDING_COST_BAND`, qui couvre les fourchettes de la recherche
+sur les coûts et le ratio habitable ÷ brut). Le coût du bâti entre dans le sol
+par le résiduel des parcelles bâties, sommé par IRIS avant le partage en valeur
+de site : le total foncier bâti de chaque IRIS devient L − 0,2 B (ou L + 0,2 B),
+borné à [0, L + B], et toutes les parcelles bâties de l'IRIS bougent du même
+facteur ; les parcelles non bâties, évaluées sur les ventes de terrains, ne
+bougent pas (`export_web._cost_shocked_land`, IRIS lu dans le fichier annexe
+des ménages). Chaque hypothèse répartit de nouveau le produit de chaque commune
+et indique la part foncière qu'elle implique. Le choc porte sur les valeurs du
+sol exportées, sans refaire l'étape de valeur de site, et les parcelles
+évaluées au coût (hangars, grandes surfaces) bougent avec leur IRIS bien que
+leur sol ne dépende pas du coût du bâti : deux approximations. La bande ne
+couvre pas le partage du sol entre parcelles d'un même IRIS selon la densité
+permise (exposant 0,5), désormais la principale incertitude sur les valeurs
+relatives du sol (revue Gemini du 11 novembre 2026 ;
+`docs/research/land-only-2026-11/`). La bande est publiée pour les chiffres clés **et** pour
 chaque catégorie de bien et chaque quintile de revenu (et, sur les couronnes, les
 quintiles classés dans chaque commune), avec les mêmes bornes de quintile que
 l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
-n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
-par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−17,1 à −19,1 %, dernier +15,6 à +15,8 %). La bande laisse la base de la taxe
+n'est tenue pour robuste que si elle vaut sur toute la bande. La bande laisse la base de la taxe
 actuelle inchangée. L'incertitude propre à cette base, le facteur appliqué aux
 locaux professionnels (§3.5), déplace les résultats des ménages bien plus que la
 bande. Elle est publiée à part, sous forme d'une variante locale présentée à
@@ -1183,8 +1210,9 @@ lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
 central (cotisations industrielles de Saint-Fons −60 %, de Marcy-l'Étoile
 −90 %).
 
-*Outillage : un choix de conception.* La réforme modélisée taxe le sol, et le
-bâti au taux réduit ; elle ne taxe **pas** l'outillage industriel fixe. Le
+*Outillage : un choix de conception.* La réforme modélisée ne taxe que le sol,
+donc ni le bâti ni l'outillage industriel fixe (ce paragraphe date du modèle
+split-rate, qui taxait le bâti mais pas l'outillage). Le
 responsable du projet a tranché en ce sens, conformément à la théorie de la taxe
 foncière sur le sol, qui évite de pénaliser l'investissement productif. Aucun
 changement de code n'est nécessaire : les valeurs de l'art. 1499 incluent
@@ -1193,7 +1221,8 @@ ne compte déjà que le hangar. Pour montrer le faible poids de ce choix, une
 estimation de premier ordre (`docs/research/plant_effect.py`) ajoute à la base
 bâtie le coût réévalué de l'outillage (base industrielle ÷ 0,03, brut ou × 0,5
 pour la dépréciation, moins la valeur bâtie du modèle) et résout de nouveau le
-4:1 commune par commune :
+4:1 commune par commune (le modèle d'alors ; avec l'impôt sur le seul sol,
+l'outillage n'a plus aucun effet) :
 
 | Cotisations industrielles vs aujourd'hui | Hangar seul (publié) | Avec outillage, déprécié | Avec outillage, brut |
 |---|---|---|---|
@@ -1301,7 +1330,11 @@ ces règles à l'export et sur chaque fichier publié (test CI).
 
   Chaque valeur est un jugement éclairé par les sources du §3.4 ; aucune n'est
   estimée sur des ventes françaises de biens bâtis.
-- **Ratio split-rate** : 4:1 (terrain:bâti), scénario de référence.
+- **Assiette** : le seul sol (`split_rate_ratio = None`), depuis le 11 novembre
+  2026 ; un split-rate 4:1 (terrain:bâti) auparavant. Un choix du responsable du
+  projet, conforme à la théorie de l'impôt foncier.
+- **Bande sur le coût du bâti** : ±20 % (`BUILDING_COST_BAND`), la sensibilité de
+  l'impôt sur le sol ; voir la bande de sensibilité au §3.7.
 - **€/m² agricole** (SAFER, par département, agricole / naturel) : défaut
   0,64 / 0,49 ; Lot 0,45 / 0,35 ; Seine-St-Denis 1,00 / 0,60 ; Nord 0,85 / 0,50 ;
   Rhône 0,70 / 0,50 ; Haute-Savoie 0,75 / 0,55 ; Isère 0,60 / 0,45 ; Paris,
@@ -1451,8 +1484,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    - **Amplification du résiduel.** Les erreurs sur le bâti sont amplifiées
      dans le résiduel là où le bâti pèse lourd. C'est atténué par le bornage
      [0,15 ; 0,85], qui s'applique quand le total de l'IRIS est formé, et par
-     l'agrégation. C'est rendu visible par la bande de ±10 points de part
-     foncière (`headline_sensitivity`).
+     l'agrégation. C'est rendu visible par la bande sur le coût du bâti
+     (`headline_sensitivity`).
    - **Foncier non bâti.** Le foncier non bâti **n'utilise pas** le résiduel :
      le message clé (le sous-utilisé paie plus) est indépendant de la qualité
      des données bâti.

@@ -54,7 +54,7 @@ interface ProcessedRow extends PublishedCategoryRow {
   isNull: boolean;
   /** A rise too large for the axis (vacant land): bar cut short, value as a multiple. */
   offScale: boolean;
-  /** ±10 pt land-share band: whisker [below, above] and its ends */
+  /** sensitivity band: whisker [below, above] and its ends */
   err: [number, number] | null;
   bandLo: number | null;
   bandHi: number | null;
@@ -97,7 +97,7 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
       )}
       {row.bandLo !== null && row.bandHi !== null && (
         <p style={{ color: GRIS_PALE }}>
-          Fourchette (±10&nbsp;pt de part foncière)&nbsp;: {signedChange(row.bandLo)}{" "}
+          Fourchette (coût du bâti ±20&nbsp;%)&nbsp;: {signedChange(row.bandLo)}{" "}
           à {signedChange(row.bandHi)}
         </p>
       )}
@@ -108,7 +108,7 @@ function CatTooltip({ active, payload }: TooltipProps<number, string>) {
 /* ── value column ──────────────────────────────────────────────────
    Values sit in a fixed column on the right (a second, label-only Y axis)
    rather than at the bar ends: on phones the end labels ran into the
-   category names and the ±10 pt whiskers. A category whose percentage is
+   category names and the band whiskers. A category whose percentage is
    undefined (vacant land: today's modelled TFPB is 0 €) shows its median
    change in euros instead of "n. d.".
 ────────────────────────────────────────────────────────────────────── */
@@ -183,7 +183,7 @@ export interface CategoryImpactBarsProps {
   byCategory: PublishedCategoryRow[];
   /** True when the run counts the unbuilt-land tax the reform replaces. */
   unbuiltReplaced?: boolean;
-  /** Low / high legs of the ±10 pt land-share band (optional). */
+  /** Low / high legs of the sensitivity band (optional). */
   band?: {
     low?: BandCategoryRow[] | null;
     high?: BandCategoryRow[] | null;

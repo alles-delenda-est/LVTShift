@@ -62,13 +62,15 @@ const subLabelStyle: React.CSSProperties = {
 };
 
 export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
-  const { delta_pt, low, base, high } = sensitivity;
+  const { low, base, high } = sensitivity;
+  const cost = sensitivity.kind === "building_cost";
+  const d = cost ? sensitivity.delta_pct : sensitivity.delta_pt;
 
   const scenarios: ScenarioDef[] = [
     {
       key: "low",
       colLabel: "Hypothèse basse",
-      sublabel: `−${delta_pt} pt de part foncière`,
+      sublabel: cost ? `Coût du bâti +${d}\u00a0%` : `−${d} pt de part foncière`,
       leg: low,
       isBase: false,
     },
@@ -82,7 +84,7 @@ export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
     {
       key: "high",
       colLabel: "Hypothèse haute",
-      sublabel: `+${delta_pt} pt de part foncière`,
+      sublabel: cost ? `Coût du bâti −${d}\u00a0%` : `+${d} pt de part foncière`,
       leg: high,
       isBase: false,
     },
