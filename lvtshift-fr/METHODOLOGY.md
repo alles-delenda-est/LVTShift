@@ -1089,6 +1089,38 @@ category, income-group totals, within-commune ranking for the rings):
 - **The levy that changes payer** roughly doubles (Paris 9.8 → 19.9 %, Lyon
   10.5 → 22.4 %).
 
+*Land only, at permitted use (run of 11 November 2026).* The figures above
+are for the 4:1 split rate and for land valued with a plot's own density
+where it exceeded its zone's. Taxing land alone, each plot at its zone's
+density (§3.4, §3.6), on the payloads published since (same columns):
+
+| | Shift, % of levy | Houses | 2–4 | 5+ | Commercial | Q1 / Q5 totals |
+|---|---|---|---|---|---|---|
+| Grenoble | 43.3 | +57.1 | +15.4 | −35.8 | +14.5 | −53.4 / −9.0 |
+| Annemasse | 33.4 | +120.8 | +21.9 | −29.6 | +21.0 | −13.3 / −8.0 |
+| Villeurbanne | 31.7 | +68.0 | +31.9 | −24.2 | +61.5 | +3.4 / −2.2 |
+| Roubaix | 39.8 | −24.4 | −29.8 | −43.0 | −21.5 | −33.8 / +47.2 |
+| Cahors | 36.6 | +14.2 | −10.7 | −35.0 | −34.2 | — / — |
+| Montreuil | 33.2 | +51.5 | +23.8 | −30.6 | +34.5 | −9.5 / +12.6 |
+| Figeac | 36.8 | −0.1 | −24.8 | −52.8 | −28.2 | — / — |
+| Sète | 32.7 | +43.4 | +4.1 | −35.5 | +37.7 | −19.3 / +8.6 |
+| La Rochelle | 37.6 | −4.8 | −18.8 | −39.1 | −4.5 | −11.9 / −3.5 |
+| Paris | 23.0 | +118.8 | +36.6 | −14.2 | +68.2 | −24.9 / +7.0 |
+| Lyon | 27.7 | +78.3 | +24.9 | −14.7 | +13.3 | −15.7 / +11.0 |
+| Paris extra-muros (petite couronne) | 34.9 | +41.3 | +14.0 | −34.6 | +29.5 | −6.8 / +3.1 |
+| Lyon extra-muros (Métropole hors Lyon) | 39.6 | +36.2 | −1.0 | −40.1 | −29.8 | −4.7 / +0.7 |
+
+- **More progressive almost everywhere:** Paris's poorest fifth −22.3 → −24.9 %
+  against the 4:1 run on the same data, Lyon −12.5 → −15.7 %, Grenoble
+  −45.2 → −53.4 %; large blocks pay less everywhere, by more than before.
+- **The one exception, Villeurbanne:** the poorest fifth's total rises 3.4 %
+  (band +2.4 to +4.1 %) while the richest fifth's falls 2.2 %, carried by
+  houses and small buildings (houses +135 % in total); its typical household
+  still pays 21 % less, as most live in large blocks. So the poorest pay less,
+  and fare better than the richest, in 10 of the 11 territories with income
+  groups.
+- **The levy that changes payer** rises again, to 23 % (Paris) – 43 % (Grenoble).
+
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (Saint-Fons
 industrial bills −60 %, Marcy-l'Étoile −90 %).

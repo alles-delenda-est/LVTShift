@@ -1212,6 +1212,41 @@ de revenu, classement dans chaque commune pour les couronnes) :
 - **La part de l'impôt qui change de payeur** double environ (Paris 9,8 →
   19,9 %, Lyon 10,5 → 22,4 %).
 
+*Le seul sol, à l'usage permis (passage du 11 novembre 2026).* Les chiffres
+ci-dessus valent pour le split-rate 4:1 et pour un sol évalué à la densité
+propre de la parcelle quand elle dépassait celle de sa zone. En n'imposant que
+le sol, chaque parcelle à la densité de sa zone (§3.4, §3.6), sur les données
+publiées depuis (mêmes colonnes) :
+
+| | Transfert, % du produit | Maisons | 2–4 | 5+ | Commerces | Totaux Q1 / Q5 |
+|---|---|---|---|---|---|---|
+| Grenoble | 43,3 | +57,1 | +15,4 | −35,8 | +14,5 | −53,4 / −9,0 |
+| Annemasse | 33,4 | +120,8 | +21,9 | −29,6 | +21,0 | −13,3 / −8,0 |
+| Villeurbanne | 31,7 | +68,0 | +31,9 | −24,2 | +61,5 | +3,4 / −2,2 |
+| Roubaix | 39,8 | −24,4 | −29,8 | −43,0 | −21,5 | −33,8 / +47,2 |
+| Cahors | 36,6 | +14,2 | −10,7 | −35,0 | −34,2 | — / — |
+| Montreuil | 33,2 | +51,5 | +23,8 | −30,6 | +34,5 | −9,5 / +12,6 |
+| Figeac | 36,8 | −0,1 | −24,8 | −52,8 | −28,2 | — / — |
+| Sète | 32,7 | +43,4 | +4,1 | −35,5 | +37,7 | −19,3 / +8,6 |
+| La Rochelle | 37,6 | −4,8 | −18,8 | −39,1 | −4,5 | −11,9 / −3,5 |
+| Paris | 23,0 | +118,8 | +36,6 | −14,2 | +68,2 | −24,9 / +7,0 |
+| Lyon | 27,7 | +78,3 | +24,9 | −14,7 | +13,3 | −15,7 / +11,0 |
+| Paris extra-muros (petite couronne) | 34,9 | +41,3 | +14,0 | −34,6 | +29,5 | −6,8 / +3,1 |
+| Lyon extra-muros (Métropole hors Lyon) | 39,6 | +36,2 | −1,0 | −40,1 | −29,8 | −4,7 / +0,7 |
+
+- **Plus progressif presque partout :** le cinquième le plus modeste de Paris
+  −22,3 → −24,9 % par rapport au passage 4:1 sur les mêmes données, Lyon
+  −12,5 → −15,7 %, Grenoble −45,2 → −53,4 % ; les grands immeubles paient
+  moins partout, plus nettement qu'avant.
+- **La seule exception, Villeurbanne :** le total du cinquième le plus modeste
+  augmente de 3,4 % (bande de +2,4 à +4,1 %) quand celui du plus aisé baisse de
+  2,2 %, porté par les maisons et petits immeubles (maisons +135 % au total) ;
+  son ménage type paie tout de même 21 % de moins, la plupart vivant en grand
+  immeuble. Les plus modestes paient donc moins, et s'en sortent mieux que les
+  plus aisés, dans 10 des 11 territoires découpés par revenu.
+- **La part de l'impôt qui change de payeur** augmente encore, de 23 % (Paris)
+  à 43 % (Grenoble).
+
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
 central (cotisations industrielles de Saint-Fons −60 %, de Marcy-l'Étoile
