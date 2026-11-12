@@ -26,7 +26,15 @@ export interface SensitivityLeg {
   by_income_quintile?: BandQuintileRow[] | null;
   by_income_quintile_within?: BandQuintileRow[] | null;
 }
-export interface Sensitivity { delta_pt: number; base: SensitivityLeg; low: SensitivityLeg; high: SensitivityLeg; }
+/** The band: building values ±delta_pct (land-only tax, kind
+ *  "building_cost"), or the land share ±delta_pt (split-rate payloads). The
+ *  low leg is always the lower land share. */
+export interface Sensitivity {
+  kind?: "building_cost" | "land_share";
+  delta_pct?: number;
+  delta_pt?: number;
+  base: SensitivityLeg; low: SensitivityLeg; high: SensitivityLeg;
+}
 /** Central vs lower-bound share of professional premises in today's tax: the
  *  LVT bills are identical, only today's tax (and so every change) differs. */
 export interface BaselineSensitivity {

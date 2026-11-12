@@ -12,17 +12,18 @@ code fait foi** — maintenir ce document à jour.
 
 Estimer, parcelle par parcelle, la redistribution **à recettes constantes** de la
 *taxe foncière sur les propriétés bâties* (TFPB) d'une commune si elle basculait
-vers une LVT à taux différenciés (split-rate), sur **données ouvertes
-uniquement**. La France n'évalue pas séparément terrain et bâti : la valeur du
+vers un impôt sur la seule valeur du sol (la TVTN, taxe sur la valeur du
+terrain nu), sur **données ouvertes uniquement**. La France n'évalue pas séparément terrain et bâti : la valeur du
 terrain par parcelle est donc **imputée**, avec des marges d'erreur explicites.
 Les résultats sont reportés par **catégorie de bien** et **quintile de revenu**,
 jamais comme des montants individuels.
 
 Sur le plan technique, il s'agit d'un fork de l'outil américain LVTShift : le code
 FR de `lvtshift-fr/` fabrique les colonnes d'entrée attendues par LVTShift à
-partir des données ouvertes françaises, puis appelle son solveur
-(`model_split_rate_tax`) et son export (`save_standard_export`) **sans les
-modifier**. Les améliorations amont profitent ainsi automatiquement à la version
+partir des données ouvertes françaises, puis appelle ses solveurs
+(`model_full_building_abatement` à 100 % pour l'impôt sur le seul sol,
+`model_split_rate_tax` si un ratio est configuré) et son export
+(`save_standard_export`) **sans les modifier**. Les améliorations amont profitent ainsi automatiquement à la version
 française.
 
 ## 2. Sources de données
@@ -350,7 +351,7 @@ répartition, qui suit la règle :
 
 ```
 poids   = surface utile de la parcelle × densité ^ 0,5
-densité = max(coefficient d'occupation réel, coefficient de référence de la zone)
+densité = coefficient de référence de la zone      (usage permis)
 ```
 
 - **Densité de référence.** C'est le 75ᵉ centile du coefficient d'occupation
@@ -362,11 +363,13 @@ densité = max(coefficient d'occupation réel, coefficient de référence de la 
   collectives de 1,4 à 6,6 (Paris UG 6,0, Lyon UCe2a 6,1).
 - **La densité à la racine carrée.** Les coefficients allemands de conversion
   pour l'habitat font croître le terrain au m² de 0,45 à 0,54 % par 1 % de
-  coefficient d'occupation (WertR 2006, annexe 11). Une parcelle plus dense que
-  sa zone garde sa propre densité, au titre de l'usage existant légal (la
-  surface « réelle ou possible » danoise), mais à la racine carrée : un immeuble
-  quatre fois plus dense que son voisin, sur une parcelle identique, reçoit deux
-  fois son terrain, pas quatre.
+  coefficient d'occupation (WertR 2006, annexe 11). Seule compte la densité
+  de la zone, jamais celle de la parcelle (usage permis, décision du
+  11 novembre 2026) : une maison et un immeuble sur des parcelles identiques
+  d'une même zone reçoivent le même terrain. Jusque-là, une parcelle plus dense
+  que sa zone gardait sa propre densité, au titre de l'usage existant légal (la
+  surface « réelle ou possible » danoise), à la racine carrée
+  (`SITE_VALUE["density_rule"] = "max_own"` la rétablit).
 - **Surface utile.** C'est la surface de la parcelle, plafonnée au
   99ᵉ centile de la commune, avec deux corrections là où le terrain en plus
   n'est pas constructible :
@@ -374,8 +377,9 @@ densité = max(coefficient d'occupation réel, coefficient de référence de la 
     de plancher compte, comme pour les parcelles de type hangar. 84 % des plus
     grandes parcelles de maisons de Cahors y sont, et une surface linéaire leur
     donnait +149 %.
-  - *Terrain en surplus.* Sur une parcelle bâtie sous la référence d'une zone
-    d'habitat individuel (référence inférieure à 1), la surface au-delà de deux
+  - *Terrain en surplus.* Sur toute parcelle bâtie d'une zone d'habitat
+    individuel (référence inférieure à 1), quoi qu'il y soit construit, la
+    surface au-delà de deux
     fois la parcelle médiane de la zone compte pour un quart. Les terrains à
     bâtir pour maisons se vendent bien moins que proportionnellement plus cher
     quand ils s'agrandissent (EPTB : élasticité 0,45 à 477 m², 0,11 à
@@ -394,7 +398,9 @@ La méthode figure dans la provenance de chaque fichier publié (`land_value`).
 et `--site-elasticity` et `--site-ref-quantile` font varier les deux
 principaux paramètres.
 
-**Ce que cela change.** Le terrain passe, dans chaque IRIS, des bâtiments
+**Ce que cela change** (chiffres de son introduction, sous le split-rate 4:1
+et l'ancienne règle de la densité propre ; voir le journal des résultats pour
+l'impôt sur le seul sol). Le terrain passe, dans chaque IRIS, des bâtiments
 denses aux bâtiments peu denses. À Villeurbanne, par exemple :
 - les maisons passent de +21 % à +115 % au total ;
 - les petits immeubles de 2 à 4 logements, de 0 à +52 % ;
@@ -783,10 +789,24 @@ indéfinie (§3.7).
 
 `--no-social-housing` reproduit le calcul sans le logement social.
 
-**3.6 Solveur split-rate** — le `model_split_rate_tax` amont trouve les taux
-fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'export
-est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
-(surcouche de localisation monétaire du rapport amont).
+**3.6 Solveur : le seul sol** — la réforme n'impose que le sol (décision du
+11 novembre 2026 ; jusque-là, un split-rate 4:1, le sol imposé quatre fois plus
+que le bâti, était publié). `run_pipeline.solve_reform` appelle le
+`model_full_building_abatement` amont avec un abattement de 100 % : un taux
+unique sur le sol, neutre en recettes, le bâti n'étant plus imposé ; les biens
+exonérés et les terres agricoles exclues restent hors du champ. Le sol est la
+valeur de site (§3.4), évaluée comme si le terrain était nu à la densité type
+de sa zone, qui tient lieu de la densité qu'elle permet : deux parcelles
+identiques d'une même zone dans un IRIS paient la même chose, quoi qu'il y
+soit construit. Deux traces de l'usage actuel demeurent : le total foncier
+d'un IRIS reste le résiduel de ce qui y est bâti (la seule mesure du marché
+pour le sol en zone bâtie), et les hangars et entrepôts prennent le prix du
+sol d'activité selon le type de bâtiment, là où l'usage permis demanderait
+la destination dominante de la zone (le champ `destdomi` du standard CNIG,
+pas encore récupéré). Donner un nombre à
+`split_rate_ratio` rétablit le modèle split-rate, par le `model_split_rate_tax`
+amont. L'export est écrit par `save_standard_export` ; les graphiques en euros
+par `charts_fr` (surcouche de localisation monétaire du rapport amont).
 
 *Décomposition* (`estimate.revalued_tax`, `export_web._steps`). Une partie de la variation de chaque groupe tient au
 remplacement d'une base de 1970, non à l'imposition du sol. Un impôt
@@ -867,7 +887,7 @@ arrondissement (75101–75120, 69381–69389). La configuration porte les deux :
 codes de données. Chaque collecteur parcourt les codes de données (les requêtes
 spatiales se font une emprise d'arrondissement à la fois, de sorte qu'un bâtiment
 en limite n'est attribué qu'aux parcelles qu'il recouvre), les tables sont
-empilées en une seule commune et **un** split-rate neutre en recettes est résolu
+empilées en une seule commune et **un** impôt foncier neutre en recettes est résolu
 pour la ville — comme l'impôt réel, à taux unique. Les DPE rattachés au code de la
 ville sont également récupérés.
 
@@ -876,25 +896,51 @@ et *Lyon extra-muros* (les 57 autres communes de la Métropole de Lyon ; liste f
 dans `territories.py`) — ne sont **pas** un impôt métropolitain. Chaque commune
 membre est résolue sur son propre produit REI et reste à recettes constantes
 (`run_territory.py`, un processus par commune) ; `export_web.build_territory_payload`
-agrège ensuite les résultats par parcelle. La bande de sensibilité ±10 pt est
-recalculée commune par commune (chacune inclinée autour de sa propre part
-foncière) avant agrégation ; les quintiles de revenu sont classés sur toute la
+agrège ensuite les résultats par parcelle. La bande de sensibilité est
+recalculée commune par commune, chacune sur son propre produit, avant
+agrégation ; les quintiles de revenu sont classés sur toute la
 couronne. Une commune en échec figure dans le champ `coverage`, jamais imputée.
 Montreuil et Villeurbanne apparaissent seules et dans leur couronne ; les totaux du
 panel sur le site ne les comptent qu'une fois.
 
 **Bande de sensibilité.** La valeur du sol étant imputée, chaque chiffre publié porte
-une bande de ±10 pt de part foncière : la part foncière agrégée est abaissée puis
-relevée de 10 points (valeurs terrain et bâti de chaque parcelle mises à l'échelle
-uniformément, base totale et produit constants) et le solveur amont est relancé
-(`export_web._tilted_change`). La bande est publiée pour les chiffres clés **et** pour
+une bande. Avec un impôt sur le seul sol, multiplier le sol de chaque parcelle
+par un même facteur ne change aucun avis d'imposition : la bande du modèle
+split-rate (part foncière ±10 points, sol et bâti de chaque parcelle mis à
+l'échelle uniformément ; `export_web._tilted_change`, conservée pour les
+résolutions split-rate) ne montrerait aucune incertitude. La bande de l'impôt
+sur le sol fait varier ce qui en change la répartition : la valeur du bâti
+±20 % (`config.BUILDING_COST_BAND`, qui couvre les fourchettes de la recherche
+sur les coûts et le ratio habitable ÷ brut). Le coût du bâti entre dans le sol
+par le résiduel des parcelles bâties, sommé par IRIS avant le partage en valeur
+de site : le total foncier résiduel de chaque IRIS devient L − 0,2 B (ou
+L + 0,2 B), borné à [0, L + B], et toutes les parcelles évaluées au résiduel
+bougent du même facteur. Seules celles-là bougent, regroupées comme la valeur
+de site les regroupe (par IRIS, à défaut la commune entière ; l'un et l'autre
+notés dans le fichier annexe des ménages) : les parcelles non bâties,
+évaluées sur les ventes de terrains, les parcelles évaluées au coût (hangars,
+grandes surfaces) et celles au plancher agricole ne bougent pas
+(`export_web._cost_shocked_land` ; revue de code du 12 novembre 2026). Chaque
+hypothèse répartit de nouveau le produit de chaque commune et indique la part
+foncière qu'elle implique. Le choc porte sur les valeurs du sol exportées,
+sans refaire l'étape de valeur de site : les parcelles bornées à la part
+foncière bougent avec le total de leur IRIS alors que, recalculées, elles
+resteraient à leur borne ; là où l'essentiel d'un IRIS est à la borne basse,
+l'hypothèse +20 % peut ramener son sol résiduel à zéro. Deux cas hors des
+passages publiés regroupent plus que le modèle : `--land current` (sans
+valeur de site, le sol de chaque parcelle est son propre résiduel, et le choc
+devrait être parcelle par parcelle) et les rares parcelles au résiduel que
+l'étape de valeur de site laisse hors de son regroupement (sans surface ni
+coût du bâti). La bande ne
+couvre pas le partage du sol entre parcelles d'un même IRIS selon la densité
+permise (exposant 0,5), désormais la principale incertitude sur les valeurs
+relatives du sol (revue Gemini du 11 novembre 2026 ;
+`docs/research/land-only-2026-11/`). La bande est publiée pour les chiffres clés **et** pour
 chaque catégorie de bien et chaque quintile de revenu (et, sur les couronnes, les
 quintiles classés dans chaque commune), avec les mêmes bornes de quintile que
 l'estimation centrale ; le site la trace en moustaches sur ces graphiques. La
 variante centrale reproduit exactement les chiffres publiés (testé). Une conclusion
-n'est tenue pour robuste que si elle vaut sur toute la bande ; à Paris, le gradient
-par quintile bouge à peine (parcelle résidentielle médiane : premier quintile
-−17,1 à −19,1 %, dernier +15,6 à +15,8 %). La bande laisse la base de la taxe
+n'est tenue pour robuste que si elle vaut sur toute la bande. La bande laisse la base de la taxe
 actuelle inchangée. L'incertitude propre à cette base, le facteur appliqué aux
 locaux professionnels (§3.5), déplace les résultats des ménages bien plus que la
 bande. Elle est publiée à part, sous forme d'une variante locale présentée à
@@ -1178,13 +1224,49 @@ de revenu, classement dans chaque commune pour les couronnes) :
 - **La part de l'impôt qui change de payeur** double environ (Paris 9,8 →
   19,9 %, Lyon 10,5 → 22,4 %).
 
+*Le seul sol, à l'usage permis (passage du 11 novembre 2026).* Les chiffres
+ci-dessus valent pour le split-rate 4:1 et pour un sol évalué à la densité
+propre de la parcelle quand elle dépassait celle de sa zone. En n'imposant que
+le sol, chaque parcelle à la densité de sa zone (§3.4, §3.6), sur les données
+publiées depuis (mêmes colonnes) :
+
+| | Transfert, % du produit | Maisons | 2–4 | 5+ | Commerces | Totaux Q1 / Q5 |
+|---|---|---|---|---|---|---|
+| Grenoble | 43,3 | +57,1 | +15,4 | −35,8 | +14,5 | −53,4 / −9,0 |
+| Annemasse | 33,4 | +120,8 | +21,9 | −29,6 | +21,0 | −13,3 / −8,0 |
+| Villeurbanne | 31,7 | +68,0 | +31,9 | −24,2 | +61,5 | +3,4 / −2,2 |
+| Roubaix | 39,8 | −24,4 | −29,8 | −43,0 | −21,5 | −33,8 / +47,2 |
+| Cahors | 36,6 | +14,2 | −10,7 | −35,0 | −34,2 | — / — |
+| Montreuil | 33,2 | +51,5 | +23,8 | −30,6 | +34,5 | −9,5 / +12,6 |
+| Figeac | 36,8 | −0,1 | −24,8 | −52,8 | −28,2 | — / — |
+| Sète | 32,7 | +43,4 | +4,1 | −35,5 | +37,7 | −19,3 / +8,6 |
+| La Rochelle | 37,6 | −4,8 | −18,8 | −39,1 | −4,5 | −11,9 / −3,5 |
+| Paris | 23,0 | +118,8 | +36,6 | −14,2 | +68,2 | −24,9 / +7,0 |
+| Lyon | 27,7 | +78,3 | +24,9 | −14,7 | +13,3 | −15,7 / +11,0 |
+| Paris extra-muros (petite couronne) | 34,9 | +41,3 | +14,0 | −34,6 | +29,5 | −6,8 / +3,1 |
+| Lyon extra-muros (Métropole hors Lyon) | 39,6 | +36,2 | −1,0 | −40,1 | −29,8 | −4,7 / +0,7 |
+
+- **Plus progressif presque partout :** le cinquième le plus modeste de Paris
+  −22,3 → −24,9 % par rapport au passage 4:1 sur les mêmes données, Lyon
+  −12,5 → −15,7 %, Grenoble −45,2 → −53,4 % ; les grands immeubles paient
+  moins partout, plus nettement qu'avant.
+- **La seule exception, Villeurbanne :** le total du cinquième le plus modeste
+  augmente de 3,4 % (bande de +2,0 à +4,4 %) quand celui du plus aisé baisse de
+  2,2 %, porté par les maisons et petits immeubles (maisons +135 % au total) ;
+  son ménage type paie tout de même 21 % de moins, la plupart vivant en grand
+  immeuble. Les plus modestes paient donc moins, et s'en sortent mieux que les
+  plus aisés, dans 10 des 11 territoires découpés par revenu.
+- **La part de l'impôt qui change de payeur** augmente encore, de 23 % (Paris)
+  à 43 % (Grenoble).
+
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
 central (cotisations industrielles de Saint-Fons −60 %, de Marcy-l'Étoile
 −90 %).
 
-*Outillage : un choix de conception.* La réforme modélisée taxe le sol, et le
-bâti au taux réduit ; elle ne taxe **pas** l'outillage industriel fixe. Le
+*Outillage : un choix de conception.* La réforme modélisée ne taxe que le sol,
+donc ni le bâti ni l'outillage industriel fixe (ce paragraphe date du modèle
+split-rate, qui taxait le bâti mais pas l'outillage). Le
 responsable du projet a tranché en ce sens, conformément à la théorie de la taxe
 foncière sur le sol, qui évite de pénaliser l'investissement productif. Aucun
 changement de code n'est nécessaire : les valeurs de l'art. 1499 incluent
@@ -1193,7 +1275,8 @@ ne compte déjà que le hangar. Pour montrer le faible poids de ce choix, une
 estimation de premier ordre (`docs/research/plant_effect.py`) ajoute à la base
 bâtie le coût réévalué de l'outillage (base industrielle ÷ 0,03, brut ou × 0,5
 pour la dépréciation, moins la valeur bâtie du modèle) et résout de nouveau le
-4:1 commune par commune :
+4:1 commune par commune (le modèle d'alors ; avec l'impôt sur le seul sol,
+l'outillage n'a plus aucun effet) :
 
 | Cotisations industrielles vs aujourd'hui | Hangar seul (publié) | Avec outillage, déprécié | Avec outillage, brut |
 |---|---|---|---|
@@ -1295,13 +1378,18 @@ ces règles à l'export et sur chaque fichier publié (test CI).
     libellé de zone (au moins 20 parcelles, sinon type de zone, sinon commune) ;
   - parcelle plafonnée au 99ᵉ centile de la commune ;
   - terrain en surplus au-delà de 2 × la parcelle médiane de la zone compté
-    à 0,25, en zone d'habitat individuel (référence inférieure à 1) et sous la
-    référence seulement ;
+    à 0,25, sur toute parcelle bâtie d'une zone d'habitat individuel (référence
+    inférieure à 1), quoi qu'il y soit construit (jusqu'au 11 novembre 2026 :
+    sous la référence seulement) ;
   - en zones A et N, une cour de 3 × la surface de plancher.
 
   Chaque valeur est un jugement éclairé par les sources du §3.4 ; aucune n'est
   estimée sur des ventes françaises de biens bâtis.
-- **Ratio split-rate** : 4:1 (terrain:bâti), scénario de référence.
+- **Assiette** : le seul sol (`split_rate_ratio = None`), depuis le 11 novembre
+  2026 ; un split-rate 4:1 (terrain:bâti) auparavant. Un choix du responsable du
+  projet, conforme à la théorie de l'impôt foncier.
+- **Bande sur le coût du bâti** : ±20 % (`BUILDING_COST_BAND`), la sensibilité de
+  l'impôt sur le sol ; voir la bande de sensibilité au §3.7.
 - **€/m² agricole** (SAFER, par département, agricole / naturel) : défaut
   0,64 / 0,49 ; Lot 0,45 / 0,35 ; Seine-St-Denis 1,00 / 0,60 ; Nord 0,85 / 0,50 ;
   Rhône 0,70 / 0,50 ; Haute-Savoie 0,75 / 0,55 ; Isère 0,60 / 0,45 ; Paris,
@@ -1451,8 +1539,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    - **Amplification du résiduel.** Les erreurs sur le bâti sont amplifiées
      dans le résiduel là où le bâti pèse lourd. C'est atténué par le bornage
      [0,15 ; 0,85], qui s'applique quand le total de l'IRIS est formé, et par
-     l'agrégation. C'est rendu visible par la bande de ±10 points de part
-     foncière (`headline_sensitivity`).
+     l'agrégation. C'est rendu visible par la bande sur le coût du bâti
+     (`headline_sensitivity`).
    - **Foncier non bâti.** Le foncier non bâti **n'utilise pas** le résiduel :
      le message clé (le sous-utilisé paie plus) est indépendant de la qualité
      des données bâti.

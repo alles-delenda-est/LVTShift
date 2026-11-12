@@ -11,15 +11,17 @@ canonical — keep both this file and `METHODOLOGIE.md` in sync with it.
 
 Estimate, parcel by parcel, the revenue-neutral redistribution of a French
 commune's *taxe foncière sur les propriétés bâties* (TFPB) if it shifted to a
-split-rate Land Value Tax, using **open data only**. France never assesses land
+tax on land value alone (the TVTN, taxe sur la valeur du terrain nu), using
+**open data only**. France never assesses land
 and buildings separately, so per-parcel land value is **imputed**, with the error
 bars made explicit. Results are reported by **property category** and **income
 quintile**, never as individual bills.
 
 Architecturally this is a fork of the US LVTShift toolkit: the FR code in
 `lvtshift-fr/` manufactures LVTShift's expected input columns from French open
-data and calls its *unmodified* solver (`model_split_rate_tax`) and export
-(`save_standard_export`). Upstream improvements flow through automatically.
+data and calls its *unmodified* solvers (`model_full_building_abatement` at
+100 % for the land-only tax, `model_split_rate_tax` when a ratio is configured)
+and export (`save_standard_export`). Upstream improvements flow through automatically.
 
 ## 2. Data sources
 
@@ -313,7 +315,7 @@ exempt public property and parcels floored at the farmland value. The rule is:
 
 ```
 weight  = effective plot × density ^ 0.5
-density = max(own floor-area ratio, reference floor-area ratio of the zone)
+density = reference floor-area ratio of the zone      (permitted use)
 ```
 
 - **Reference density.** It is the 75th percentile of the realised floor-area
@@ -324,17 +326,19 @@ density = max(own floor-area ratio, reference floor-area ratio of the zone)
   mixed and collective zones 1.4–6.6 (Paris UG 6.0, Lyon UCe2a 6.1).
 - **Density at the square root.** German residential conversion coefficients
   have land per m² of plot rising 0.45–0.54 % per 1 % of floor-area ratio
-  (WertR 2006, Anlage 11). A parcel denser than its zone keeps its own density,
-  as lawful existing use (Denmark's "actual or possible" floor area), but at the
-  square root: a block four times as dense as its neighbour on the same plot
-  gets twice its land, not four times.
+  (WertR 2006, Anlage 11). Only the zone's density counts, never the
+  plot's own (permitted use, decision of 2026-11-11): a house and a block on
+  identical plots of one zone get the same land. Until then a parcel denser
+  than its zone kept its own density, as lawful existing use (Denmark's
+  "actual or possible" floor area), at the square root
+  (`SITE_VALUE["density_rule"] = "max_own"` restores it).
 - **Effective plot.** This is the plot area, capped at the commune's 99th
   percentile, with two corrections where the extra land is not building land:
   - *Natural and agricultural zones (A, N).* Only a yard of 3 × floor area
     counts, as for shed-type parcels. 84 % of Cahors's largest house plots lie
     there, and linear plot area gave them +149 %.
-  - *Surplus garden land.* On a parcel built below the reference of a
-    house-scale zone (reference below 1), area beyond twice the zone's median
+  - *Surplus land.* On any built parcel of a house-scale zone (reference
+    below 1), whatever stands on it, area beyond twice the zone's median
     plot counts at a quarter. Vacant house plots sell for far less than
     proportionally more as they grow (EPTB: elasticity 0.45 at 477 m², 0.11 at
     2,000 m²; Combes, Duranton & Gobillon), and in DVF an extra m² of garden
@@ -350,8 +354,10 @@ The method is recorded in each payload's provenance (`land_value`).
 `run_commune.py --land current` reproduces the residual at the existing density,
 and `--site-elasticity` and `--site-ref-quantile` vary the two main parameters.
 
-**What it changes.** Land moves within each IRIS from dense buildings to
-low-density ones. In Villeurbanne, for example:
+**What it changes** (figures from its introduction, under the 4:1 split rate
+and the earlier own-density rule; see the results log for the land-only
+tax). Land moves within each IRIS from dense buildings to low-density ones.
+In Villeurbanne, for example:
 - houses go from +21 % to +115 % in total;
 - small 2–4-dwelling buildings go from 0 to +52 %;
 - large blocks go from −1 to −13 %.
@@ -696,10 +702,23 @@ counts a parcel paying nothing today as a rise, not as undefined (§3.7).
 
 `--no-social-housing` reproduces the run without it.
 
-**3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
-revenue-neutral land/improvement millages at the configured ratio (default 4:1).
-Output is written by `save_standard_export`; euro charts by `charts_fr`
-(currency-localised wrapper over the upstream report).
+**3.6 Solver: land only** — the reform taxes land alone (decision of
+2026-11-11; until then a 4:1 split rate, land taxed four times the building
+rate, was published). `run_pipeline.solve_reform` calls upstream
+`model_full_building_abatement` with a 100 % abatement: one revenue-neutral
+rate on land, buildings untaxed, exempt property and excluded farmland
+outside. Land is the site value (§3.4), valued as if vacant at its zone's
+typical density standing in for the density it permits, so two identical
+plots of one zone in an IRIS pay alike whatever stands on them. Two traces
+of current use remain: an IRIS's land total is still the residual of what
+stands there (the market's only evidence of land value in built areas), and
+sheds and warehouses take the business-land price by building type, where
+permitted use would need the zone's dominant use (the CNIG `destdomi` field,
+not yet fetched).
+Setting `split_rate_ratio` to a number restores the split-rate model through
+upstream `model_split_rate_tax`. Output is written by `save_standard_export`;
+euro charts by `charts_fr` (currency-localised wrapper over the upstream
+report).
 
 *Decomposition* (`estimate.revalued_tax`, `export_web._steps`). Part of each
 group's change comes from replacing a 1970 base, not from taxing land. An
@@ -774,7 +793,7 @@ arrondissement (75101–75120, 69381–69389). A config carries both: `insee_cod
 the fiscal code REI is keyed on, `sub_codes` the data codes. Every fetcher loops
 the data codes (spatial fetches one arrondissement bbox at a time, so a boundary
 building is credited only to the parcels it overlaps), the frames are stacked into
-one commune, and **one** revenue-neutral split-rate is solved for the city — as the
+one commune, and **one** revenue-neutral land tax is solved for the city — as the
 real levy has one rate. DPE records filed under the city code are also pulled.
 
 The **extra-muros territories** — *Paris extra-muros* (all 122 communes of 92/93/94)
@@ -782,23 +801,44 @@ and *Lyon extra-muros* (the 57 other communes of the Métropole de Lyon; members
 frozen in `territories.py`) — are **not** a metropolitan tax. Each member is run on
 its own REI produit and held revenue-neutral on its own (`run_territory.py`, one
 process per commune); `export_web.build_territory_payload` then pools the
-per-parcel results into aggregates. The ±10 pt sensitivity is re-solved commune by
-commune (each tilted around its own land share) before pooling; income quintiles
+per-parcel results into aggregates. The sensitivity band is re-solved commune by
+commune, each on its own levy, before pooling; income quintiles
 are ranked across the whole ring. A member that fails is listed in the payload's
 `coverage`, never imputed. Montreuil and Villeurbanne appear both alone and in
 their ring; the site's panel totals count them once.
 
 **Sensitivity band.** Because land value is imputed, every published figure carries
-a ±10 pt land-share band: the aggregate land share is tilted down and up by 10 points
-(each parcel's land and building values scaled uniformly, total base and levy held
-fixed) and the upstream solver is re-run (`export_web._tilted_change`). The band is
+a band. Under a land-only tax, scaling every parcel's land by one factor changes
+no bill, so the split-rate model's band (land share ±10 points, each parcel's
+land and building scaled uniformly; `export_web._tilted_change`, kept for
+split-rate runs) would show no uncertainty. The land-only band shocks what
+moves the shares: building values ±20 % (`config.BUILDING_COST_BAND`, spanning
+the cost research's ranges and the habitable ÷ gross ratio). Building cost
+enters land through the residual of built parcels, summed by IRIS before the
+site-value sharing, so each IRIS's residual land total becomes L − 0.2 B (or
+L + 0.2 B), clipped to [0, L + B], and every parcel the residual priced moves
+by the same factor. Only those parcels move, pooled as the site value pools
+them (by IRIS, else the whole commune; both recorded in the households
+sidecar): building-less parcels, priced from plot sales, parcels valued at
+replacement cost (sheds, retail boxes) and parcels floored at the farmland
+value do not (`export_web._cost_shocked_land`; code review, 2026-11-12). Each
+leg re-shares each commune's levy and reports the land share it implies. The
+shock is applied to the exported land values, not by re-running the
+site-value step: parcels clipped to the land-share bounds move with their
+IRIS total though, re-run, they would stay at their bound; where most of an
+IRIS sits at the lower bound, the +20 % leg can take its residual land to
+zero. Two cases outside the published runs pool more than the model does:
+`--land current` (no site value: each parcel's land is its own residual, so
+the right shock would be per parcel) and the few residual parcels the
+site-value step leaves out of its pool (no plot area or building cost). The
+band does not cover the within-IRIS sharing of land by permitted density
+(exponent 0.5), now the main uncertainty on relative land values (Gemini
+review, 2026-11-11; `docs/research/land-only-2026-11/`). The band is
 reported for the headline figures **and** for each property category and income
 quintile (and, on the rings, the within-commune quintiles), using the same quintile
 cut points as the central estimate; the site draws it as whiskers on those charts.
 The central leg reproduces the published figures exactly (tested). A conclusion is
-treated as robust only if it holds across the band; in Paris the quintile gradient
-barely moves (median residential parcel: poorest fifth −17.1 to −19.1 %, richest
-+15.6 to +15.8 %). The band holds today's-tax baseline fixed. The baseline's own
+treated as robust only if it holds across the band. The band holds today's-tax baseline fixed. The baseline's own
 uncertainty, the professional-premises scale (§3.5), moves household results
 far more than the band does. It is published separately, as a local
 alternative shown beside the central case (§3.7, §6 item 1).
@@ -1059,19 +1099,53 @@ category, income-group totals, within-commune ranking for the rings):
 - **The levy that changes payer** roughly doubles (Paris 9.8 → 19.9 %, Lyon
   10.5 → 22.4 %).
 
+*Land only, at permitted use (run of 11 November 2026).* The figures above
+are for the 4:1 split rate and for land valued with a plot's own density
+where it exceeded its zone's. Taxing land alone, each plot at its zone's
+density (§3.4, §3.6), on the payloads published since (same columns):
+
+| | Shift, % of levy | Houses | 2–4 | 5+ | Commercial | Q1 / Q5 totals |
+|---|---|---|---|---|---|---|
+| Grenoble | 43.3 | +57.1 | +15.4 | −35.8 | +14.5 | −53.4 / −9.0 |
+| Annemasse | 33.4 | +120.8 | +21.9 | −29.6 | +21.0 | −13.3 / −8.0 |
+| Villeurbanne | 31.7 | +68.0 | +31.9 | −24.2 | +61.5 | +3.4 / −2.2 |
+| Roubaix | 39.8 | −24.4 | −29.8 | −43.0 | −21.5 | −33.8 / +47.2 |
+| Cahors | 36.6 | +14.2 | −10.7 | −35.0 | −34.2 | — / — |
+| Montreuil | 33.2 | +51.5 | +23.8 | −30.6 | +34.5 | −9.5 / +12.6 |
+| Figeac | 36.8 | −0.1 | −24.8 | −52.8 | −28.2 | — / — |
+| Sète | 32.7 | +43.4 | +4.1 | −35.5 | +37.7 | −19.3 / +8.6 |
+| La Rochelle | 37.6 | −4.8 | −18.8 | −39.1 | −4.5 | −11.9 / −3.5 |
+| Paris | 23.0 | +118.8 | +36.6 | −14.2 | +68.2 | −24.9 / +7.0 |
+| Lyon | 27.7 | +78.3 | +24.9 | −14.7 | +13.3 | −15.7 / +11.0 |
+| Paris extra-muros (petite couronne) | 34.9 | +41.3 | +14.0 | −34.6 | +29.5 | −6.8 / +3.1 |
+| Lyon extra-muros (Métropole hors Lyon) | 39.6 | +36.2 | −1.0 | −40.1 | −29.8 | −4.7 / +0.7 |
+
+- **More progressive almost everywhere:** Paris's poorest fifth −22.3 → −24.9 %
+  against the 4:1 run on the same data, Lyon −12.5 → −15.7 %, Grenoble
+  −45.2 → −53.4 %; large blocks pay less everywhere, by more than before.
+- **The one exception, Villeurbanne:** the poorest fifth's total rises 3.4 %
+  (band +2.0 to +4.4 %) while the richest fifth's falls 2.2 %, carried by
+  houses and small buildings (houses +135 % in total); its typical household
+  still pays 21 % less, as most live in large blocks. So the poorest pay less,
+  and fare better than the richest, in 10 of the 11 territories with income
+  groups.
+- **The levy that changes payer** rises again, to 23 % (Paris) – 43 % (Grenoble).
+
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (Saint-Fons
 industrial bills −60 %, Marcy-l'Étoile −90 %).
 
-*Plant: a design decision.* The modelled reform taxes land, and buildings at
-the split rate; it does **not** tax fixed industrial plant. The project lead
+*Plant: a design decision.* The modelled reform taxes land only, so neither
+buildings nor fixed industrial plant (this paragraph dates from the split-rate
+model, under which buildings were taxed and plant was not). The project lead
 took this decision, consistent with land-value-tax theory, which avoids
 penalising capital investment. It needs no code change: art. 1499 values include
 fixed plant, but the model's improvement value for an industrial parcel already
 counts only the shed. To show how little the decision matters, a first-order
 estimate (`docs/research/plant_effect.py`) adds the plant's revalued cost to the
 improvement base (industrial base ÷ 0.03, gross or × 0.5 for depreciation, less
-the model's building value) and re-solves the 4:1 split per commune:
+the model's building value) and re-solves the 4:1 split per commune (the
+model then; under the land-only tax plant has no effect at all):
 
 | Industrial bills vs today | Shed only (published) | With plant, depreciated | With plant, gross |
 |---|---|---|---|
@@ -1160,13 +1234,18 @@ published file (CI test).
   - reference density at the 75th percentile of the zone label's realised
     floor-area ratio (at least 20 parcels, else zone type, else commune);
   - plot capped at the commune's 99th percentile;
-  - surplus land beyond 2 × the zone's median plot at 0.25, in house-scale
-    zones (reference below 1) and on parcels below the reference only;
+  - surplus land beyond 2 × the zone's median plot at 0.25, on every built
+    parcel of a house-scale zone (reference below 1), whatever stands on it
+    (until 2026-11-11: on parcels below the reference only);
   - in A and N zones, a yard of 3 × floor area.
 
   Every value is a judgement informed by the sources cited in §3.4; none is
   estimated on French sales of built property.
-- **Split-rate ratio**: 4:1 (land:improvement), headline scenario.
+- **Tax base**: land only (`split_rate_ratio = None`), since 2026-11-11; a 4:1
+  split rate (land:improvement) before. A judgement call by the project lead,
+  consistent with land-value-tax theory.
+- **Building-cost band**: ±20 % (`BUILDING_COST_BAND`), the land-only tax's
+  sensitivity; see the sensitivity band in §3.7.
 - **Agricultural €/m²** (SAFER, by département, agricultural / natural): default
   0.64 / 0.49; Lot 0.45 / 0.35; Seine-St-Denis 1.00 / 0.60; Nord 0.85 / 0.50;
   Rhône 0.70 / 0.50; Haute-Savoie 0.75 / 0.55; Isère 0.60 / 0.45; Paris,
@@ -1301,7 +1380,7 @@ Ranked by how much they move published (category/quintile) results.
    - **Residual amplification.** Building errors are amplified in the residual
      wherever buildings are a large share of value. This is mitigated by the
      [0.15, 0.85] clip, which applies when the IRIS total is formed, and by
-     aggregation. It is made visible by the ±10-point land-share band
+     aggregation. It is made visible by the building-cost band
      (`headline_sensitivity`).
    - **Vacant land.** Vacant land does **not** use the residual, so the
      headline that under-used land pays more does not depend on building-data

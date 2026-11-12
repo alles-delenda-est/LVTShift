@@ -68,6 +68,14 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
             f"No model output for {commune_key} at {path}; "
             f"run `python run_commune.py {commune_key}` first.")
     df = pd.read_csv(path)
+    # the payload is labelled, and its band built, from the config: a run made
+    # under another model (an older 4:1 export) must not pass for this one
+    from config import model_label
+    if "model_type" in df.columns:
+        ran = set(df["model_type"].dropna().astype(str))
+        if ran != {model_label(cfg)}:
+            raise ValueError(f"{path.name} was run as {sorted(ran)}, the config now "
+                             f"models {model_label(cfg)!r}; re-run the commune")
     df = _attach_dwellings(df, path, commune_key)
     n_exempt = 0
     if "is_fully_exempt" in df.columns:
@@ -130,7 +138,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
         raise ValueError(
             f"{side_path.name} was not written with this {path.name}; "
             f"re-run `python run_commune.py {commune_key}`")
-    side = pd.read_csv(side_path)
+    # codes as text: read as numbers they would lose a leading zero and slip
+    # past the code guards
+    side = pd.read_csv(side_path, dtype={"iris": str, "landlord_key": str})
     if len(side) != len(df) or not np.allclose(
             side["new_tax"].to_numpy(float), df["new_tax"].to_numpy(float),
             rtol=1e-9, atol=0.01, equal_nan=True):
@@ -162,6 +172,11 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
     if "residual_at_cap" in side.columns:
         df = df.assign(residual_at_cap=_strict_flag(side["residual_at_cap"],
                                                     side_path.name).to_numpy())
+    if "iris" in side.columns:              # grouping key for the building-cost band only
+        df = df.assign(_iris=side["iris"].fillna("").astype(str).to_numpy())
+    if "residual_land" in side.columns:     # which parcels the band shocks
+        df = df.assign(_residual_land=_strict_flag(side["residual_land"],
+                                                   side_path.name).to_numpy())
     if "landlord_key" in side.columns:      # hashed label: for counting landlords only
         keys = side["landlord_key"].fillna("").astype(str).to_numpy()
         df = df.assign(landlord_key=keys)
@@ -624,6 +639,61 @@ def build_by_income_quintile(df: pd.DataFrame):
     return [_quintile_row(q, d[d["_q"] == q]) for q in [1, 2, 3, 4, 5]]
 
 
+def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
+    """Each parcel's land value if building values were (1 + shock) times
+    the model's. Building cost enters land value through the residual of
+    built parcels, summed by IRIS before the site-value sharing (estimate.
+    site_value_land), so the shock moves each IRIS's built land total,
+    L − shock × B clipped to [0, L + B], and every built parcel of the IRIS
+    by the same factor: two identical plots in one IRIS still pay alike.
+    Only the parcels the residual priced move (`_residual_land`, from the
+    sidecar): building-less parcels, priced from plot sales, parcels valued
+    at replacement cost (sheds, retail boxes) and parcels floored at the
+    farmland value do not. Older sidecars without the flag fall back to
+    every parcel with a building. Parcels without an IRIS form one group.
+    An IRIS whose residual land is zero stays at zero: the site value shares
+    its total by weights, and a zero total gives no shares to scale."""
+    land = df["taxable_land_value"].to_numpy(dtype=float)
+    imp = df["taxable_improvement_value"].to_numpy(dtype=float)
+    # a territory member from an older run has no flag (NaN after stacking):
+    # its parcels fall back to the building test, never to "residual"
+    if "_residual_land" in df.columns:
+        flag = df["_residual_land"]
+        known = flag.map({True: True, False: False, 1: True, 0: False,
+                          "True": True, "False": False})
+        if (flag.notna() & known.isna()).any():
+            raise ValueError("residual_land flag has values other than True/False")
+        built = np.where(flag.isna(), imp > 0, known.fillna(False).astype(bool))
+    else:
+        built = imp > 0
+    group = (df["_iris"].fillna("").astype(str).to_numpy() if "_iris" in df.columns
+             else np.zeros(len(df), dtype=int))
+    g = pd.DataFrame({"g": group, "l": np.where(built, land, 0.0),
+                      "b": np.where(built, imp, 0.0)}).groupby("g")[["l", "b"]].transform("sum")
+    l_g, b_g = g["l"].to_numpy(), g["b"].to_numpy()
+    new_g = np.clip(l_g - shock * b_g, 0.0, l_g + b_g)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        factor = np.where(l_g > 0, new_g / l_g, 1.0)
+    return np.where(built, land * factor, land)
+
+
+def _share_levy(land: np.ndarray, df: pd.DataFrame) -> np.ndarray:
+    """Each parcel's change when the commune's levy is shared by `land`."""
+    total = float(land.sum())
+    if not (np.isfinite(total) and total > 0):
+        raise ValueError("land-only band: no taxable land after the shock")
+    current = df["current_tax"].to_numpy(dtype=float)
+    return float(current.sum()) * land / total - current
+
+
+def _land_only_change(df: pd.DataFrame, shock: float) -> np.ndarray:
+    """Per-parcel change under the land-only tax with building values shocked
+    (_cost_shocked_land), the commune's levy held. The levy shares by land
+    value, so the re-solve is a re-share: the upstream solver would give the
+    same bills."""
+    return _share_levy(_cost_shocked_land(df, shock), df)
+
+
 def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
                    current_revenue: float) -> np.ndarray:
     """Per-parcel tax change after re-solving with the aggregate land share of
@@ -751,7 +821,32 @@ def build_baseline_sensitivity(df: pd.DataFrame, within: bool = False,
     }
 
 
-def build_headline_sensitivity(df: pd.DataFrame, ratio: float, delta_pt: float = 10.0) -> dict:
+def build_land_only_sensitivity(df: pd.DataFrame, band: float, within: bool = False) -> dict:
+    """The land-only tax's band: building values +band (less land: the low
+    leg) and −band (the high leg), each commune re-shared on its own levy.
+    Each leg reports the land share it implies."""
+    groups = (list(df.groupby("_commune", sort=False)) if "_commune" in df.columns
+              else [(None, df)])
+    legs = {"base": 0.0, "low": band, "high": -band}
+    out = {"kind": "building_cost", "delta_pct": round(100 * band)}
+    rev = float(df["current_tax"].sum())
+    base = float((df["taxable_land_value"] + df["taxable_improvement_value"]).sum())
+    for leg, shock in legs.items():
+        shocked = [(_cost_shocked_land(sub, shock), sub) for _k, sub in groups]
+        chg = np.concatenate([_share_levy(sl, sub) for sl, sub in shocked])
+        land = sum(float(sl.sum()) for sl, _sub in shocked)
+        pooled = pd.concat([sub for _k, sub in groups], ignore_index=True) \
+            if len(groups) > 1 else df
+        out[leg] = _sensitivity_summary(pooled, chg, land / base if base else 0.0, rev,
+                                        within=within)
+    return out
+
+
+def build_headline_sensitivity(df: pd.DataFrame, ratio: float | None,
+                               delta_pt: float = 10.0) -> dict:
+    if ratio is None:
+        from config import BUILDING_COST_BAND
+        return build_land_only_sensitivity(df, BUILDING_COST_BAND)
     current_revenue = float(df["current_tax"].sum())
     land = float(df["taxable_land_value"].sum())
     base = land + float(df["taxable_improvement_value"].sum())
@@ -792,6 +887,22 @@ MEMBER_KEYS = {
 }
 PARCEL_ID_RE = re.compile(r"\b\d[\dAB]\d{3}[0-9]{3}[0-9A-Z]{2}\d{4}\b")
 IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
+
+
+def _check_no_iris_codes(payload: dict, df: pd.DataFrame) -> None:
+    """Value guard: none of the commune's own IRIS codes (the band's grouping
+    key, from the sidecar) appears anywhere in its payload: quoted, bare, in
+    text, or without a leading zero. IRIS_CODE_RE only catches the quoted
+    shape (security review, 2026-11-12)."""
+    if "_iris" not in df.columns:
+        return
+    blob = json.dumps(payload, ensure_ascii=False)
+    for code in set(df["_iris"].dropna().astype(str)):
+        if not re.fullmatch(r"\d[\dAB]\d{7}", code):
+            continue                       # "_commune", blanks: not codes
+        for form in {code, code.lstrip("0")}:
+            assert not re.search(rf"(?<![\dAB]){re.escape(form)}(?!\d)", blob), \
+                "an IRIS code of the commune leaked into its payload"
 FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$", "landlord_key")
 
 
@@ -958,7 +1069,15 @@ def assert_aggregate_only(payload: dict) -> None:
         for leg in ("central", "low"):
             _check_leg(bs.get(leg) or {}, "baseline")
     sens = payload.get("headline_sensitivity") or {}
-    assert set(sens) <= {"delta_pt", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
+    sens_keys = {"delta_pt", "kind", "delta_pct", "base", "low", "high"}
+    assert set(sens) <= sens_keys, f"unexpected sensitivity keys: {set(sens) - sens_keys}"
+    assert sens.get("kind", "land_share") in ("building_cost", "land_share"), \
+        f"unknown band kind {sens.get('kind')!r}"
+    for k in ("delta_pt", "delta_pct"):
+        v = sens.get(k)
+        assert v is None or (isinstance(v, (int, float)) and not isinstance(v, bool)
+                             and math.isfinite(v) and 0 < v <= 100), \
+            f"headline_sensitivity.{k} must be a finite number in (0, 100], got {v!r}"
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
@@ -1057,7 +1176,12 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     if land["concept"] == "current":
         return {"concept": "current"}
     out = {"concept": "site"}
-    for k in sorted(SITE_VALUE):
+    # the density rule is a word; runs from before it existed used "max_own"
+    rule = land.get("density_rule", "max_own")
+    if rule not in ("zone", "max_own"):
+        raise ValueError(f"{path}: unknown land_value.density_rule {rule!r}")
+    out["density_rule"] = rule
+    for k in sorted(set(SITE_VALUE) - {"density_rule"}):
         v = land.get(k)
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")
@@ -1201,19 +1325,19 @@ def _territory_baseline(present: list, out_dir: str) -> dict:
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
-    from config import COMMUNES
+    from config import COMMUNES, model_label
     cfg = COMMUNES[commune_key]
     df = load_parcels(commune_key, out_dir)
     baseline = load_baseline(commune_key, out_dir)
     by_category = build_by_category(df)
-    return {
+    payload = {
         "commune_key": commune_key,
         "kind": "commune",
         "insee": cfg.insee_code,
         "name": cfg.name,
         "departement": cfg.departement,
         "reference_year": getattr(cfg, "reference_year", None),
-        "model_type": f"split_rate:{cfg.split_rate_ratio}",
+        "model_type": model_label(cfg),
         "headline": build_headline(df),
         "headline_sensitivity": build_headline_sensitivity(df, cfg.split_rate_ratio),
         "by_category": by_category,
@@ -1238,6 +1362,8 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         },
         "currency": "EUR",
     }
+    _check_no_iris_codes(payload, df)
+    return payload
 
 
 def load_territory(territory_key: str, out_dir: str = "output"):
@@ -1267,7 +1393,7 @@ def load_territory(territory_key: str, out_dir: str = "output"):
     return out, present, missing
 
 
-def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
+def build_territory_sensitivity(df: pd.DataFrame, ratio: float | None,
                                 delta_pt: float = 10.0) -> dict:
     """±10 pt band for a territory, honouring per-commune revenue neutrality.
 
@@ -1276,6 +1402,9 @@ def build_territory_sensitivity(df: pd.DataFrame, ratio: float,
     the per-parcel changes are pooled for the summary. A single pooled solve
     would silently model a metropolitan tax instead.
     """
+    if ratio is None:
+        from config import BUILDING_COST_BAND
+        return build_land_only_sensitivity(df, BUILDING_COST_BAND, within=True)
     d = delta_pt / 100.0
     legs = {"base": [], "low": [], "high": []}
     tilted_land = {"base": 0.0, "low": 0.0, "high": 0.0}
@@ -1354,7 +1483,7 @@ def build_by_income_quintile_within(df: pd.DataFrame):
 
 
 def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:
-    from config import (COMMUNES, TERRITORIES, TERRITORY_ACTIVITY_LAND_RATIO,
+    from config import (COMMUNES, TERRITORIES, model_label, TERRITORY_ACTIVITY_LAND_RATIO,
                         TERRITORY_COST_EUR_M2, TERRITORY_HOUSE_COST_EUR_M2)
     t = TERRITORIES[territory_key]
     df, present, missing = load_territory(territory_key, out_dir)
@@ -1367,14 +1496,14 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
     within, within_cov = build_by_income_quintile_within(df)
     tb = _territory_baseline(present, out_dir)
     by_category = build_by_category(df)
-    return {
+    payload = {
         "commune_key": territory_key,
         "kind": "territory",
         "insee": None,
         "name": t["name"],
         "departement": t["departement"],
         "reference_year": COMMUNES[present[0]].reference_year,
-        "model_type": f"split_rate:{ratio}",
+        "model_type": model_label(COMMUNES[present[0]]),
         "headline": build_headline(df),
         "headline_sensitivity": build_territory_sensitivity(df, ratio),
         "by_category": by_category,
@@ -1413,6 +1542,8 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         },
         "currency": "EUR",
     }
+    _check_no_iris_codes(payload, df)
+    return payload
 
 
 def export_territory(territory_key: str, out_dir: str = "output",

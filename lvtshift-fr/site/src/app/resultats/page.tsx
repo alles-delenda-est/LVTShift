@@ -22,9 +22,8 @@ export default function ResultatsPage() {
         </h2>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed">
           Sélectionnez une commune pour explorer les effets simulés de la
-          taxe sur la valeur du terrain nu (TVTN), à recettes constantes. Elle y
-          est simulée à deux taux : le sol est imposé quatre fois plus que le
-          bâti, qui continue de payer. Les résultats sont exprimés en
+          taxe sur la valeur du terrain nu (TVTN), à recettes constantes : seul
+          le sol est imposé, le bâti ne l&apos;est plus. Les résultats sont exprimés en
           variation médiane et en proportion de parcelles concernées.
         </p>
       </div>
