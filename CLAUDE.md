@@ -148,3 +148,13 @@ Located in `cities/<city>/model.ipynb`. Each follows the 7-section template in `
 ## Data Files
 
 All data files (.csv, .xlsx, .parquet, .gpq, .geojson, .shp) are gitignored. Each city's scraped data is cached locally in `cities/<city>/data/`; notebooks auto-detect cached files and skip re-scraping when a recent file exists. Standard exports land in `analysis/data/` and reports in `analysis/reports/` (both gitignored).
+
+## Review process
+
+- **Checks** (run before every PR and paste the real output; never claim they pass without running them): root `python -m pytest tests/ -q`; in `lvtshift-fr/`: `python -m pytest -q`, `python test_units.py`, `python test_synthetic.py`; in `lvtshift-fr/site/` (after `npm ci`): `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`. These mirror `.github/workflows/ci.yml`.
+- **Before a PR**: fresh-context subagent review of the diff + `/code-review` + `/security-review`. See `REVIEW.md` for what reviewers must check in this repo.
+- **PR body** must have **Testing**, **Risk** (Low/Medium/High + why) and **How to revert** (`.github/pull_request_template.md`).
+- **Risk is set by the change, not the author.** High (never auto-merged): auth, secrets, CI/deploy config, economic parameters or calculations, anything hard to undo.
+- **Findings**: label Important / Nit / Pre-existing; fix each or resolve it with a written reason. Max 3 review-and-fix rounds, then rethink the approach.
+- Patrick is the required human reviewer on every agent-written PR. One concern per PR.
+- **Fork:** this repo is a fork of Center-for-Land-Economics/LVTShift. Every `gh pr create` must include `--repo alles-delenda-est/LVTShift`; never open PRs or issues on the upstream repo.
