@@ -36,9 +36,14 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Today's-tax split | REI (DGFiP), via OFGL `rei`: `E11` (TFPB base), `WC75` (compensation for the 2021 industrial halving), `T29`, `T29_1`, `X503` (CFE gross bases); OFGL `base-fiscale-simplifiee` 2020 TFPB rates | Opendatasoft API by `idcom` | REI 2025; rates 2020 | per-commune industrial / professional / housing shares of the TFPB base (§3.5) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
 | Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 (see §6.8) | distributional (quintile) analysis |
-| Exempt public property | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | yearly zips via the data.economie.gouv.fr catalog | situation 2025 | flag obviously TFPB-exempt public property (§3.5) |
+| Exempt public property | DGFiP « Fichiers des locaux et des parcelles des personnes morales » | yearly zips via the data.economie.gouv.fr catalog | situation 2025 | flag obviously TFPB-exempt public property; parcels held by social landlords (§3.5) |
+| Social dwellings | SDES RPLS, « Données détaillées au logement » | DiDo API by `DEPCOM` (row count, then CSV of 13 columns) | 1 January 2025 | social dwellings' financing, dates, convention, QPV and coordinates: today's exemptions and abatement (§3.5) |
 
-All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`.
+All Licence Ouverte / Etalab. Exact endpoints live in `config.DATA_SOURCES`. The
+RPLS also carries diffusion rules (décret 2009-1485, restated in its dictionary):
+no statistic identifying a landlord, no figure on fewer than 11 dwellings below
+commune level, no redistribution of the rows. The rows stay in the local download
+cache; only commune-level aggregates are published (§3.5).
 
 ## 3. The pipeline and formulas
 
@@ -527,6 +532,112 @@ codes would.
 `--no-exemptions` turns off both the public-property and the rural-building
 exemption and reproduces the unflagged run.
 
+**Social housing** (`social_housing.py`; research in
+`docs/research/hlm-2026-11/`). Today, CGI art. 1384 A (new builds and VEFA) and
+1384 C (acquisitions) exempt conventioned social rental dwellings financed by a
+prêt réglementé for 15 years from the year after completion or acquisition, 25
+years when the financing decision falls between 1 July 2004 and 31 December 2026;
+art. 1388 bis abates by 30 % the base of taxable HLM and SEM dwellings in a 2024
+priority neighbourhood (QPV), for the tax years 2025 to 2030. The REI produit
+excludes exempt and abated bases (`E11` is the base after them, `E13` the
+cotisations issued), so the model shares today's produit over taxable floor only.
+The reform ends both regimes: social landlords pay the land tax like every owner.
+
+*Which parcels* (`social_parcels`). From the DGFiP « personnes morales » file, per
+département: a company is an HLM body if most of its rows carry groupe 5
+(« office HLM »; the code is recorded per row, and real HLM bodies have about
+95 %), or it has an HLM legal form (5546/5646 SA, 5547/5647 coopérative, 7371
+OPHLM), or it is a local EPIC (4140) named like a public housing office (the
+Métropole de Lyon's OPH is coded groupe 9); an SEM if most rows carry groupe 6
+or it has an SEM form. Intermediate-rent companies (In'li) are never social. A
+landlord holds a building unit when it has a right whose holder pays the TFPB
+(P, U, E, R, W), except full ownership of a unit someone else leases (a commune's
+land under an emphyteutic lease to an office is the office's). An **estate** is a
+parcel where the landlord holds units and the land.
+
+*Which dwellings, which regime* (`dwelling_status`, `fetch_rpls`). The RPLS gives
+one row per social dwelling, with coordinates but no parcel and no landlord. For
+the 2025 tax year, a dwelling is exempt when it is conventioned (`CONV` = 1),
+financed by PLAI, PLUS, PLS or other post-1977 aided loans (`FINAN_CODE` 10, 11,
+13, 14, 49), and its clock started in 2010 or later (15 years), or from 2005 with
+a convention dated between July 2004 and 2026 (25 years; for 2005–06 starts the
+convention must date from 2005, since a convention can follow the decision by
+months; without a convention date, from 2007). The clock is the completion year
+(`CONSTRUCT`) for new builds and VEFA, and the year of entry into the landlord's
+stock (`PATRIMOINE`) for acquisitions, except for **transfers between landlords**,
+which carry no new exemption (art. 1384 C; the convention follows the dwelling,
+CCH L. 353-4): an acquisition whose convention is more than 2 years older than its
+entry is a transfer, and its clock is the later of completion and convention.
+The first-letting year (`LOCAT`) is only the fallback without a convention date:
+some landlords report the building's first letting ever, not its first social
+letting. In Montreuil 1,167 apparent transfers by `LOCAT` were financed by loans
+created after their `LOCAT` year (PLUS, since 1999), and 1,288 were conventioned
+within 3 years of their entry: they are purchases, and exempt. PLA ordinaire
+(`FINAN_CODE` 12) is never exempt in 2025: PLUS replaced it in 1999, so every
+such decision predates July 2004 and its 15 years (20 with the environmental
+bonus) ended by 2024. PLI (16) and PCL (17) are intermediate rents. A taxable
+dwelling in a QPV (`PLG_QP24` « QN… ») is abated if it is conventioned or has
+pre-1977 HLM financing (50–55, 99), which had the old art. 1384 exemption.
+
+*Placing the dwellings* (`parcel_social`; sources_report §4). Each RPLS address
+point goes to the nearest parcel where a social landlord holds units or land
+within 30 m (96 % and 94 % of dwellings in Montreuil and Villeurbanne), otherwise
+to the parcel holding it (nearest within 15 m). Address points often fall on a
+neighbouring parcel of the same estate, so contiguous parcels of **one landlord**
+(within 2 m) form an estate, and each estate takes the habitable-area-weighted
+factor of its dwellings (0 exempt, 0.7 abated, 1 taxable). Neighbouring estates of
+different landlords stay apart; a parcel of unknown landlord joins a touching
+estate but never bridges two. On an estate the whole housing floor is social (an
+SEM's only if its estate holds RPLS dwellings: SEMs are partly non-social); on
+other parcels the social share is the RPLS habitable area over 0.72 × the BD TOPO
+gross housing floor, capped at 1 (0.70–0.75 measured per estate), with the
+parcel's own dwellings' factor. A parcel's housing floor then carries the weight
+1 − share × (1 − factor) in today's tax (`estimate.current_tax`,
+`hlm_tax_factor`), in the group calibration's housing total and in the achieved
+shares; the produit lost to exemptions falls on the other taxable floor, as in
+the REI. The reform's bills do not depend on it.
+
+*Who bears the change.* The TFPB is not a recoverable charge (décret 82-955,
+annex VIII) and conventioned rents are capped (CCH L. 353-9-3), so the change on
+social housing falls on the landlord, a business. Parcels whose housing floor is
+at least half social, and residential or annex by use, form the category
+**Social Housing** (« Logement social (bailleurs) »), outside the residential set
+and so outside every household and income figure. On other parcels, only the
+private share of dwellings counts in the household weights. Category assignment
+comes after valuation and does not change any value.
+
+*Disclosure* (`export_web`). The Social Housing category, and the commune's counts
+of RPLS dwellings exempt and abated today, are published only where at least 3
+landlords hold its parcels and none carries more than 85 % of its tax, today or
+under the reform (`MIN_SOCIAL_LANDLORDS`, `MAX_LANDLORD_SHARE`, the two rules of
+French business statistics' secrecy); otherwise the category joins "Other". The
+local run outputs keep a landlord key per parcel, for counting only: a hash of
+the SIREN, which anyone with the public SIREN list could reverse, so it never
+reaches a payload. No SIREN, name or RPLS row is published, and only
+commune-level figures are. Comparing a folded commune's payload with the release
+before social housing was modelled shows how many parcels left the residential
+rows for "Other": a count of parcels, largely derivable
+from the public DGFiP file, with no € or % figure attached (security review,
+2026-11-04).
+
+*Results* (run of 4 November 2026). Across the 188 communes, 1.11 M RPLS
+dwellings, 98.8 % placed on a parcel; 22.7 % are exempt in 2025 and 29.7 %
+abated, against a national estimate of 20–25 % exempt (`legal_report.md` §6.2).
+Montreuil: 23.7 % of 18,755 exempt and 41.8 % abated; Villeurbanne: 25.3 % of
+21,711 exempt and 21.2 % abated. In Montreuil the social parcels' share of
+today's tax falls by 23 % (65 of them pay nothing today), the other parcels
+making up the difference, and the category pays −4.2 % in total under the
+reform: dense
+estates gain from a land tax even once their exemptions end. The Social Housing
+category is shown in 11 of the 13 published territories; in Cahors and Figeac it
+joins "Other" under the disclosure rules. Taking social estates out of the
+household figures makes the poorest fifth's total less favourable where they
+house many of the poorest (Villeurbanne −6.1 % → −1.5 %, Montreuil −18.8 % →
+−8.4 %): the estates' gain goes to their landlords. A category median now
+counts a parcel paying nothing today as a rise, not as undefined (§3.7).
+
+`--no-social-housing` reproduces the run without it.
+
 **3.6 Split-rate solver** — upstream `model_split_rate_tax` finds the
 revenue-neutral land/improvement millages at the configured ratio (default 4:1).
 Output is written by `save_standard_export`; euro charts by `charts_fr`
@@ -622,7 +733,12 @@ negated (security review, 2026-11-04). A % alone gives nothing to subtract,
 since no category's tax today is published. A total is withheld when one parcel
 carries more than a tenth of the category's tax, today or under the reform
 (`MAX_PARCEL_TAX_SHARE`), since it would then be close to that parcel's own
-change.
+change. A category's median % counts a parcel that pays nothing today as a rise
+(or a fall) of unbounded size, rather than leaving it out: otherwise the
+social housing exempt today, which all goes from 0 € to a land tax, would drop
+out of its own category's median. Where the median itself falls on such a
+parcel (vacant land, or an even split), no % is published and the euro median
+shows instead.
 
 **Paris's land share and the 85 % cap.** Under the original rule (straight-line
 to a 25 % floor) a ~95-year-old, continuously maintained Paris building fell to
@@ -940,6 +1056,16 @@ published file (CI test).
   case;
   per-m² weights capped at 5 × housing; industrial + professional share capped
   at 75 %.
+- **Social housing** (`social_housing.py`, §3.5): tax year 2025, RPLS at
+  1 January 2025, PM file 2025; exempt for 15 years, or 25 with a convention
+  dated 1 July 2004 – 31 December 2026 (from 2005 for 2005–06 starts; without
+  one, from 2007); QPV factor 0.7; a transfer when the convention is more than
+  2 years older than the entry into the stock; groupe code by majority of rows;
+  join within 30 m of a social parcel, else 15 m; estates within 2 m, one
+  landlord each; habitable ÷ gross 0.72; Social Housing category from half the
+  housing floor; published with at least 3 landlords and none above 85 % of the
+  category's tax. The durations and the QPV rate are law; the rest are
+  judgement calls checked on Montreuil and Villeurbanne (`docs/research/hlm-2026-11/`).
 - **REI layers** held neutral: Commune + intercommunalité (configurable). The
   preflight `rei_layers` check reports, per commune, which FB layers exist and the
   share left out: in 92/93/94 there is no GFP layer (EPTs and the MGP levy no
@@ -1128,10 +1254,9 @@ Ranked by how much they move published (category/quintile) results.
     no unit recorded stay taxable. Farm buildings (CGI art. 1382 6°) are
     identified from BD TOPO usage and PLU zoning, not from actual use: an
     unlabelled farm shed in an urban zone stays taxed, and park outbuildings in
-    N zones are exempted (§3.5). Temporary exemptions (new social housing under
-    CGI art. 1384 A, the QPV abatement) are not identifiable from open data, so
-    the baseline still overstates today's bill on exempt HLM and understates it
-    elsewhere (material in 93).
+    N zones are exempted (§3.5). Social housing's exemptions and QPV abatement
+    are modelled since November 2026 (§3.5, and item 14); other temporary
+    exemptions (new private builds' two years, local deliberations) are not.
 12. **DVF multi-local mutations.** Annex locals (Dépendance) and rows outside
     the commune keep their value in the mutation price but are excluded from
     the floor-area sum, overstating €/m² where annexes are common (rural
@@ -1143,6 +1268,33 @@ Ranked by how much they move published (category/quintile) results.
     occasionally move (config.py's warning). There is no manifest (source, URL,
     fetch date, hash) yet, so runs are reproducible as commands rather than as
     data.
+14. **Social housing is modelled from a spatial join, not from the tax files.**
+    The RPLS has no parcel and no landlord, so dwellings are placed by address
+    point, and an estate's dwellings share one exemption factor: right in total,
+    blurred between the parcels of an estate. The rule rests on proxies: the
+    convention date stands in for the financing decision date (15 or 25 years),
+    and for whether an acquisition was a transfer between landlords; RPLS
+    reports the first-letting year inconsistently. Not observable: the 5-year
+    environmental extension (art. 1384 A I bis), late declarations (art. 1406),
+    local opt-outs (art. 1384 C III), and whether each landlord signed the QPV
+    convention (all are assumed to have; REI `G211`/`G213` would calibrate it).
+    The RPLS leaves out logements-foyers and résidences sociales: their parcels
+    count as social when a social landlord holds them, at today's full rate.
+    Mixed parcels (VEFA in a condominium) take a social share from the RPLS
+    habitable area against the BD TOPO floor. Where that share is under half,
+    the parcel stays residential and its whole change counts in the household
+    figures, the landlord's part included (its lost exemption shows as a rise
+    for the building's households). Such parcels carry 8–14 % of residential
+    tax today in Montreuil, Annemasse and Villeurbanne; attributing only the
+    private share to households would move an income fifth's total by 0.2 to
+    1.4 points, mostly downwards, and flats' category total by under 1 point.
+    Not corrected: it needs the landlord's part of each parcel's tax in the
+    run outputs. MAJIC lags new builds by about a
+    year, so some recent dwellings land on parcels with no social right. On
+    State dégrèvements refunded to landlords after the rolls (art. 1391 E and
+    C, about 4–5 % of HLM TFPB), the REI-based baseline slightly overstates what
+    landlords pay. The Fichiers fonciers' exemption records would replace all of
+    this (§7).
 
 ## 7. The Fichiers Fonciers access argument
 

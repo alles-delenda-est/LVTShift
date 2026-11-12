@@ -17,6 +17,11 @@ ingest.py        all fetchers: cadastre, DVF, BD TOPO buildings, DPE year,
                  GPU zoning, terrain-à-bâtir comparables, REI (OFGL), IRIS, Filosofi
 estimate.py      improvement value, hedonic market value, classify-then-price
                  land value, current-tax baseline
+exemptions.py    exempt public property and farm buildings (DGFiP personnes
+                 morales, BD TOPO usage)
+social_housing.py  social landlords' parcels, RPLS dwellings' exemption or QPV
+                 abatement today; the reform ends both (RPLS diffusion rules
+                 in its docstring bind every published figure)
 run_pipeline.py  orchestration; calls upstream model_split_rate_tax + export
 run_commune.py   live-data driver for one commune (python run_commune.py <key>)
 charts_fr.py     euro-localised wrapper over the upstream report

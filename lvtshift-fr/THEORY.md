@@ -66,7 +66,15 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   below flats count as professional. Public property obviously exempt under
   CGI 1382-1° (DGFiP *personnes morales* files, conservative ownership rule) and
   farm buildings under CGI 1382 6° (BD TOPO agricultural use, greenhouses, sheds
-  in farmland zones) bear nothing today and nothing under the LVT.
+  in farmland zones) bear nothing today and nothing under the LVT. Social
+  housing exempt today (CGI 1384 A/C: 15 or 25 years) bears nothing today and
+  QPV-abated housing 70 %, as in the REI; the reform ends both, so social
+  landlords pay like any owner (decision of 2026-11-03).
+
+**Who bears a change decides where it is shown.** The TFPB on social housing is
+not recoverable from tenants and social rents are capped, so its change falls on
+the landlord, a business: those parcels form their own category, outside every
+household and income figure, as businesses' premises already were.
 
 Each weak step is flagged in-band and every published figure carries a ±10-point
 land-share band, so error propagates visibly rather than silently.
@@ -122,10 +130,8 @@ land-share band, so error propagates visibly rather than silently.
   only 1–3 points across a ring (up to 14 in a single industrial commune): in an industrial corridor the LVT genuinely shifts tax from
   capital-heavy industry on cheap land to households. Expectations, including
   a reviewer's, are hypotheses to test against data.
-- **Changing a variable's units silently retunes every rule calibrated on it.**
-  Restating the depreciation trigger per habitable m² halved Lyon's maintained
-  weight before it was caught; the trigger keeps its calibrated basis. Check
-  downstream thresholds whenever a unit changes.
+- **Changing a variable's units silently retunes every rule calibrated on it**
+  (the depreciation trigger per habitable m² halved Lyon's maintained weight).
 - **The residual measured current use, not site value, and its house category
   was mostly not houses** (Nov 2026). Land = (price − cost) × floor area, so
   land tracked the building: on 8,591 DVF house sales the market's land rises
@@ -152,6 +158,17 @@ land-share band, so error propagates visibly rather than silently.
 - **Ownership rules need the *right* holder, not every holder.** A domaine national
   is State property managed under droit Z by a public agency; reading the agency
   as a blocking owner kept Saint-Cloud's park taxable (23 % of its LVT levy).
+  Social landlords likewise: the taxable holder of a unit is its lessee
+  (emphyteuta, building lessee), not the commune owning the land.
+- **A register's field means what its reporters typed, not what its dictionary
+  says** (Nov 2026). The RPLS first-letting year looked like the way to tell a
+  transfer between landlords (no new exemption) from a purchase (a new one). In
+  Montreuil 1,167 "transfers" were financed by loans created after that year:
+  some landlords report the building's first letting ever. The convention
+  date, which follows the dwelling, separates the two cleanly (Montreuil's
+  exempt share 16.8 % → 23.7 %, Villeurbanne's 27.7 % → 25.3 %, both inside
+  the 20–25 % national estimate). Cross-check a date against another field
+  that cannot predate it.
 - **Paris and Lyon were a key mismatch, not a data gap**: arrondissements carry the
   data codes, the city carries the levy; one city-wide rate is solved. The inner
   rings are aggregates of per-commune solves, never a metropolitan tax.
@@ -159,8 +176,6 @@ land-share band, so error propagates visibly rather than silently.
   shared in the copropriété, mostly pay less; the house on a valuable plot pays
   more. The determinant is the property's land share, not tenure — a framing
   decision for the domain expert, which the site states plainly.
-- **Coverage boundaries are structural.** Alsace-Moselle sales are in the Livre
-  Foncier, not DVF, so Mulhouse is documented as unmodellable.
 - **External reviews must be checked against data.** Gemini reviews caught real
   errors (the surface-utile step, the stack fan-out) but also asserted things the
   data disproved (Saint-Cloud already exempt, Marnes-la-Coquette failing, wrong
@@ -188,8 +203,15 @@ land-share band, so error propagates visibly rather than silently.
   comptes total. At the raw proxy (×1.0) every household quintile gains 10–15
   points more (Paris −27.6/+3.9 vs −17.4/+18.9). New bills are the same either
   way; only the starting point moves. One national multiplier cannot fit every
-  commune; the per-parcel VLC in the Fichiers fonciers is the real fix. HLM
-  (art. 1384 A) and QPV abatements are not yet modelled either.
+  commune; the per-parcel VLC in the Fichiers fonciers is the real fix.
+- **Social housing's exemptions rest on proxies.** The convention date stands in
+  for the financing decision (15 or 25 years) and marks transfers; the RPLS has
+  no parcel, so an estate's dwellings share one factor; foyers and résidences
+  sociales are missing from it; the 5-year environmental extension and each
+  landlord's QPV convention are not observable. Totals per commune are close;
+  the split between an estate's parcels is not. Ending the exemptions on stock
+  already exempt is a transition question the site raises but the model does
+  not price (about €1.1–1.3 bn a year nationally, as large as the RLS).
 - **Whether a reform should tax industrial plant is a policy choice.** Today's
   industrial base includes fixed installations; the modelled LVT taxes only the
   shed. Estimated from REI, adding plant moves industrial bills by 1–3 points

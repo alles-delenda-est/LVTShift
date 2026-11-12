@@ -55,6 +55,18 @@ const DATA_SOURCES: {
     licence: "Licence Ouverte / Etalab",
   },
   {
+    name: "Locaux et parcelles des personnes morales",
+    source: "DGFiP (data.economie.gouv.fr), situation 2025",
+    role: "Repérage du foncier public exonéré de taxe foncière et des parcelles détenues par les bailleurs sociaux (organismes HLM, SEM)",
+    licence: "Licence Ouverte / Etalab",
+  },
+  {
+    name: "RPLS — répertoire des logements locatifs des bailleurs sociaux",
+    source: "SDES (ministère chargé du logement), au 1er janvier 2025",
+    role: "Financement, dates d'achèvement, d'acquisition et de convention, quartier prioritaire de chaque logement social : exonérations et abattement de la taxe foncière actuelle",
+    licence: "Licence Ouverte, avec règles de diffusion : aucun chiffre ne doit identifier un bailleur",
+  },
+  {
     name: "Contours IRIS",
     source: "IGN",
     role: "Géométrie des IRIS pour l'attribution parcelle → zone de revenu",
@@ -109,6 +121,22 @@ export default function SourcesPage() {
               de transférer les droits de mutation à titre onéreux (DMTO) vers
               la taxe foncière sans perte de recettes pour les collectivités :
               taxer la détention plutôt que l&apos;acquisition.
+            </p>
+          </div>
+
+          {/* Cour des comptes 2017 */}
+          <div className="border-l-2 border-lisere pl-5">
+            <p className="font-display text-base font-medium text-encre mb-1">
+              Cour des comptes,{" "}
+              <em>Les dépenses fiscales en faveur du logement social</em>, référé
+              S2017-1737, 2017
+            </p>
+            <p className="font-body text-sm text-gris leading-relaxed">
+              La Cour juge mal ciblées les exonérations de taxe foncière du
+              logement social : leur coût pèse sur les communes qui accueillent
+              les logements, l&apos;État n&apos;en compensant qu&apos;une faible
+              part. Elle recommande de les remplacer par des subventions
+              ciblées selon les territoires et les organismes.
             </p>
           </div>
 
@@ -170,7 +198,9 @@ export default function SourcesPage() {
         </h3>
         <p className="font-body text-sm text-gris max-w-2xl leading-relaxed mb-6">
           Toutes les données utilisées dans la modélisation sont sous{" "}
-          <strong>Licence Ouverte&nbsp;/ Etalab</strong>. Les URL et millésimes
+          <strong>Licence Ouverte&nbsp;/ Etalab</strong> ; le répertoire des
+          logements sociaux (RPLS) y ajoute des règles de diffusion, que les
+          résultats publiés respectent. Les URL et millésimes
           exacts sont configurés dans le code source (
           <a href="https://github.com/alles-delenda-est/LVTShift/blob/main/lvtshift-fr/config.py" className="font-mono text-xs underline underline-offset-2 hover:text-marine">config.py</a>, <code className="text-xs font-mono">DATA_SOURCES</code>
           ) et reproductibles par toute partie. Les jeux de données

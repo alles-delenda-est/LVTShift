@@ -265,6 +265,46 @@ export default function MethodologiePage() {
           </p>
 
           <p>
+            <strong>Le logement social.</strong> Un logement social récent est
+            aujourd&apos;hui exonéré de taxe foncière pendant 15&nbsp;ans, ou
+            25&nbsp;ans pour les opérations financées depuis juillet 2004, à
+            compter de l&apos;année qui suit son achèvement ou son achat
+            (art. 1384&nbsp;A et 1384&nbsp;C du CGI) ; en quartier prioritaire,
+            ceux qui paient l&apos;impôt bénéficient d&apos;un abattement de
+            30&nbsp;% (art. 1388&nbsp;bis). Le produit de taxe foncière des
+            communes exclut déjà ces bases : le modèle répartit donc l&apos;impôt
+            actuel sur la seule surface imposable. Il repère les parcelles des
+            bailleurs sociaux (organismes HLM et SEM) dans les fichiers des
+            personnes morales de la DGFiP, et y rattache, par leur adresse, les
+            logements du répertoire des logements locatifs des bailleurs sociaux
+            (RPLS au 1er janvier 2025, SDES), qui donne pour chacun son
+            financement, ses dates d&apos;achèvement, d&apos;entrée dans le
+            patrimoine et de convention, et son quartier prioritaire. Un logement
+            conventionné financé par un prêt aidé (PLAI, PLUS, PLS) est compté
+            exonéré s&apos;il est entré dans le parc social depuis 2010, ou depuis
+            2005 avec une convention postérieure à juin 2004 ; un logement passé
+            d&apos;un bailleur social à un autre ne rouvre pas d&apos;exonération.
+            À Montreuil, 23,7&nbsp;% des logements sociaux sont ainsi exonérés en
+            2025, à Villeurbanne 25,3&nbsp;%, dans la fourchette de 20 à
+            25&nbsp;% estimée à l&apos;échelle nationale. La réforme met fin à ces
+            exonérations (voir{" "}
+            <Link href="/exonerations-protections" className="underline">
+              Exonérations et protections
+            </Link>
+            ). La taxe foncière n&apos;étant pas récupérable sur les locataires,
+            la variation pèse sur le bailleur : les parcelles détenues
+            principalement par des bailleurs sociaux forment une catégorie à part
+            et n&apos;entrent dans aucun chiffre par ménage. Cette catégorie
+            n&apos;est publiée que si au moins trois bailleurs en détiennent les
+            parcelles et qu&apos;aucun n&apos;en porte plus de 85&nbsp;% de
+            l&apos;impôt, pour qu&apos;aucun chiffre ne décrive un bailleur
+            identifiable. Limites : les logements sont placés par point
+            d&apos;adresse, les logements-foyers et résidences sociales manquent au
+            RPLS, et la majoration environnementale de cinq ans n&apos;est pas
+            observable.
+          </p>
+
+          <p>
             <strong>Ce que paierait le foncier public.</strong> La réforme
             conserve l&apos;exonération actuelle. Si le sol public était taxé
             comme le sol privé, il paierait environ 10&nbsp;Md€ par an au taux

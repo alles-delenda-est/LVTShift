@@ -30,6 +30,7 @@ import exemptions
 import estimate
 import ingest
 import run_pipeline as rp
+import social_housing
 from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
 from ingest import CRS_METRIC, CRS_WGS84
 
@@ -170,9 +171,13 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     return parcels
 
 
-def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
+def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None,
+            use_social=True):
     """Fetch + shape all inputs for one commune. `deflator` (see
-    estimate.deflator_factors) brings terrain-à-bâtir prices to reference-year €."""
+    estimate.deflator_factors) brings terrain-à-bâtir prices to reference-year €.
+    use_social: model social housing's exemptions today and its landlord
+    category (social_housing.py); the commune-level counts are returned in
+    parcels.attrs["social_housing"]."""
     parcels = ingest.fetch_parcels(cfg)
     sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
@@ -243,6 +248,21 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
         print(f"  [{cfg.name}] exempt public property: {n_ex} parcels "
               f"({built_ex} built), tiers {parcels['exempt_tier'].value_counts().to_dict()}")
 
+    # Social housing: exempt or QPV-abated today (CGI 1384 A/C, 1388 bis),
+    # taxed like any owner under the reform, borne by the landlord
+    social_summary = None
+    if use_social:
+        soc, social_summary = social_housing.social_for_commune(cfg, parcels, buildings)
+        parcels = parcels.merge(soc, on="idpar", how="left")
+        parcels["social_share"] = parcels["social_share"].fillna(0.0)
+        parcels["hlm_tax_factor"] = parcels["hlm_tax_factor"].fillna(1.0)
+        parcels["rpls_dwellings"] = parcels["rpls_dwellings"].fillna(0).astype(int)
+        s = social_summary
+        print(f"  [{cfg.name}] social housing: {s['rpls_dwellings']} RPLS dwellings "
+              f"({s['placed_dwellings']} placed), {s['exempt_dwellings']} exempt, "
+              f"{s['qpv_abated_dwellings']} QPV-abated; {s['estates']} estates, "
+              f"{s['social_parcels']} parcels mainly social")
+
     # IRIS code per parcel + Filosofi income (drives the distributional charts)
     parcels = parcels.merge(ingest.fetch_parcel_iris(cfg, parcels),
                             on="idpar", how="left")
@@ -258,6 +278,7 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None):
     print(f"  [{cfg.name}] {len(parcels)} parcels, {len(sales)} usable DVF "
           f"sales, {parcels['cell'].nunique()} grid cells")
     print("  land_type:", parcels["land_type"].value_counts().to_dict())
+    parcels.attrs["social_housing"] = social_summary
     return parcels, buildings, sales, tfpb, iris_income
 
 
@@ -276,6 +297,9 @@ def main():
                          "— for the depreciation side-by-side")
     ap.add_argument("--no-exemptions", action="store_true",
                     help="don't flag exempt public property (before/after comparison)")
+    ap.add_argument("--no-social-housing", action="store_true",
+                    help="don't model social housing's exemptions today nor its "
+                         "landlord category (before/after comparison)")
     ap.add_argument("--no-deflator", action="store_true",
                     help="don't deflate DVF prices to the reference year "
                          "(for the before/after comparison)")
@@ -312,7 +336,9 @@ def main():
                   + ", ".join(f"{y} ×{v:.3f}" for y, v in sorted(f.items())))
     parcels, buildings, sales, tfpb, iris_income = prepare(
         cfg, tuple(args.layers), use_dpe=not args.no_dpe,
-        use_exemptions=not args.no_exemptions, deflator=deflator)
+        use_exemptions=not args.no_exemptions, deflator=deflator,
+        use_social=not args.no_social_housing)
+    social_summary = parcels.attrs.get("social_housing")
 
     split = None
     if args.baseline == "calibrated":
@@ -324,7 +350,8 @@ def main():
 
     out = rp.run(parcels, buildings, sales, tfpb, iris_income=iris_income,
                  out_dir=args.out_dir, make_report=not args.no_report, cfg=cfg,
-                 deflator=deflator, baseline_split=split, site_value=site_value)
+                 deflator=deflator, baseline_split=split, site_value=site_value,
+                 social_summary=social_summary)
 
     print("\n--- sanity checks -------------------------------------")
     print(f"rows exported: {len(out)}")

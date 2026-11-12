@@ -45,7 +45,8 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
 | Année de construction | **DPE logements existants** (ADEME) | période de construction → dépréciation (BD TOPO `date_d_apparition` peu fiable/souvent nulle) |
 | Recettes TFPB | REI (DGFiP), territorialisé par **OFGL** | cible exacte de neutralité budgétaire (foncier bâti `FB`, montant réel) |
 | Revenus | Filosofi IRIS (INSEE) | analyse distributive (quintiles) |
-| Foncier public exonéré | fichiers DGFiP des **personnes morales** (locaux et parcelles) | repérer le foncier public manifestement exonéré de TFPB (règle prudente) |
+| Foncier public exonéré | fichiers DGFiP des **personnes morales** (locaux et parcelles) | repérer le foncier public manifestement exonéré de TFPB (règle prudente) ; parcelles des bailleurs sociaux |
+| Logements sociaux | **RPLS** détaillé au logement (SDES, API DiDo), au 1er janvier 2025 | exonérations (art. 1384 A et C) et abattement QPV (art. 1388 bis) de l'impôt actuel ; règles de diffusion propres (aucun chiffre identifiant un bailleur) |
 | Zonage | **GPU `zone_urba`** (Géoportail de l'Urbanisme, WFS) | constructibilité (U/AU vs A/N) des parcelles non bâties ; repérage des bâtiments agricoles exonérés (zones A/N) |
 | Prix terrain à bâtir | ventes **terrains à bâtir** (DVF), EPTB (repli national) | valeur du foncier constructible |
 | Prix terres agricoles | **SAFER** « Le prix des terres » (départemental) | valeur du foncier agricole/naturel |
@@ -235,8 +236,14 @@ export CSV seul : `run(..., make_report=False)`.
 - **Exonérations TFPB partiellement modélisées** : le foncier public
   manifestement exonéré est repéré (règle prudente, voir plus haut), comme les
   bâtiments agricoles (CGI art. 1382 6°, approchés par l'usage BD TOPO et le
-  zonage) ; les édifices religieux associatifs et les exonérations temporaires
-  (HLM neufs, abattement QPV) absorbent encore une part du produit actuel **et**
+  zonage). Les exonérations du logement social (art. 1384 A et 1384 C) et
+  l'abattement en quartier prioritaire (art. 1388 bis) sont modélisés dans
+  l'impôt actuel, à partir du RPLS et des fichiers des personnes morales, et la
+  réforme simulée y met fin (`social_housing.py`, METHODOLOGIE §3.5) ; les
+  logements sont placés par point d'adresse, donc le partage entre les
+  parcelles d'une même résidence reste approximatif. Les édifices religieux
+  associatifs et les autres exonérations temporaires (deux ans du neuf privé,
+  délibérations locales) absorbent encore une part du produit actuel **et**
   paient la LVT simulée.
 - **Coûts de construction et ratio habitable ÷ brut.** Hors Paris, petite
   couronne et territoires lyonnais, les coûts restent des valeurs pilotes non
