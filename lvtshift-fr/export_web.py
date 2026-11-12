@@ -653,8 +653,13 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     its total by weights, and a zero total gives no shares to scale."""
     land = df["taxable_land_value"].to_numpy(dtype=float)
     imp = df["taxable_improvement_value"].to_numpy(dtype=float)
-    built = (df["_residual_land"].to_numpy(dtype=bool) if "_residual_land" in df.columns
-             else imp > 0)
+    # a territory member from an older run has no flag (NaN after stacking):
+    # its parcels fall back to the building test, never to "residual"
+    if "_residual_land" in df.columns:
+        flag = df["_residual_land"]
+        built = np.where(flag.isna(), imp > 0, flag.fillna(False).astype(bool))
+    else:
+        built = imp > 0
     group = (df["_iris"].fillna("").astype(str).to_numpy() if "_iris" in df.columns
              else np.zeros(len(df), dtype=int))
     g = pd.DataFrame({"g": group, "l": np.where(built, land, 0.0),

@@ -827,7 +827,10 @@ shock is applied to the exported land values, not by re-running the
 site-value step: parcels clipped to the land-share bounds move with their
 IRIS total though, re-run, they would stay at their bound; where most of an
 IRIS sits at the lower bound, the +20 % leg can take its residual land to
-zero. The
+zero. Two cases outside the published runs pool more than the model does:
+`--land current` (no site value: each parcel's land is its own residual, so
+the right shock would be per parcel) and the few residual parcels the
+site-value step leaves out of its pool (no plot area or building cost). The
 band does not cover the within-IRIS sharing of land by permitted density
 (exponent 0.5), now the main uncertainty on relative land values (Gemini
 review, 2026-11-11; `docs/research/land-only-2026-11/`). The band is

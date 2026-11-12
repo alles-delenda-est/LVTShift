@@ -156,3 +156,10 @@ def test_band_shocks_only_residual_land_pooled_like_the_site_value(tmp_path):
     with pytest.raises(ValueError, match="no taxable land"):
         rp.solve_reform(_frame().assign(land_value=0.0), "land_value", "improvement_value",
                         1_000.0, None, "outside_levy")
+
+
+def test_a_member_without_the_flag_falls_back_to_the_building_test():
+    import export_web as ew
+    d = _band_frame().assign(_residual_land=[True, np.nan, np.nan, np.nan, np.nan])
+    up = ew._cost_shocked_land(d, 0.2)
+    assert up[2] == 100.0                     # the vacant plot never moves

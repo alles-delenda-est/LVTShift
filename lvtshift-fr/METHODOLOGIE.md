@@ -926,7 +926,12 @@ foncière qu'elle implique. Le choc porte sur les valeurs du sol exportées,
 sans refaire l'étape de valeur de site : les parcelles bornées à la part
 foncière bougent avec le total de leur IRIS alors que, recalculées, elles
 resteraient à leur borne ; là où l'essentiel d'un IRIS est à la borne basse,
-l'hypothèse +20 % peut ramener son sol résiduel à zéro. La bande ne
+l'hypothèse +20 % peut ramener son sol résiduel à zéro. Deux cas hors des
+passages publiés regroupent plus que le modèle : `--land current` (sans
+valeur de site, le sol de chaque parcelle est son propre résiduel, et le choc
+devrait être parcelle par parcelle) et les rares parcelles au résiduel que
+l'étape de valeur de site laisse hors de son regroupement (sans surface ni
+coût du bâti). La bande ne
 couvre pas le partage du sol entre parcelles d'un même IRIS selon la densité
 permise (exposant 0,5), désormais la principale incertitude sur les valeurs
 relatives du sol (revue Gemini du 11 novembre 2026 ;
