@@ -79,6 +79,18 @@ not recoverable from tenants and social rents are capped, so its change falls on
 the landlord, a business: those parcels form their own category, outside every
 household and income figure, as businesses' premises already were.
 
+**Part of the reform's effect is not the land tax's.** The headline result
+(poorer neighbourhoods pay less) bundles three things: replacing a 1970 base
+with current values, taxing land rather than buildings, and ending social
+housing exemptions. The housing revision (RVLLH, due in the 2031 bases) would
+deliver the first alone, so the TVTN can only claim what remains. Each commune
+page now splits every group's change into two revenue-neutral steps, the
+revision's stand-in and the TVTN (decision of 2026-11-11); the end of the
+exemptions stays inside the second, because publishing it apart would reveal
+what exempt social landlords would pay, one landlord's in small communes. The first step is measured against our floor-area
+estimate of today, not the real 1970 values, so it is a stand-in for the
+revision, with rents assumed to rise at 0.8 times prices.
+
 Each weak step is flagged in-band and every published figure carries a ±10-point
 land-share band, so error propagates visibly rather than silently.
 
@@ -194,6 +206,14 @@ land-share band, so error propagates visibly rather than silently.
   exemption counts); every claim is verified before it changes code or docs.
 
 ## Open questions / where the theory might break
+
+- **How much of the progressivity is the revision's?** If the first step
+  carries most of the fall for the poorest groups, the case for the TVTN
+  rests on its incentive to build and on the end of exemptions, not on
+  fairness. Our floor-area baseline has no location element, unlike the 1970
+  values, so it may overstate the first step; the IPP's simulation (poorest
+  decile −5.6 %, richest +9 %) is the external check. The rent-to-price
+  elasticity (0.8) rests on one cross-commune study.
 
 - **Site value cannot be checked against sales of built property**, which price
   what stands on the plot. The only direct evidence is rare vacant-plot sales

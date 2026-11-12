@@ -701,6 +701,73 @@ revenue-neutral land/improvement millages at the configured ratio (default 4:1).
 Output is written by `save_standard_export`; euro charts by `charts_fr`
 (currency-localised wrapper over the upstream report).
 
+*Decomposition* (`estimate.revalued_tax`, `export_web._steps`). Part of each
+group's change comes from replacing a 1970 base, not from taxing land. An
+intermediate bill, holding the same revenue as today, splits the change in
+two:
+
+1. **Housing at market values** (`revalued_tax`): today's built tax with the
+   housing group's amount re-shared by taxable housing floor ×
+   (hedonic housing price per m² of the parcel's location, `eur_m2`)^0.8,
+   instead of taxable housing floor alone. (Not market value ÷ floor area:
+   after the site-value step that is land + building, and a parcel valued at
+   replacement cost carries its whole plot's land, so a shed would look like
+   the dearest housing in town; independent review, 2026-11-12.) The
+   pipeline checks that the same weights at an exponent of 0 give today's
+   bills back. The floor of the industrial and professional groups keeps
+   today's amounts, so a shop or plant keeps its bill unless it also holds
+   housing floor:
+   professional premises were revised in 2017, and the pending housing
+   revision (RVLLH, LF 2020 art. 146, now due in the 2031 bases after LF 2026
+   art. 106) neutralises each commune's housing base (art. 146 V.B).
+   Exemptions and abatements stay as today; the unbuilt-land bill is
+   unchanged. The exponent is below 1 because rents rise less than prices:
+   gross yields fall from about 6.3 % to 5.2 % as prices rise from about
+   €1,600 to €3,900/m² (Chapelle & Eyméoud, PLOS ONE 2022, table 6), a
+   rent-to-price elasticity near 0.8. The IPP's simulation of the revision
+   (rapport n° 29, 2020) assumes 1 within a commune. Gemini suggested 0.55
+   without a source; we did not use it.
+2. **The move to the TVTN** (the reform, `new_tax`, against bill 1), which
+   includes the end of the social housing exemptions.
+
+Both steps are published, per category and per income group, as a % of the
+group's tax today, adding up to its total change (to rounding). A first
+version also split off the end of the exemptions, with a bill that kept
+them; it was dropped and is no longer computed: between that bill and the
+reform every unexempt parcel's bill scales by one factor, which any row of
+houses gave away, and with the published levy that factor yielded the euro
+tax on exempt social housing, one landlord's or one parcel's in some
+communes (security review, 2026-11-11). The steps are published only where the
+run kept the tax groups (the calibrated baseline, every published commune);
+on the plain floor-area baseline it would re-weight shops and industry too.
+The exponent is in each payload's provenance (`rent_price_elasticity`).
+
+The steps are totals, not medians, because only totals add up. A group's
+steps are withheld with its total, or when one parcel carries more than a
+tenth of the group's tax today, under bill 1 or under the reform (income
+groups included). Each step is revenue-neutral across categories, but
+weighted by the categories' taxes today, which are never published, so the
+published rows cannot recover a withheld one, provided at least four
+publish: a withheld group with no housing has a step 1 of exactly 0, and if it
+is vacant land its tax today is about the published unbuilt-tax amount, so
+with the published levy two published rows would close the equations
+(security and independent reviews, 2026-11-12); with three, bounds from
+non-negative taxes were still tight in a few test groupings, with four in
+none. With a withheld row (one with neither a % nor a € total; a row in euros
+is untaxed today and has no weight) and fewer than four publishing, no
+category's steps are published.
+The payload guard checks it. The social landlord rule is
+tested on bill 1 as well.
+
+What the first step is not: our "today" is itself a floor-area estimate
+(§3.5), with no location or comfort element, whereas the 1970 values carry
+category and situation coefficients. The step measures the move from shares
+by size to shares by value within housing, a stand-in for the revision, not
+a simulation of it. The IPP found the revision would lower the poorest
+decile's dwellings by 5.6 % and raise the richest decile's by 9 %
+(20 large urban areas, outside Paris), an order of magnitude to check ours
+against. Docs: `docs/research/revaluation-2026-11/`.
+
 **3.7 Paris, Lyon and the inner rings** — Paris (75056) and Lyon (69123) levy
 the TFPB as one commune, but cadastre, DVF, DPE and IRIS are published per
 arrondissement (75101–75120, 69381–69389). A config carries both: `insee_code` is
@@ -1129,6 +1196,11 @@ published file (CI test).
   parcels inside the reform and houses' open ground beyond 500 m² (five ares,
   BOFiP), one weight per m². The share method follows the law; the garden
   allowance is an administrative practice and the equal weight a judgement.
+- **Rent-to-price elasticity** (`REVALUATION["rent_price_elasticity"]`, §3.6):
+  0.8, from the fall of gross yields with price across French communes
+  (Chapelle & Eyméoud 2022). 1 would treat a rental value as a capital value
+  (the IPP's within-commune assumption); lower values flatten the first step.
+  A judgement call on the only quantitative French evidence found.
 - **REI layers** held neutral: Commune + intercommunalité (configurable). The
   preflight `rei_layers` check reports, per commune, which FB layers exist and the
   share left out: in 92/93/94 there is no GFP layer (EPTs and the MGP levy no
@@ -1374,6 +1446,16 @@ Ranked by how much they move published (category/quintile) results.
     administrative practice applied case by case, not a measurement. The
     Fichiers fonciers' per-parcel cadastral income would replace all of this
     (§7).
+
+16. **The revaluation step is measured against an estimate of today.** Today's
+    tax is shared by floor area (§3.5), so the first step of the
+    decomposition (§3.6) is the move from size to value, not the true effect
+    of revising the 1970 values, whose category and situation coefficients we
+    cannot see. The price per m² is the hedonic housing price of the
+    parcel's location: it does not see a dwelling's own quality, size class
+    or floor, which the revision's categories and localisation coefficients
+    would. A parcel holding a co-ownership counts as one. The Fichiers fonciers' per-local rental
+    values would give the true starting point (§7).
 
 ## 7. The Fichiers Fonciers access argument
 

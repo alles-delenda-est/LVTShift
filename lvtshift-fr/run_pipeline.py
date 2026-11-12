@@ -23,7 +23,7 @@ sys.path.insert(0, str(LVTSHIFT))
 from lvt.lvt_utils import model_split_rate_tax, save_standard_export  # noqa: E402
 
 import estimate  # noqa: E402
-from config import GRENOBLE as CFG, slug_of  # noqa: E402
+from config import GRENOBLE as CFG, REVALUATION, slug_of  # noqa: E402
 from social_housing import SOCIAL_CATEGORY_SHARE  # noqa: E402
 
 # French -> LVTShift standard property categories (exact strings from
@@ -240,6 +240,31 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
 
     p["tax_change"] = p["new_tax"] - p["current_tax"]
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
+
+    # Decomposition (METHODOLOGY §3.6): today → housing at market values →
+    # the reform. Both steps hold the same revenue. (A third bill, the reform
+    # with today's social housing exemptions kept, was dropped: publishing it
+    # revealed exempt landlords' tax, security review of 2026-11-11.)
+    built_today = p["current_tax"] - p["unbuilt_tax_today"]
+    # revalued_tax copies current_tax's group weights: at elasticity 0 it must
+    # give today's bills back, or step 1 would report a baseline mismatch
+    start = estimate.revalued_tax(p, commune_tfpb_produit, 0.0,
+                                  bucket_weights=baseline["weights"])
+    if not np.allclose(start.to_numpy(float), built_today.to_numpy(float),
+                       rtol=1e-9, atol=0.01):
+        raise ValueError(f"[{cfg.name}] revalued_tax at elasticity 0 does not "
+                         f"reproduce today's tax")
+    p["revalued_tax"] = estimate.revalued_tax(
+        p, commune_tfpb_produit, REVALUATION["rent_price_elasticity"],
+        bucket_weights=baseline["weights"]) + p["unbuilt_tax_today"]
+    v = p["revalued_tax"].to_numpy(float)
+    if not (np.isfinite(v).all() and (v >= -1e-6).all()
+            and abs(v.sum() - levy) <= max(1.0, 1e-6 * levy)):
+        raise ValueError(f"[{cfg.name}] revalued_tax is not a non-negative re-share "
+                         f"of the €{levy:,.0f} levy (sum €{v.sum():,.0f})")
+    baseline["revaluation"] = {
+        "rent_price_elasticity": REVALUATION["rent_price_elasticity"],
+        "groups_kept": bool(baseline["weights"])}
     # (taxable_land_value / taxable_improvement_value come from the solver:
     #  equal to land_value / improvement_value except on exempt parcels, 0)
 
@@ -385,7 +410,8 @@ def _write_baseline(p: pd.DataFrame, baseline: dict, out_dir: str, name: str) ->
     """Sidecar recording how today's tax was shared (commune-level figures
     only), for the payload provenance and the docs."""
     import json
-    rec = {k: baseline.get(k) for k in ("method", "targets", "weights", "note", "unbuilt")}
+    rec = {k: baseline.get(k) for k in ("method", "targets", "weights", "note", "unbuilt",
+                                         "revaluation")}
     if baseline.get("weights"):
         # group shares are shares of the built tax, not of the whole levy
         tax = p["current_tax"] - p["unbuilt_tax_today"]
@@ -469,6 +495,9 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
         side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
                                         .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
+    # the decomposition's intermediate bill (METHODOLOGY §3.6)
+    if "revalued_tax" in p.columns:
+        side["revalued_tax"] = p["revalued_tax"].values
     # today's tax at the lower-bound professional share (baseline sensitivity)
     if "current_tax_low" in p.columns:
         side["current_tax_low"] = p["current_tax_low"].values
