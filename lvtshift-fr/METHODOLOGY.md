@@ -1121,7 +1121,7 @@ density (§3.4, §3.6), on the payloads published since (same columns):
   against the 4:1 run on the same data, Lyon −12.5 → −15.7 %, Grenoble
   −45.2 → −53.4 %; large blocks pay less everywhere, by more than before.
 - **The one exception, Villeurbanne:** the poorest fifth's total rises 3.4 %
-  (band +2.4 to +4.1 %) while the richest fifth's falls 2.2 %, carried by
+  (band +2.0 to +4.4 %) while the richest fifth's falls 2.2 %, carried by
   houses and small buildings (houses +135 % in total); its typical household
   still pays 21 % less, as most live in large blocks. So the poorest pay less,
   and fare better than the richest, in 10 of the 11 territories with income

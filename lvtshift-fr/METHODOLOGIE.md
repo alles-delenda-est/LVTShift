@@ -1246,7 +1246,7 @@ publiées depuis (mêmes colonnes) :
   −12,5 → −15,7 %, Grenoble −45,2 → −53,4 % ; les grands immeubles paient
   moins partout, plus nettement qu'avant.
 - **La seule exception, Villeurbanne :** le total du cinquième le plus modeste
-  augmente de 3,4 % (bande de +2,4 à +4,1 %) quand celui du plus aisé baisse de
+  augmente de 3,4 % (bande de +2,0 à +4,4 %) quand celui du plus aisé baisse de
   2,2 %, porté par les maisons et petits immeubles (maisons +135 % au total) ;
   son ménage type paie tout de même 21 % de moins, la plupart vivant en grand
   immeuble. Les plus modestes paient donc moins, et s'en sortent mieux que les
