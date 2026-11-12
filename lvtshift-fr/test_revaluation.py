@@ -215,8 +215,8 @@ def test_steps_disclosable_counts_withheld_rows_only():
     eur = {"total_change_pct": None, "total_change_eur": 12_000.0, "step_revaluation_pct": None}
     hid = {"total_change_pct": None, "total_change_eur": None, "step_revaluation_pct": None}
     assert ew._steps_disclosable([pub, eur])               # a row in euros is not withheld
-    assert not ew._steps_disclosable([pub, pub, hid])      # two beside a withheld row
-    assert ew._steps_disclosable([pub, pub, pub, hid])
+    assert not ew._steps_disclosable([pub, pub, pub, hid])  # three beside a withheld row
+    assert ew._steps_disclosable([pub, pub, pub, pub, hid])
     with pytest.raises(AssertionError):
         ew._check_steps({"by_category": [
             {**pub, "parcels": 50, "step_land_pct": 4.0}, {**hid, "parcels": 50}]})

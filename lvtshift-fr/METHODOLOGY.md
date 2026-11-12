@@ -747,13 +747,15 @@ steps are withheld with its total, or when one parcel carries more than a
 tenth of the group's tax today, under bill 1 or under the reform (income
 groups included). Each step is revenue-neutral across categories, but
 weighted by the categories' taxes today, which are never published, so the
-published rows cannot recover a withheld one, provided at least three
+published rows cannot recover a withheld one, provided at least four
 publish: a withheld group with no housing has a step 1 of exactly 0, and if it
 is vacant land its tax today is about the published unbuilt-tax amount, so
 with the published levy two published rows would close the equations
-(security and independent reviews, 2026-11-12). With a withheld row (one
-with neither a % nor a € total; a row in euros is untaxed today and has no
-weight) and fewer than three publishing, no category's steps are published.
+(security and independent reviews, 2026-11-12); with three, bounds from
+non-negative taxes were still tight in a few test groupings, with four in
+none. With a withheld row (one with neither a % nor a € total; a row in euros
+is untaxed today and has no weight) and fewer than four publishing, no
+category's steps are published.
 The payload guard checks it. The social landlord rule is
 tested on bill 1 as well.
 

@@ -839,14 +839,15 @@ quand une parcelle porte plus du dixième de l'impôt du groupe, aujourd'hui,
 selon l'impôt 1 ou après la réforme (groupes de revenu compris). Chaque étape
 est neutre en recettes entre catégories, mais pondérée par l'impôt actuel des
 catégories, qui n'est jamais publié : les lignes publiées ne permettent pas
-de retrouver une ligne retenue, pourvu qu'au moins trois soient publiées : un
+de retrouver une ligne retenue, pourvu qu'au moins quatre soient publiées : un
 groupe retenu sans logement a une étape 1 nulle et, s'il s'agit du terrain
 nu, un impôt actuel proche du montant publié de l'impôt sur le non-bâti ;
 avec le produit publié, deux lignes publiées fermeraient les équations
-(revues de sécurité et indépendante du 12 novembre 2026). Avec une ligne
-retenue (ni total en %, ni total en € ; une ligne en euros, non imposée
-aujourd'hui, ne pèse pas) et moins de trois lignes publiées, aucune étape
-n'est publiée. Le garde-fou de l'export le vérifie. La règle des bailleurs sociaux porte aussi
+(revues de sécurité et indépendante du 12 novembre 2026) ; avec trois, les
+bornes tirées d'impôts positifs restaient serrées dans quelques regroupements
+d'essai, avec quatre dans aucun. Avec une ligne retenue (ni total en %, ni
+total en € ; une ligne en euros, non imposée aujourd'hui, ne pèse pas) et
+moins de quatre lignes publiées, aucune étape n'est publiée. Le garde-fou de l'export le vérifie. La règle des bailleurs sociaux porte aussi
 sur l'impôt 1.
 
 Ce que la première étape n'est pas : notre « aujourd'hui » est lui-même une

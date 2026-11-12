@@ -435,9 +435,12 @@ STEP_KEYS = ("step_revaluation_pct", "step_land_pct")
 NO_STEPS = dict.fromkeys(STEP_KEYS)
 # With a withheld row, at least this many rows must publish steps. A withheld
 # row with no housing floor has a step 1 of exactly 0, and its tax today is
-# about the published unbuilt-tax amount; with the published levy, two rows
-# would then close the equations (independent review, 2026-11-12).
-MIN_STEP_ROWS_BESIDE_WITHHELD = 3
+# about the published unbuilt-tax amount (an industrial row's, about its
+# published group share); with the published levy, two rows close the
+# equations (independent review, 2026-11-12), and with three, bounds from
+# non-negative taxes were still tight in 0.4 % of test groupings, none with
+# four (security review, 2026-11-12).
+MIN_STEP_ROWS_BESIDE_WITHHELD = 4
 
 
 def _steps_disclosable(rows: list) -> bool:
