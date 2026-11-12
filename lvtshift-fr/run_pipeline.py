@@ -99,6 +99,14 @@ def solve_reform(df: pd.DataFrame, land_col: str, imp_col: str, levy: float,
         out["taxable_improvement_value"] = (
             pd.to_numeric(out[imp_col], errors="coerce").fillna(0).where(inside, 0.0))
         return 0.0, 0.0, 0.0, out
+    if ratio is None:
+        inside_land = pd.to_numeric(df[land_col], errors="coerce").fillna(0)
+        if flag_col:
+            inside_land = inside_land.where(
+                pd.to_numeric(df[flag_col], errors="coerce").fillna(0) == 0, 0.0)
+        if not float(inside_land.sum()) > 0:
+            raise ValueError(f"land-only reform: no taxable land to carry the "
+                             f"€{levy:,.0f} levy")
     if ratio is not None:
         return model_split_rate_tax(
             df=df, land_value_col=land_col, improvement_value_col=imp_col,
@@ -531,12 +539,15 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
         side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
                                         .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
-    # each parcel's IRIS (the income merge leaves it blank where Filosofi has
-    # no figure): the building-cost band shocks IRIS land totals. Local only;
-    # the export's guard keeps IRIS codes out of every payload
-    iris = p["iris"] if "iris" in p.columns else p.get("cell")
-    if iris is not None:
-        side["iris"] = iris.astype(str).values
+    # the building-cost band (export_web._cost_shocked_land) shocks the land
+    # the residual priced, pooled as estimate.site_value_land pools it: by
+    # IRIS, else the whole commune. Local only; the export's guard keeps IRIS
+    # codes out of every payload
+    side["iris"] = (p["iris"].astype("object").fillna("_commune").astype(str).values
+                    if "iris" in p.columns else "_commune")
+    flag = p["lv_flag"] if "lv_flag" in p.columns else pd.Series("", index=p.index)
+    side["residual_land"] = flag.isin(
+        set(estimate.SITE_POOLED_FLAGS) | {"built_site_value"}).values
     # the decomposition's intermediate bill (METHODOLOGY §3.6)
     if "revalued_tax" in p.columns:
         side["revalued_tax"] = p["revalued_tax"].values

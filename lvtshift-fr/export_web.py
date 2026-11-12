@@ -172,6 +172,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
                                                     side_path.name).to_numpy())
     if "iris" in side.columns:              # grouping key for the building-cost band only
         df = df.assign(_iris=side["iris"].fillna("").astype(str).to_numpy())
+    if "residual_land" in side.columns:     # which parcels the band shocks
+        df = df.assign(_residual_land=_strict_flag(side["residual_land"],
+                                                   side_path.name).to_numpy())
     if "landlord_key" in side.columns:      # hashed label: for counting landlords only
         keys = side["landlord_key"].fillna("").astype(str).to_numpy()
         df = df.assign(landlord_key=keys)
@@ -641,11 +644,17 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     site_value_land), so the shock moves each IRIS's built land total,
     L − shock × B clipped to [0, L + B], and every built parcel of the IRIS
     by the same factor: two identical plots in one IRIS still pay alike.
-    Building-less parcels, priced from plot sales, do not move. Parcels
-    without an IRIS (older runs) form one group."""
+    Only the parcels the residual priced move (`_residual_land`, from the
+    sidecar): building-less parcels, priced from plot sales, parcels valued
+    at replacement cost (sheds, retail boxes) and parcels floored at the
+    farmland value do not. Older sidecars without the flag fall back to
+    every parcel with a building. Parcels without an IRIS form one group.
+    An IRIS whose residual land is zero stays at zero: the site value shares
+    its total by weights, and a zero total gives no shares to scale."""
     land = df["taxable_land_value"].to_numpy(dtype=float)
     imp = df["taxable_improvement_value"].to_numpy(dtype=float)
-    built = imp > 0
+    built = (df["_residual_land"].to_numpy(dtype=bool) if "_residual_land" in df.columns
+             else imp > 0)
     group = (df["_iris"].fillna("").astype(str).to_numpy() if "_iris" in df.columns
              else np.zeros(len(df), dtype=int))
     g = pd.DataFrame({"g": group, "l": np.where(built, land, 0.0),
@@ -657,21 +666,21 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     return np.where(built, land * factor, land)
 
 
-def _land_only_change(df: pd.DataFrame, shock: float, current_revenue: float) -> np.ndarray:
-    """Per-parcel change under the land-only tax with building values shocked
-    (_cost_shocked_land), revenue held. The levy shares by land value, so the
-    re-solve is a re-share: the upstream solver would give the same bills."""
-    land = _cost_shocked_land(df, shock)
+def _share_levy(land: np.ndarray, df: pd.DataFrame) -> np.ndarray:
+    """Each parcel's change when the commune's levy is shared by `land`."""
     total = float(land.sum())
     if not (np.isfinite(total) and total > 0):
         raise ValueError("land-only band: no taxable land after the shock")
-    return current_revenue * land / total - df["current_tax"].to_numpy(dtype=float)
+    current = df["current_tax"].to_numpy(dtype=float)
+    return float(current.sum()) * land / total - current
 
 
-def _land_share_after(df: pd.DataFrame, shock: float) -> float:
-    land = _cost_shocked_land(df, shock)
-    base = float((df["taxable_land_value"] + df["taxable_improvement_value"]).sum())
-    return float(land.sum()) / base if base else 0.0
+def _land_only_change(df: pd.DataFrame, shock: float) -> np.ndarray:
+    """Per-parcel change under the land-only tax with building values shocked
+    (_cost_shocked_land), the commune's levy held. The levy shares by land
+    value, so the re-solve is a re-share: the upstream solver would give the
+    same bills."""
+    return _share_levy(_cost_shocked_land(df, shock), df)
 
 
 def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
@@ -812,9 +821,9 @@ def build_land_only_sensitivity(df: pd.DataFrame, band: float, within: bool = Fa
     rev = float(df["current_tax"].sum())
     base = float((df["taxable_land_value"] + df["taxable_improvement_value"]).sum())
     for leg, shock in legs.items():
-        chg = np.concatenate([_land_only_change(sub, shock, float(sub["current_tax"].sum()))
-                              for _k, sub in groups])
-        land = sum(float(_cost_shocked_land(sub, shock).sum()) for _k, sub in groups)
+        shocked = [(_cost_shocked_land(sub, shock), sub) for _k, sub in groups]
+        chg = np.concatenate([_share_levy(sl, sub) for sl, sub in shocked])
+        land = sum(float(sl.sum()) for sl, _sub in shocked)
         pooled = pd.concat([sub for _k, sub in groups], ignore_index=True) \
             if len(groups) > 1 else df
         out[leg] = _sensitivity_summary(pooled, chg, land / base if base else 0.0, rev,
@@ -1033,7 +1042,8 @@ def assert_aggregate_only(payload: dict) -> None:
         for leg in ("central", "low"):
             _check_leg(bs.get(leg) or {}, "baseline")
     sens = payload.get("headline_sensitivity") or {}
-    assert set(sens) <= {"delta_pt", "kind", "delta_pct", "base", "low", "high"},         f"unexpected sensitivity keys: {set(sens) - {'delta_pt', 'base', 'low', 'high'}}"
+    sens_keys = {"delta_pt", "kind", "delta_pct", "base", "low", "high"}
+    assert set(sens) <= sens_keys, f"unexpected sensitivity keys: {set(sens) - sens_keys}"
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
@@ -1437,7 +1447,7 @@ def build_by_income_quintile_within(df: pd.DataFrame):
 
 
 def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict:
-    from config import (COMMUNES, TERRITORIES, TERRITORY_ACTIVITY_LAND_RATIO,
+    from config import (COMMUNES, TERRITORIES, model_label, TERRITORY_ACTIVITY_LAND_RATIO,
                         TERRITORY_COST_EUR_M2, TERRITORY_HOUSE_COST_EUR_M2)
     t = TERRITORIES[territory_key]
     df, present, missing = load_territory(territory_key, out_dir)
@@ -1457,7 +1467,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         "name": t["name"],
         "departement": t["departement"],
         "reference_year": COMMUNES[present[0]].reference_year,
-        "model_type": "land_only" if ratio is None else f"split_rate:{ratio}",
+        "model_type": model_label(COMMUNES[present[0]]),
         "headline": build_headline(df),
         "headline_sensitivity": build_territory_sensitivity(df, ratio),
         "by_category": by_category,

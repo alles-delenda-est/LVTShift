@@ -815,17 +815,19 @@ split-rate runs) would show no uncertainty. The land-only band shocks what
 moves the shares: building values ±20 % (`config.BUILDING_COST_BAND`, spanning
 the cost research's ranges and the habitable ÷ gross ratio). Building cost
 enters land through the residual of built parcels, summed by IRIS before the
-site-value sharing, so each IRIS's built land total becomes L − 0.2 B (or
-L + 0.2 B), clipped to [0, L + B], and every built parcel of the IRIS moves by
-the same factor; building-less parcels, priced from plot sales, do not move
-(`export_web._cost_shocked_land`, IRIS from the households sidecar). Each leg
-re-shares each commune's levy and reports the land share it implies. The
-shock is applied to the exported land values, not by re-running the site-value
-step, and cost-priced parcels (sheds, retail boxes), parcels floored at the
-farmland value and parcels clipped to the land-share bounds move with their
-IRIS though their land does not respond to building cost there: all
-approximations. Where every built parcel of an IRIS sits at the lower bound,
-the +20 % leg takes its built land to zero (4 IRIS of 3,541). The
+site-value sharing, so each IRIS's residual land total becomes L − 0.2 B (or
+L + 0.2 B), clipped to [0, L + B], and every parcel the residual priced moves
+by the same factor. Only those parcels move, pooled as the site value pools
+them (by IRIS, else the whole commune; both recorded in the households
+sidecar): building-less parcels, priced from plot sales, parcels valued at
+replacement cost (sheds, retail boxes) and parcels floored at the farmland
+value do not (`export_web._cost_shocked_land`; code review, 2026-11-12). Each
+leg re-shares each commune's levy and reports the land share it implies. The
+shock is applied to the exported land values, not by re-running the
+site-value step: parcels clipped to the land-share bounds move with their
+IRIS total though, re-run, they would stay at their bound; where most of an
+IRIS sits at the lower bound, the +20 % leg can take its residual land to
+zero. The
 band does not cover the within-IRIS sharing of land by permitted density
 (exponent 0.5), now the main uncertainty on relative land values (Gemini
 review, 2026-11-11; `docs/research/land-only-2026-11/`). The band is

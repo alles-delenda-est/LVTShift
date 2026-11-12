@@ -85,15 +85,17 @@ def test_land_only_band_shifts_tax_to_vacant_land_when_buildings_cost_more():
     import export_web as ew
     d = _band_frame().assign(property_category=["Residential"] * 3 + ["Commercial"] * 2)
     rev = float(d["current_tax"].sum())
-    base = ew._land_only_change(d, 0.0, rev) + d["current_tax"].to_numpy()
-    low = ew._land_only_change(d, 0.2, rev) + d["current_tax"].to_numpy()
+    base = ew._land_only_change(d, 0.0) + d["current_tax"].to_numpy()
+    low = ew._land_only_change(d, 0.2) + d["current_tax"].to_numpy()
     assert low.sum() == pytest.approx(rev) and base.sum() == pytest.approx(rev)
     assert low[2] > base[2]                    # the vacant plot pays more
-    assert ew._land_share_after(d, 0.2) < ew._land_share_after(d, 0.0) < ew._land_share_after(d, -0.2)
+    share = lambda s: ew._cost_shocked_land(d, s).sum() / (
+        d["taxable_land_value"] + d["taxable_improvement_value"]).sum()
+    assert share(0.2) < share(0.0) < share(-0.2)
     # one IRIS of built parcels only: a uniform shock changes no bill
     mono = d.iloc[[0, 1]].assign(_iris="a")
     r2 = float(mono["current_tax"].sum())
-    assert np.allclose(ew._land_only_change(mono, 0.2, r2), ew._land_only_change(mono, 0.0, r2))
+    assert np.allclose(ew._land_only_change(mono, 0.2), ew._land_only_change(mono, 0.0))
 
 
 def test_land_only_payload_carries_the_band_and_passes_the_guards(tmp_path):
@@ -134,3 +136,23 @@ def test_review_fixes_model_check_blank_iris_and_zero_levy(tmp_path):
     _lm, _im, rev, out = rp.solve_reform(_frame(), "land_value", "improvement_value",
                                          0.0, None, "outside_levy")
     assert rev == 0.0 and (out["new_tax"] == 0).all()
+
+
+def test_band_shocks_only_residual_land_pooled_like_the_site_value(tmp_path):
+    import export_web as ew
+    from test_farmland import _world
+    # a cost-valued parcel (index 1) shares the IRIS but its land does not move
+    d = _band_frame().assign(_residual_land=[True, False, False, True, True])
+    up = ew._cost_shocked_land(d, 0.2)
+    # IRIS a: residual land 100 − 0.2 × 400 = 20 on parcel 0 alone
+    assert up[:3].tolist() == pytest.approx([20.0, 100.0, 100.0])
+    # the pipeline writes the flag and pools by IRIS, else the whole commune
+    parcels, buildings, dvf = _world()
+    rp.run(parcels, buildings, dvf, 2_000_000.0, out_dir=str(tmp_path), make_report=False)
+    side = pd.read_csv(tmp_path / f"{rp.slug_of(rp.CFG)}.households.csv")
+    assert set(side["iris"]) == {"_commune"}
+    assert side["residual_land"].dtype == bool and side["residual_land"].any()
+    # no taxable land: a clear error, not upstream's
+    with pytest.raises(ValueError, match="no taxable land"):
+        rp.solve_reform(_frame().assign(land_value=0.0), "land_value", "improvement_value",
+                        1_000.0, None, "outside_levy")

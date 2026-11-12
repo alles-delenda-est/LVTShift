@@ -1168,20 +1168,6 @@ def test_land_concept_is_validated():
 
 # ------------------------------------------------------------------ #
 
-if __name__ == "__main__":
-    tests = [v for k, v in sorted(globals().items())
-             if k.startswith("test_") and callable(v)]
-    failed = 0
-    for t in tests:
-        try:
-            t()
-            print(f"  PASS  {t.__name__}")
-        except Exception as exc:
-            failed += 1
-            print(f"  FAIL  {t.__name__}: {type(exc).__name__}: {exc}")
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
-    sys.exit(1 if failed else 0)
-
 
 def test_site_value_permitted_use_ignores_what_stands_on_the_plot():
     # same zone, identical plots: the low house and the dense block get the
@@ -1198,3 +1184,19 @@ def test_site_value_permitted_use_ignores_what_stands_on_the_plot():
         raise AssertionError("an unknown density rule must be refused")
     except ValueError:
         pass
+
+
+if __name__ == "__main__":
+    tests = [v for k, v in sorted(globals().items())
+             if k.startswith("test_") and callable(v)]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+            print(f"  PASS  {t.__name__}")
+        except Exception as exc:
+            failed += 1
+            print(f"  FAIL  {t.__name__}: {type(exc).__name__}: {exc}")
+    print(f"\n{len(tests) - failed}/{len(tests)} passed")
+    sys.exit(1 if failed else 0)
+

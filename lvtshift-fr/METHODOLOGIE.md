@@ -913,18 +913,20 @@ sur le sol fait varier ce qui en change la répartition : la valeur du bâti
 ±20 % (`config.BUILDING_COST_BAND`, qui couvre les fourchettes de la recherche
 sur les coûts et le ratio habitable ÷ brut). Le coût du bâti entre dans le sol
 par le résiduel des parcelles bâties, sommé par IRIS avant le partage en valeur
-de site : le total foncier bâti de chaque IRIS devient L − 0,2 B (ou L + 0,2 B),
-borné à [0, L + B], et toutes les parcelles bâties de l'IRIS bougent du même
-facteur ; les parcelles non bâties, évaluées sur les ventes de terrains, ne
-bougent pas (`export_web._cost_shocked_land`, IRIS lu dans le fichier annexe
-des ménages). Chaque hypothèse répartit de nouveau le produit de chaque commune
-et indique la part foncière qu'elle implique. Le choc porte sur les valeurs du
-sol exportées, sans refaire l'étape de valeur de site, et les parcelles
-évaluées au coût (hangars, grandes surfaces), les parcelles au plancher
-agricole et celles bornées à la part foncière bougent avec leur IRIS bien que
-leur sol n'y réponde pas au coût du bâti : autant d'approximations. Là où
-toutes les parcelles bâties d'un IRIS sont à la borne basse, l'hypothèse
-+20 % ramène leur sol bâti à zéro (4 IRIS sur 3 541). La bande ne
+de site : le total foncier résiduel de chaque IRIS devient L − 0,2 B (ou
+L + 0,2 B), borné à [0, L + B], et toutes les parcelles évaluées au résiduel
+bougent du même facteur. Seules celles-là bougent, regroupées comme la valeur
+de site les regroupe (par IRIS, à défaut la commune entière ; l'un et l'autre
+notés dans le fichier annexe des ménages) : les parcelles non bâties,
+évaluées sur les ventes de terrains, les parcelles évaluées au coût (hangars,
+grandes surfaces) et celles au plancher agricole ne bougent pas
+(`export_web._cost_shocked_land` ; revue de code du 12 novembre 2026). Chaque
+hypothèse répartit de nouveau le produit de chaque commune et indique la part
+foncière qu'elle implique. Le choc porte sur les valeurs du sol exportées,
+sans refaire l'étape de valeur de site : les parcelles bornées à la part
+foncière bougent avec le total de leur IRIS alors que, recalculées, elles
+resteraient à leur borne ; là où l'essentiel d'un IRIS est à la borne basse,
+l'hypothèse +20 % peut ramener son sol résiduel à zéro. La bande ne
 couvre pas le partage du sol entre parcelles d'un même IRIS selon la densité
 permise (exposant 0,5), désormais la principale incertitude sur les valeurs
 relatives du sol (revue Gemini du 11 novembre 2026 ;
