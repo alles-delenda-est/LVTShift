@@ -788,17 +788,23 @@ fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'expo
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
 (surcouche de localisation monétaire du rapport amont).
 
-*Décomposition* (`estimate.revalued_tax`, `estimate.taxable_share_today`,
-`export_web._steps`). Une partie de la variation de chaque groupe tient au
+*Décomposition* (`estimate.revalued_tax`, `export_web._steps`). Une partie de la variation de chaque groupe tient au
 remplacement d'une base de 1970, non à l'imposition du sol. La chaîne calcule
 deux impôts intermédiaires, chacun au produit d'aujourd'hui ; seul le premier
 est publié :
 
 1. **Les logements aux valeurs de marché** (`revalued_tax`) : l'impôt bâti
    d'aujourd'hui, la part du groupe des logements étant répartie selon la
-   surface de logement imposable × (valeur de marché au m² de plancher)^0,8,
-   au lieu de la seule surface. Les groupes industriel et professionnel
-   gardent leur montant d'aujourd'hui : les locaux professionnels ont été
+   surface de logement imposable × (prix hédonique du logement au m² à
+   l'emplacement de la parcelle, `eur_m2`)^0,8, au lieu de la seule surface.
+   (Pas la valeur de marché ÷ le plancher : après l'étape de la valeur de
+   site, elle vaut terrain + bâti, et une parcelle évaluée au coût porte le
+   sol de toute sa parcelle, si bien qu'un abri de jardin passerait pour le
+   logement le plus cher de la ville ; revue indépendante du 12 novembre
+   2026.) La chaîne vérifie que les mêmes poids, à un exposant nul, rendent
+   l'impôt d'aujourd'hui. Les surfaces des groupes industriel et
+   professionnel gardent leur montant d'aujourd'hui, si bien qu'un commerce
+   ou une usine garde son impôt sauf s'il compte aussi des logements : les locaux professionnels ont été
    révisés en 2017, et la révision des valeurs locatives des logements
    (RVLLH, LF 2020 art. 146, désormais prévue pour les bases 2031 après la
    LF 2026 art. 106) neutralise la base des logements de chaque commune
@@ -810,23 +816,23 @@ est publié :
    loyers aux prix proche de 0,8. La simulation de la révision par l'IPP
    (rapport n° 29, 2020) suppose 1 au sein d'une commune. Gemini proposait
    0,55, sans source ; nous ne l'avons pas retenu.
-2. **La TVTN, exonérations d'aujourd'hui maintenues** (`new_tax_kept`, local
-   seulement) : la même résolution à 4:1, sur des valeurs du sol et du bâti
-   multipliées par la part que les règles actuelles du logement social
-   laissent imposable, 1 − (1 − facteur) × part de logement du plancher.
-3. **La réforme** (`new_tax`), qui met aussi fin à ces exonérations.
+2. **Le passage à la TVTN** (la réforme, `new_tax`, contre l'impôt 1), qui
+   comprend la fin des exonérations du logement social.
 
-Deux étapes sont publiées, par catégorie et par groupe de revenu, en % de
-l'impôt actuel du groupe, et s'additionnent à sa variation totale (aux
-arrondis près) : les logements aux valeurs de marché (1 contre aujourd'hui),
-et le passage à la TVTN (la réforme contre 1), qui comprend la fin des
-exonérations du logement social. L'impôt 2 n'est jamais publié ni lu par
-l'export : entre lui et la réforme, l'impôt de toute parcelle non exonérée
-est multiplié par un même facteur, que n'importe quelle ligne de maisons
-révélerait ; avec le produit publié, ce facteur donne en euros l'impôt sur le
-logement social exonéré, celui d'un seul bailleur ou d'une seule parcelle
-dans certaines communes (revue de sécurité du 11 novembre 2026). Il ne sert
-qu'à l'analyse interne.
+Les deux étapes sont publiées, par catégorie et par groupe de revenu, en %
+de l'impôt actuel du groupe, et s'additionnent à sa variation totale (aux
+arrondis près). Une première version isolait aussi la fin des exonérations,
+avec un impôt qui les maintenait ; elle a été abandonnée et cet impôt n'est
+plus calculé : entre lui et la réforme, l'impôt de toute parcelle non
+exonérée était multiplié par un même facteur, que n'importe quelle ligne de
+maisons révélait ; avec le produit publié, ce facteur donnait en euros
+l'impôt sur le logement social exonéré, celui d'un seul bailleur ou d'une
+seule parcelle dans certaines communes (revue de sécurité du 11 novembre
+2026). L'étape 1 n'est publiée que là où les groupes de locaux ont été
+conservés (la base calibrée, toutes les communes publiées) ; sur la base de
+la seule surface, elle déplacerait aussi l'impôt des commerces et de
+l'industrie. L'exposant figure dans la provenance de chaque fichier publié
+(`rent_price_elasticity`).
 
 Les étapes sont des totaux, non des médianes, parce que seuls les totaux
 s'additionnent. Les étapes d'un groupe sont retenues avec son total, ou
@@ -834,10 +840,14 @@ quand une parcelle porte plus du dixième de l'impôt du groupe, aujourd'hui,
 selon l'impôt 1 ou après la réforme (groupes de revenu compris). Chaque étape
 est neutre en recettes entre catégories, mais pondérée par l'impôt actuel des
 catégories, qui n'est jamais publié : les lignes publiées ne permettent pas
-de retrouver une ligne retenue, pourvu qu'au moins deux soient publiées : un
-groupe retenu sans logement (étape 1 nulle) à côté d'une seule ligne publiée
-pourrait l'être, et aucune étape n'est alors publiée (revue de sécurité du
-12 novembre 2026 ; le cas ne se présente dans aucune commune publiée). La règle des bailleurs sociaux porte aussi
+de retrouver une ligne retenue, pourvu qu'au moins trois soient publiées : un
+groupe retenu sans logement a une étape 1 nulle et, s'il s'agit du terrain
+nu, un impôt actuel proche du montant publié de l'impôt sur le non-bâti ;
+avec le produit publié, deux lignes publiées fermeraient les équations
+(revues de sécurité et indépendante du 12 novembre 2026). Avec une ligne
+retenue (ni total en %, ni total en € ; une ligne en euros, non imposée
+aujourd'hui, ne pèse pas) et moins de trois lignes publiées, aucune étape
+n'est publiée. Le garde-fou de l'export le vérifie. La règle des bailleurs sociaux porte aussi
 sur l'impôt 1.
 
 Ce que la première étape n'est pas : notre « aujourd'hui » est lui-même une
@@ -1614,9 +1624,10 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     première étape de la décomposition (§3.6) est donc le passage de la
     surface à la valeur, non l'effet exact de la révision des valeurs de 1970,
     dont nous ne voyons pas les coefficients de catégorie et de situation. La
-    valeur au m² est une moyenne de la parcelle : sur une parcelle mixte, la
-    valeur au m² plus élevée des commerces est prêtée aux logements du dessus.
-    Une parcelle en copropriété compte pour une. Les valeurs locatives par
+    valeur au m² est le prix hédonique du logement à l'emplacement de la
+    parcelle : elle ne voit ni la qualité propre d'un logement, ni sa taille,
+    ni son étage, que verraient les catégories et coefficients de
+    localisation de la révision. Une parcelle en copropriété compte pour une. Les valeurs locatives par
     local des Fichiers fonciers donneraient le vrai point de départ (§7).
 
 ## 7. L'argument d'accès aux Fichiers fonciers

@@ -242,27 +242,26 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     p["tax_change_pct"] = 100 * p["tax_change"] / p["current_tax"].replace(0, pd.NA)
 
     # Decomposition (METHODOLOGY §3.6): today → housing at market values →
-    # land tax with today's social housing exemptions → the reform, which also
-    # ends them. Each step holds the same revenue. Only the first bill is
-    # published; new_tax_kept stays local (export_web.STEP_TAX_COLS).
+    # the reform. Both steps hold the same revenue. (A third bill, the reform
+    # with today's social housing exemptions kept, was dropped: publishing it
+    # revealed exempt landlords' tax, security review of 2026-11-11.)
+    built_today = p["current_tax"] - p["unbuilt_tax_today"]
+    # revalued_tax copies current_tax's group weights: at elasticity 0 it must
+    # give today's bills back, or step 1 would report a baseline mismatch
+    start = estimate.revalued_tax(p, commune_tfpb_produit, 0.0,
+                                  bucket_weights=baseline["weights"])
+    if not np.allclose(start.to_numpy(float), built_today.to_numpy(float),
+                       rtol=1e-9, atol=0.01):
+        raise ValueError(f"[{cfg.name}] revalued_tax at elasticity 0 does not "
+                         f"reproduce today's tax")
     p["revalued_tax"] = estimate.revalued_tax(
         p, commune_tfpb_produit, REVALUATION["rent_price_elasticity"],
         bucket_weights=baseline["weights"]) + p["unbuilt_tax_today"]
-    k = estimate.taxable_share_today(p)
-    kept = pd.DataFrame({"land_value": p["land_value"] * k,
-                         "improvement_value": p["improvement_value"] * k,
-                         "outside_levy": p["outside_levy"]}, index=p.index)
-    _lm, _im, _rev, kept = model_split_rate_tax(
-        df=kept, land_value_col="land_value", improvement_value_col="improvement_value",
-        current_revenue=levy, land_improvement_ratio=cfg.split_rate_ratio,
-        exemption_flag_col="outside_levy")
-    p["new_tax_kept"] = kept["new_tax"].to_numpy(float)
-    for col in ("revalued_tax", "new_tax_kept"):
-        v = p[col].to_numpy(float)
-        if not (np.isfinite(v).all() and (v >= -1e-6).all()
-                and abs(v.sum() - levy) <= max(1.0, 1e-6 * levy)):
-            raise ValueError(f"[{cfg.name}] {col} is not a non-negative re-share "
-                             f"of the €{levy:,.0f} levy (sum €{v.sum():,.0f})")
+    v = p["revalued_tax"].to_numpy(float)
+    if not (np.isfinite(v).all() and (v >= -1e-6).all()
+            and abs(v.sum() - levy) <= max(1.0, 1e-6 * levy)):
+        raise ValueError(f"[{cfg.name}] revalued_tax is not a non-negative re-share "
+                         f"of the €{levy:,.0f} levy (sum €{v.sum():,.0f})")
     baseline["revaluation"] = {
         "rent_price_elasticity": REVALUATION["rent_price_elasticity"],
         "groups_kept": bool(baseline["weights"])}
@@ -496,11 +495,9 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
         side["landlord_key"] = np.where(soc, p.get("landlord_key", pd.Series("", index=p.index))
                                         .fillna("").astype(str).to_numpy(), "")
     side.insert(0, "new_tax", p["new_tax"].values)
-    # the decomposition's two intermediate bills (METHODOLOGY §3.6); new_tax_kept
-    # is for private analysis only, never read by the export
-    for col in ("revalued_tax", "new_tax_kept"):
-        if col in p.columns:
-            side[col] = p[col].values
+    # the decomposition's intermediate bill (METHODOLOGY §3.6)
+    if "revalued_tax" in p.columns:
+        side["revalued_tax"] = p["revalued_tax"].values
     # today's tax at the lower-bound professional share (baseline sensitivity)
     if "current_tax_low" in p.columns:
         side["current_tax_low"] = p["current_tax_low"].values

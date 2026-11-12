@@ -74,6 +74,12 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
         exempt = df["is_fully_exempt"].fillna(False).astype(bool)
         n_exempt = int(exempt.sum())
         df = df[~exempt].copy()
+    # step 1 keeps the industrial and professional groups only on the
+    # calibrated baseline; on the plain floor-area one everything moves, which
+    # the site does not claim: no steps then (a territory member without them
+    # blanks the territory's steps, _steps)
+    if "revalued_tax" in df.columns and not _revaluation(commune_key, out_dir).get("groups_kept"):
+        df = df.assign(revalued_tax=np.nan)
     # count only (never which parcels): disclosed in the payload provenance
     df.attrs["exempt_parcels"] = n_exempt
     # unbuilt farmland stays on today's TFPNB (run_pipeline): outside the shares
@@ -143,9 +149,8 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
             raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
                              f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
-    # new_tax_kept (the TVTN with today's exemptions) stays in the sidecar,
-    # never read: with the reform's bills it gives away the tax on exempt
-    # social housing (security review, 2026-11-11)
+    # (new_tax_kept, written by runs of 2026-11-11 only, is never read: with
+    # the reform's bills it gave away the tax on exempt social housing)
     for col in [c for c in STEP_TAX_COLS if c in side.columns]:
         v = side[col].to_numpy(float)
         cur = df["current_tax"].to_numpy(float)
@@ -428,7 +433,22 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
 STEP_TAX_COLS = ("revalued_tax",)
 STEP_KEYS = ("step_revaluation_pct", "step_land_pct")
 NO_STEPS = dict.fromkeys(STEP_KEYS)
-MIN_STEP_ROWS_BESIDE_WITHHELD = 2
+# With a withheld row, at least this many rows must publish steps. A withheld
+# row with no housing floor has a step 1 of exactly 0, and its tax today is
+# about the published unbuilt-tax amount; with the published levy, two rows
+# would then close the equations (independent review, 2026-11-12).
+MIN_STEP_ROWS_BESIDE_WITHHELD = 3
+
+
+def _steps_disclosable(rows: list) -> bool:
+    """May these category rows publish steps? Yes when no row is withheld (a
+    row with neither a % nor a € total), or at least
+    MIN_STEP_ROWS_BESIDE_WITHHELD rows publish them. A row in euros (untaxed
+    today) has no weight in the equations and is not withheld."""
+    withheld = any(r.get("total_change_pct") is None and r.get("total_change_eur") is None
+                   for r in rows)
+    shown = sum(r.get("step_revaluation_pct") is not None for r in rows)
+    return not withheld or shown >= MIN_STEP_ROWS_BESIDE_WITHHELD
 # a step beyond this (in % of today's tax) is a group almost untaxed today
 STEP_MAX_PCT = 1_000_000
 
@@ -579,8 +599,7 @@ def build_by_category(df: pd.DataFrame) -> list:
     # land) next to a single published one would be recoverable from the
     # revenue-neutral equation: with a withheld row, at least two must publish
     # (security review, 2026-11-12)
-    shown = [r for r in out if r["step_revaluation_pct"] is not None]
-    if len(shown) < MIN_STEP_ROWS_BESIDE_WITHHELD and len(shown) < len(out):
+    if not _steps_disclosable(out):
         for r in out:
             r.update(NO_STEPS)
     out.sort(key=lambda r: r["parcels"], reverse=True)
@@ -900,6 +919,9 @@ def _check_steps(payload: dict) -> None:
             assert (isinstance(tot, (int, float)) and not isinstance(tot, bool)
                     and math.isfinite(tot) and abs(sum(vals) - tot) <= 0.3), (
                 f"{key}: steps {vals} do not add up to the total {tot}")
+        if key == "by_category" and any(r.get("step_revaluation_pct") is not None for r in rows):
+            assert _steps_disclosable(rows), \
+                "by_category: steps beside a withheld row with too few published"
 
 
 def assert_aggregate_only(payload: dict) -> None:
@@ -987,6 +1009,10 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     # share is meaningful, so report it as professional and say so
     merged = "industrial merged into professional" in str(rec.get("note", ""))
     out["industrial_merged_into_professional"] = merged
+    # the decomposition's first step (METHODOLOGY §3.6), where the run has it
+    rv = _revaluation(commune_key, out_dir)
+    if rv:
+        out["rent_price_elasticity"] = rv["rent_price_elasticity"]
     if merged:
         for kind in ("target", "achieved"):
             i, p = out[f"{kind}_industrial_share"], out[f"{kind}_professional_share"]
@@ -994,6 +1020,23 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
                                                  if i is not None and p is not None else None)
             out[f"{kind}_industrial_share"] = None
     return out
+
+
+def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
+    """The decomposition's first step as run (baseline sidecar): the
+    rent-to-price elasticity and whether the tax groups were kept. Empty for
+    runs before it existed."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.baseline.json"
+    rec = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    r = rec.get("revaluation") if isinstance(rec, dict) else None
+    if not isinstance(r, dict):
+        return {}
+    e, g = r.get("rent_price_elasticity"), r.get("groups_kept")
+    if isinstance(e, bool) or not isinstance(e, (int, float)) or not 0 <= e <= 1 \
+            or not isinstance(g, bool):
+        raise ValueError(f"{path}: invalid revaluation record {r!r}")
+    return {"rent_price_elasticity": float(e), "groups_kept": g}
 
 
 def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
@@ -1146,8 +1189,12 @@ def _territory_baseline(present: list, out_dir: str) -> dict:
     n = sum(r["method"] == "calibrated" for r in recs)
     method = ("calibrated" if n == len(present) else "floor_area" if n == 0 else "mixed")
     srcs = {r.get("low_source", "cfe_raw") for r in recs}
-    return {"method": method, "members_calibrated": n,
-            "low_source": srcs.pop() if len(srcs) == 1 else "mixed"}
+    out = {"method": method, "members_calibrated": n,
+           "low_source": srcs.pop() if len(srcs) == 1 else "mixed"}
+    els = {r.get("rent_price_elasticity") for r in recs}
+    if len(els) == 1 and None not in els:
+        out["rent_price_elasticity"] = els.pop()
+    return out
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:

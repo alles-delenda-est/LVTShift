@@ -422,10 +422,10 @@ export default function MethodologiePage() {
               <strong>Les logements aux valeurs de marché.</strong> L&apos;impôt
               d&apos;aujourd&apos;hui, la part des logements étant répartie selon
               leur valeur de marché actuelle plutôt que selon leur surface. Les
-              commerces, bureaux et locaux industriels gardent leur part : leurs
-              valeurs ont été révisées en 2017, et la loi neutralise la part des
-              logements dans chaque commune. Les exonérations restent celles
-              d&apos;aujourd&apos;hui.
+              surfaces de commerces, de bureaux et d&apos;industrie gardent leur
+              part : leurs valeurs ont été révisées en 2017, et la loi neutralise
+              la part des logements dans chaque commune. Les exonérations restent
+              celles d&apos;aujourd&apos;hui.
             </li>
             <li>
               <strong>Le passage à la TVTN</strong>, au même produit, qui met

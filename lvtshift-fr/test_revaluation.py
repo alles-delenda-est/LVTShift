@@ -1,6 +1,5 @@
-"""Offline tests for the decomposition of the reform: housing at market values,
-then the move to the TVTN; the pipeline's local-only bill with today's exemptions
-kept (METHODOLOGY §3.6).
+"""Offline tests for the decomposition of the reform in two steps: housing at
+market values, then the move to the TVTN (METHODOLOGY §3.6).
 
 Run: python -m pytest -q test_revaluation.py
 """
@@ -33,6 +32,15 @@ def _parcels():
         "is_exempt_public":   [False] * 6 + [True, False, False],
         "hlm_tax_factor":     [1.0] * 8 + [0.0],
     })
+
+
+def _as_calibrated(tmp_path, rp):
+    """The synthetic world has no REI split (plain floor-area baseline), where
+    the export publishes no steps; mark the run calibrated to test them."""
+    side = tmp_path / f"{rp.slug_of(rp.CFG)}.baseline.json"
+    rec = json.loads(side.read_text())
+    rec["revaluation"]["groups_kept"] = True
+    side.write_text(json.dumps(rec))
 
 
 def test_elasticity_zero_is_todays_tax():
@@ -81,35 +89,39 @@ def test_plain_baseline_and_missing_prices():
         estimate.revalued_tax(g.assign(floor_professional=-1.0), 1e6, 0.5, bucket_weights=W)
 
 
-def test_taxable_share_today():
-    p = _parcels().assign(hlm_tax_factor=[1.0] * 2 + [0.7] + [1.0] * 5 + [0.0])
-    k = estimate.taxable_share_today(p)
-    # mixed block: 80 % housing at the QPV factor 0.7 → 1 − 0.3 × 0.8
-    assert k.tolist() == pytest.approx([1, 1, 0.76, 1, 1, 1, 1, 1, 0])
-    assert (estimate.taxable_share_today(p.drop(columns="hlm_tax_factor")) == 1).all()
-    # a social landlord's shop-only parcel keeps its whole base, as today; so
-    # does unbuilt land; a building with no grouped floor takes the factor whole
-    q = p.assign(hlm_tax_factor=0.0)
-    k = estimate.taxable_share_today(q)
-    assert k[4] == 1.0 and k[5] == 1.0 and k[7] == 1.0
-    r = q.assign(floor_housing=0.0, floor_professional=0.0, floor_industrial=0.0)
-    assert estimate.taxable_share_today(r)[0] == 0.0
+def test_price_index_uses_the_hedonic_price_not_value_over_floor():
+    # a 1 m² shed on a large plot: market value ÷ floor is huge, but its
+    # location's hedonic price is ordinary, so it stays a small payer
+    p = pd.DataFrame({
+        "floor_area_m2": [100.0, 1.0],
+        "floor_housing": [100.0, 1.0],
+        "floor_professional": [0.0, 0.0],
+        "floor_industrial": [0.0, 0.0],
+        "market_value": [400_000.0, 500_000.0],
+        "eur_m2": [4_000.0, 4_000.0],
+    })
+    rev = estimate.revalued_tax(p, 1_000.0, 0.8, bucket_weights=W)
+    assert rev.tolist() == pytest.approx([1_000.0 * 100 / 101, 1_000.0 / 101])
+    # a parcel without a hedonic price takes the housing median
+    q = p.assign(eur_m2=[4_000.0, np.nan])
+    assert estimate.revalued_tax(q, 1_000.0, 0.8, bucket_weights=W).tolist() == \
+        pytest.approx(rev.tolist())
 
 
-def test_pipeline_writes_the_three_steps_and_each_holds_the_levy(tmp_path):
+def test_pipeline_writes_step_one_and_it_holds_the_levy(tmp_path):
     import run_pipeline as rp
     from test_farmland import _world
     parcels, buildings, dvf = _world()
     levy = 2_000_000.0
-    out = rp.run(parcels, buildings, dvf, levy, out_dir=str(tmp_path), make_report=False)
+    rp.run(parcels, buildings, dvf, levy, out_dir=str(tmp_path), make_report=False)
     side = pd.read_csv(tmp_path / f"{rp.slug_of(rp.CFG)}.households.csv")
-    for col in ("revalued_tax", "new_tax_kept"):
-        assert side[col].sum() == pytest.approx(levy) and (side[col] >= 0).all()
-    # no social housing in this world: keeping its exemptions changes nothing
-    assert np.allclose(side["new_tax_kept"], out["new_tax"])
+    assert side["revalued_tax"].sum() == pytest.approx(levy) and (side["revalued_tax"] >= 0).all()
+    # the kept-exemptions bill is gone: it revealed exempt landlords' tax
+    assert "new_tax_kept" not in side.columns
     rec = json.loads((tmp_path / f"{rp.slug_of(rp.CFG)}.baseline.json").read_text())
-    assert rec["revaluation"]["rent_price_elasticity"] == rp.REVALUATION["rent_price_elasticity"]
-    # social housing exempt today: zero after the first two steps, taxed after
+    assert rec["revaluation"] == {
+        "rent_price_elasticity": rp.REVALUATION["rent_price_elasticity"], "groups_kept": False}
+    # social housing exempt today stays untaxed at step 1, and is taxed after
     p2 = parcels.assign(hlm_tax_factor=np.where(np.arange(len(parcels)) % 7 == 0, 0.0, 1.0))
     out2 = rp.run(p2, buildings, dvf, levy, out_dir=str(tmp_path / "s"), make_report=False)
     side2 = pd.read_csv(tmp_path / "s" / f"{rp.slug_of(rp.CFG)}.households.csv")
@@ -117,7 +129,7 @@ def test_pipeline_writes_the_three_steps_and_each_holds_the_levy(tmp_path):
     built = (parcels["category_fr"] != "terrain_nu").to_numpy()
     sb = social & built & ~parcels["is_exempt_public"].to_numpy()
     assert sb.any()
-    assert (side2.loc[sb, "revalued_tax"] == 0).all() and (side2.loc[sb, "new_tax_kept"] == 0).all()
+    assert (side2.loc[sb, "revalued_tax"] == 0).all()
     assert (out2.loc[sb, "new_tax"] > 0).all()
 
 
@@ -129,11 +141,15 @@ def test_export_publishes_the_steps_and_guards_them(tmp_path):
     key = next(k for k, c in COMMUNES.items() if rp.slug_of(c) == rp.slug_of(rp.CFG))
     parcels, buildings, dvf = _world()
     rp.run(parcels, buildings, dvf, 2_000_000.0, out_dir=str(tmp_path), make_report=False)
+    plain = ew.load_parcels(key, str(tmp_path))
+    assert plain["revalued_tax"].isna().all()          # plain baseline: no steps
+    _as_calibrated(tmp_path, rp)
     df = ew.load_parcels(key, str(tmp_path))
+    assert df["revalued_tax"].notna().all()
     assert set(ew.STEP_TAX_COLS) <= set(df.columns)
     rows = ew.build_by_category(df)
     shown = [r for r in rows if r["total_change_pct"] is not None]
-    assert shown
+    assert shown and any(r["step_revaluation_pct"] is not None for r in rows)
     for r in rows:
         vals = [r[k] for k in ew.STEP_KEYS]
         if r["step_revaluation_pct"] is not None:
@@ -165,7 +181,11 @@ def test_the_kept_exemptions_bill_is_never_read_and_steps_are_robust(tmp_path):
     key = next(k for k, c in COMMUNES.items() if rp.slug_of(c) == rp.slug_of(rp.CFG))
     parcels, buildings, dvf = _world()
     rp.run(parcels, buildings, dvf, 2_000_000.0, out_dir=str(tmp_path), make_report=False)
+    plain = ew.load_parcels(key, str(tmp_path))
+    assert plain["revalued_tax"].isna().all()          # plain baseline: no steps
+    _as_calibrated(tmp_path, rp)
     df = ew.load_parcels(key, str(tmp_path))
+    assert df["revalued_tax"].notna().all()
     # the TVTN-with-exemptions bill gives away the tax on exempt social
     # housing: it never leaves the sidecar
     assert "new_tax_kept" not in df.columns
@@ -187,3 +207,16 @@ def test_the_kept_exemptions_bill_is_never_read_and_steps_are_robust(tmp_path):
     for tot in (True, float("nan")):
         with pytest.raises(AssertionError):
             ew._check_steps({"by_category": [{**good, "total_change_pct": tot}]})
+
+
+def test_steps_disclosable_counts_withheld_rows_only():
+    import export_web as ew
+    pub = {"total_change_pct": 5.0, "total_change_eur": None, "step_revaluation_pct": 1.0}
+    eur = {"total_change_pct": None, "total_change_eur": 12_000.0, "step_revaluation_pct": None}
+    hid = {"total_change_pct": None, "total_change_eur": None, "step_revaluation_pct": None}
+    assert ew._steps_disclosable([pub, eur])               # a row in euros is not withheld
+    assert not ew._steps_disclosable([pub, pub, hid])      # two beside a withheld row
+    assert ew._steps_disclosable([pub, pub, pub, hid])
+    with pytest.raises(AssertionError):
+        ew._check_steps({"by_category": [
+            {**pub, "parcels": 50, "step_land_pct": 4.0}, {**hid, "parcels": 50}]})

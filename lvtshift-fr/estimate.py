@@ -866,13 +866,27 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
 
 
 def _price_index(p: pd.DataFrame, elasticity: float) -> pd.Series:
-    """(market value per m² of floor)^elasticity, the relative rental value of
-    a parcel's floor. A parcel with no usable price takes the commune median,
-    so a gap in the hedonic surface never zeroes its tax."""
-    floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
-    mv = pd.to_numeric(p["market_value"], errors="coerce")
-    ppm2 = (mv / floor.where(floor > 0)).where(lambda s: np.isfinite(s) & (s > 0))
-    med = float(ppm2.median()) if ppm2.notna().any() else 1.0
+    """(hedonic housing price per m²)^elasticity, the relative rental value
+    of a parcel's housing floor.
+
+    The price is the hedonic surface's €/m² at the parcel's location
+    (`eur_m2`, set by market_value), not market value ÷ floor area: after the
+    site-value step market value is land + building, and a parcel valued at
+    replacement cost carries its whole plot's land, so a 1 m² shed on a large
+    plot would look like the dearest housing in town (independent review,
+    2026-11-12). Frames without `eur_m2` (synthetic tests) fall back to market
+    value ÷ floor. A parcel with no usable price takes the median over parcels
+    with housing floor, so a gap in the surface never zeroes its tax."""
+    if "eur_m2" in p.columns:
+        ppm2 = pd.to_numeric(p["eur_m2"], errors="coerce")
+    else:
+        floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
+        ppm2 = pd.to_numeric(p["market_value"], errors="coerce") / floor.where(floor > 0)
+    ppm2 = ppm2.where(np.isfinite(ppm2) & (ppm2 > 0))
+    housing = (pd.to_numeric(p["floor_housing"], errors="coerce").fillna(0) > 0
+               if "floor_housing" in p.columns else pd.Series(True, index=p.index))
+    ref = ppm2[housing] if ppm2[housing].notna().any() else ppm2
+    med = float(ref.median()) if ref.notna().any() else 1.0
     return ppm2.fillna(med) ** float(elasticity)
 
 
@@ -953,31 +967,6 @@ def revalued_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         raise ValueError("revalued tax: non-finite or negative share")
     return out
 
-
-def taxable_share_today(p: pd.DataFrame,
-                        housing_factor_col: str | None = "hlm_tax_factor") -> pd.Series:
-    """Share of each parcel's value that today's social housing rules leave
-    taxable: 1 − (1 − factor) × housing share of its floor. Used to solve the
-    land tax with today's exemptions kept (decomposition, second step)."""
-    if not housing_factor_col or housing_factor_col not in p.columns:
-        return pd.Series(1.0, index=p.index)
-    hf = pd.to_numeric(p[housing_factor_col], errors="coerce").fillna(1.0).clip(0, 1)
-    floor = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0)
-    cols = [f"floor_{k}" for k in BUCKETS]
-    if all(c in p.columns for c in cols):
-        f = {k: pd.to_numeric(p[f"floor_{k}"], errors="coerce").fillna(0.0).clip(lower=0)
-             for k in BUCKETS}
-        grouped = sum(f.values()) > 0
-        # as current_tax: grouped floor → the factor on the housing floor only
-        # (a shop-only parcel keeps its whole base); no grouped floor → on
-        # the whole parcel
-        share = ((f["housing"] / floor.where(floor > 0)).fillna(0.0).clip(0, 1)
-                 .where(grouped, 1.0))
-    else:
-        share = pd.Series(1.0, index=p.index)
-    k = 1.0 - (1.0 - hf) * share
-    # the exemptions are on built property: unbuilt land keeps its whole base
-    return k.where(floor > 0, 1.0)
 
 
 # Gardens attached to a house are part of the built property up to five ares

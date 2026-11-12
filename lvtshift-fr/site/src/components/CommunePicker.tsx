@@ -342,9 +342,10 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               passage d&apos;une répartition selon la surface à une répartition
               selon la valeur, non l&apos;effet exact de la révision. Les loyers
               variant moins que les prix d&apos;un quartier à l&apos;autre, la
-              valeur y est atténuée (voir la méthodologie). Les commerces, bureaux
-              et locaux industriels gardent leur part à cette étape : leurs
-              valeurs ont été révisées en 2017.
+              valeur y est atténuée (voir la méthodologie). Les surfaces de
+              commerces, de bureaux et d&apos;industrie gardent leur part à cette
+              étape, leurs valeurs ayant été révisées en 2017 : une catégorie de
+              bien ne bouge que par les logements qu&apos;elle compte.
             </p>
           </section>
 

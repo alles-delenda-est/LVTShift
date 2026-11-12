@@ -12,16 +12,22 @@ and how much from taxing land?
 2. the move to the TVTN (the 4:1 reform), end of the social housing
    exemptions included.
 
-The pipeline also computes the TVTN with today's exemptions kept, as Gemini
-advised, but it is not published: the security review of 11 November showed
-that the gap between it and the reform reveals the tax on exempt social
-housing, one landlord's or one parcel's in some communes. (The brief and
-reply below use the earlier name, TFVN.)
+A first version also computed the TVTN with today's exemptions kept, as Gemini
+advised, to split off the end of the exemptions. The security review of
+11 November showed that the gap between it and the reform revealed the tax on
+exempt social housing, one landlord's or one parcel's in some communes, so it
+was dropped. (The brief and reply below use the earlier name, TFVN.)
+
+**Fixed after review (12 November):** step 1 first priced each parcel by
+market value ÷ floor area, which after the site-value step is land +
+building; cost-valued parcels (a shed on a large plot) then looked like the
+dearest housing in town, inflating step 1 by 9–29 points. It now uses the
+hedonic housing price per m² at the parcel's location.
 
 **What we took from Gemini (02):**
 - Don't use raw market value as a revised rental value: rents vary less than prices.
 - Keep each group's share fixed: the law does (RVLLH art. 146 V.B; RVLLP CGI 1518 A quinquies), confirmed in 03.
-- Separate the end of the social housing exemptions from the land tax: computed, but not published (see above). For households it matters little, since the end of the exemptions lowers other residents' bills slightly; the Social Housing row carries its own rise.
+- Separate the end of the social housing exemptions from the land tax: tried, then dropped (see above). For households it matters little, since the end of the exemptions lowers other residents' bills slightly; the Social Housing row carries its own rise.
 - Don't call step 1 "the effect of the revision": our baseline is a floor-area estimate. The site says « valeurs de marché », and states the limit.
 
 **What we rejected:**

@@ -9,6 +9,7 @@
  */
 
 import type { CategoryRow, QuintileRow } from "./types";
+import { QUINTILE_LABELS } from "./baselineRange";
 
 export interface StepRow {
   key: string;
@@ -33,9 +34,6 @@ function steps(r: WithSteps) {
   return { revaluation: a, land: b, total: t };
 }
 
-const QUINTILE_LABEL = ["", "Revenus les plus modestes", "Revenus modestes", "Revenus médians",
-  "Revenus aisés", "Revenus les plus aisés"];
-
 export function stepTable(
   byCategory: CategoryRow[],
   byQuintile: QuintileRow[] | null | undefined,
@@ -52,7 +50,7 @@ export function stepTable(
       quintiles.push({
         key: `q${r.quintile}`,
         label: `Quintile ${r.quintile}`,
-        sublabel: QUINTILE_LABEL[r.quintile],
+        sublabel: QUINTILE_LABELS[r.quintile],
         ...s,
       });
   }

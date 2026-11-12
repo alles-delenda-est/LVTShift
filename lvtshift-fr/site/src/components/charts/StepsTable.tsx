@@ -9,7 +9,7 @@
 
 import type { CategoryRow, QuintileRow } from "@/lib/types";
 import { stepTable, type StepRow } from "@/lib/steps";
-import { signedChange, signedPct } from "@/lib/format";
+import { signedPct } from "@/lib/format";
 import { MARINE, CREME, ENCRE, GRIS, LISERE, ROUGE, GREEN } from "./theme";
 
 const BG_TOTAL = "#e8edf5";
@@ -116,7 +116,7 @@ export default function StepsTable({ byCategory, byQuintile }: StepsTableProps) 
               </td>
             ))}
             <td style={{ ...cell, background: BG_TOTAL }}>
-              <span style={value(r.total, true)}>{signedChange(r.total)}</span>
+              <span style={value(r.total, true)}>{signedPct(r.total)}</span>
             </td>
           </tr>
         ))}
