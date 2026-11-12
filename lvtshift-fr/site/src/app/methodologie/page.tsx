@@ -868,8 +868,8 @@ export default function MethodologiePage() {
               tous les logements occupés. En ville, elle est plus élevée que
               dans le cas central, et les ménages paient donc davantage : à
               Paris, le cinquième le plus modeste voit son impôt baisser de
-              21&nbsp;% dans le cas central et de 11&nbsp;% dans la variante
-              locale ; à Lyon, de 17&nbsp;% et de 6&nbsp;%. Dans les deux cas,
+              25&nbsp;% dans le cas central et de 15&nbsp;% dans la variante
+              locale ; à Lyon, de 16&nbsp;% et de 5&nbsp;%. Dans les deux cas,
               le cinquième le plus aisé paie le plus. Les nouvelles cotisations
               sont les mêmes : seul le point de départ change. Seuls les
               Fichiers fonciers, qui donnent la valeur réelle de chaque local,

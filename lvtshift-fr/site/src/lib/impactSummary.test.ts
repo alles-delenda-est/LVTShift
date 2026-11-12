@@ -13,19 +13,20 @@ describe("impactSummary on the published data", () => {
     expect(s.territories).toBe(13);
   });
 
-  // November 2026 payloads: social landlords' parcels left the household
-  // figures, and the reform replaces the tax on non-agricultural unbuilt land
+  // November 2026 payloads: the land-only tax at permitted use (the reform
+  // also replaces the tax on non-agricultural unbuilt land; social
+  // landlords' parcels are outside the household figures)
   it("matches the central-case figures in the November 2026 payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
-    expect(s.smallBuildingsPayLess).toBe(6);
+    expect(s.smallBuildingsPayLess).toBe(5);
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
-    expect(s.poorestPayLess).toBe(11);
-    expect(s.poorestBelowRichest).toBe(11); // Villeurbanne at parity: −1.5 % vs −1.3 %
-    expect(s.houseMedianMin).toBe(-22.5); // Roubaix
-    expect(s.houseMedianMax).toBe(106.2); // Paris
-    expect(s.shiftMin).toBe(20.6); // Paris
-    expect(s.shiftMax).toBe(35.9); // Grenoble
+    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +3.4 %
+    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +3.4 % vs −2.2 %
+    expect(s.houseMedianMin).toBe(-24.4); // Roubaix
+    expect(s.houseMedianMax).toBe(120.8); // Annemasse
+    expect(s.shiftMin).toBe(23); // Paris
+    expect(s.shiftMax).toBe(43.3); // Grenoble
   });
 
   it("matches the local-variant figures in the November 2026 payloads", () => {
@@ -35,7 +36,7 @@ describe("impactSummary on the published data", () => {
       blocksPayLess: 13,
       poorestAnalysable: 11,
       poorestPayLess: 8,
-      poorestBelowRichest: 10, // Villeurbanne: +11.0 % vs +9.9 %
+      poorestBelowRichest: 10, // Villeurbanne: +16.5 % vs +9.1 %
     });
     expect(s.poorestBelowRichestBoth).toBe(10);
   });
