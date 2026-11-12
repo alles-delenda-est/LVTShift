@@ -737,7 +737,7 @@ them; it was dropped and is no longer computed: between that bill and the
 reform every unexempt parcel's bill scales by one factor, which any row of
 houses gave away, and with the published levy that factor yielded the euro
 tax on exempt social housing, one landlord's or one parcel's in some
-communes (security review, 2026-11-11). Step 1 is published only where the
+communes (security review, 2026-11-11). The steps are published only where the
 run kept the tax groups (the calibrated baseline, every published commune);
 on the plain floor-area baseline it would re-weight shops and industry too.
 The exponent is in each payload's provenance (`rent_price_elasticity`).

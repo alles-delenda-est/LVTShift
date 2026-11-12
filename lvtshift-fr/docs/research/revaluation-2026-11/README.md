@@ -20,9 +20,13 @@ was dropped. (The brief and reply below use the earlier name, TFVN.)
 
 **Fixed after review (12 November):** step 1 first priced each parcel by
 market value ÷ floor area, which after the site-value step is land +
-building; cost-valued parcels (a shed on a large plot) then looked like the
-dearest housing in town, inflating step 1 by 9–29 points. It now uses the
-hedonic housing price per m² at the parcel's location.
+building on every parcel the site-value step re-prices, and cost-valued
+parcels (a shed on a large plot) looked like the dearest housing in town.
+Houses' step 1 fell by 28 to 87 points once fixed (Paris 104.6 → 17.1 %,
+Grenoble 68.2 → 21.3 %). It now uses the hedonic housing price per m² at the
+parcel's location. Known approximation: that price is per habitable m² and
+multiplies gross floor, so a house weighs about 4 % more than a flat at the
+same location ((0.64 / 0.61)^0.8).
 
 **What we took from Gemini (02):**
 - Don't use raw market value as a revised rental value: rents vary less than prices.

@@ -827,7 +827,7 @@ exonérée était multiplié par un même facteur, que n'importe quelle ligne de
 maisons révélait ; avec le produit publié, ce facteur donnait en euros
 l'impôt sur le logement social exonéré, celui d'un seul bailleur ou d'une
 seule parcelle dans certaines communes (revue de sécurité du 11 novembre
-2026). L'étape 1 n'est publiée que là où les groupes de locaux ont été
+2026). Les étapes ne sont publiées que là où les groupes de locaux ont été
 conservés (la base calibrée, toutes les communes publiées) ; sur la base de
 la seule surface, elle déplacerait aussi l'impôt des commerces et de
 l'industrie. L'exposant figure dans la provenance de chaque fichier publié

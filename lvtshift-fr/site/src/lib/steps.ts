@@ -49,8 +49,7 @@ export function stepTable(
     if (s)
       quintiles.push({
         key: `q${r.quintile}`,
-        label: `Quintile ${r.quintile}`,
-        sublabel: QUINTILE_LABELS[r.quintile],
+        label: QUINTILE_LABELS[r.quintile] ?? `Quintile ${r.quintile}`,
         ...s,
       });
   }

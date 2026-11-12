@@ -21,7 +21,7 @@ describe("stepTable", () => {
     expect(t.categories.map((r) => r.key)).toEqual(["Maisons"]);
     expect(t.categories[0]).toMatchObject({ revaluation: 4, land: 7.5, total: 11.5 });
     expect(t.quintiles.map((r) => r.key)).toEqual(["q1", "q5"]);
-    expect(t.quintiles[0].sublabel).toBe("20 % les plus modestes");
+    expect(t.quintiles[0].label).toBe("20 % les plus modestes");
   });
 
   it("leaves out older payloads and partial rows", () => {
