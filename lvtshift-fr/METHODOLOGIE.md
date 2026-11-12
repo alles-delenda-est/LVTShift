@@ -789,9 +789,8 @@ est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
 (surcouche de localisation monétaire du rapport amont).
 
 *Décomposition* (`estimate.revalued_tax`, `export_web._steps`). Une partie de la variation de chaque groupe tient au
-remplacement d'une base de 1970, non à l'imposition du sol. La chaîne calcule
-deux impôts intermédiaires, chacun au produit d'aujourd'hui ; seul le premier
-est publié :
+remplacement d'une base de 1970, non à l'imposition du sol. Un impôt
+intermédiaire, au produit d'aujourd'hui, la partage en deux :
 
 1. **Les logements aux valeurs de marché** (`revalued_tax`) : l'impôt bâti
    d'aujourd'hui, la part du groupe des logements étant répartie selon la
