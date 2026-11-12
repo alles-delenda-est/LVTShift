@@ -741,7 +741,10 @@ steps are withheld with its total, or when one parcel carries more than a
 tenth of the group's tax today, under bill 1 or under the reform (income
 groups included). Each step is revenue-neutral across categories, but
 weighted by the categories' taxes today, which are never published, so the
-published rows cannot recover a withheld one. The social landlord rule is
+published rows cannot recover a withheld one, provided at least two publish:
+a withheld group with no housing (step 1 exactly 0) beside a single published
+one could be, so then no category's steps are published (security review,
+2026-11-12; it occurs in no published commune). The social landlord rule is
 tested on bill 1 as well.
 
 What the first step is not: our "today" is itself a floor-area estimate

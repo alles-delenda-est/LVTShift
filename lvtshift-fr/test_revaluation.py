@@ -177,6 +177,11 @@ def test_the_kept_exemptions_bill_is_never_read_and_steps_are_robust(tmp_path):
     # a group almost untaxed today: no steps rather than a crash
     tiny = df.assign(current_tax=1e-12, revalued_tax=1e-12, new_tax=df["new_tax"] + 1e6)
     assert ew._steps(tiny) == ew.NO_STEPS
+    # a withheld row beside a single published one: no steps at all
+    two = pd.concat([df.assign(property_category="Single Family Residential"),
+                     df.head(3).assign(property_category="Vacant Land")], ignore_index=True)
+    rows = ew.build_by_category(two)
+    assert all(r["step_revaluation_pct"] is None for r in rows)
     # booleans and non-finite totals are refused
     good = {"parcels": 50, "step_revaluation_pct": 2.0, "step_land_pct": 3.0}
     for tot in (True, float("nan")):

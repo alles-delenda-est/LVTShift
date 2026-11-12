@@ -834,7 +834,10 @@ quand une parcelle porte plus du dixième de l'impôt du groupe, aujourd'hui,
 selon l'impôt 1 ou après la réforme (groupes de revenu compris). Chaque étape
 est neutre en recettes entre catégories, mais pondérée par l'impôt actuel des
 catégories, qui n'est jamais publié : les lignes publiées ne permettent pas
-de retrouver une ligne retenue. La règle des bailleurs sociaux porte aussi
+de retrouver une ligne retenue, pourvu qu'au moins deux soient publiées : un
+groupe retenu sans logement (étape 1 nulle) à côté d'une seule ligne publiée
+pourrait l'être, et aucune étape n'est alors publiée (revue de sécurité du
+12 novembre 2026 ; le cas ne se présente dans aucune commune publiée). La règle des bailleurs sociaux porte aussi
 sur l'impôt 1.
 
 Ce que la première étape n'est pas : notre « aujourd'hui » est lui-même une

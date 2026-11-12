@@ -428,6 +428,7 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
 STEP_TAX_COLS = ("revalued_tax",)
 STEP_KEYS = ("step_revaluation_pct", "step_land_pct")
 NO_STEPS = dict.fromkeys(STEP_KEYS)
+MIN_STEP_ROWS_BESIDE_WITHHELD = 2
 # a step beyond this (in % of today's tax) is a group almost untaxed today
 STEP_MAX_PCT = 1_000_000
 
@@ -574,6 +575,14 @@ def build_by_category(df: pd.DataFrame) -> list:
             # residential only; None for other categories and older runs
             **_per_dwelling(sub),
         })
+    # a withheld row whose step 1 is known to be 0 (no housing floor: vacant
+    # land) next to a single published one would be recoverable from the
+    # revenue-neutral equation: with a withheld row, at least two must publish
+    # (security review, 2026-11-12)
+    shown = [r for r in out if r["step_revaluation_pct"] is not None]
+    if len(shown) < MIN_STEP_ROWS_BESIDE_WITHHELD and len(shown) < len(out):
+        for r in out:
+            r.update(NO_STEPS)
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
 
@@ -875,8 +884,9 @@ def _check_steps(payload: dict) -> None:
 
     Each step is revenue-neutral across categories, one equation per step.
     Weighted by the categories' taxes today, which are never published, the
-    equations cannot recover a withheld row: the protection the totals rely on
-    (security review, 2026-11-04)."""
+    equations cannot recover a withheld row (the protection the totals rely
+    on, security review of 2026-11-04) as long as at least two other rows
+    publish, which build_by_category enforces."""
     for key in ("by_category", "by_income_quintile", "by_income_quintile_within"):
         rows = payload.get(key) or []
         for r in rows:
