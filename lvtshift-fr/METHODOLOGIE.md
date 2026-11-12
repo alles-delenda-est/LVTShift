@@ -37,6 +37,7 @@ française.
 | Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | édition 2025 (marché 2024) | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
+| Impôt sur le non-bâti remplacé | REI (DGFiP), via OFGL `rei` : `B11`, `B13`, `B31`, `B33` (bases et produits de TFPNB), `B11TAFNB`, `B13TAFNB`, `B31TAFNB`, `B33TAFNB`, `B31MGPTAFNB`, `B33MGPTAFNB` (TAFNB) | API Opendatasoft par `idcom` | REI 2025 | TFPNB non agricole et TAFNB que la réforme remplace (§3.5) |
 | Répartition de la taxe actuelle | REI (DGFiP), via OFGL `rei` : `E11` (base TFPB), `WC75` (compensation de la division par deux des valeurs industrielles en 2021), `T29`, `T29_1`, `X503` (bases brutes de CFE) ; taux de TFPB 2020 d'OFGL `base-fiscale-simplifiee` | API Opendatasoft par `idcom` | REI 2025 ; taux 2020 | parts industrielle / professionnelle / logement de la base TFPB, par commune (§3.5) |
 | Géométrie IRIS | Contours IRIS (IGN) | WFS `STATISTICALUNITS.IRIS:contours_iris` | courant | rattachement parcelle → IRIS pour le revenu |
 | Revenus | Filosofi (INSEE) | CSV zip (`DISP_MED21`) | 2021 (voir §6.8) | analyse distributive (quintiles) |
@@ -434,8 +435,9 @@ ventes françaises de biens bâtis. Sensibilité (Lyon, Villeurbanne, Cahors) :
 
 **3.5 Taxe actuelle (base de départ)** — le produit TFPB exact (REI), réparti
 (`estimate.current_tax`) sur les **parcelles bâties uniquement**. La TFPB est un
-impôt sur le bâti ; les parcelles non bâties portent **0 €** (elles relèvent de
-la TFPNB, hors périmètre). **Aucun calage sur la valeur de marché** : la VLC 1970
+impôt sur le bâti ; les parcelles non bâties n'en portent aucune part (elles
+relèvent de la TFPNB, que la réforme remplace sur le non-bâti non agricole :
+*Non-bâti* ci-dessous). **Aucun calage sur la valeur de marché** : la VLC 1970
 est régressive par rapport au marché, et un tel calage rendrait la base de
 départ moins fidèle à la taxe actuelle.
 
@@ -597,6 +599,68 @@ fichiers fonciers le permettraient.
 
 `--no-exemptions` désactive à la fois l'exonération du foncier public et celle
 des bâtiments ruraux, et reproduit le calcul sans signalement.
+
+**Non-bâti : la TFPNB remplacée** (`ingest.fetch_rei_unbuilt_replaced`,
+`estimate.unbuilt_tax` ; décision du 11 novembre 2026, recherches dans
+`docs/research/tfpnb-2026-11/`). La réforme remplace l'impôt sur le non-bâti
+autre qu'agricole : la part non agricole de la TFPNB de la commune et toute la
+TAFNB (art. 1519 I du CGI). Les terres agricoles et naturelles gardent leur
+TFPNB, hors de la réforme (§3.4). Jusque-là, le modèle ne maintenait constante
+que la TFPB : une parcelle non bâtie payait 0 € aujourd'hui et son impôt foncier
+apparaissait comme une hausse à partir de rien ; les scénarios nationaux
+supposaient déjà ce remplacement (`docs/research/yields-2026.md`).
+
+*Le montant.* Aucune source ne publie la TFPNB par nature de terrain. La TAFNB
+n'est assise que sur les groupes cadastraux 7 et 10 à 13 (carrières, terrains à
+bâtir, terrains d'agrément, chemins de fer, sols ; BOI-IF-AUT-80) : sa base
+rapportée à celle de la TFPNB (`B11TAFNB + B31TAFNB + B31MGPTAFNB` sur `B11`, ou
+`B31` pour l'EPCI) donne la part non agricole de la base, et du produit puisqu'un
+seul taux s'applique à tous les groupes. Montant remplacé = part × `B13` + part
+× `B33` + les produits de TAFNB (`B13TAFNB`, `B33TAFNB`, `B33MGPTAFNB`), REI
+2025, sur les strates neutralisées. Il s'ajoute aux recettes maintenues
+constantes. Sur les 188 communes, il représente 23,2 M€ pour 6 766 M€ de TFPB
+(médiane 0,47 % de la TFPB d'une commune, de 0,02 % à 2,9 %) ; la part non
+agricole a une médiane de 96 % (20 % au plus bas).
+
+*Qui le paie aujourd'hui.* Les valeurs cadastrales de cet impôt (tarifs par
+nature et classe, fixés en 1961) ne sont pas des données ouvertes : le montant
+est réparti selon la surface sur les terrains qui le paient, à savoir les
+parcelles non bâties comprises dans la réforme (ni terres agricoles exclues, ni
+foncier public exonéré) et le terrain libre des **maisons** au-delà de cinq
+ares, hors zones A et N (surface de la parcelle − emprise bâtie − 500 m²).
+L'administration tient le jardin attenant à une maison pour une dépendance du
+bâti jusqu'à cinq ares ; au-delà, c'est un terrain d'agrément du groupe 11,
+imposé comme un terrain à bâtir (BOFiP BOI-IF-TFB-10-10-40). Les cours, jardins
+et parcs des immeubles collectifs sont des dépendances de l'immeuble et ne
+reçoivent aucune part. Un même poids au m² s'applique dans toute la commune, et
+le modèle valorise presque partout le terrain à bâtir nu à un seul prix au m²
+par commune : presque toutes les parcelles nues d'une commune ont donc la même
+variation en %. C'est une moyenne communale, non le résultat d'une parcelle.
+
+*Vérifié après une relecture par IA (Gemini).* Son affirmation selon laquelle la
+majoration de l'art. 1396 sur les terrains constructibles expliquait les forts
+multiples ne tient pas : la majoration relève la base communale mais ni celle
+de l'EPCI ni celle de la TAFNB, et aucune des 66 communes modélisées disposant
+des deux bases ne montre d'écart ; là où il n'y a pas de base intercommunale
+(Paris et petite couronne), elle ajouterait au plus 0,3 M€ au total. Un
+avertissement s'affiche si une commune montre un jour cet écart. Sa remarque sur
+les grands jardins, qui paient aussi cet impôt, était juste et significative :
+le terrain des maisons au-delà de cinq ares porte une médiane de 37 % du montant
+sur les 188 communes (20 à 63 % dans les territoires publiés), d'où la part
+attribuée aux jardins. Le poids double
+qu'elle suggérait pour les terrains à bâtir n'avait pas de source et n'a pas été
+retenu.
+
+*Résultats* (calcul du 11 novembre 2026). Le terrain nu compris dans la réforme
+a désormais une vraie variation : son impôt est multiplié par environ 3,5 à
+Villeurbanne, 5 à Sète, 7 à Montreuil, 14 à Lyon, 17 à Paris, 47 à La Rochelle et
+60 à Annemasse, pour une médiane de 67 € à 1 793 € par parcelle et par an. Les
+autres chiffres bougent de moins d'un point, sauf le total des maisons, qui
+baisse jusqu'à 25 points là où les grands jardins paient désormais aujourd'hui
+(Paris +261 % → +236 %). Le site affiche les hausses d'au moins ×3 sous forme
+de multiple, la barre étant coupée au bord de l'échelle.
+
+`--no-unbuilt-tax` reproduit le calcul sans ce remplacement.
 
 **Logement social** (`social_housing.py` ; recherches dans
 `docs/research/hlm-2026-11/`). Aujourd'hui, les art. 1384 A (constructions neuves
@@ -1192,6 +1256,12 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   l'impôt de la catégorie. Les durées et le taux QPV sont la loi ; le reste
   relève du jugement, vérifié sur Montreuil et Villeurbanne
   (`docs/research/hlm-2026-11/`).
+- **Impôt sur le non-bâti remplacé** (§3.5) : lignes REI 2025 `B11`, `B13`,
+  `B31`, `B33` et bases et produits de TAFNB ; réparti selon la surface sur les
+  parcelles non bâties comprises dans la réforme et sur le terrain libre des
+  maisons au-delà de 500 m² (cinq ares, BOFiP), un seul poids au m². La méthode
+  de la part suit la loi ; le seuil des jardins est une pratique
+  administrative et le poids égal un jugement.
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
   existantes et la part laissée de côté : dans le 92/93/94 il n'y a pas de strate
@@ -1452,6 +1522,24 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     de la TFPB des HLM), l'état initial fondé sur le REI surestime un peu ce que
     paient les bailleurs. Les enregistrements d'exonération des Fichiers fonciers
     remplaceraient tout cela (§7).
+
+15. **L'impôt sur le non-bâti remplacé est un total communal réparti selon la
+    surface.** Son partage entre parcelles n'est pas une donnée ouverte (tarifs
+    cadastraux de 1961) : la variation en % du terrain nu est une moyenne
+    communale. Trois écarts connus. Les groupes cadastraux ne sont pas les zones
+    du PLU : un champ classé en zone U paie l'impôt foncier dans le modèle alors
+    que sa TFPNB agricole n'est pas dans le montant remplacé, et un terrain
+    d'agrément en zone N est dans le cas inverse. Les carrières et les emprises
+    ferroviaires paient aussi cet impôt et ne reçoivent ici aucune part. Enfin,
+    beaucoup de parcelles non bâties en ville sont des délaissés, des voies
+    privées ou des cours qui ne paient peut-être rien aujourd'hui : répartir
+    selon la surface sur toutes sous-estime ce que paient les vrais terrains à
+    bâtir et surestime leur hausse ; le rôle compte bien moins d'articles
+    imposés que le modèle n'a de parcelles non bâties (La Rochelle : 820
+    articles pour tout le non-bâti, 3 822 parcelles de ce type). La règle des
+    cinq ares pour les jardins est une pratique administrative appliquée au cas
+    par cas, non une mesure. Le revenu cadastral par parcelle des Fichiers
+    fonciers remplacerait tout cela (§7).
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

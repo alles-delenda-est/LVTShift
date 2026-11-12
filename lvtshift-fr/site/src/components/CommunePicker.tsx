@@ -262,6 +262,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             </h3>
             <CategoryImpactBars
               byCategory={publishedCategories(commune.by_category)}
+              unbuiltReplaced={commune.provenance.unbuilt_tax?.replaced ?? false}
               band={{
                 low: commune.headline_sensitivity?.low?.by_category,
                 high: commune.headline_sensitivity?.high?.by_category,

@@ -66,6 +66,10 @@ def social_landlord_parcels(p: pd.DataFrame) -> pd.Series:
     return (share >= SOCIAL_CATEGORY_SHARE) & p["category_fr"].isin(SOCIAL_HOST_CATEGORIES)
 
 
+# The unbuilt-land tax replaced is 0.02–2.9 % of a commune's built tax in the
+# REI 2025; an amount above this share of it is a bad answer (run_commune).
+MAX_UNBUILT_SHARE_OF_TFPB = 0.1
+
 # Unbuilt agricultural and natural land (PLU zones A and N, run_commune) is
 # outside the reform: it keeps today's TFPNB and its exemptions, so it takes no
 # share of the land tax. Parcels holding only farm buildings are unbuilt here,
@@ -113,7 +117,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         deflator: dict | None = None,
         baseline_split: dict | None = None,
         site_value: dict | None = None,
-        social_summary: dict | None = None) -> pd.DataFrame:
+        social_summary: dict | None = None,
+        unbuilt_replaced: dict | None = None) -> pd.DataFrame:
     """parcels: idpar, parcel_area_m2, cell, type_local, category_fr
        buildings / dvf / iris_income: see estimate.py docstrings.
        cfg: CommuneConfig for the commune being modelled (construction cost,
@@ -130,7 +135,12 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
        cfg.land_concept is "site".
        social_summary: commune-level counts from social_housing.parcel_social,
        recorded in the households meta (parcels then carry social_share,
-       hlm_tax_factor and landlord_key)."""
+       hlm_tax_factor and landlord_key).
+       unbuilt_replaced: the tax on non-agricultural unbuilt land that the
+       reform replaces (ingest.fetch_rei_unbuilt_replaced): its "amount" joins
+       the revenue held constant and is shared, as today's tax, over the
+       building-less parcels inside the reform and houses' large gardens
+       (estimate.unbuilt_tax). None keeps the built tax alone."""
 
     # hedonic surface first: the maintained-stock depreciation rule needs the
     # neighbourhood price level before buildings are valued
@@ -173,6 +183,33 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     # after valuation: the category changes who bears the change, not the value
     p.loc[social_landlord_parcels(p), "PROPERTY_CATEGORY"] = SOCIAL_CATEGORY
 
+    # Exempt public property (exemptions.py) pays neither tax: zero share of
+    # today's tax and zero taxable value in the solve, so the levy is held
+    # neutral over the taxable base only. Excluded farmland keeps today's
+    # TFPNB, outside the levy, and is left out of the solve the same way.
+    exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
+    if exempt_col:
+        p[exempt_col] = p[exempt_col].fillna(False).astype(int)
+    p["is_farmland_excluded"] = farmland_excluded(p).astype(int)
+    farm = p["is_farmland_excluded"].astype(bool)
+
+    # The reform replaces the tax on the other unbuilt land (TFPNB and TAFNB):
+    # that amount joins the revenue held constant and is today's tax on the
+    # ground that pays it, shared by area (estimate.unbuilt_tax).
+    in_reform = ~farm
+    if exempt_col:
+        in_reform &= ~p[exempt_col].astype(bool)
+    footprint = (p["idpar"].map(pd.to_numeric(buildings["footprint_m2"], errors="coerce")
+                                .groupby(buildings["idpar"]).sum())
+                 if len(buildings) else None)
+    amount = float((unbuilt_replaced or {}).get("amount") or 0.0)
+    p["unbuilt_tax_today"] = estimate.unbuilt_tax(p, amount, in_reform, footprint)
+    unbuilt_total = float(p["unbuilt_tax_today"].sum())
+    baseline["unbuilt"] = _unbuilt_record(p, unbuilt_replaced, cfg)
+    p["current_tax"] = p["current_tax"] + p["unbuilt_tax_today"]
+    p["current_tax_low"] = p["current_tax_low"] + p["unbuilt_tax_today"]
+    levy = commune_tfpb_produit + unbuilt_total
+
     # a single non-finite value would poison the solver's rates for everyone
     for col in ("market_value", "land_value", "improvement_value", "current_tax"):
         bad = ~np.isfinite(pd.to_numeric(p[col], errors="coerce"))
@@ -181,21 +218,12 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
                              f"values before the solve")
 
     # ---- LVTShift's real revenue-neutral solver -------------------- #
-    # Exempt public property (exemptions.py) pays neither tax: zero share of
-    # today's FB (current_tax above) and zero taxable value in the solve, so the
-    # levy is held neutral over the taxable base only. Excluded farmland bears
-    # no FB today (it is unbuilt) and is left out of the solve the same way.
-    exempt_col = "is_exempt_public" if "is_exempt_public" in p.columns else None
-    if exempt_col:
-        p[exempt_col] = p[exempt_col].fillna(False).astype(int)
-    p["is_farmland_excluded"] = farmland_excluded(p).astype(int)
-    # excluded farmland must be unbuilt land paying no FB today: anything else
-    # would take part of the levy out of the solve and the published shares
-    farm = p["is_farmland_excluded"].astype(bool)
+    # excluded farmland must be unbuilt land outside today's levy: anything
+    # else would take part of the levy out of the solve and the published shares
     bad = farm & ((p["improvement_value"] != 0) | (p["current_tax"] != 0))
     if bad.any():
         raise ValueError(f"[{cfg.name}] {int(bad.sum())} parcels flagged as excluded "
-                         f"farmland carry a building or today's FB")
+                         f"farmland carry a building or a share of today's levy")
     if exempt_col:
         p["outside_levy"] = (p[exempt_col].astype(bool)
                              | p["is_farmland_excluded"].astype(bool)).astype(int)
@@ -205,7 +233,7 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
         df=p,
         land_value_col="land_value",
         improvement_value_col="improvement_value",
-        current_revenue=commune_tfpb_produit,
+        current_revenue=levy,
         land_improvement_ratio=cfg.split_rate_ratio,
         exemption_flag_col="outside_levy",
     )
@@ -244,7 +272,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     print(f"[{cfg.name}] farmland outside the reform (A/N, unbuilt): "
           f"{int(out['is_farmland_excluded'].sum())} parcels")
     print(f"[{cfg.name}] land mill {land_mill:.3f} | imp mill {imp_mill:.3f} "
-          f"| revenue €{revenue:,.0f} (target €{commune_tfpb_produit:,.0f})")
+          f"| revenue €{revenue:,.0f} (target €{levy:,.0f}: built "
+          f"€{commune_tfpb_produit:,.0f} + unbuilt replaced €{unbuilt_total:,.0f})")
 
     _write_households(p, buildings, out_dir, name, land_method(cfg, site_value),
                       social_summary)
@@ -252,6 +281,30 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     if make_report:
         _write_report(out, out_dir, cfg)
     return out
+
+
+def _unbuilt_record(p: pd.DataFrame, replaced: dict | None, cfg) -> dict:
+    """What the baseline sidecar says about the unbuilt-land tax replaced
+    (commune-level figures only): the amount, the non-agricultural share of
+    the commune's TFPNB, and the part shared over houses' large gardens."""
+    if not replaced:
+        return {"replaced": False, "note": "not requested or REI lines unavailable"}
+    tax = p["unbuilt_tax_today"]
+    shared = float(tax.sum())
+    amount = float(replaced.get("amount") or 0.0)
+    on_built = float(tax[p["floor_area_m2"] > 0].sum())
+    rec = {"replaced": shared > 0, "amount_eur": round(shared, 2),
+           "non_agricultural_share": round(float(replaced.get("non_agricultural_share") or 0.0), 4),
+           "garden_share": round(on_built / shared, 4) if shared > 0 else None,
+           "year": replaced.get("year")}
+    if amount > 0 and shared <= 0:
+        rec["note"] = "no unbuilt ground inside the reform"
+        print(f"[{cfg.name}] unbuilt-land tax (€{amount:,.0f}) not replaced: "
+              f"no unbuilt ground inside the reform to carry it")
+    elif shared > 0:
+        print(f"[{cfg.name}] unbuilt-land tax replaced: €{shared:,.0f}, of which "
+              f"{100 * on_built / shared:.0f}% on houses' large gardens")
+    return rec
 
 
 def _report_site_value(p: pd.DataFrame, cfg) -> None:
@@ -332,9 +385,10 @@ def _write_baseline(p: pd.DataFrame, baseline: dict, out_dir: str, name: str) ->
     """Sidecar recording how today's tax was shared (commune-level figures
     only), for the payload provenance and the docs."""
     import json
-    rec = {k: baseline.get(k) for k in ("method", "targets", "weights", "note")}
+    rec = {k: baseline.get(k) for k in ("method", "targets", "weights", "note", "unbuilt")}
     if baseline.get("weights"):
-        tax = p["current_tax"]
+        # group shares are shares of the built tax, not of the whole levy
+        tax = p["current_tax"] - p["unbuilt_tax_today"]
         tot = float(tax.sum())
         shares = {}
         floor = {k: p[f"floor_{k}"].fillna(0.0) for k in estimate.BUCKETS}

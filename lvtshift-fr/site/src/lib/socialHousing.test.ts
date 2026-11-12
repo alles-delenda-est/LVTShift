@@ -54,8 +54,8 @@ describe("socialSummary", () => {
 
   // Reads site/public/data, like the build: a re-run that changes the
   // protections page's sentence fails here first.
-  it("matches the November 2026 social-housing payloads", () => {
+  it("matches the November 2026 payloads", () => {
     const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
-    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 4, min: -26, max: 21.7 });
+    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 4, min: -25.8, max: 21.8 });
   });
 });

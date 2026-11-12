@@ -863,3 +863,61 @@ def current_tax(p: pd.DataFrame, commune_tfpb_produit: float,
         raise ValueError(f"current-tax weights sum to {total}: cannot share the produit")
     out["current_tax"] = (commune_tfpb_produit * w / total) if total > 0 else 0.0
     return out
+
+
+# Gardens attached to a house are part of the built property up to five ares
+# (BOFiP BOI-IF-TFB-10-10-40, « dépendance indispensable et immédiate »);
+# beyond, the ground is unbuilt amenity land (cadastral group 11), which pays
+# the TFPNB and the TAFNB like a building plot. The rule is for houses: the
+# courtyards, gardens and parks of collective buildings are dependences.
+GARDEN_ALLOWANCE_M2 = 500.0
+GARDEN_CATEGORIES = ("maison",)
+RURAL_ZONE_TYPES = ("A", "N")
+
+
+def unbuilt_tax(p: pd.DataFrame, amount: float, in_reform: pd.Series,
+                footprint: pd.Series | None = None) -> pd.Series:
+    """
+    Today's tax on non-agricultural unbuilt land (the TFPNB share and the
+    TAFNB that the reform replaces, ingest.fetch_rei_unbuilt_replaced),
+    shared by area over the ground that pays it:
+
+      * building-less parcels inside the reform (`in_reform`: not excluded
+        farmland, not exempt public property): their whole area;
+      * houses outside zones A and N: their open ground beyond
+        GARDEN_ALLOWANCE_M2 (parcel area − building footprint − the
+        allowance), the amenity land of large gardens.
+
+    The cadastral values behind this tax (1961 tariffs per nature and class)
+    are not open data, so the same weight per m² applies everywhere in the
+    commune: a parcel's figure is a commune average, not its bill.
+
+    p: parcel_area_m2, floor_area_m2 and, optionally, category_fr and zone_typ.
+    footprint: building footprint per parcel, aligned on p (missing: 0).
+    Returns a Series aligned on p, summing to `amount`, or all zeros when the
+    amount is 0 or no ground can carry it.
+    """
+    zero = pd.Series(0.0, index=p.index)
+    amount = float(amount or 0.0)
+    if not np.isfinite(amount) or amount < 0:
+        raise ValueError(f"unbuilt-land tax to share must be a finite amount >= 0, got {amount}")
+    if amount == 0:
+        return zero
+    area = pd.to_numeric(p["parcel_area_m2"], errors="coerce").fillna(0.0).clip(lower=0.0)
+    if not np.isfinite(area).all():
+        raise ValueError("unbuilt-land tax: non-finite parcel area")
+    built = pd.to_numeric(p["floor_area_m2"], errors="coerce").fillna(0.0) > 0
+    inside = pd.Series(np.asarray(in_reform, dtype=bool), index=p.index)
+    w = area.where(~built & inside, 0.0)
+    if "category_fr" in p.columns:
+        fp = (pd.to_numeric(footprint, errors="coerce").reindex(p.index).fillna(0.0)
+              if footprint is not None else zero)
+        garden = (area - fp.clip(lower=0.0) - GARDEN_ALLOWANCE_M2).clip(lower=0.0)
+        eligible = built & inside & p["category_fr"].isin(GARDEN_CATEGORIES)
+        if "zone_typ" in p.columns:        # in A/N the surplus ground is farmland
+            eligible &= ~p["zone_typ"].isin(RURAL_ZONE_TYPES)
+        w = w + garden.where(eligible, 0.0)
+    total = float(w.sum())
+    if not (np.isfinite(total) and total > 0):
+        return zero
+    return amount * w / total

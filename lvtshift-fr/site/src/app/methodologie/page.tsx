@@ -239,6 +239,28 @@ export default function MethodologiePage() {
           </p>
 
           <p>
+            <strong>Ce que le non-bâti paie aujourd&apos;hui.</strong> La
+            réforme remplace la taxe foncière sur les propriétés non bâties, et
+            sa taxe additionnelle, sur les terrains autres qu&apos;agricoles.
+            Leur produit s&apos;ajoute donc aux recettes maintenues constantes
+            dans chaque commune : de 0,02&nbsp;% à 2,9&nbsp;% de la taxe
+            foncière bâtie selon la commune. Aucune statistique publique ne
+            sépare les terrains agricoles des autres ; nous reconstituons ce
+            partage à partir de la taxe additionnelle, qui ne frappe que les
+            terrains non agricoles. Les valeurs cadastrales de ces terrains,
+            fixées en 1961, ne sont pas publiques : le montant est réparti
+            selon la surface entre les terrains nus et le terrain des maisons
+            au-delà de 500&nbsp;m², que l&apos;administration impose comme
+            terrain d&apos;agrément. La variation affichée pour le terrain nu
+            est donc une moyenne communale, et non celle d&apos;un terrain
+            donné. Elle est forte en proportion parce que l&apos;impôt actuel
+            est très faible, et elle surestime sans doute la hausse des vrais
+            terrains à bâtir : beaucoup de petites parcelles non bâties (voies
+            privées, cours, délaissés) ne paient probablement rien
+            aujourd&apos;hui.
+          </p>
+
+          <p>
             <strong>Le foncier public exonéré</strong> (ministères, hôpitaux
             publics, écoles, mairies, parcs…) ne paie pas la taxe foncière
             aujourd&apos;hui et n&apos;en paierait pas davantage dans la

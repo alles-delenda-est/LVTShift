@@ -33,6 +33,7 @@ data and calls its *unmodified* solver (`model_split_rate_tax`) and export
 | Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2025 edition (2024 sales) | non-constructible land €/m² |
 | Building-plot fallback | EPTB (SDES) | national figure (config) | 2023 | constructible €/m² when local comparables are thin |
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
+| Unbuilt-land tax replaced | REI (DGFiP), via OFGL `rei`: `B11`, `B13`, `B31`, `B33` (TFPNB bases and amounts), `B11TAFNB`, `B13TAFNB`, `B31TAFNB`, `B33TAFNB`, `B31MGPTAFNB`, `B33MGPTAFNB` (TAFNB) | Opendatasoft API by `idcom` | REI 2025 | non-agricultural TFPNB and TAFNB that the reform replaces (§3.5) |
 | Today's-tax split | REI (DGFiP), via OFGL `rei`: `E11` (TFPB base), `WC75` (compensation for the 2021 industrial halving), `T29`, `T29_1`, `X503` (CFE gross bases); OFGL `base-fiscale-simplifiee` 2020 TFPB rates | Opendatasoft API by `idcom` | REI 2025; rates 2020 | per-commune industrial / professional / housing shares of the TFPB base (§3.5) |
 | IRIS geometry | IGN IRIS contours | WFS `STATISTICALUNITS.IRIS:contours_iris` | current | parcel → IRIS for income join |
 | Income | INSEE Filosofi | CSV zip (`DISP_MED21`) | 2021 (see §6.8) | distributional (quintile) analysis |
@@ -388,7 +389,8 @@ Sensitivity (Lyon, Villeurbanne, Cahors):
 
 **3.5 Current tax (baseline)** — the exact REI FB produit, distributed
 (`estimate.current_tax`) across **built parcels only**. TFPB is a built tax;
-building-less parcels bear €0 (they pay the separate TFPNB, out of scope). There
+building-less parcels bear none of it (they pay the separate TFPNB, which the
+reform replaces on non-agricultural land: *Unbuilt land* below). There
 is no market-value tilt: the 1970 VLC is regressive against market value, so a
 tilt would make the baseline less faithful to today's tax.
 
@@ -531,6 +533,62 @@ codes would.
 
 `--no-exemptions` turns off both the public-property and the rural-building
 exemption and reproduces the unflagged run.
+
+**Unbuilt land: the TFPNB replaced** (`ingest.fetch_rei_unbuilt_replaced`,
+`estimate.unbuilt_tax`; decision of 11 November 2026, research in
+`docs/research/tfpnb-2026-11/`). The reform replaces the tax on unbuilt land
+other than farmland: the non-agricultural share of the commune's TFPNB and the
+whole TAFNB (CGI art. 1519 I). Agricultural and natural land keeps its TFPNB,
+outside the reform (§3.4). Until then the model held the TFPB alone constant,
+so a building-less parcel paid 0 today and its land tax showed as a rise from
+nothing; the national scenarios already assumed the replacement
+(`docs/research/yields-2026.md`).
+
+*The amount.* No source publishes the TFPNB by kind of land. The TAFNB is
+assessed on cadastral groups 7 and 10–13 only (quarries, building plots,
+amenity land, railways, sols; BOI-IF-AUT-80), so its base ÷ the TFPNB base
+(`B11TAFNB + B31TAFNB + B31MGPTAFNB` over `B11`, or `B31` for the EPCI) is the
+non-agricultural share of the base, and of the amount since one rate applies to
+every group. Replaced = share × `B13` + share × `B33` + the TAFNB amounts
+(`B13TAFNB`, `B33TAFNB`, `B33MGPTAFNB`), REI 2025, over the layers held neutral.
+It joins the revenue held constant. Across the 188 communes it is €23.2 M
+against €6,766 M of TFPB (median 0.47 % of a commune's TFPB, from 0.02 % to
+2.9 %); the non-agricultural share has a median of 96 % (20 % at the lowest).
+
+*Who pays it today.* The cadastral values behind this tax (tariffs per nature
+and class, set in 1961) are not open data, so the amount is shared by area over
+the ground that pays it: building-less parcels inside the reform (not excluded
+farmland, not exempt public property), and the open ground of **houses** beyond
+five ares outside zones A and N (parcel area − building footprint − 500 m²).
+The administration treats a garden attached to a house as part of the built
+property up to five ares; beyond, it is amenity land in group 11, taxed like a
+building plot (BOFiP BOI-IF-TFB-10-10-40). The courtyards, gardens and parks of
+collective buildings are dependences of the building and take no share. One
+weight per m² applies across the commune, and the model prices vacant building
+land at one €/m² per commune in most places, so nearly every vacant parcel in a
+commune gets the same percentage change: it is a commune average, not a
+parcel's result.
+
+*Checked after an AI review (Gemini).* Its claim that the art. 1396 surcharge
+on building land explained the large multiples did not hold: the surcharge
+raises the commune's base but neither the EPCI's nor the TAFNB's, and none of
+the 66 modelled communes with both bases shows a gap; where there is no EPCI
+base (Paris and the inner ring) the most it could add is €0.3 M in all. A
+warning is printed if a commune ever shows the gap. Its point that large
+gardens also pay this tax was right, and material: houses' ground beyond five
+ares carries a median of 37 % of the amount across the 188 communes (20–63 % in
+the published territories), hence the garden share.
+Its suggested double weight for building plots had no source and was not used.
+
+*Results* (run of 11 November 2026). Vacant land inside the reform now has a
+real change: its tax is multiplied by about 3.5 in Villeurbanne, 5 in Sète, 7 in
+Montreuil, 14 in Lyon, 17 in Paris, 47 in La Rochelle and 60 in Annemasse, for a
+median of €67 to €1,793 a parcel a year. Every other figure moves by under a
+point, except houses' totals, which fall by up to 25 points where large
+gardens now pay today (Paris +261 % → +236 %). The site shows rises of ×3 or
+more as a multiple, with the bar cut at the edge of the scale.
+
+`--no-unbuilt-tax` reproduces the run without it.
 
 **Social housing** (`social_housing.py`; research in
 `docs/research/hlm-2026-11/`). Today, CGI art. 1384 A (new builds and VEFA) and
@@ -1066,6 +1124,11 @@ published file (CI test).
   housing floor; published with at least 3 landlords and none above 85 % of the
   category's tax. The durations and the QPV rate are law; the rest are
   judgement calls checked on Montreuil and Villeurbanne (`docs/research/hlm-2026-11/`).
+- **Unbuilt-land tax replaced** (§3.5): REI 2025 lines `B11`, `B13`, `B31`,
+  `B33` and the TAFNB bases and amounts; shared by area over building-less
+  parcels inside the reform and houses' open ground beyond 500 m² (five ares,
+  BOFiP), one weight per m². The share method follows the law; the garden
+  allowance is an administrative practice and the equal weight a judgement.
 - **REI layers** held neutral: Commune + intercommunalité (configurable). The
   preflight `rei_layers` check reports, per commune, which FB layers exist and the
   share left out: in 92/93/94 there is no GFP layer (EPTs and the MGP levy no
@@ -1295,6 +1358,22 @@ Ranked by how much they move published (category/quintile) results.
     C, about 4–5 % of HLM TFPB), the REI-based baseline slightly overstates what
     landlords pay. The Fichiers fonciers' exemption records would replace all of
     this (§7).
+
+15. **The unbuilt-land tax replaced is a commune total shared by area.** Its
+    split between parcels is not open data (1961 cadastral tariffs), so vacant
+    land's percentage change is a commune average. Three known gaps. Cadastral
+    groups are not PLU zones: a field zoned U pays the land tax in the model
+    while its agricultural TFPNB is not in the amount replaced, and amenity
+    land in an N zone is the reverse. Quarries and railway land also pay this
+    tax and receive no share here. And many building-less parcels in towns are
+    slivers, private roads or yards that may pay nothing today, so sharing by
+    area over all of them understates what true building plots pay today and
+    overstates their rise; the roll counts far fewer taxed accounts than the
+    model has building-less parcels (La Rochelle: 820 accounts for all unbuilt
+    land, 3,822 such parcels). The five-are rule for gardens is an
+    administrative practice applied case by case, not a measurement. The
+    Fichiers fonciers' per-parcel cadastral income would replace all of this
+    (§7).
 
 ## 7. The Fichiers Fonciers access argument
 

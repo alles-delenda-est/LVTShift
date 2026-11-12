@@ -34,6 +34,19 @@ export function signedPct(n: number | null): string {
   return `${sign}${frNum(Math.abs(n), 1)}${NBSP}%`;
 }
 
+/** From this rise (%), a change reads better as a multiple than as a percentage. */
+export const MULTIPLE_FROM_PCT = 200;
+
+/** A signed % change, or a multiple once the rise reaches MULTIPLE_FROM_PCT
+ *  ("+85,0 %", "×3,5", "×47"): vacant land's tax today is tiny, so its rise in
+ *  % runs to thousands and reads like an error. */
+export function signedChange(n: number | null): string {
+  if (n === null || n === undefined || Number.isNaN(n)) return "n. d.";
+  if (n < MULTIPLE_FROM_PCT) return signedPct(n);
+  const m = n / 100 + 1;
+  return `×${frNum(m, m < 10 ? 1 : 0)}`;
+}
+
 /** Axis ticks: round values without a trailing ",0" ("+20 %", "−40 %"). */
 export function signedPctAxis(n: number): string {
   if (!Number.isInteger(n)) return signedPct(n);
