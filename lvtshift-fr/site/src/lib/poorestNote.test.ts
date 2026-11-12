@@ -12,6 +12,7 @@ describe("poorestNote", () => {
     expect(n!.q1Household).toBeLessThan(0);
     expect(n!.housesTotal).toBeGreaterThan(100);
     expect(n!.q1Income).toBeLessThan(n!.q5Income);
+    expect(n!.q1Band).toEqual([2.0, 4.4]);
   });
 
   it("stays silent elsewhere, or once the poorest no longer fare worse", () => {
