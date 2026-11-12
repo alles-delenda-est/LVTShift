@@ -398,7 +398,9 @@ La méthode figure dans la provenance de chaque fichier publié (`land_value`).
 et `--site-elasticity` et `--site-ref-quantile` font varier les deux
 principaux paramètres.
 
-**Ce que cela change.** Le terrain passe, dans chaque IRIS, des bâtiments
+**Ce que cela change** (chiffres de son introduction, sous le split-rate 4:1
+et l'ancienne règle de la densité propre ; voir le journal des résultats pour
+l'impôt sur le seul sol). Le terrain passe, dans chaque IRIS, des bâtiments
 denses aux bâtiments peu denses. À Villeurbanne, par exemple :
 - les maisons passent de +21 % à +115 % au total ;
 - les petits immeubles de 2 à 4 logements, de 0 à +52 % ;
@@ -918,8 +920,11 @@ bougent pas (`export_web._cost_shocked_land`, IRIS lu dans le fichier annexe
 des ménages). Chaque hypothèse répartit de nouveau le produit de chaque commune
 et indique la part foncière qu'elle implique. Le choc porte sur les valeurs du
 sol exportées, sans refaire l'étape de valeur de site, et les parcelles
-évaluées au coût (hangars, grandes surfaces) bougent avec leur IRIS bien que
-leur sol ne dépende pas du coût du bâti : deux approximations. La bande ne
+évaluées au coût (hangars, grandes surfaces), les parcelles au plancher
+agricole et celles bornées à la part foncière bougent avec leur IRIS bien que
+leur sol n'y réponde pas au coût du bâti : autant d'approximations. Là où
+toutes les parcelles bâties d'un IRIS sont à la borne basse, l'hypothèse
++20 % ramène leur sol bâti à zéro (4 IRIS sur 3 541). La bande ne
 couvre pas le partage du sol entre parcelles d'un même IRIS selon la densité
 permise (exposant 0,5), désormais la principale incertitude sur les valeurs
 relatives du sol (revue Gemini du 11 novembre 2026 ;
@@ -1366,8 +1371,9 @@ ces règles à l'export et sur chaque fichier publié (test CI).
     libellé de zone (au moins 20 parcelles, sinon type de zone, sinon commune) ;
   - parcelle plafonnée au 99ᵉ centile de la commune ;
   - terrain en surplus au-delà de 2 × la parcelle médiane de la zone compté
-    à 0,25, en zone d'habitat individuel (référence inférieure à 1) et sous la
-    référence seulement ;
+    à 0,25, sur toute parcelle bâtie d'une zone d'habitat individuel (référence
+    inférieure à 1), quoi qu'il y soit construit (jusqu'au 11 novembre 2026 :
+    sous la référence seulement) ;
   - en zones A et N, une cour de 3 × la surface de plancher.
 
   Chaque valeur est un jugement éclairé par les sources du §3.4 ; aucune n'est

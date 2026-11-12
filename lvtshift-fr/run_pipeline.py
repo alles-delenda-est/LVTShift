@@ -90,6 +90,15 @@ def solve_reform(df: pd.DataFrame, land_col: str, imp_col: str, levy: float,
     taxable_land_value and taxable_improvement_value set as the split-rate
     solver sets them (the improvement base is still reported, untaxed).
     """
+    if levy == 0:
+        out = df.copy()
+        inside = (pd.to_numeric(out[flag_col], errors="coerce").fillna(0) == 0
+                  if flag_col else pd.Series(True, index=out.index))
+        out["new_tax"] = 0.0
+        out["taxable_land_value"] = pd.to_numeric(out[land_col], errors="coerce").fillna(0).where(inside, 0.0)
+        out["taxable_improvement_value"] = (
+            pd.to_numeric(out[imp_col], errors="coerce").fillna(0).where(inside, 0.0))
+        return 0.0, 0.0, 0.0, out
     if ratio is not None:
         return model_split_rate_tax(
             df=df, land_value_col=land_col, improvement_value_col=imp_col,

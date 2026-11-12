@@ -68,6 +68,14 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
             f"No model output for {commune_key} at {path}; "
             f"run `python run_commune.py {commune_key}` first.")
     df = pd.read_csv(path)
+    # the payload is labelled, and its band built, from the config: a run made
+    # under another model (an older 4:1 export) must not pass for this one
+    from config import model_label
+    if "model_type" in df.columns:
+        ran = set(df["model_type"].dropna().astype(str))
+        if ran != {model_label(cfg)}:
+            raise ValueError(f"{path.name} was run as {sorted(ran)}, the config now "
+                             f"models {model_label(cfg)!r}; re-run the commune")
     df = _attach_dwellings(df, path, commune_key)
     n_exempt = 0
     if "is_fully_exempt" in df.columns:
@@ -638,7 +646,7 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     land = df["taxable_land_value"].to_numpy(dtype=float)
     imp = df["taxable_improvement_value"].to_numpy(dtype=float)
     built = imp > 0
-    group = (df["_iris"].to_numpy() if "_iris" in df.columns
+    group = (df["_iris"].fillna("").astype(str).to_numpy() if "_iris" in df.columns
              else np.zeros(len(df), dtype=int))
     g = pd.DataFrame({"g": group, "l": np.where(built, land, 0.0),
                       "b": np.where(built, imp, 0.0)}).groupby("g")[["l", "b"]].transform("sum")

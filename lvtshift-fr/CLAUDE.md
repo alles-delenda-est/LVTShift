@@ -22,7 +22,8 @@ exemptions.py    exempt public property and farm buildings (DGFiP personnes
 social_housing.py  social landlords' parcels, RPLS dwellings' exemption or QPV
                  abatement today; the reform ends both (RPLS diffusion rules
                  in its docstring bind every published figure)
-run_pipeline.py  orchestration; calls upstream model_split_rate_tax + export
+run_pipeline.py  orchestration; calls upstream model_full_building_abatement
+                 (land only; model_split_rate_tax when a ratio is set) + export
 run_commune.py   live-data driver for one commune (python run_commune.py <key>)
 charts_fr.py     euro-localised wrapper over the upstream report
 make_infographic.py  one-page comparison infographic across communes (FR labels)

@@ -354,8 +354,10 @@ The method is recorded in each payload's provenance (`land_value`).
 `run_commune.py --land current` reproduces the residual at the existing density,
 and `--site-elasticity` and `--site-ref-quantile` vary the two main parameters.
 
-**What it changes.** Land moves within each IRIS from dense buildings to
-low-density ones. In Villeurbanne, for example:
+**What it changes** (figures from its introduction, under the 4:1 split rate
+and the earlier own-density rule; see the results log for the land-only
+tax). Land moves within each IRIS from dense buildings to low-density ones.
+In Villeurbanne, for example:
 - houses go from +21 % to +115 % in total;
 - small 2–4-dwelling buildings go from 0 to +52 %;
 - large blocks go from −1 to −13 %.
@@ -819,8 +821,11 @@ the same factor; building-less parcels, priced from plot sales, do not move
 (`export_web._cost_shocked_land`, IRIS from the households sidecar). Each leg
 re-shares each commune's levy and reports the land share it implies. The
 shock is applied to the exported land values, not by re-running the site-value
-step, and cost-priced parcels (sheds, retail boxes) move with their IRIS
-though their land does not depend on building cost: both approximations. The
+step, and cost-priced parcels (sheds, retail boxes), parcels floored at the
+farmland value and parcels clipped to the land-share bounds move with their
+IRIS though their land does not respond to building cost there: all
+approximations. Where every built parcel of an IRIS sits at the lower bound,
+the +20 % leg takes its built land to zero (4 IRIS of 3,541). The
 band does not cover the within-IRIS sharing of land by permitted density
 (exponent 0.5), now the main uncertainty on relative land values (Gemini
 review, 2026-11-11; `docs/research/land-only-2026-11/`). The band is
@@ -1224,8 +1229,9 @@ published file (CI test).
   - reference density at the 75th percentile of the zone label's realised
     floor-area ratio (at least 20 parcels, else zone type, else commune);
   - plot capped at the commune's 99th percentile;
-  - surplus land beyond 2 × the zone's median plot at 0.25, in house-scale
-    zones (reference below 1) and on parcels below the reference only;
+  - surplus land beyond 2 × the zone's median plot at 0.25, on every built
+    parcel of a house-scale zone (reference below 1), whatever stands on it
+    (until 2026-11-11: on parcels below the reference only);
   - in A and N zones, a yard of 3 × floor area.
 
   Every value is a judgement informed by the sources cited in §3.4; none is

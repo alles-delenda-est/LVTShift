@@ -7,7 +7,8 @@ Pipeline:  parcels + buildings -> improvement value
            REI + VLC proxy     -> current tax per parcel
 
 Every function takes/returns plain DataFrames so the output plugs
-directly into LVTShift's model_split_rate_tax / save_standard_export.
+directly into LVTShift's solvers (model_full_building_abatement for the
+land-only tax) and save_standard_export.
 """
 
 import numpy as np

@@ -111,3 +111,26 @@ def test_land_only_payload_carries_the_band_and_passes_the_guards(tmp_path):
     assert s["low"]["land_share_pct"] < s["base"]["land_share_pct"] < s["high"]["land_share_pct"]
     blob = json.dumps(p)
     assert "_iris" not in blob
+
+
+def test_review_fixes_model_check_blank_iris_and_zero_levy(tmp_path):
+    import dataclasses
+    import export_web as ew
+    from config import COMMUNES
+    from test_farmland import _world
+    key = next(k for k, c in COMMUNES.items() if rp.slug_of(c) == rp.slug_of(rp.CFG))
+    parcels, buildings, dvf = _world()
+    # a run made as 4:1 is refused by an export whose config models land only
+    rp.run(parcels, buildings, dvf, 2_000_000.0, out_dir=str(tmp_path), make_report=False,
+           cfg=dataclasses.replace(rp.CFG, split_rate_ratio=4.0))
+    with pytest.raises(ValueError, match="re-run"):
+        ew.load_parcels(key, str(tmp_path))
+    # a blank IRIS (a territory member from an older run) is one group, not frozen
+    d = _band_frame().assign(_iris=[np.nan] * 5)
+    one = _band_frame().assign(_iris="x")
+    assert np.allclose(ew._cost_shocked_land(d, 0.2), ew._cost_shocked_land(one, 0.2))
+    assert not np.allclose(ew._cost_shocked_land(d, 0.2), d["taxable_land_value"])
+    # a zero levy shares nothing, and never divides by it
+    _lm, _im, rev, out = rp.solve_reform(_frame(), "land_value", "improvement_value",
+                                         0.0, None, "outside_levy")
+    assert rev == 0.0 and (out["new_tax"] == 0).all()
