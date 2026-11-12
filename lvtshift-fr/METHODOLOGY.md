@@ -315,7 +315,7 @@ exempt public property and parcels floored at the farmland value. The rule is:
 
 ```
 weight  = effective plot × density ^ 0.5
-density = max(own floor-area ratio, reference floor-area ratio of the zone)
+density = reference floor-area ratio of the zone      (permitted use)
 ```
 
 - **Reference density.** It is the 75th percentile of the realised floor-area
@@ -326,17 +326,19 @@ density = max(own floor-area ratio, reference floor-area ratio of the zone)
   mixed and collective zones 1.4–6.6 (Paris UG 6.0, Lyon UCe2a 6.1).
 - **Density at the square root.** German residential conversion coefficients
   have land per m² of plot rising 0.45–0.54 % per 1 % of floor-area ratio
-  (WertR 2006, Anlage 11). A parcel denser than its zone keeps its own density,
-  as lawful existing use (Denmark's "actual or possible" floor area), but at the
-  square root: a block four times as dense as its neighbour on the same plot
-  gets twice its land, not four times.
+  (WertR 2006, Anlage 11). Only the zone's density counts, never the
+  plot's own (permitted use, decision of 2026-11-11): a house and a block on
+  identical plots of one zone get the same land. Until then a parcel denser
+  than its zone kept its own density, as lawful existing use (Denmark's
+  "actual or possible" floor area), at the square root
+  (`SITE_VALUE["density_rule"] = "max_own"` restores it).
 - **Effective plot.** This is the plot area, capped at the commune's 99th
   percentile, with two corrections where the extra land is not building land:
   - *Natural and agricultural zones (A, N).* Only a yard of 3 × floor area
     counts, as for shed-type parcels. 84 % of Cahors's largest house plots lie
     there, and linear plot area gave them +149 %.
-  - *Surplus garden land.* On a parcel built below the reference of a
-    house-scale zone (reference below 1), area beyond twice the zone's median
+  - *Surplus land.* On any built parcel of a house-scale zone (reference
+    below 1), whatever stands on it, area beyond twice the zone's median
     plot counts at a quarter. Vacant house plots sell for far less than
     proportionally more as they grow (EPTB: elasticity 0.45 at 477 m², 0.11 at
     2,000 m²; Combes, Duranton & Gobillon), and in DVF an extra m² of garden
@@ -704,9 +706,13 @@ rate, was published). `run_pipeline.solve_reform` calls upstream
 `model_full_building_abatement` with a 100 % abatement: one revenue-neutral
 rate on land, buildings untaxed, exempt property and excluded farmland
 outside. Land is the site value (§3.4), valued as if vacant at its zone's
-typical density, so two identical plots in an IRIS pay alike whatever stands
-on them; but an IRIS's land total is still the residual of what stands there,
-and a plot built above the zone's typical density counts at its own density.
+typical density standing in for the density it permits, so two identical
+plots of one zone in an IRIS pay alike whatever stands on them. Two traces
+of current use remain: an IRIS's land total is still the residual of what
+stands there (the market's only evidence of land value in built areas), and
+sheds and warehouses take the business-land price by building type, where
+permitted use would need the zone's dominant use (the CNIG `destdomi` field,
+not yet fetched).
 Setting `split_rate_ratio` to a number restores the split-rate model through
 upstream `model_split_rate_tax`. Output is written by `save_standard_export`;
 euro charts by `charts_fr` (currency-localised wrapper over the upstream

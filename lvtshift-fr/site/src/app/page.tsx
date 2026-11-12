@@ -258,7 +258,7 @@ export default function Home() {
                 (variation médiane de {signedPct(impact.houseMedianMin)} à{" "}
                 {signedPct(impact.houseMedianMax)} selon le territoire, cas
                 central). Le sol étant évalué comme s&apos;il était nu, à la
-                densité habituelle de son quartier, c&apos;est la maison basse
+                densité que permet sa zone, c&apos;est la maison basse
                 au milieu d&apos;immeubles qui paie le plus.
               </p>
             </div>
@@ -334,8 +334,8 @@ export default function Home() {
           <p className="text-sm text-encre mt-3 max-w-3xl leading-relaxed">
             <strong>Seconde incertitude : la valeur du sol bâti.</strong> Le sol
             sous un bâtiment est évalué comme s&apos;il était nu, à la densité
-            habituelle de sa zone d&apos;urbanisme, ce qu&apos;un impôt sur la
-            valeur du sol doit taxer. Cette valeur ne se vérifie pas sur les
+            que permet sa zone d&apos;urbanisme, quoi qu&apos;il y soit construit :
+            c&apos;est ce qu&apos;un impôt sur la valeur du sol doit taxer. Cette valeur ne se vérifie pas sur les
             ventes de biens bâtis : seules les rares ventes de terrains nus et
             de biens destinés à la démolition en donnent une mesure directe.{" "}
             <Link href="/methodologie" className="underline underline-offset-2">

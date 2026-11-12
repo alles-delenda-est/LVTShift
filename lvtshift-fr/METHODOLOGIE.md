@@ -351,7 +351,7 @@ répartition, qui suit la règle :
 
 ```
 poids   = surface utile de la parcelle × densité ^ 0,5
-densité = max(coefficient d'occupation réel, coefficient de référence de la zone)
+densité = coefficient de référence de la zone      (usage permis)
 ```
 
 - **Densité de référence.** C'est le 75ᵉ centile du coefficient d'occupation
@@ -363,11 +363,13 @@ densité = max(coefficient d'occupation réel, coefficient de référence de la 
   collectives de 1,4 à 6,6 (Paris UG 6,0, Lyon UCe2a 6,1).
 - **La densité à la racine carrée.** Les coefficients allemands de conversion
   pour l'habitat font croître le terrain au m² de 0,45 à 0,54 % par 1 % de
-  coefficient d'occupation (WertR 2006, annexe 11). Une parcelle plus dense que
-  sa zone garde sa propre densité, au titre de l'usage existant légal (la
-  surface « réelle ou possible » danoise), mais à la racine carrée : un immeuble
-  quatre fois plus dense que son voisin, sur une parcelle identique, reçoit deux
-  fois son terrain, pas quatre.
+  coefficient d'occupation (WertR 2006, annexe 11). Seule compte la densité
+  de la zone, jamais celle de la parcelle (usage permis, décision du
+  11 novembre 2026) : une maison et un immeuble sur des parcelles identiques
+  d'une même zone reçoivent le même terrain. Jusque-là, une parcelle plus dense
+  que sa zone gardait sa propre densité, au titre de l'usage existant légal (la
+  surface « réelle ou possible » danoise), à la racine carrée
+  (`SITE_VALUE["density_rule"] = "max_own"` la rétablit).
 - **Surface utile.** C'est la surface de la parcelle, plafonnée au
   99ᵉ centile de la commune, avec deux corrections là où le terrain en plus
   n'est pas constructible :
@@ -375,8 +377,9 @@ densité = max(coefficient d'occupation réel, coefficient de référence de la 
     de plancher compte, comme pour les parcelles de type hangar. 84 % des plus
     grandes parcelles de maisons de Cahors y sont, et une surface linéaire leur
     donnait +149 %.
-  - *Terrain en surplus.* Sur une parcelle bâtie sous la référence d'une zone
-    d'habitat individuel (référence inférieure à 1), la surface au-delà de deux
+  - *Terrain en surplus.* Sur toute parcelle bâtie d'une zone d'habitat
+    individuel (référence inférieure à 1), quoi qu'il y soit construit, la
+    surface au-delà de deux
     fois la parcelle médiane de la zone compte pour un quart. Les terrains à
     bâtir pour maisons se vendent bien moins que proportionnellement plus cher
     quand ils s'agrandissent (EPTB : élasticité 0,45 à 477 m², 0,11 à
@@ -791,10 +794,14 @@ que le bâti, était publié). `run_pipeline.solve_reform` appelle le
 unique sur le sol, neutre en recettes, le bâti n'étant plus imposé ; les biens
 exonérés et les terres agricoles exclues restent hors du champ. Le sol est la
 valeur de site (§3.4), évaluée comme si le terrain était nu à la densité type
-de sa zone : deux parcelles identiques d'un même IRIS paient la même chose,
-quoi qu'il y soit construit ; mais le total foncier d'un IRIS reste le
-résiduel de ce qui y est bâti, et une parcelle bâtie au-delà de la densité
-type de sa zone compte à sa propre densité. Donner un nombre à
+de sa zone, qui tient lieu de la densité qu'elle permet : deux parcelles
+identiques d'une même zone dans un IRIS paient la même chose, quoi qu'il y
+soit construit. Deux traces de l'usage actuel demeurent : le total foncier
+d'un IRIS reste le résiduel de ce qui y est bâti (la seule mesure du marché
+pour le sol en zone bâtie), et les hangars et entrepôts prennent le prix du
+sol d'activité selon le type de bâtiment, là où l'usage permis demanderait
+la destination dominante de la zone (le champ `destdomi` du standard CNIG,
+pas encore récupéré). Donner un nombre à
 `split_rate_ratio` rétablit le modèle split-rate, par le `model_split_rate_tax`
 amont. L'export est écrit par `save_standard_export` ; les graphiques en euros
 par `charts_fr` (surcouche de localisation monétaire du rapport amont).

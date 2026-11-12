@@ -205,16 +205,25 @@ export default function MethodologiePage() {
             identique. Sur les ventes de maisons, le prix du terrain croît
             pourtant avec la surface de la parcelle, et non avec celle de la
             maison. Dans chaque quartier, le sol est donc réparti à nouveau
-            selon la surface de chaque parcelle et la densité habituelle de sa
-            zone du PLU (le quart le plus dense de ce qui y est bâti), une
-            parcelle plus dense gardant la sienne mais à la racine carrée,
-            comme dans les barèmes allemands. Dans les zones d&apos;habitat
-            individuel, le jardin au-delà de deux parcelles types compte pour
-            un quart ; en zone agricole ou naturelle, seule une cour autour de
-            la maison compte. Le sol passe ainsi des immeubles denses aux
-            parcelles peu bâties : à Villeurbanne, les maisons paient au total
-            +115&nbsp;% au lieu de +21&nbsp;%, les grands immeubles
-            &minus;13&nbsp;% au lieu de &minus;1&nbsp;%.{" "}
+            selon la surface de chaque parcelle et la densité que permet sa
+            zone du PLU, <strong>quoi qu&apos;il y soit construit</strong> :
+            deux parcelles identiques d&apos;une même zone ont le même sol,
+            qu&apos;y soit posée une maison ou un immeuble. Les règles
+            d&apos;urbanisme n&apos;étant pas publiées en données structurées,
+            cette densité permise est approchée par le quart le plus dense de
+            ce qui est bâti dans la zone, et la valeur du sol croît comme sa
+            racine carrée, comme dans les barèmes allemands. Dans les zones
+            d&apos;habitat individuel, la surface au-delà de deux parcelles
+            types compte pour un quart ; en zone agricole ou naturelle, où
+            l&apos;on ne peut guère construire au-delà de l&apos;existant, seule
+            une cour autour du bâtiment compte. Le sol passe ainsi des
+            immeubles denses aux parcelles peu bâties : à Villeurbanne, les
+            maisons paient au total +135&nbsp;%, les grands immeubles
+            &minus;21&nbsp;%. Deux éléments reflètent encore l&apos;usage
+            actuel : le total foncier de chaque quartier, tiré des prix de
+            marché de ce qui y est bâti, et le prix du sol des entrepôts et
+            hangars, plus bas que celui des terrains à bâtir, qui suit le type
+            de bâtiment plutôt que le zonage.{" "}
             <strong>Limite :</strong> la valeur du site ne peut pas se vérifier
             sur les ventes de biens bâtis, qui reflètent ce qui est construit.
             Les seules preuves directes sont les rares ventes de terrains à
@@ -965,10 +974,11 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+4,6&nbsp;%), alors que ce groupe paie
-              6,1&nbsp;% de moins au total et que son ménage type paie
-              19,7&nbsp;% de moins : les grands immeubles, où vivent la plupart de
-              ses ménages, sont les plus gagnants. Le nombre de logements vient
+              plus pauvre en forte hausse (+21,6&nbsp;%), alors que son ménage
+              type paie 21&nbsp;% de moins : les grands immeubles, où vivent la
+              plupart de ses ménages, sont les plus gagnants. Le groupe paie
+              pourtant 3,4&nbsp;% de plus au total, la hausse se concentrant sur
+              ses maisons et petits immeubles. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
             </p>

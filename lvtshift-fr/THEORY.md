@@ -215,11 +215,13 @@ band, so error propagates visibly rather than silently.
 ## Open questions / where the theory might break
 
 - **Under a land-only tax, how land is shared within an IRIS is the result.**
-  The site value shares each IRIS's land by plot area × max(own,
-  zone-typical floor-area ratio)^0.5. The exponent and the "own density"
-  term (which lends a plot built above the zone's typical density its own
-  density, a trace of current use) now decide who pays between dense flats,
-  houses on large plots and vacant land; the band does not cover them.
+  The site value shares each IRIS's land by plot area × the zone's
+  reference floor-area ratio^0.5, at permitted use (decision of 2026-11-11;
+  a plot's own density no longer counts). The exponent and the reference
+  density, the 75th percentile of what is built in the zone standing in for
+  what the PLU permits, now decide who pays between dense flats, houses on
+  large plots and vacant land; the band does not cover them. Current use
+  still sets each IRIS's land total and the business-land price of sheds.
 
 - **How much of the progressivity is the revision's?** If the first step
   carries most of the fall for the poorest groups, the case for the TVTN

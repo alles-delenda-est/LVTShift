@@ -33,6 +33,6 @@ is zero: correct for a uniform cost error, but the within-IRIS uncertainty
 remains.
 
 **Not covered, and now the main uncertainty:** the within-IRIS sharing of
-land by plot area × max(own, zone-typical floor-area ratio)^0.5. The exponent
-and the own-density term decide who pays between dense flats, houses on large
+land by plot area × the zone's reference floor-area ratio^0.5 (at permitted use since 2026-11-11). The exponent
+and the reference density decide who pays between dense flats, houses on large
 plots and vacant land. A second band on the exponent is the obvious follow-up.
