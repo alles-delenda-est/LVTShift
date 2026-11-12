@@ -8,10 +8,11 @@
 This repo is a fork of Center-for-Land-Economics/LVTShift. The owner's own work is the French adaptation in `lvtshift-fr/`, plus `vercel.json` and `THEORY.MD`. Review focus: `lvtshift-fr/` and the files the owner changed in the PR. Code inherited from upstream is `Pre-existing`: flag real issues, but do not refactor it (this keeps upstream merges painless).
 
 ## What failure looks like in this repo
-- **Silently wrong totals:** the shift stops being revenue-neutral, millage is not per $1000, or the wrong tax year or assessment ratio is applied.
-- **Plausible but wrong bills:** a land-value imputation in `lvtshift-fr/` uses the wrong construction cost, benchmark or year, so a parcel's modelled tax looks reasonable but is not.
-- **Publication leak:** per-parcel bills reach the site or an export, against the aggregate-only rule in `lvtshift-fr/CLAUDE.md`.
-- **Mis-joined data:** parcels matched to the wrong commune, census block group or official revenue year.
+- **Silently wrong totals:** the TFPB shift stops being revenue-neutral against the REI réel (1 % tolerance), or the commune's homes / business-premises split (WC75, CFE base) is calibrated to the wrong year or commune.
+- **Plausible but wrong bills:** a land-value imputation in `lvtshift-fr/` uses the wrong construction cost (per m² brut vs habitable), depreciation floor, terrain benchmark (terrain à bâtir, SAFER, ×0.45 / ×0.35 activity factor) or DVF index year, so a parcel's modelled tax looks reasonable but is not.
+- **Publication leak:** per-parcel bills or land values reach `lvtshift-fr/site/public/data/` or an export, against the aggregate-only rule in `lvtshift-fr/CLAUDE.md`.
+- **Mis-joined data:** BD TOPO buildings, DPE years or parcels attached by centroid instead of area-weighted intersection, or matched to the wrong commune, IRIS zone or millésime.
+- Upstream US-property code inherited from LVTShift is out of scope; flag real issues there only as `Pre-existing`.
 
 ## What to check first
 1. Correctness of any calculation or economic parameter (units, indexation year, currency, nominal vs real).
