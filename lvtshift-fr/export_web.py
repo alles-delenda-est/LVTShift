@@ -138,7 +138,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
         raise ValueError(
             f"{side_path.name} was not written with this {path.name}; "
             f"re-run `python run_commune.py {commune_key}`")
-    side = pd.read_csv(side_path)
+    # codes as text: read as numbers they would lose a leading zero and slip
+    # past the code guards
+    side = pd.read_csv(side_path, dtype={"iris": str, "landlord_key": str})
     if len(side) != len(df) or not np.allclose(
             side["new_tax"].to_numpy(float), df["new_tax"].to_numpy(float),
             rtol=1e-9, atol=0.01, equal_nan=True):
@@ -657,7 +659,11 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     # its parcels fall back to the building test, never to "residual"
     if "_residual_land" in df.columns:
         flag = df["_residual_land"]
-        built = np.where(flag.isna(), imp > 0, flag.fillna(False).astype(bool))
+        known = flag.map({True: True, False: False, 1: True, 0: False,
+                          "True": True, "False": False})
+        if (flag.notna() & known.isna()).any():
+            raise ValueError("residual_land flag has values other than True/False")
+        built = np.where(flag.isna(), imp > 0, known.fillna(False).astype(bool))
     else:
         built = imp > 0
     group = (df["_iris"].fillna("").astype(str).to_numpy() if "_iris" in df.columns
@@ -881,6 +887,22 @@ MEMBER_KEYS = {
 }
 PARCEL_ID_RE = re.compile(r"\b\d[\dAB]\d{3}[0-9]{3}[0-9A-Z]{2}\d{4}\b")
 IRIS_CODE_RE = re.compile(r'"\d[\dAB]\d{7}"')
+
+
+def _check_no_iris_codes(payload: dict, df: pd.DataFrame) -> None:
+    """Value guard: none of the commune's own IRIS codes (the band's grouping
+    key, from the sidecar) appears anywhere in its payload: quoted, bare, in
+    text, or without a leading zero. IRIS_CODE_RE only catches the quoted
+    shape (security review, 2026-11-12)."""
+    if "_iris" not in df.columns:
+        return
+    blob = json.dumps(payload, ensure_ascii=False)
+    for code in set(df["_iris"].dropna().astype(str)):
+        if not re.fullmatch(r"\d[\dAB]\d{7}", code):
+            continue                       # "_commune", blanks: not codes
+        for form in {code, code.lstrip("0")}:
+            assert not re.search(rf"(?<![\dAB]){re.escape(form)}(?!\d)", blob), \
+                "an IRIS code of the commune leaked into its payload"
 FORBIDDEN_TOKENS = ("std_geoid", "minority_pct", "black_pct", "_usd", "$", "landlord_key")
 
 
@@ -1049,6 +1071,13 @@ def assert_aggregate_only(payload: dict) -> None:
     sens = payload.get("headline_sensitivity") or {}
     sens_keys = {"delta_pt", "kind", "delta_pct", "base", "low", "high"}
     assert set(sens) <= sens_keys, f"unexpected sensitivity keys: {set(sens) - sens_keys}"
+    assert sens.get("kind", "land_share") in ("building_cost", "land_share"), \
+        f"unknown band kind {sens.get('kind')!r}"
+    for k in ("delta_pt", "delta_pct"):
+        v = sens.get(k)
+        assert v is None or (isinstance(v, (int, float)) and not isinstance(v, bool)
+                             and math.isfinite(v) and 0 < v <= 100), \
+            f"headline_sensitivity.{k} must be a finite number in (0, 100], got {v!r}"
     for leg in ("base", "low", "high"):
         _check_leg(sens.get(leg) or {}, "band")
     _check_small_groups(payload)
@@ -1301,7 +1330,7 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
     df = load_parcels(commune_key, out_dir)
     baseline = load_baseline(commune_key, out_dir)
     by_category = build_by_category(df)
-    return {
+    payload = {
         "commune_key": commune_key,
         "kind": "commune",
         "insee": cfg.insee_code,
@@ -1333,6 +1362,8 @@ def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:
         },
         "currency": "EUR",
     }
+    _check_no_iris_codes(payload, df)
+    return payload
 
 
 def load_territory(territory_key: str, out_dir: str = "output"):
@@ -1465,7 +1496,7 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
     within, within_cov = build_by_income_quintile_within(df)
     tb = _territory_baseline(present, out_dir)
     by_category = build_by_category(df)
-    return {
+    payload = {
         "commune_key": territory_key,
         "kind": "territory",
         "insee": None,
@@ -1511,6 +1542,8 @@ def build_territory_payload(territory_key: str, out_dir: str = "output") -> dict
         },
         "currency": "EUR",
     }
+    _check_no_iris_codes(payload, df)
+    return payload
 
 
 def export_territory(territory_key: str, out_dir: str = "output",

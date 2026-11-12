@@ -163,3 +163,22 @@ def test_a_member_without_the_flag_falls_back_to_the_building_test():
     d = _band_frame().assign(_residual_land=[True, np.nan, np.nan, np.nan, np.nan])
     up = ew._cost_shocked_land(d, 0.2)
     assert up[2] == 100.0                     # the vacant plot never moves
+
+
+def test_guards_catch_iris_codes_in_any_form_and_bad_band_fields():
+    import export_web as ew
+    df = pd.DataFrame({"_iris": ["012345678", "_commune", "381850101"]})
+    ew._check_no_iris_codes({"note": "aggregate"}, df)
+    for leak in ({"x": "012345678"}, {"x": 12345678}, {"x": "IRIS 381850101 here"},
+                 {"x": 381850101}):
+        with pytest.raises(AssertionError):
+            ew._check_no_iris_codes(leak, df)
+    # a large amount sharing digits but not the code is fine
+    ew._check_no_iris_codes({"levy": 4123456789}, df)
+    for bad in ({"kind": "other"}, {"kind": "building_cost", "delta_pct": [20]},
+                {"kind": "building_cost", "delta_pct": float("nan")},
+                {"kind": "building_cost", "delta_pct": True}):
+        with pytest.raises(AssertionError):
+            ew.assert_aggregate_only({"headline_sensitivity": bad})
+    with pytest.raises(ValueError):
+        ew._cost_shocked_land(_band_frame().assign(_residual_land=["yes"] * 5), 0.2)

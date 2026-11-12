@@ -64,7 +64,7 @@ const subLabelStyle: React.CSSProperties = {
 export default function SensitivityBand({ sensitivity }: SensitivityBandProps) {
   const { low, base, high } = sensitivity;
   const cost = sensitivity.kind === "building_cost";
-  const d = cost ? sensitivity.delta_pct : sensitivity.delta_pt;
+  const d = (cost ? sensitivity.delta_pct : sensitivity.delta_pt) ?? (cost ? 20 : 10);
 
   const scenarios: ScenarioDef[] = [
     {
