@@ -13,19 +13,20 @@ describe("impactSummary on the published data", () => {
     expect(s.territories).toBe(13);
   });
 
-  // November 2026 payloads: social landlords' parcels left the household
-  // figures, and the reform replaces the tax on non-agricultural unbuilt land
+  // November 2026 payloads: the land-only tax at permitted use (the reform
+  // also replaces the tax on non-agricultural unbuilt land; social
+  // landlords' parcels are outside the household figures)
   it("matches the central-case figures in the November 2026 payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
-    expect(s.smallBuildingsPayLess).toBe(6);
+    expect(s.smallBuildingsPayLess).toBe(5);
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
-    expect(s.poorestPayLess).toBe(11);
-    expect(s.poorestBelowRichest).toBe(11); // Villeurbanne at parity: −1.5 % vs −1.3 %
-    expect(s.houseMedianMin).toBe(-22.5); // Roubaix
-    expect(s.houseMedianMax).toBe(106.2); // Paris
-    expect(s.shiftMin).toBe(20.6); // Paris
-    expect(s.shiftMax).toBe(35.9); // Grenoble
+    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +3.4 %
+    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +3.4 % vs −2.2 %
+    expect(s.houseMedianMin).toBe(-24.4); // Roubaix
+    expect(s.houseMedianMax).toBe(120.8); // Annemasse
+    expect(s.shiftMin).toBe(23); // Paris
+    expect(s.shiftMax).toBe(43.3); // Grenoble
   });
 
   it("matches the local-variant figures in the November 2026 payloads", () => {
@@ -35,7 +36,7 @@ describe("impactSummary on the published data", () => {
       blocksPayLess: 13,
       poorestAnalysable: 11,
       poorestPayLess: 8,
-      poorestBelowRichest: 10, // Villeurbanne: +11.0 % vs +10.1 %
+      poorestBelowRichest: 10, // Villeurbanne: +16.5 % vs +9.1 %
     });
     expect(s.poorestBelowRichestBoth).toBe(10);
   });
@@ -45,12 +46,12 @@ describe("the exception to the « sur 11 » headline", () => {
   const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
   const s = impactSummary(communes);
 
-  it("is Villeurbanne alone, which explains 10 sur 11", () => {
+  it("is Villeurbanne alone, in both hypotheses, which explains 10 sur 11", () => {
     expect(s.poorestExceptions).toEqual([
       {
         name: "Villeurbanne",
-        central: { poorest: -1.5, richest: -1.3 },
-        local: { poorest: 11, richest: 10.1 },
+        central: { poorest: 3.4, richest: -2.2 },
+        local: { poorest: 16.5, richest: 9.1 },
       },
     ]);
     expect(s.poorestAnalysable - s.poorestExceptions.length).toBe(s.poorestBelowRichestBoth);
@@ -59,8 +60,8 @@ describe("the exception to the « sur 11 » headline", () => {
   it("is written in two lines from the figures", () => {
     const nb = (t: string) => t.replace(/ /g, " ");
     expect(exceptionNote(s.poorestExceptions)!.map(nb)).toEqual([
-      nb("Exception : Villeurbanne, dans la variante locale : les plus modestes +11,0 %, les plus aisés +10,1 %."),
-      nb("Dans le cas central, l’écart y est de 0,2 point en faveur des plus modestes."),
+      nb("Exception : Villeurbanne, dans le cas central : les plus modestes +3,4 %, les plus aisés −2,2 %."),
+      nb("Dans la variante locale : les plus modestes +16,5 %, les plus aisés +9,1 %."),
     ]);
   });
 
@@ -93,9 +94,9 @@ describe("quintileGaps on the published data", () => {
   });
 
   it("orders the widest advantage for the poorest first", () => {
-    expect(gaps[0].commune_key).toBe("roubaix"); // −27,2 % vs +34,5 %
-    expect(gaps[0]).toMatchObject({ poorest: -27.2, richest: 34.5 });
-    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // −1,5 % vs −1,3 %
+    expect(gaps[0].commune_key).toBe("roubaix"); // −33,8 % vs +47,2 %
+    expect(gaps[0]).toMatchObject({ poorest: -33.8, richest: 47.2 });
+    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +3,4 % vs −2,2 %: the poorest fifth does worse
     const diffs = gaps.map((g) => g.poorest - g.richest);
     expect(diffs).toEqual([...diffs].sort((a, b) => a - b));
   });

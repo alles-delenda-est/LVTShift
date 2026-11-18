@@ -151,11 +151,11 @@ export default function MethodologiePage() {
           travail.
         </p>
         <p className="font-body text-base text-gris max-w-2xl leading-relaxed mt-3">
-          La réforme étudiée est une taxe sur la valeur du terrain nu (TVTN).
-          Dans les résultats par commune,
-          elle est simulée à deux taux, le sol étant imposé quatre fois plus
-          que le bâti ; les scénarios nationaux, eux, l&apos;assoient sur le
-          seul sol.
+          La réforme étudiée est une taxe sur la valeur du terrain nu (TVTN) :
+          seul le sol est imposé, à sa valeur comme s&apos;il était nu, quel que
+          soit ce qui y est construit ; le bâti ne l&apos;est plus. Les
+          résultats par commune comme les scénarios nationaux l&apos;assoient
+          sur le seul sol.
         </p>
       </div>
 
@@ -205,16 +205,25 @@ export default function MethodologiePage() {
             identique. Sur les ventes de maisons, le prix du terrain croît
             pourtant avec la surface de la parcelle, et non avec celle de la
             maison. Dans chaque quartier, le sol est donc réparti à nouveau
-            selon la surface de chaque parcelle et la densité habituelle de sa
-            zone du PLU (le quart le plus dense de ce qui y est bâti), une
-            parcelle plus dense gardant la sienne mais à la racine carrée,
-            comme dans les barèmes allemands. Dans les zones d&apos;habitat
-            individuel, le jardin au-delà de deux parcelles types compte pour
-            un quart ; en zone agricole ou naturelle, seule une cour autour de
-            la maison compte. Le sol passe ainsi des immeubles denses aux
-            parcelles peu bâties : à Villeurbanne, les maisons paient au total
-            +115&nbsp;% au lieu de +21&nbsp;%, les grands immeubles
-            &minus;13&nbsp;% au lieu de &minus;1&nbsp;%.{" "}
+            selon la surface de chaque parcelle et la densité que permet sa
+            zone du PLU, <strong>quoi qu&apos;il y soit construit</strong> :
+            deux parcelles identiques d&apos;une même zone ont le même sol,
+            qu&apos;y soit posée une maison ou un immeuble. Les règles
+            d&apos;urbanisme n&apos;étant pas publiées en données structurées,
+            cette densité permise est approchée par le quart le plus dense de
+            ce qui est bâti dans la zone, et la valeur du sol croît comme sa
+            racine carrée, comme dans les barèmes allemands. Dans les zones
+            d&apos;habitat individuel, la surface au-delà de deux parcelles
+            types compte pour un quart ; en zone agricole ou naturelle, où
+            l&apos;on ne peut guère construire au-delà de l&apos;existant, seule
+            une cour autour du bâtiment compte. Le sol passe ainsi des
+            immeubles denses aux parcelles peu bâties : à Villeurbanne, les
+            maisons paient au total +135&nbsp;%, les grands immeubles
+            &minus;21&nbsp;%. Deux éléments reflètent encore l&apos;usage
+            actuel : le total foncier de chaque quartier, tiré des prix de
+            marché de ce qui y est bâti, et le prix du sol des entrepôts et
+            hangars, plus bas que celui des terrains à bâtir, qui suit le type
+            de bâtiment plutôt que le zonage.{" "}
             <strong>Limite :</strong> la valeur du site ne peut pas se vérifier
             sur les ventes de biens bâtis, qui reflètent ce qui est construit.
             Les seules preuves directes sont les rares ventes de terrains à
@@ -390,15 +399,22 @@ export default function MethodologiePage() {
 
           <div className="border-l-4 border-lisere pl-5 text-sm text-gris">
             <strong className="font-semibold text-encre">
-              Bande de sensibilité ±&thinsp;10 points de pourcentage.
+              Bande de sensibilité : coût du bâti ±&thinsp;20&nbsp;%.
             </strong>{" "}
-            L&apos;hypothèse de part foncière est la principale source
-            d&apos;incertitude du modèle. Tous les résultats de titre sont
-            accompagnés d&apos;une fourchette calculée en faisant varier la
-            part foncière de ±&thinsp;10 points : si la part imputée est de
-            60&nbsp;%, les chiffres sont vérifiés à 50&nbsp;% et 70&nbsp;%.
-            Cette bande n&apos;est pas une correction — c&apos;est une
-            mesure explicite de l&apos;incertitude.
+            Le sol des parcelles bâties est ce qui reste de la valeur de marché
+            une fois le bâti déduit, quartier par quartier : le coût du bâti
+            est donc la principale incertitude sur sa valeur. Tous les
+            résultats de titre sont accompagnés d&apos;une fourchette où ce
+            coût est relevé ou abaissé de 20&nbsp;% ; le sol bâti de chaque
+            quartier baisse ou monte d&apos;autant, le terrain non bâti, évalué
+            sur les ventes de terrains, ne bouge pas. Avec un impôt sur le seul
+            sol, faire varier toute la valeur du sol dans la même proportion ne
+            changerait aucun avis d&apos;imposition : la fourchette porte donc
+            sur ce qui en change la répartition. Elle ne couvre pas la
+            répartition du sol entre parcelles d&apos;un même quartier, selon la
+            densité permise, autre source d&apos;incertitude. Cette bande
+            n&apos;est pas une correction — c&apos;est une mesure explicite de
+            l&apos;incertitude.
           </div>
         </div>
       </section>
@@ -852,8 +868,8 @@ export default function MethodologiePage() {
               tous les logements occupés. En ville, elle est plus élevée que
               dans le cas central, et les ménages paient donc davantage : à
               Paris, le cinquième le plus modeste voit son impôt baisser de
-              21&nbsp;% dans le cas central et de 11&nbsp;% dans la variante
-              locale ; à Lyon, de 17&nbsp;% et de 6&nbsp;%. Dans les deux cas,
+              25&nbsp;% dans le cas central et de 15&nbsp;% dans la variante
+              locale ; à Lyon, de 16&nbsp;% et de 5&nbsp;%. Dans les deux cas,
               le cinquième le plus aisé paie le plus. Les nouvelles cotisations
               sont les mêmes : seul le point de départ change. Seuls les
               Fichiers fonciers, qui donnent la valeur réelle de chaque local,
@@ -958,10 +974,11 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en hausse (+4,6&nbsp;%), alors que ce groupe paie
-              6,1&nbsp;% de moins au total et que son ménage type paie
-              19,7&nbsp;% de moins : les grands immeubles, où vivent la plupart de
-              ses ménages, sont les plus gagnants. Le nombre de logements vient
+              plus pauvre en forte hausse (+21,6&nbsp;%), alors que son ménage
+              type paie 21&nbsp;% de moins : les grands immeubles, où vivent la
+              plupart de ses ménages, sont les plus gagnants. Le groupe paie
+              pourtant 3,4&nbsp;% de plus au total, la hausse se concentrant sur
+              ses maisons et petits immeubles. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
             </p>
@@ -1036,7 +1053,7 @@ export default function MethodologiePage() {
               les quartiers d&apos;affaires de premier rang. Les bureaux restent
               valorisés au prix de vente des logements, faute d&apos;une
               surface de prix propre aux locaux professionnels. La bande
-              de sensibilité ±&thinsp;10 points encadre cette incertitude dans
+              de sensibilité sur le coût du bâti encadre cette incertitude dans
               tous les résultats publiés : chiffres clés, catégories de bien
               et quintiles de revenu, où elle apparaît en traits fins autour
               de chaque barre.

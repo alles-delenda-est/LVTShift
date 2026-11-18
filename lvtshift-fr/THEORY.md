@@ -13,7 +13,7 @@ honest about its error bars, credible enough to start a policy conversation.
 
 The leverage is **reuse, not reinvention**. The US `LVTShift` toolkit already
 solves the fiscal mechanics: given per-parcel land value, improvement value and a
-revenue target, it finds the revenue-neutral split-rate millages. So the French
+revenue target, it finds the revenue-neutral rates. So the French
 problem reduces to *manufacturing LVTShift's input columns from French open data,
 then calling its real solver unchanged*.
 
@@ -91,8 +91,15 @@ what exempt social landlords would pay, one landlord's in small communes. The fi
 estimate of today, not the real 1970 values, so it is a stand-in for the
 revision, with rents assumed to rise at 0.8 times prices.
 
-Each weak step is flagged in-band and every published figure carries a ±10-point
-land-share band, so error propagates visibly rather than silently.
+**The tax is on land alone** (decision of 2026-11-11; a 4:1 split rate
+before). That makes the land value's *relative* level, parcel to parcel, the
+whole result: scaling all land by one factor changes no bill. So the old band
+(land share ±10 points, uniform) became meaningless and was replaced by a
+building-cost shock (±20 %) on each IRIS's built land, the error that does
+move shares between neighbourhoods and between built and vacant land.
+
+Each weak step is flagged in-band and every published figure carries that
+band, so error propagates visibly rather than silently.
 
 ## Strategy
 
@@ -101,7 +108,7 @@ land-share band, so error propagates visibly rather than silently.
 2. **Aggregate, never per-parcel, for publication.** Imputation error averages out
    by category and income group; individual bills do not. An aggregate-only guard
    and disclosure control (minimum group size, no dominant parcel) enforce it.
-3. **Sensitivity as a first-class output.** The ±10-point band is published for
+3. **Sensitivity as a first-class output.** The building-cost band is published for
    headlines, every category and every income quintile.
 4. **The access argument.** Each open-data compromise maps to a Fichiers fonciers
    variable that would resolve it, so the demo is itself the case for access.
@@ -206,6 +213,15 @@ land-share band, so error propagates visibly rather than silently.
   exemption counts); every claim is verified before it changes code or docs.
 
 ## Open questions / where the theory might break
+
+- **Under a land-only tax, how land is shared within an IRIS is the result.**
+  The site value shares each IRIS's land by plot area × the zone's
+  reference floor-area ratio^0.5, at permitted use (decision of 2026-11-11;
+  a plot's own density no longer counts). The exponent and the reference
+  density, the 75th percentile of what is built in the zone standing in for
+  what the PLU permits, now decide who pays between dense flats, houses on
+  large plots and vacant land; the band does not cover them. Current use
+  still sets each IRIS's land total and the business-land price of sheds.
 
 - **How much of the progressivity is the revision's?** If the first step
   carries most of the fall for the poorest groups, the case for the TVTN

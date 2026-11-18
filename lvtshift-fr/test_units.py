@@ -994,7 +994,7 @@ def _site_frame():
 
 def test_site_value_keeps_the_pool_total_and_follows_plot_and_density():
     p = _site_frame()
-    prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5}   # reference FAR 2
+    prm = {"density_rule": "max_own", "min_zone_parcels": 1, "ref_density_quantile": 0.5}   # reference FAR 2
     out = estimate.site_value_land(p, prm)
     assert abs(out["land_value"].sum() - p["land_value"].sum()) < 1e-6
     # density: the low house is valued at the zone's 2, the dense block at its own 4
@@ -1009,7 +1009,7 @@ def test_site_value_keeps_the_pool_total_and_follows_plot_and_density():
 
 
 def test_site_value_building_keeps_its_cost_and_value_is_the_sum():
-    out = estimate.site_value_land(_site_frame(), {"min_zone_parcels": 1,
+    out = estimate.site_value_land(_site_frame(), {"density_rule": "max_own", "min_zone_parcels": 1,
                                                    "ref_density_quantile": 0.5})
     assert list(out["improvement_value"]) == [200_000.0, 1_500_000.0, 1_500_000.0]
     assert np.allclose(out["market_value"], out["land_value"] + out["improvement_value"])
@@ -1023,7 +1023,7 @@ def test_site_value_density_counts_sub_proportionally():
     p = _site_frame()
     p.loc[2, "parcel_area_m2"] = 500.0
     p.loc[2, "floor_area_m2"] = 8000.0          # FAR 16 on the block's plot (FAR 2)
-    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "ref_density_quantile": 0.5,
+    out = estimate.site_value_land(p, {"density_rule": "max_own", "min_zone_parcels": 1, "ref_density_quantile": 0.5,
                                        "density_elasticity": 0.5})
     lv = out.set_index("idpar")["land_value"]
     assert abs(lv["D"] / lv["B"] - 8 ** 0.5) < 1e-9   # 8× the floor, √8 × the land
@@ -1060,7 +1060,7 @@ def test_site_value_pools_by_iris_and_leaves_other_parcels_alone():
 def test_site_value_reference_density_falls_back_from_thin_zones():
     p = _site_frame()
     p["zone_libelle"] = ["UA", "UB", "UC"]       # each label has one parcel
-    out = estimate.site_value_land(p, {"min_zone_parcels": 2, "ref_density_quantile": 0.5})
+    out = estimate.site_value_land(p, {"density_rule": "max_own", "min_zone_parcels": 2, "ref_density_quantile": 0.5})
     # zone type U holds all three: median FAR 2, as in the one-zone case
     assert list(out["site_density"]) == [2.0, 2.0, 4.0]
 
@@ -1068,7 +1068,7 @@ def test_site_value_reference_density_falls_back_from_thin_zones():
 def test_site_value_caps_outlier_plots_and_rejects_bad_parameters():
     p = _site_frame()
     p.loc[0, "parcel_area_m2"] = 1e6             # a park counted as the house's plot
-    out = estimate.site_value_land(p, {"min_zone_parcels": 1, "plot_cap_quantile": 0.5,
+    out = estimate.site_value_land(p, {"density_rule": "max_own", "min_zone_parcels": 1, "plot_cap_quantile": 0.5,
                                        "ref_density_quantile": 0.5})
     lv = out["land_value"].to_numpy()
     assert abs(lv[0] - lv[1]) < 1e-6           # capped to the block's 500 m², same density
@@ -1087,7 +1087,7 @@ def test_site_value_discounts_surplus_land_on_under_built_plots_only():
     p.loc[2, "floor_area_m2"] = 12000.0           # ...at FAR 4, above the reference
     extra = p.iloc[[1, 1]].assign(idpar=["B2", "B3"])          # keep the zone median at 500
     p = pd.concat([p, extra], ignore_index=True)
-    prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5, "plot_cap_quantile": 1.0,
+    prm = {"density_rule": "max_own", "min_zone_parcels": 1, "ref_density_quantile": 0.5, "plot_cap_quantile": 1.0,
            "surplus_max_ref_far": 3.0}         # the zone's reference FAR 2 counts as house-scale
     out = estimate.site_value_land(p, prm)
     lv = out.set_index("idpar")["land_value"]
@@ -1096,10 +1096,10 @@ def test_site_value_discounts_surplus_land_on_under_built_plots_only():
     # the dense block uses its whole plot: 3 000 × 4 ** 0.5 against 500 × 2 ** 0.5
     assert abs(lv["D"] / lv["B"] - (3000.0 * 2.0) / (500.0 * 2 ** 0.5)) < 1e-9
     # a weight of 1 switches the discount off
-    lv1 = estimate.site_value_land(p, {**prm, "surplus_plot_weight": 1.0}).set_index("idpar")["land_value"]
+    lv1 = estimate.site_value_land(p, {"density_rule": "max_own", **prm, "surplus_plot_weight": 1.0}).set_index("idpar")["land_value"]
     assert abs(lv1["H"] / lv1["B"] - 3000.0 / 500.0) < 1e-9
     # in a denser zone (reference FAR 2 above the default bound 1) the whole plot counts
-    lv2 = estimate.site_value_land(p, {**prm, "surplus_max_ref_far": 1.0}).set_index("idpar")["land_value"]
+    lv2 = estimate.site_value_land(p, {"density_rule": "max_own", **prm, "surplus_max_ref_far": 1.0}).set_index("idpar")["land_value"]
     assert abs(lv2["H"] / lv2["B"] - 3000.0 / 500.0) < 1e-9
     for bad in ({"surplus_plot_multiple": 0.5}, {"surplus_plot_weight": -0.1},
                 {"surplus_plot_weight": 1.5}, {"surplus_max_ref_far": -1.0}):
@@ -1168,6 +1168,24 @@ def test_land_concept_is_validated():
 
 # ------------------------------------------------------------------ #
 
+
+def test_site_value_permitted_use_ignores_what_stands_on_the_plot():
+    # same zone, identical plots: the low house and the dense block get the
+    # same land under the zone rule (the default), unlike "max_own"
+    p = _site_frame()
+    prm = {"min_zone_parcels": 1, "ref_density_quantile": 0.5}
+    out = estimate.site_value_land(p, prm)
+    assert abs(out["land_value"].sum() - p["land_value"].sum()) < 1e-6
+    assert (out["site_density"] == out["site_density"].iloc[0]).all()
+    old = estimate.site_value_land(p, {**prm, "density_rule": "max_own"})
+    assert not (old["site_density"] == old["site_density"].iloc[0]).all()
+    try:
+        estimate.site_value_land(p, {**prm, "density_rule": "current"})
+        raise AssertionError("an unknown density rule must be refused")
+    except ValueError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items())
              if k.startswith("test_") and callable(v)]
@@ -1181,3 +1199,4 @@ if __name__ == "__main__":
             print(f"  FAIL  {t.__name__}: {type(exc).__name__}: {exc}")
     print(f"\n{len(tests) - failed}/{len(tests)} passed")
     sys.exit(1 if failed else 0)
+

@@ -20,7 +20,7 @@ export interface QuintileBar extends QuintileRow {
   bar: number | null;
   /** Value drawn as the household marker (null: no marker). */
   household: number | null;
-  /** [below, above] whisker of the bar's ±10 pt band, or null. */
+  /** [below, above] whisker of the bar's sensitivity band, or null. */
   err: [number, number] | null;
   bandLo: number | null;
   bandHi: number | null;

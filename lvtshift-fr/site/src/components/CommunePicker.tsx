@@ -24,16 +24,18 @@ import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
 import StepsTable from "@/components/charts/StepsTable";
 import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
+import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
 
-/** Caption under charts that carry the ±10 pt land-share whiskers. */
+/** Caption under charts that carry the building-cost whiskers. */
 function BandNote() {
   return (
     <p className="text-xs text-gris font-body italic mt-2 max-w-3xl leading-relaxed">
-      Les traits fins indiquent la fourchette obtenue en faisant varier la part
-      foncière de ±10&nbsp;points (hypothèses basse et haute) : la valeur du sol
-      étant imputée, seule une conclusion qui tient sur toute la fourchette est
-      robuste.
+      Les traits fins indiquent la fourchette obtenue en faisant varier le coût
+      du bâti de ±20&nbsp;% (hypothèses basse et haute), ce qui déplace la
+      valeur du sol des parcelles bâties d&apos;un quartier à l&apos;autre : la
+      valeur du sol étant imputée, seule une conclusion qui tient sur toute la
+      fourchette est robuste.
     </p>
   );
 }
@@ -308,6 +310,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               bailleurs sociaux n&apos;est pas non plus attribuée aux ménages qui
               y habitent : elle n&apos;est pas récupérable sur leurs loyers.
             </p>
+            <PoorestNote commune={commune} />
           </section>
 
           {/* 5a. Where the change comes from: revaluation vs the TVTN */}

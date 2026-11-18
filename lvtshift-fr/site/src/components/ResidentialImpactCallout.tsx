@@ -107,7 +107,7 @@ export default function ResidentialImpactCallout() {
       </div>
       <p className="px-4 py-3 text-xs text-gris leading-relaxed border-t border-lisere">
         Toutes les variations médianes sont encadrées par la bande de
-        sensibilité ±&thinsp;10&nbsp;points sur la part foncière. Chiffres du
+        sensibilité sur le coût du bâti (±&thinsp;20&nbsp;%). Chiffres du
         cas central : dans la variante locale sur la taxe actuelle, les hausses
         sont plus fréquentes, surtout en ville. Le sol étant évalué comme
         s&apos;il était nu, l&apos;immeuble collectif, dont le sol est partagé

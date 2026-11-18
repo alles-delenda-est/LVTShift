@@ -56,6 +56,7 @@ describe("socialSummary", () => {
   // protections page's sentence fails here first.
   it("matches the November 2026 payloads", () => {
     const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
-    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 4, min: -25.8, max: 21.8 });
+    // land-only tax: La Rochelle −33.7 %, Annemasse +10.3 %
+    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 6, min: -33.7, max: 10.3 });
   });
 });
