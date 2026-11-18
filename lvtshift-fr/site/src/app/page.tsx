@@ -144,28 +144,33 @@ export default function Home() {
                   label: "de la taxe foncière change de payeur, selon le territoire",
                   note: null,
                 },
-              ].map(({ value, label, note }) => (
+              ].map(({ value, label, note }, i) => (
                 <div key={label} className="bg-marine px-6 py-5">
                   {note ? (
-                    // Hover, keyboard focus or tap shows the exception behind
-                    // the figure; the note is also the button's description.
+                    // Hover or keyboard focus shows the exception behind the
+                    // figure; the note is also the button's description. The
+                    // tooltip box starts at the button's edge (padding, not
+                    // margin), so the pointer can move onto it without it closing.
                     <div className="group relative inline-block">
                       <button
                         type="button"
-                        aria-describedby="exception-note"
+                        aria-label={`${value} ${label}`}
+                        aria-describedby={`exception-note-${i}`}
                         className="cursor-help text-left font-display text-3xl md:text-4xl font-medium leading-none text-creme underline decoration-dotted decoration-creme/60 underline-offset-[6px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-creme"
                       >
                         {value}
                         <span aria-hidden="true" className="ml-1.5 align-top text-sm text-creme/70">ⓘ</span>
                       </button>
                       <div
-                        id="exception-note"
+                        id={`exception-note-${i}`}
                         role="tooltip"
-                        className="invisible group-hover:visible group-focus-within:visible absolute left-0 top-full z-20 mt-3 w-80 max-w-[80vw] space-y-1 border border-lisere bg-white p-3 text-xs leading-snug text-encre shadow-lg"
+                        className="invisible group-hover:visible group-focus-within:visible absolute left-0 top-full z-20 w-80 max-w-[80vw] pt-3"
                       >
-                        {note.map((line) => (
-                          <p key={line}>{line}</p>
-                        ))}
+                        <div className="space-y-1 border border-lisere bg-white p-3 text-xs leading-snug text-encre shadow-lg">
+                          {note.map((line, j) => (
+                            <p key={j}>{line}</p>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : (

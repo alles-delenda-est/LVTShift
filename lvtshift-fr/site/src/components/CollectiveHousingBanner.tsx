@@ -40,7 +40,7 @@ function CountRow({ label, central, alt, of }: CountRowProps) {
         {bars.map((b) => (
           <div key={b.key} className="flex items-center gap-3">
             <div className={`relative h-3 flex-1 ${TRACK}`} aria-hidden="true">
-              <div className={`absolute inset-y-0 left-0 ${b.fill}`} style={{ width: `${(b.value / of) * 100}%` }} />
+              <div className={`absolute inset-y-0 left-0 ${b.fill}`} style={{ width: `${of > 0 ? (b.value / of) * 100 : 0}%` }} />
             </div>
             <p className="w-24 shrink-0 text-sm text-encre tabular-nums">
               <strong className="font-semibold">{b.value}</strong> sur {of}
@@ -56,16 +56,15 @@ function CountRow({ label, central, alt, of }: CountRowProps) {
 /** Axis bounds, rounded out to a multiple of 10 so ticks fall on whole numbers. */
 function bounds(gaps: QuintileGap[]): { lo: number; hi: number } {
   const values = gaps.flatMap((g) => [g.poorest, g.richest, 0]);
-  return {
-    lo: Math.floor(Math.min(...values) / 10) * 10,
-    hi: Math.ceil(Math.max(...values) / 10) * 10,
-  };
+  const lo = Math.floor(Math.min(...values) / 10) * 10;
+  return { lo, hi: Math.max(Math.ceil(Math.max(...values) / 10) * 10, lo + 10) };
 }
 
 function GapChart({ gaps }: { gaps: QuintileGap[] }) {
+  if (gaps.length === 0) return null;
   const { lo, hi } = bounds(gaps);
   const at = (v: number) => `${((v - lo) / (hi - lo)) * 100}%`;
-  const step = hi - lo > 60 ? 20 : 10;
+  const step = Math.max(10, Math.ceil((hi - lo) / 5 / 10) * 10);
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
 
@@ -89,7 +88,7 @@ function GapChart({ gaps }: { gaps: QuintileGap[] }) {
         </span>
       </p>
 
-      <div role="img" aria-label="Pour chaque territoire, variation de la taxe foncière des 20 % de ménages les plus modestes et des 20 % les plus aisés. Les valeurs figurent dans la liste ci-dessous.">
+      <div>
         <div className="flex items-end">
           <div className={gutter} />
           <div className="relative flex-1 h-5 mr-5">
@@ -107,7 +106,7 @@ function GapChart({ gaps }: { gaps: QuintileGap[] }) {
 
         <ul aria-hidden="true">
           {gaps.map((g) => (
-            <li key={g.commune_key} className="flex items-center h-7 border-t border-lisere/60">
+            <li key={g.commune_key} className="flex items-center min-h-7 py-0.5 border-t border-lisere/60">
               <p className={`${gutter} pr-2 text-xs sm:text-sm text-encre leading-tight`}>{shortName(g.name)}</p>
               <div className="relative flex-1 h-full mr-5">
                 {ticks.map((t) => (
