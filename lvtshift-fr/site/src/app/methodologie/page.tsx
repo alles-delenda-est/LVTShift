@@ -150,6 +150,13 @@ export default function MethodologiePage() {
           journalistes, décideurs et pairs qui souhaitent évaluer la rigueur du
           travail.
         </p>
+        <p className="font-body text-base text-gris max-w-2xl leading-relaxed mt-3">
+          La réforme étudiée est une taxe sur la valeur du terrain nu (TVTN).
+          Dans les résultats par commune,
+          elle est simulée à deux taux, le sol étant imposé quatre fois plus
+          que le bâti ; les scénarios nationaux, eux, l&apos;assoient sur le
+          seul sol.
+        </p>
       </div>
 
       {/* ── Section (a) : Imputation ──────────────────────────────────── */}
@@ -187,8 +194,9 @@ export default function MethodologiePage() {
 
           <p>
             <strong>Le sol est ensuite évalué comme s&apos;il était nu.</strong>{" "}
-            Un impôt sur la valeur du sol taxe le terrain à l&apos;usage que
-            permet l&apos;urbanisme, non au bâtiment qui s&apos;y trouve : ainsi
+            La TVTN, comme tout impôt sur la valeur du sol, taxe le terrain à
+            l&apos;usage que permet l&apos;urbanisme, non au bâtiment qui
+            s&apos;y trouve : ainsi
             le font l&apos;Allemagne (valeurs foncières de référence par zone),
             le Bade-Wurtemberg depuis 2025, le Danemark ou la Nouvelle-Galles
             du Sud. Or
@@ -229,13 +237,17 @@ export default function MethodologiePage() {
             pas le résiduel marché&nbsp;&minus;&nbsp;bâti, dont la fiabilité
             serait nulle en l&apos;absence de bâtiment.{" "}
             <strong>Les terres agricoles et naturelles non bâties</strong>{" "}
-            (zones A et N du PLU) sont ensuite exclues de la réforme : elles
-            continuent de payer la taxe foncière sur les propriétés non bâties
-            actuelle, avec ses exonérations, et ne prennent aucune part du
-            nouvel impôt. Elles ne figurent donc pas dans les résultats
-            publiés. Le terrain constructible non bâti reste, lui, dans la
-            réforme, de même qu&apos;une parcelle non bâtie dont le zonage
-            n&apos;est pas connu (valorisée au barème agricole).
+            (zones A et N du PLU), de faible valeur au regard du reste
+            (environ 3,5&nbsp;% de la base à l&apos;échelle nationale), sont
+            ensuite exclues de la réforme : elles continuent de payer la taxe
+            foncière sur les propriétés non bâties actuelle, avec ses
+            exonérations, et ne prennent aucune part du nouvel impôt. Elles ne
+            figurent donc pas dans les résultats publiés. Le terrain
+            constructible non bâti est, lui, bien entendu compris dans la
+            réforme : l&apos;inciter à être bâti en est l&apos;un des
+            principaux objets. Il en va de même d&apos;une parcelle non bâtie
+            dont le zonage n&apos;est pas connu (valorisée au barème
+            agricole).
           </p>
 
           <p>

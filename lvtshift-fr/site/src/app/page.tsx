@@ -85,14 +85,16 @@ export default function Home() {
                 avec des taux votés séparément : un premier pas peut être,
                 dans les limites fixées par la loi actuelle, de baisser le taux
                 de la TFPB et d&apos;augmenter celui de la TFPNB, mais ce sera
-                imparfait et incomplet. La réforme modélisée ici va
-                plus loin : elle assoit la taxe foncière de chaque parcelle sur
-                la <strong>valeur de son sol</strong>, ce qui suppose de
-                construire une base foncière par une loi de finances (voir{" "}
+                imparfait et incomplet. La réforme proposée va plus loin :
+                une <strong>taxe sur la valeur du terrain nu (TVTN)</strong>{" "}
+                de chaque parcelle, ce qui
+                suppose de construire une base foncière par une loi de finances
+                (voir{" "}
                 <Link href="/voie-juridique" className="underline underline-offset-2 hover:text-rouge">
                   la voie juridique
                 </Link>
-                ).
+                ). Les résultats par commune la simulent à deux taux : le bâti y
+                reste imposé, à un taux quatre fois plus faible que le sol.
               </p>
             </div>
           </div>
@@ -166,8 +168,8 @@ export default function Home() {
           <div className="mt-8 border-l-4 border-rouge pl-5 max-w-2xl">
             <p className="font-body text-base text-encre leading-relaxed">
               <strong>
-                La réforme proposée est à recettes constantes &mdash; ce
-                n&apos;est pas une hausse déguisée.
+                La réforme proposée est à recettes constantes &mdash; il
+                n&apos;y a aucune hausse déguisée.
               </strong>{" "}
               Le total perçu ne change pas : les taux sont recalculés
               mécaniquement pour produire{" "}
@@ -266,14 +268,15 @@ export default function Home() {
                 L&apos;immeuble collectif et les ménages modestes
               </p>
               <p className="font-body text-base text-encre leading-relaxed">
-                Le cinquième des ménages le plus modeste, pris dans son
-                ensemble, s&apos;en sort <strong>mieux</strong> que le cinquième
-                le plus aisé dans {impact.poorestBelowRichestBoth} des{" "}
-                {impact.poorestAnalysable} territoires où le découpage par revenu
-                est possible
+                Sur les {impact.poorestAnalysable} territoires où le découpage
+                par revenu est possible, le cinquième des ménages le plus
+                modeste, pris dans son ensemble, s&apos;en sort{" "}
+                <strong>mieux</strong> que le cinquième le plus aisé dans{" "}
+                {impact.poorestBelowRichest} d&apos;entre eux
                 {impact.alt ? (
                   <>
-                    , dans les deux hypothèses. Il paie moins dans{" "}
+                    {" "}dans le cas central, {impact.alt.poorestBelowRichest} dans
+                    la variante locale. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
                     {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
                     {impact.alt.poorestPayLess} dans la variante locale. Dans
                     l&apos;immeuble collectif, où vivent la plupart des ménages, le
@@ -287,7 +290,8 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    , et paie moins dans {impact.poorestPayLess} d&apos;entre eux.
+                    , et paie moins qu&apos;aujourd&apos;hui dans{" "}
+                    {impact.poorestPayLess} d&apos;entre eux.
                     Dans l&apos;immeuble collectif, où vivent la plupart des
                     ménages, le sol est partagé : il paie moins dans{" "}
                     {impact.blocksPayLess} territoires sur {impact.territories}.
@@ -309,7 +313,8 @@ export default function Home() {
               <p className="font-body text-base text-encre leading-relaxed">
                 Sa charge augmente fortement : c&apos;est le{" "}
                 <strong>cœur du dispositif</strong>, qui envoie le signal que la
-                collectivité attend une mise en valeur du terrain.
+                collectivité attend une mise en valeur du terrain. Cela pénalise
+                aussi la spéculation foncière.
               </p>
             </div>
           </div>

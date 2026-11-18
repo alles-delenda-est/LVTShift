@@ -22,7 +22,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 const DESCRIPTION =
-  "Modélisation d'une réforme de la taxe foncière sur la valeur des terrains en France — Récompenser le travail, décourager la rente.";
+  "Modélisation d'une taxe sur la valeur du terrain nu (TVTN) en France — Récompenser le travail, décourager la rente.";
 
 export const metadata = {
   title: "Pour une terre productive",
