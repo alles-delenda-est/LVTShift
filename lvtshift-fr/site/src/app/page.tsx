@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
-import { countRange, impactSummary, quintileGaps } from "@/lib/impactSummary";
+import { countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
 import { CollectiveHousingBanner } from "@/components/CollectiveHousingBanner";
 import { panelLandShares } from "@/lib/panel";
 
@@ -123,28 +123,56 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-creme/15">
               {[
                 {
-                  value: `${fmt1(impact.shiftMin)} à ${fmt1(impact.shiftMax)} %`,
-                  label: "de la taxe foncière change de payeur, selon le territoire",
-                },
-                {
-                  value: `${impact.poorestBelowRichestBoth} sur ${impact.poorestAnalysable}`,
+                  value: `${impact.poorestBelowRichestBoth} sur ${impact.poorestAnalysable}`,
                   label: impact.alt
-                    ? "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés, dans les deux hypothèses"
-                    : "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés",
+                    ? "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés, dans les deux hypothèses"
+                    : "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés",
+                  note: exceptionNote(impact.poorestExceptions),
                 },
                 {
                   value: countRange(impact.blocksPayLess, impact.alt?.blocksPayLess, impact.territories),
                   label: "territoires où l’immeuble collectif type (5 logements ou plus) paie moins",
+                  note: null,
                 },
                 {
                   value: countRange(impact.housesPayMore, impact.alt?.housesPayMore, impact.territories),
                   label: "territoires où la maison type paie davantage",
+                  note: null,
                 },
-              ].map(({ value, label }) => (
+                {
+                  value: `${fmt1(impact.shiftMin)} à ${fmt1(impact.shiftMax)} %`,
+                  label: "de la taxe foncière change de payeur, selon le territoire",
+                  note: null,
+                },
+              ].map(({ value, label, note }) => (
                 <div key={label} className="bg-marine px-6 py-5">
-                  <p className="font-display text-3xl md:text-4xl font-medium leading-none text-creme">
-                    {value}
-                  </p>
+                  {note ? (
+                    // Hover, keyboard focus or tap shows the exception behind
+                    // the figure; the note is also the button's description.
+                    <div className="group relative inline-block">
+                      <button
+                        type="button"
+                        aria-describedby="exception-note"
+                        className="cursor-help text-left font-display text-3xl md:text-4xl font-medium leading-none text-creme underline decoration-dotted decoration-creme/60 underline-offset-[6px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-creme"
+                      >
+                        {value}
+                        <span aria-hidden="true" className="ml-1.5 align-top text-sm text-creme/70">ⓘ</span>
+                      </button>
+                      <div
+                        id="exception-note"
+                        role="tooltip"
+                        className="invisible group-hover:visible group-focus-within:visible absolute left-0 top-full z-20 mt-3 w-80 max-w-[80vw] space-y-1 border border-lisere bg-white p-3 text-xs leading-snug text-encre shadow-lg"
+                      >
+                        {note.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="font-display text-3xl md:text-4xl font-medium leading-none text-creme">
+                      {value}
+                    </p>
+                  )}
                   <p className="text-sm text-creme/80 mt-2 leading-snug">{label}</p>
                 </div>
               ))}
