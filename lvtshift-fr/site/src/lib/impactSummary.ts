@@ -128,6 +128,33 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
   };
 }
 
+/** One territory's poorest-fifth and richest-fifth total change (central case). */
+export interface QuintileGap {
+  commune_key: string;
+  name: string;
+  /** Total change in today's tax for the poorest fifth of households, %. */
+  poorest: number;
+  /** Same for the richest fifth, %. */
+  richest: number;
+}
+
+/**
+ * The poorest and richest fifths side by side, one row per territory that
+ * can be split by income (the same ones `poorestAnalysable` counts, chosen by
+ * the same rule), ordered from the widest advantage for the poorest to the
+ * narrowest. Feeds the home page's chart so it cannot drift from the counts.
+ */
+export function quintileGaps(communes: Commune[]): QuintileGap[] {
+  const rows: QuintileGap[] = [];
+  for (const c of communes) {
+    const { q1, q5 } = centralInputs(c);
+    if (q1 != null && q5 != null) {
+      rows.push({ commune_key: c.commune_key, name: c.name, poorest: q1, richest: q5 });
+    }
+  }
+  return rows.sort((a, b) => a.poorest - a.richest - (b.poorest - b.richest));
+}
+
 /** "9 sur 13" when both hypotheses agree, "6 à 9 sur 13" otherwise (no-break spaces). */
 export function countRange(central: number, alt: number | undefined, of: number): string {
   if (alt == null || alt === central) return `${central} sur ${of}`;

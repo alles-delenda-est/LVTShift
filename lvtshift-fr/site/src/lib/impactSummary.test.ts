@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countRange, impactSummary } from "./impactSummary";
+import { countRange, impactSummary, quintileGaps } from "./impactSummary";
 import { loadCommune, loadIndex } from "./data";
 import type { Commune } from "./types";
 
@@ -38,6 +38,32 @@ describe("impactSummary on the published data", () => {
       poorestBelowRichest: 10, // Villeurbanne: +11.0 % vs +9.9 %
     });
     expect(s.poorestBelowRichestBoth).toBe(10);
+  });
+});
+
+describe("quintileGaps on the published data", () => {
+  const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
+  const s = impactSummary(communes);
+  const gaps = quintileGaps(communes);
+
+  it("has one row per territory the counts analyse, and agrees with them", () => {
+    expect(gaps).toHaveLength(s.poorestAnalysable);
+    expect(gaps.filter((g) => g.poorest < 0)).toHaveLength(s.poorestPayLess);
+    expect(gaps.filter((g) => g.poorest < g.richest)).toHaveLength(s.poorestBelowRichest);
+  });
+
+  it("orders the widest advantage for the poorest first", () => {
+    expect(gaps[0].commune_key).toBe("roubaix"); // −27,2 % vs +34,5 %
+    expect(gaps[0]).toMatchObject({ poorest: -27.2, richest: 34.5 });
+    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // −1,5 % vs −1,3 %
+    const diffs = gaps.map((g) => g.poorest - g.richest);
+    expect(diffs).toEqual([...diffs].sort((a, b) => a - b));
+  });
+
+  it("leaves out territories without an income split", () => {
+    const keys = gaps.map((g) => g.commune_key);
+    expect(keys).not.toContain("cahors");
+    expect(keys).not.toContain("figeac");
   });
 });
 
