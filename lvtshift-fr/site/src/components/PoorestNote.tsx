@@ -56,7 +56,7 @@ export default function PoorestNote({
       <p className="text-xs text-gris font-body mt-2 leading-relaxed">
         Deux précisions. Les logements sociaux ne sont pas comptés ici (leur impôt
         pèse sur les bailleurs), alors que beaucoup de ménages parmi les plus
-        modestes y vivent - l'effet sur les plus modestes est donc exagéré. Et le 
+        modestes y vivent - l&apos;effet sur les plus modestes est donc exagéré. Et le 
         revenu est celui du quartier, non du ménage : le propriétaire d&apos;une maison 
         dans un quartier modeste n&apos;est pas forcément modeste.
         Pour les propriétaires riches en terrain mais pauvres en revenu, la réforme
