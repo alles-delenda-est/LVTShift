@@ -106,9 +106,9 @@ function GapChart({ gaps }: { gaps: QuintileGap[] }) {
 
         <ul aria-hidden="true">
           {gaps.map((g) => (
-            <li key={g.commune_key} className="flex items-center min-h-7 py-0.5 border-t border-lisere/60">
-              <p className={`${gutter} pr-2 text-xs sm:text-sm text-encre leading-tight`}>{shortName(g.name)}</p>
-              <div className="relative flex-1 h-full mr-5">
+            <li key={g.commune_key} className="flex items-stretch min-h-7 border-t border-lisere/60">
+              <p className={`${gutter} pr-2 py-0.5 self-center text-xs sm:text-sm text-encre leading-tight`}>{shortName(g.name)}</p>
+              <div className="relative flex-1 mr-5">
                 {ticks.map((t) => (
                   <span
                     key={t}
