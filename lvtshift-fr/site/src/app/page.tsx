@@ -298,9 +298,10 @@ export default function Home() {
             <strong>Seconde incertitude : la valeur du sol bâti.</strong> Le sol
             sous un bâtiment est évalué comme s&apos;il était nu, à la densité
             que permet sa zone d&apos;urbanisme, quoi qu&apos;il y soit construit :
-            c&apos;est ce qu&apos;un impôt sur la valeur du sol doit taxer. Cette valeur ne se vérifie pas sur les
-            ventes de biens bâtis : seules les rares ventes de terrains nus et
-            de biens destinés à la démolition en donnent une mesure directe.{" "}
+            c&apos;est ce qu&apos;un impôt sur la valeur du sol doit taxer. Cette
+            valeur ne se vérifie pas sur les ventes de biens bâtis : seules les
+            rares ventes de terrains nus et de biens destinés à la démolition en
+            donnent une mesure directe.{" "}
             <Link href="/methodologie" className="underline underline-offset-2">
               Méthode et limites
             </Link>
