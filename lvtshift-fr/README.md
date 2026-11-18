@@ -2,12 +2,13 @@
 
 Adaptation française de [LVTShift](https://github.com/gregmiller00/LVTShift)
 (Center for Land Economics) : simulation d'un transfert de la taxe foncière
-vers une taxe sur la valeur du foncier (LVT), **à recettes constantes**,
+vers une taxe sur la seule valeur du sol (la TVTN, taxe sur la valeur du terrain
+nu), **à recettes constantes**,
 à la parcelle, sur **données ouvertes uniquement**.
 
 Zéro modification de l'amont : le code (dans `lvtshift-fr/`, au sein de ce
 fork) appelle directement le solveur et l'export standard de LVTShift
-(`model_split_rate_tax`, `save_standard_export`) sans toucher aux fichiers
+(`model_full_building_abatement`, `save_standard_export`) sans toucher aux fichiers
 amont. Les améliorations amont profitent automatiquement à la version
 française.
 
@@ -106,9 +107,12 @@ test_synthetic.py  test bout-en-bout sur données synthétiques (passe ✅)
    zonage A/N) sont exclus, aujourd'hui comme sous la LVT ; une parcelle qui ne
    porte que des bâtiments agricoles est traitée comme une terre agricole non
    bâtie. `--no-exemptions` désactive les deux.
-5. **Solveur LVTShift** : split-rate 4:1, neutralité à 1 % près (vérifiée).
-6. **Sensibilité** : tout résultat publié avec bande part-terrain ±10 pts —
-   chiffres clés, catégories de bien et quintiles de revenu (moustaches sur le site).
+5. **Solveur LVTShift** : impôt sur le seul sol (abattement de 100 % sur le
+   bâti ; un split-rate 4:1 jusqu'au 11 novembre 2026), neutralité à 1 % près
+   (vérifiée).
+6. **Sensibilité** : tout résultat publié avec une bande sur le coût du bâti
+   ±20 %, qui déplace le sol bâti d'un IRIS à l'autre — chiffres clés,
+   catégories de bien et quintiles de revenu (moustaches sur le site).
 
 Les résultats sont reportés aux niveaux **catégorie de bien** et **quintile
 de revenu IRIS**, où les erreurs d'imputation parcellaires se moyennent.
@@ -220,7 +224,7 @@ export CSV seul : `run(..., make_report=False)`.
   une décote plus forte et les pastilles `Nh/Ah` (constructibilité limitée en A/N)
   sont actuellement sous-évaluées.
 - L'imputation résiduelle est contestable dans les cœurs denses (peu de
-  ventes de terrains nus) ; d'où la bande de sensibilité ±10 pts publiée avec
+  ventes de terrains nus) ; d'où la bande de sensibilité publiée avec
   chaque commune (voir METHODOLOGY §6).
 - Le bornage de la part terrain à [15 %, 85 %] est une **contrainte de
   conception, non une mesure** : toute publication doit présenter la

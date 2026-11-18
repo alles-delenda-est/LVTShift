@@ -118,8 +118,11 @@ class CommuneConfig:
     # Land of built parcels: "site" (as if vacant at the zone's typical
     # density, SITE_VALUE) or "current" (the residual at the existing density).
     land_concept: str = "site"
-    # Split-rate ratio for the headline scenario (LVTShift convention)
-    split_rate_ratio: float = 4.0
+    # The reform's tax base. None (the published model since 2026-11-11):
+    # land only, buildings untaxed (the TVTN). A number: a split-rate tax with
+    # land taxed that many times the building rate (LVTShift's convention;
+    # 4.0 was published until then).
+    split_rate_ratio: float | None = None
     # Paris / Lyon / Marseille: the commune levies the taxe foncière under its
     # own INSEE code (75056, 69123 — the code REI is keyed on), but cadastre,
     # DVF, DPE and IRIS are published per *arrondissement* (75101…75120,
@@ -617,6 +620,11 @@ SITE_VALUE = {
     # Land per m² of plot against floor-area ratio: German residential
     # conversion coefficients (WertR 2006 Anl. 11) imply 0.45–0.54.
     "density_elasticity": 0.5,
+    # Permitted use (decision of 2026-11-11): every built plot at its zone's
+    # reference density, whatever stands on it. "max_own" restores the earlier
+    # rule, max(own floor-area ratio, reference), which lent a plot built
+    # above its zone's density its own: a trace of current use.
+    "density_rule": "zone",
     # Reference density: this quantile of the realised floor-area ratio of the
     # pooled parcels in the same PLU zone label (permitted density is not open
     # data in structured form; the typical upper end of what was built stands in).
@@ -656,6 +664,22 @@ CATEGORY_VLC_WEIGHTS_SENSITIVITY = {
     "maison": 1.0, "appartement": 1.0, "immeuble_collectif": 1.0,
     "commerce": 1.8, "industriel": 1.4, "dependance": 0.5, "terrain_nu": 0.0,
 }
+
+
+def model_label(cfg) -> str:
+    """The reform modelled, as the exports name it."""
+    r = getattr(cfg, "split_rate_ratio", None)
+    return "land_only" if r is None else f"split_rate:{r}"
+
+
+# Sensitivity of the land-only tax (export_web.build_headline_sensitivity):
+# building values ± this share, which moves the land residual of built
+# parcels in each IRIS. It spans the construction-cost research's plausible
+# ranges (about −10 % to +17 % around the central costs) and the habitable ÷
+# gross ratio (±0.05, about ±7 % of building value). Under a land-only tax a
+# uniform rescaling of land changes no bill, so the split-rate model's
+# "land share ±10 points" band would show no uncertainty at all.
+BUILDING_COST_BAND = 0.20
 
 
 def slug_of(cfg) -> str:
