@@ -24,6 +24,7 @@ import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
 import StepsTable from "@/components/charts/StepsTable";
 import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
+import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
 
 /** Caption under charts that carry the building-cost whiskers. */
@@ -309,6 +310,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               bailleurs sociaux n&apos;est pas non plus attribuée aux ménages qui
               y habitent : elle n&apos;est pas récupérable sur leurs loyers.
             </p>
+            <PoorestNote commune={commune} />
           </section>
 
           {/* 5a. Where the change comes from: revaluation vs the TVTN */}
