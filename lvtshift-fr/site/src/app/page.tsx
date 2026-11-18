@@ -268,14 +268,15 @@ export default function Home() {
                 L&apos;immeuble collectif et les ménages modestes
               </p>
               <p className="font-body text-base text-encre leading-relaxed">
-                Le cinquième des ménages le plus modeste, pris dans son
-                ensemble, s&apos;en sort <strong>mieux</strong> que le cinquième
-                le plus aisé dans {impact.poorestBelowRichestBoth} des{" "}
-                {impact.poorestAnalysable} territoires où le découpage par revenu
-                est possible
+                Sur les {impact.poorestAnalysable} territoires où le découpage
+                par revenu est possible, le cinquième des ménages le plus
+                modeste, pris dans son ensemble, s&apos;en sort{" "}
+                <strong>mieux</strong> que le cinquième le plus aisé dans{" "}
+                {impact.poorestBelowRichest} d&apos;entre eux
                 {impact.alt ? (
                   <>
-                    , dans les deux hypothèses. Il paie moins dans{" "}
+                    {" "}dans le cas central, {impact.alt.poorestBelowRichest} dans
+                    la variante locale. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
                     {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
                     {impact.alt.poorestPayLess} dans la variante locale. Dans
                     l&apos;immeuble collectif, où vivent la plupart des ménages, le
@@ -289,7 +290,8 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    , et paie moins dans {impact.poorestPayLess} d&apos;entre eux.
+                    , et paie moins qu&apos;aujourd&apos;hui dans{" "}
+                    {impact.poorestPayLess} d&apos;entre eux.
                     Dans l&apos;immeuble collectif, où vivent la plupart des
                     ménages, le sol est partagé : il paie moins dans{" "}
                     {impact.blocksPayLess} territoires sur {impact.territories}.
@@ -311,7 +313,8 @@ export default function Home() {
               <p className="font-body text-base text-encre leading-relaxed">
                 Sa charge augmente fortement : c&apos;est le{" "}
                 <strong>cœur du dispositif</strong>, qui envoie le signal que la
-                collectivité attend une mise en valeur du terrain.
+                collectivité attend une mise en valeur du terrain. Cela pénalise
+                aussi la spéculation foncière.
               </p>
             </div>
           </div>
