@@ -21,6 +21,7 @@ import BaselineRange from "@/components/charts/BaselineRange";
 import WinLoseSplit from "@/components/charts/WinLoseSplit";
 import CategoryImpactBars from "@/components/charts/CategoryImpactBars";
 import IncomeQuintileChart from "@/components/charts/IncomeQuintileChart";
+import StepsTable from "@/components/charts/StepsTable";
 import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
@@ -306,6 +307,45 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
               être traité dans une seconde phase. La variation de l&apos;impôt des
               bailleurs sociaux n&apos;est pas non plus attribuée aux ménages qui
               y habitent : elle n&apos;est pas récupérable sur leurs loyers.
+            </p>
+          </section>
+
+          {/* 5a. Where the change comes from: revaluation vs the TVTN */}
+          <section aria-labelledby="section-etapes">
+            <h3
+              id="section-etapes"
+              className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
+            >
+              D&apos;où viennent les écarts ?
+            </h3>
+            <p className="text-sm text-encre font-body mb-3 max-w-3xl leading-relaxed">
+              Une partie des écarts ne tient pas à la TVTN : elle vient de ce que
+              la taxe foncière des logements repose encore sur des valeurs
+              locatives de 1970. Le tableau sépare deux étapes, chacune à
+              recettes constantes : <strong>1.</strong> l&apos;impôt d&apos;aujourd&apos;hui,
+              réparti entre les logements selon leur valeur de marché actuelle,
+              sans rien changer d&apos;autre (ce qu&apos;apporterait, en ordre de
+              grandeur, la révision des valeurs locatives des logements, repoussée à 2031) ;{" "}
+              <strong>2.</strong> le passage à la TVTN, qui met aussi fin aux
+              exonérations des logements sociaux. Chaque case est en % de
+              l&apos;impôt actuel du groupe ; les deux étapes s&apos;additionnent
+              au total.
+            </p>
+            <StepsTable
+              byCategory={publishedCategories(commune.by_category)}
+              byQuintile={commune.by_income_quintile}
+            />
+            <p className="text-xs text-gris font-body mt-2 max-w-3xl leading-relaxed">
+              L&apos;impôt d&apos;aujourd&apos;hui est lui-même une estimation : faute
+              d&apos;accès aux valeurs locatives réelles, il est réparti selon la
+              surface, par groupe de locaux. La première étape mesure donc le
+              passage d&apos;une répartition selon la surface à une répartition
+              selon la valeur, non l&apos;effet exact de la révision. Les loyers
+              variant moins que les prix d&apos;un quartier à l&apos;autre, la
+              valeur y est atténuée (voir la méthodologie). Les surfaces de
+              commerces, de bureaux et d&apos;industrie gardent leur part à cette
+              étape, leurs valeurs ayant été révisées en 2017 : une catégorie de
+              bien ne bouge que par les logements qu&apos;elle compte.
             </p>
           </section>
 

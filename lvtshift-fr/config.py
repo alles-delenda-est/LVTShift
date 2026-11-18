@@ -551,6 +551,18 @@ BUILDING_TYPES = {
 # CFE is an occupier tax: vacant premises and non-CFE occupiers drop out, so
 # the scale corrects the undercount. Per-m² weights are capped relative to
 # housing so a single plant's base cannot load every shed in the commune.
+# Decomposition, first step (estimate.revalued_tax): housing's share of today's
+# tax re-weighted by (market value per m²)^elasticity, within the commune's
+# housing amount (the RVLLH neutralises each commune's housing base, LF 2020
+# art. 146 V.B). Rents rise less than prices: gross yields fall from 6.3 % to
+# 5.2 % as prices rise from about €1,600 to €3,900/m² (Chapelle & Eyméoud,
+# PLOS ONE 2022, table 6), a rent-to-price elasticity of about 0.8. The IPP
+# (rapport 29, 2020) assumes 1 within a commune. Gemini's 0.55 had no source.
+# See docs/research/revaluation-2026-11.
+REVALUATION = {
+    "rent_price_elasticity": 0.8,
+}
+
 BASELINE_MODEL = {
     "rei_year": 2025,
     "rates_year": 2020,

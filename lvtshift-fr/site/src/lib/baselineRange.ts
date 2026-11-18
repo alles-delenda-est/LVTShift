@@ -16,7 +16,7 @@ export interface RangeRow {
   format: RangeFormat;
 }
 
-const QUINTILE_LABELS: Record<number, string> = {
+export const QUINTILE_LABELS: Record<number, string> = {
   1: "20 % les plus modestes",
   2: "2ᵉ quintile",
   3: "3ᵉ quintile",

@@ -74,6 +74,12 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
         exempt = df["is_fully_exempt"].fillna(False).astype(bool)
         n_exempt = int(exempt.sum())
         df = df[~exempt].copy()
+    # step 1 keeps the industrial and professional groups only on the
+    # calibrated baseline; on the plain floor-area one everything moves, which
+    # the site does not claim: no steps then (a territory member without them
+    # blanks the territory's steps, _steps)
+    if "revalued_tax" in df.columns and not _revaluation(commune_key, out_dir).get("groups_kept"):
+        df = df.assign(revalued_tax=np.nan)
     # count only (never which parcels): disclosed in the payload provenance
     df.attrs["exempt_parcels"] = n_exempt
     # unbuilt farmland stays on today's TFPNB (run_pipeline): outside the shares
@@ -82,7 +88,7 @@ def load_parcels(commune_key: str, out_dir: str = "output") -> pd.DataFrame:
     if "is_farmland_excluded" in df.columns:
         farm = _strict_flag(df["is_farmland_excluded"], path.name)
         paying = [c for c in ("current_tax", "new_tax", "taxable_improvement_value")
-                  if c in df.columns]
+                  + STEP_TAX_COLS if c in df.columns]
         if paying and (df.loc[farm, paying].abs().sum(axis=1) > 0).any():
             raise ValueError(f"{path.name}: rows flagged as excluded farmland pay tax "
                              f"or carry a building")
@@ -143,6 +149,16 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
             raise ValueError(f"{side_path.name}: lower-bound current tax is not a "
                              f"revenue-neutral, non-negative re-share of {path.name}")
         df = df.assign(current_tax_low=low)
+    # (new_tax_kept, written by runs of 2026-11-11 only, is never read: with
+    # the reform's bills it gave away the tax on exempt social housing)
+    for col in [c for c in STEP_TAX_COLS if c in side.columns]:
+        v = side[col].to_numpy(float)
+        cur = df["current_tax"].to_numpy(float)
+        if not (np.isfinite(v).all() and (v >= -0.01).all()
+                and abs(v.sum() - cur.sum()) <= max(1.0, 1e-6 * abs(cur.sum()))):
+            raise ValueError(f"{side_path.name}: {col} is not a revenue-neutral, "
+                             f"non-negative re-share of {path.name}")
+        df = df.assign(**{col: np.clip(v, 0.0, None)})
     if "residual_at_cap" in side.columns:
         df = df.assign(residual_at_cap=_strict_flag(side["residual_at_cap"],
                                                     side_path.name).to_numpy())
@@ -205,12 +221,19 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
     rsub = sub[sub["property_category"].isin(FR_RESIDENTIAL)]
     sp = sub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
     rp = rsub["tax_change_pct"].replace([np.inf, -np.inf], np.nan).dropna()
-    total = None
+    total, steps = None, dict(NO_STEPS)
     if {"current_tax", "tax_change"} <= set(rsub.columns) and len(rsub) >= MIN_GROUP_PARCELS:
         chg = rsub["tax_change"].sum(min_count=1)
         cur = rsub["current_tax"].sum(min_count=1)
         if np.isfinite(chg) and np.isfinite(cur) and rsub["tax_change"].notna().all():
             total = _pct(float(chg), float(cur))
+            dominated = any(
+                float(rsub[c].astype(float).sum()) > 0
+                and float(rsub[c].astype(float).max())
+                > MAX_PARCEL_TAX_SHARE * float(rsub[c].astype(float).sum())
+                for c in ("current_tax", "new_tax") + STEP_TAX_COLS if c in rsub.columns)
+            if total is not None and not dominated:
+                steps = _steps(rsub)
     hh_median, dwellings = None, None
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
     # every residential parcel must carry a count (a member commune without a
@@ -226,6 +249,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         # building's own: publish nothing household-level then
         if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
             hh_median, dwellings, total = None, None, None
+            steps = dict(NO_STEPS)
     if _small(len(sub)):
         sp = sp.iloc[:0]
     if _small(len(rsub)):
@@ -236,6 +260,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         "median_change_pct": round(float(sp.median()), 1) if len(sp) else None,
         "median_change_pct_residential": round(float(rp.median()), 1) if len(rp) else None,
         "total_change_pct": total,
+        **steps,
         "household_median_change_pct": hh_median,
         "parcels": int(len(sub)),
         "dwellings": dwellings,
@@ -397,6 +422,63 @@ def _per_dwelling(sub: pd.DataFrame) -> dict:
     }
 
 
+# The decomposition's intermediate bill (run_pipeline, METHODOLOGY §3.6):
+# today's tax with housing at market values. The pipeline's second one, the
+# TVTN with today's social housing exemptions, is never published: between
+# it and the reform every unexempt bill scales by one factor, which a row of
+# houses gives away, and with the published levy that factor yields the tax
+# on exempt social housing, one landlord's or one parcel's in places
+# (security review, 2026-11-11). Step 2 therefore includes the end of the
+# exemptions.
+STEP_TAX_COLS = ("revalued_tax",)
+STEP_KEYS = ("step_revaluation_pct", "step_land_pct")
+NO_STEPS = dict.fromkeys(STEP_KEYS)
+# With a withheld row, at least this many rows must publish steps. A withheld
+# row with no housing floor has a step 1 of exactly 0, and its tax today is
+# about the published unbuilt-tax amount (an industrial row's, about its
+# published group share); with the published levy, two rows close the
+# equations (independent review, 2026-11-12), and with three, bounds from
+# non-negative taxes were still tight in 0.4 % of test groupings, none with
+# four (security review, 2026-11-12).
+MIN_STEP_ROWS_BESIDE_WITHHELD = 4
+
+
+def _steps_disclosable(rows: list) -> bool:
+    """May these category rows publish steps? Yes when no row is withheld (a
+    row with neither a % nor a € total), or at least
+    MIN_STEP_ROWS_BESIDE_WITHHELD rows publish them. A row in euros (untaxed
+    today) has no weight in the equations and is not withheld."""
+    withheld = any(r.get("total_change_pct") is None and r.get("total_change_eur") is None
+                   for r in rows)
+    shown = sum(r.get("step_revaluation_pct") is not None for r in rows)
+    return not withheld or shown >= MIN_STEP_ROWS_BESIDE_WITHHELD
+# a step beyond this (in % of today's tax) is a group almost untaxed today
+STEP_MAX_PCT = 1_000_000
+
+
+def _steps(sub: pd.DataFrame) -> dict:
+    """A group's change split into two steps, each in % of the group's tax
+    today, so they add up to its total change (to rounding): housing brought
+    to market values, then the move to the TVTN (end of the social housing
+    exemptions included). Group totals, not medians, because only totals add
+    up. Empty for an older run, a member without the column, a group untaxed
+    today, or a step out of bounds."""
+    cols = ("current_tax",) + STEP_TAX_COLS + ("new_tax",)
+    if not set(cols) <= set(sub.columns):
+        return dict(NO_STEPS)
+    v = sub[list(cols)].astype(float)
+    # a territory member from an older run has blanks, which sums would skip
+    if not np.isfinite(v.to_numpy()).all():
+        return dict(NO_STEPS)
+    tot = v.sum().tolist()
+    if not tot[0] > 0:
+        return dict(NO_STEPS)
+    out = {k: _pct(tot[i + 1] - tot[i], tot[0]) for i, k in enumerate(STEP_KEYS)}
+    if any(x is None or not abs(x) < STEP_MAX_PCT for x in out.values()):
+        return dict(NO_STEPS)
+    return out
+
+
 def _category_total(sub: pd.DataFrame) -> dict:
     """A category's total change: the sum of its parcels' changes, in % of
     today's tax, or in euros (rounded to the thousand) only where today's tax
@@ -414,20 +496,22 @@ def _category_total(sub: pd.DataFrame) -> dict:
     carries more than MAX_PARCEL_TAX_SHARE of the category's tax today or
     under the reform.
     """
-    none = {"total_change_pct": None, "total_change_eur": None}
+    none = {"total_change_pct": None, "total_change_eur": None, **NO_STEPS}
     if _small(len(sub)) or not {"current_tax", "new_tax", "tax_change"} <= set(sub.columns):
         return none
     cur, new = sub["current_tax"].astype(float), sub["new_tax"].astype(float)
     if not (np.isfinite(cur).all() and np.isfinite(new).all()):
         return none
-    for col in (cur, new):
+    # one parcel dominating any of the bills would make the figures its own
+    for col in [cur, new] + [sub[c].astype(float) for c in STEP_TAX_COLS if c in sub.columns]:
         tot = float(col.sum())
         if tot > 0 and float(col.max()) > MAX_PARCEL_TAX_SHARE * tot:
             return none
     chg = float(new.sum() - cur.sum())
     if cur.sum() > 0:
-        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None}
-    return {"total_change_pct": None, "total_change_eur": round(chg, -3)}
+        return {"total_change_pct": _pct(chg, float(cur.sum())), "total_change_eur": None,
+                **_steps(sub)}
+    return {"total_change_pct": None, "total_change_eur": round(chg, -3), **NO_STEPS}
 
 
 def social_landlords(df: pd.DataFrame) -> int:
@@ -441,7 +525,8 @@ def social_landlords(df: pd.DataFrame) -> int:
 # Every tax the dominance test reads: today's under both baselines (in a
 # baseline leg, current_tax is the variant and current_tax_central the
 # central one) and the reform's, so every leg takes the same decision.
-DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax")
+DOMINANCE_TAX_COLS = ("current_tax", "current_tax_low", "current_tax_central", "new_tax",
+                      "revalued_tax")
 
 
 def social_disclosable(df: pd.DataFrame) -> bool:
@@ -513,6 +598,13 @@ def build_by_category(df: pd.DataFrame) -> list:
             # residential only; None for other categories and older runs
             **_per_dwelling(sub),
         })
+    # a withheld row whose step 1 is known to be 0 (no housing floor: vacant
+    # land) next to a single published one would be recoverable from the
+    # revenue-neutral equation: with a withheld row, at least two must publish
+    # (security review, 2026-11-12)
+    if not _steps_disclosable(out):
+        for r in out:
+            r.update(NO_STEPS)
     out.sort(key=lambda r: r["parcels"], reverse=True)
     return out
 
@@ -560,7 +652,7 @@ BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
                       "share_paying_more_pct")
 QUINTILE_KEYS = {"quintile", "median_income_eur", "median_change_pct",
                  "median_change_pct_residential", "total_change_pct",
-                 "household_median_change_pct", "parcels", "dwellings"}
+                 "household_median_change_pct", "parcels", "dwellings", *STEP_KEYS}
 BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential",
                       "total_change_pct", "household_median_change_pct")
 
@@ -733,9 +825,10 @@ SMALL_GROUP_BLANK = {
     "by_category": ("median_change_pct", "median_change_eur", "count_paying_more",
                     "share_paying_more_pct", "median_change_eur_per_dwelling",
                     "household_median_change_pct", "share_dwellings_paying_more_pct",
-                    "total_change_pct", "total_change_eur", "dwellings"),
+                    "total_change_pct", "total_change_eur", "dwellings") + STEP_KEYS,
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
-                           "total_change_pct", "household_median_change_pct", "dwellings"),
+                           "total_change_pct", "household_median_change_pct",
+                           "dwellings") + STEP_KEYS,
 }
 
 
@@ -807,6 +900,33 @@ def _check_social(payload: dict) -> None:
         assert not extra, f"sensitivity leg shows categories the central rows do not: {extra}"
 
 
+def _check_steps(payload: dict) -> None:
+    """Decomposition guard: steps are bounded numbers published only beside
+    their group's total and add up to it (to rounding).
+
+    Each step is revenue-neutral across categories, one equation per step.
+    Weighted by the categories' taxes today, which are never published, the
+    equations cannot recover a withheld row (the protection the totals rely
+    on, security review of 2026-11-04) as long as at least two other rows
+    publish, which build_by_category enforces."""
+    for key in ("by_category", "by_income_quintile", "by_income_quintile_within"):
+        rows = payload.get(key) or []
+        for r in rows:
+            vals = [r.get(k) for k in STEP_KEYS]
+            if all(v is None for v in vals):
+                continue
+            assert all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                       and math.isfinite(v) and abs(v) < STEP_MAX_PCT for v in vals), (
+                f"{key}: steps must all be finite numbers, got {vals}")
+            tot = r.get("total_change_pct")
+            assert (isinstance(tot, (int, float)) and not isinstance(tot, bool)
+                    and math.isfinite(tot) and abs(sum(vals) - tot) <= 0.3), (
+                f"{key}: steps {vals} do not add up to the total {tot}")
+        if key == "by_category" and any(r.get("step_revaluation_pct") is not None for r in rows):
+            assert _steps_disclosable(rows), \
+                "by_category: steps beside a withheld row with too few published"
+
+
 def assert_aggregate_only(payload: dict) -> None:
     """Shape guard: only aggregate keys, bounded lists, no US/per-parcel leakage."""
     extra = set(payload) - ALLOWED_TOP_KEYS
@@ -844,6 +964,7 @@ def assert_aggregate_only(payload: dict) -> None:
     _check_small_groups(payload)
     _check_social(payload)
     _check_unbuilt(payload)
+    _check_steps(payload)
     blob = json.dumps(payload, ensure_ascii=False)
     for tok in FORBIDDEN_TOKENS:
         assert tok not in blob, f"forbidden token {tok!r} leaked into payload"
@@ -891,6 +1012,10 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
     # share is meaningful, so report it as professional and say so
     merged = "industrial merged into professional" in str(rec.get("note", ""))
     out["industrial_merged_into_professional"] = merged
+    # the decomposition's first step (METHODOLOGY §3.6), where the run has it
+    rv = _revaluation(commune_key, out_dir)
+    if rv:
+        out["rent_price_elasticity"] = rv["rent_price_elasticity"]
     if merged:
         for kind in ("target", "achieved"):
             i, p = out[f"{kind}_industrial_share"], out[f"{kind}_professional_share"]
@@ -898,6 +1023,23 @@ def load_baseline(commune_key: str, out_dir: str = "output") -> dict:
                                                  if i is not None and p is not None else None)
             out[f"{kind}_industrial_share"] = None
     return out
+
+
+def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
+    """The decomposition's first step as run (baseline sidecar): the
+    rent-to-price elasticity and whether the tax groups were kept. Empty for
+    runs before it existed."""
+    from config import COMMUNES
+    path = Path(out_dir) / f"{_slug(COMMUNES[commune_key])}.baseline.json"
+    rec = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    r = rec.get("revaluation") if isinstance(rec, dict) else None
+    if not isinstance(r, dict):
+        return {}
+    e, g = r.get("rent_price_elasticity"), r.get("groups_kept")
+    if isinstance(e, bool) or not isinstance(e, (int, float)) or not 0 <= e <= 1 \
+            or not isinstance(g, bool):
+        raise ValueError(f"{path}: invalid revaluation record {r!r}")
+    return {"rent_price_elasticity": float(e), "groups_kept": g}
 
 
 def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
@@ -1050,8 +1192,12 @@ def _territory_baseline(present: list, out_dir: str) -> dict:
     n = sum(r["method"] == "calibrated" for r in recs)
     method = ("calibrated" if n == len(present) else "floor_area" if n == 0 else "mixed")
     srcs = {r.get("low_source", "cfe_raw") for r in recs}
-    return {"method": method, "members_calibrated": n,
-            "low_source": srcs.pop() if len(srcs) == 1 else "mixed"}
+    out = {"method": method, "members_calibrated": n,
+           "low_source": srcs.pop() if len(srcs) == 1 else "mixed"}
+    els = {r.get("rent_price_elasticity") for r in recs}
+    if len(els) == 1 and None not in els:
+        out["rent_price_elasticity"] = els.pop()
+    return out
 
 
 def build_commune_payload(commune_key: str, out_dir: str = "output") -> dict:

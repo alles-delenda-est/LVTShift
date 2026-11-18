@@ -788,6 +788,78 @@ fonciers/bâti neutres en recettes au ratio configuré (4:1 par défaut). L'expo
 est écrit par `save_standard_export` ; les graphiques en euros par `charts_fr`
 (surcouche de localisation monétaire du rapport amont).
 
+*Décomposition* (`estimate.revalued_tax`, `export_web._steps`). Une partie de la variation de chaque groupe tient au
+remplacement d'une base de 1970, non à l'imposition du sol. Un impôt
+intermédiaire, au produit d'aujourd'hui, la partage en deux :
+
+1. **Les logements aux valeurs de marché** (`revalued_tax`) : l'impôt bâti
+   d'aujourd'hui, la part du groupe des logements étant répartie selon la
+   surface de logement imposable × (prix hédonique du logement au m² à
+   l'emplacement de la parcelle, `eur_m2`)^0,8, au lieu de la seule surface.
+   (Pas la valeur de marché ÷ le plancher : après l'étape de la valeur de
+   site, elle vaut terrain + bâti, et une parcelle évaluée au coût porte le
+   sol de toute sa parcelle, si bien qu'un abri de jardin passerait pour le
+   logement le plus cher de la ville ; revue indépendante du 12 novembre
+   2026.) La chaîne vérifie que les mêmes poids, à un exposant nul, rendent
+   l'impôt d'aujourd'hui. Les surfaces des groupes industriel et
+   professionnel gardent leur montant d'aujourd'hui, si bien qu'un commerce
+   ou une usine garde son impôt sauf s'il compte aussi des logements : les locaux professionnels ont été
+   révisés en 2017, et la révision des valeurs locatives des logements
+   (RVLLH, LF 2020 art. 146, désormais prévue pour les bases 2031 après la
+   LF 2026 art. 106) neutralise la base des logements de chaque commune
+   (art. 146 V.B). Exonérations et abattements restent ceux d'aujourd'hui ;
+   l'impôt sur le non-bâti est inchangé. L'exposant est inférieur à 1 parce
+   que les loyers montent moins que les prix : le rendement brut passe
+   d'environ 6,3 % à 5,2 % quand le prix passe d'environ 1 600 à 3 900 €/m²
+   (Chapelle et Eyméoud, PLOS ONE 2022, tableau 6), soit une élasticité des
+   loyers aux prix proche de 0,8. La simulation de la révision par l'IPP
+   (rapport n° 29, 2020) suppose 1 au sein d'une commune. Gemini proposait
+   0,55, sans source ; nous ne l'avons pas retenu.
+2. **Le passage à la TVTN** (la réforme, `new_tax`, contre l'impôt 1), qui
+   comprend la fin des exonérations du logement social.
+
+Les deux étapes sont publiées, par catégorie et par groupe de revenu, en %
+de l'impôt actuel du groupe, et s'additionnent à sa variation totale (aux
+arrondis près). Une première version isolait aussi la fin des exonérations,
+avec un impôt qui les maintenait ; elle a été abandonnée et cet impôt n'est
+plus calculé : entre lui et la réforme, l'impôt de toute parcelle non
+exonérée était multiplié par un même facteur, que n'importe quelle ligne de
+maisons révélait ; avec le produit publié, ce facteur donnait en euros
+l'impôt sur le logement social exonéré, celui d'un seul bailleur ou d'une
+seule parcelle dans certaines communes (revue de sécurité du 11 novembre
+2026). Les étapes ne sont publiées que là où les groupes de locaux ont été
+conservés (la base calibrée, toutes les communes publiées) ; sur la base de
+la seule surface, elle déplacerait aussi l'impôt des commerces et de
+l'industrie. L'exposant figure dans la provenance de chaque fichier publié
+(`rent_price_elasticity`).
+
+Les étapes sont des totaux, non des médianes, parce que seuls les totaux
+s'additionnent. Les étapes d'un groupe sont retenues avec son total, ou
+quand une parcelle porte plus du dixième de l'impôt du groupe, aujourd'hui,
+selon l'impôt 1 ou après la réforme (groupes de revenu compris). Chaque étape
+est neutre en recettes entre catégories, mais pondérée par l'impôt actuel des
+catégories, qui n'est jamais publié : les lignes publiées ne permettent pas
+de retrouver une ligne retenue, pourvu qu'au moins quatre soient publiées : un
+groupe retenu sans logement a une étape 1 nulle et, s'il s'agit du terrain
+nu, un impôt actuel proche du montant publié de l'impôt sur le non-bâti ;
+avec le produit publié, deux lignes publiées fermeraient les équations
+(revues de sécurité et indépendante du 12 novembre 2026) ; avec trois, les
+bornes tirées d'impôts positifs restaient serrées dans quelques regroupements
+d'essai, avec quatre dans aucun. Avec une ligne retenue (ni total en %, ni
+total en € ; une ligne en euros, non imposée aujourd'hui, ne pèse pas) et
+moins de quatre lignes publiées, aucune étape n'est publiée. Le garde-fou de l'export le vérifie. La règle des bailleurs sociaux porte aussi
+sur l'impôt 1.
+
+Ce que la première étape n'est pas : notre « aujourd'hui » est lui-même une
+estimation selon la surface (§3.5), sans élément de situation ni de confort,
+alors que les valeurs de 1970 portent des coefficients de catégorie et de
+situation. L'étape mesure le passage d'une répartition selon la surface à une
+répartition selon la valeur au sein des logements : une approximation de la
+révision, non sa simulation. L'IPP trouvait que la révision baisserait de
+5,6 % l'impôt des logements du décile le plus pauvre et relèverait de 9 % celui
+du plus riche (20 grandes aires urbaines, hors Paris), un ordre de grandeur
+auquel comparer le nôtre. Documents : `docs/research/revaluation-2026-11/`.
+
 **3.7 Paris, Lyon et leurs couronnes** — Paris (75056) et Lyon (69123) lèvent la
 TFPB en tant que commune unique, mais cadastre, DVF, DPE et IRIS sont publiés par
 arrondissement (75101–75120, 69381–69389). La configuration porte les deux :
@@ -1262,6 +1334,12 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   maisons au-delà de 500 m² (cinq ares, BOFiP), un seul poids au m². La méthode
   de la part suit la loi ; le seuil des jardins est une pratique
   administrative et le poids égal un jugement.
+- **Élasticité des loyers aux prix** (`REVALUATION["rent_price_elasticity"]`,
+  §3.6) : 0,8, d'après la baisse du rendement brut avec le prix entre communes
+  françaises (Chapelle et Eyméoud 2022). 1 traiterait une valeur locative
+  comme une valeur vénale (l'hypothèse de l'IPP au sein d'une commune) ; une
+  valeur plus faible aplatit la première étape. Un choix raisonné, sur la
+  seule mesure française trouvée.
 - **Strates REI** neutralisées : Commune + intercommunalité (configurable). Le
   contrôle `rei_layers` du preflight indique, par commune, les strates FB
   existantes et la part laissée de côté : dans le 92/93/94 il n'y a pas de strate
@@ -1540,6 +1618,17 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     cinq ares pour les jardins est une pratique administrative appliquée au cas
     par cas, non une mesure. Le revenu cadastral par parcelle des Fichiers
     fonciers remplacerait tout cela (§7).
+
+16. **L'étape de la révision est mesurée par rapport à une estimation
+    d'aujourd'hui.** L'impôt actuel est réparti selon la surface (§3.5) : la
+    première étape de la décomposition (§3.6) est donc le passage de la
+    surface à la valeur, non l'effet exact de la révision des valeurs de 1970,
+    dont nous ne voyons pas les coefficients de catégorie et de situation. La
+    valeur au m² est le prix hédonique du logement à l'emplacement de la
+    parcelle : elle ne voit ni la qualité propre d'un logement, ni sa taille,
+    ni son étage, que verraient les catégories et coefficients de
+    localisation de la révision. Une parcelle en copropriété compte pour une. Les valeurs locatives par
+    local des Fichiers fonciers donneraient le vrai point de départ (§7).
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

@@ -403,6 +403,64 @@ export default function MethodologiePage() {
         </div>
       </section>
 
+      <section aria-labelledby="decomposition" className="mb-12 border-t border-lisere pt-10">
+        <h3 id="decomposition" className="font-display text-xl font-medium text-marine mb-4">
+          Révision des valeurs locatives ou TVTN : séparer les effets
+        </h3>
+        <div className="font-body text-base text-encre leading-relaxed space-y-4 max-w-3xl">
+          <p>
+            La taxe foncière des logements repose encore sur des valeurs
+            locatives de 1970. Leur révision, votée en 2020 et repoussée aux
+            bases de 2031, redistribuerait à elle seule une partie de
+            l&apos;impôt. Pour ne pas attribuer à la TVTN ce qu&apos;une
+            simple mise à jour apporterait, chaque page de commune décompose
+            la variation de chaque groupe en deux étapes, toutes deux à
+            recettes constantes :
+          </p>
+          <ol className="list-decimal pl-6 space-y-2">
+            <li>
+              <strong>Les logements aux valeurs de marché.</strong> L&apos;impôt
+              d&apos;aujourd&apos;hui, la part des logements étant répartie selon
+              leur valeur de marché actuelle plutôt que selon leur surface. Les
+              surfaces de commerces, de bureaux et d&apos;industrie gardent leur
+              part : leurs valeurs ont été révisées en 2017, et la loi neutralise
+              la part des logements dans chaque commune. Les exonérations restent
+              celles d&apos;aujourd&apos;hui.
+            </li>
+            <li>
+              <strong>Le passage à la TVTN</strong>, au même produit, qui met
+              aussi fin aux exonérations des logements sociaux et à
+              l&apos;abattement en quartier prioritaire. Nous ne publions pas
+              ces deux effets séparément : dans les communes où peu de
+              bailleurs sociaux sont exonérés, l&apos;écart entre eux
+              révélerait l&apos;impôt de l&apos;un d&apos;entre eux.
+            </li>
+          </ol>
+          <p>
+            Chaque étape est exprimée en % de l&apos;impôt actuel du groupe :
+            les deux s&apos;additionnent à sa variation totale. Les loyers
+            variant moins que les prix d&apos;un quartier à l&apos;autre (le
+            rendement locatif brut baisse quand le prix monte), la valeur au
+            m² y entre atténuée : une hausse de 10&nbsp;% du prix au m² compte
+            pour environ 8&nbsp;% de valeur locative (Chapelle et Eyméoud,
+            2022).
+          </p>
+          <div className="border-l-4 border-lisere pl-5 text-sm text-gris">
+            <strong className="font-semibold text-encre">Une limite à garder en tête.</strong>{" "}
+            Faute d&apos;accès aux valeurs locatives réelles, notre impôt
+            d&apos;aujourd&apos;hui est réparti selon la surface, sans les
+            coefficients de catégorie et de situation des valeurs de 1970. La
+            première étape mesure donc le passage d&apos;une répartition selon
+            la surface à une répartition selon la valeur : une approximation de
+            la révision, non sa simulation. À titre de comparaison, l&apos;Institut
+            des politiques publiques estimait que la révision baisserait de
+            5,6&nbsp;% l&apos;impôt des logements des ménages les plus modestes
+            et relèverait de 9&nbsp;% celui des plus aisés (20 grandes aires
+            urbaines, hors Paris).
+          </div>
+        </div>
+      </section>
+
       {/* ── Section : base foncière nationale ─────────────────────────── */}
       <section aria-labelledby="base-nationale" className="mb-12 border-t border-lisere pt-10">
         <h3 id="base-nationale" className="font-display text-xl font-medium text-marine mb-4">

@@ -48,6 +48,12 @@ export interface CategoryRow {
    *  older payloads. */
   total_change_pct?: number | null;
   total_change_eur?: number | null;
+  /** The total change split into two steps, each in % of the group's tax
+   *  today, adding up to total_change_pct (to rounding): housing at market
+   *  values, then the move to the TVTN (end of the social housing exemptions
+   *  included). Null, or absent in older payloads, when withheld. */
+  step_revaluation_pct?: number | null;
+  step_land_pct?: number | null;
   /** Typical household's change in €, residential categories only (absent in older payloads). */
   median_change_eur_per_dwelling?: number | null;
   /** Typical household's change in %, parcels weighted by dwellings (absent in older payloads). */
@@ -65,6 +71,12 @@ export interface QuintileRow {
   median_change_pct_residential: number | null; parcels: number;
   /** Group total change on residential parcels (absent in older payloads). */
   total_change_pct?: number | null;
+  /** The total change split into two steps, each in % of the group's tax
+   *  today, adding up to total_change_pct (to rounding): housing at market
+   *  values, then the move to the TVTN (end of the social housing exemptions
+   *  included). Null, or absent in older payloads, when withheld. */
+  step_revaluation_pct?: number | null;
+  step_land_pct?: number | null;
   /** Typical household's change: parcel change weighted by dwellings. */
   household_median_change_pct?: number | null;
   dwellings?: number | null;
