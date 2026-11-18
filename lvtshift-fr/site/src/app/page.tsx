@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
-import { countRange, impactSummary } from "@/lib/impactSummary";
+import { countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
+import { CollectiveHousingBanner } from "@/components/CollectiveHousingBanner";
 import { panelLandShares } from "@/lib/panel";
 
 /** One decimal, French comma ("9,8"); "n. d." when missing. */
@@ -31,7 +32,9 @@ export default function Home() {
   const rings = communes.length - singles;
 
   // "Who pays" figures, computed from the payloads (central case).
-  const impact = impactSummary(communes.map((c) => loadCommune(c.commune_key)));
+  const payloads = communes.map((c) => loadCommune(c.commune_key));
+  const impact = impactSummary(payloads);
+  const gaps = quintileGaps(payloads);
 
   return (
     <div>
@@ -120,28 +123,61 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-creme/15">
               {[
                 {
-                  value: `${fmt1(impact.shiftMin)} à ${fmt1(impact.shiftMax)} %`,
-                  label: "de la taxe foncière change de payeur, selon le territoire",
-                },
-                {
-                  value: `${impact.poorestBelowRichestBoth} sur ${impact.poorestAnalysable}`,
+                  value: `${impact.poorestBelowRichestBoth} sur ${impact.poorestAnalysable}`,
                   label: impact.alt
-                    ? "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés, dans les deux hypothèses"
-                    : "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés",
+                    ? "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés, dans les deux hypothèses"
+                    : "territoires où les 20 % de ménages les plus modestes s’en sortent mieux que les 20 % les plus aisés",
+                  note: exceptionNote(impact.poorestExceptions),
                 },
                 {
                   value: countRange(impact.blocksPayLess, impact.alt?.blocksPayLess, impact.territories),
                   label: "territoires où l’immeuble collectif type (5 logements ou plus) paie moins",
+                  note: null,
                 },
                 {
                   value: countRange(impact.housesPayMore, impact.alt?.housesPayMore, impact.territories),
                   label: "territoires où la maison type paie davantage",
+                  note: null,
                 },
-              ].map(({ value, label }) => (
+                {
+                  value: `${fmt1(impact.shiftMin)} à ${fmt1(impact.shiftMax)} %`,
+                  label: "de la taxe foncière change de payeur, selon le territoire",
+                  note: null,
+                },
+              ].map(({ value, label, note }, i) => (
                 <div key={label} className="bg-marine px-6 py-5">
-                  <p className="font-display text-3xl md:text-4xl font-medium leading-none text-creme">
-                    {value}
-                  </p>
+                  {note ? (
+                    // Hover or keyboard focus shows the exception behind the
+                    // figure; the note is also the button's description. The
+                    // tooltip box starts at the button's edge (padding, not
+                    // margin), so the pointer can move onto it without it closing.
+                    <div className="group relative inline-block">
+                      <button
+                        type="button"
+                        aria-label={`${value} ${label}`}
+                        aria-describedby={`exception-note-${i}`}
+                        className="cursor-help text-left font-display text-3xl md:text-4xl font-medium leading-none text-creme underline decoration-dotted decoration-creme/60 underline-offset-[6px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-creme"
+                      >
+                        {value}
+                        <span aria-hidden="true" className="ml-1.5 align-top text-sm text-creme/70">ⓘ</span>
+                      </button>
+                      <div
+                        id={`exception-note-${i}`}
+                        role="tooltip"
+                        className="invisible group-hover:visible group-focus-within:visible absolute left-0 top-full z-20 w-80 max-w-[80vw] pt-3"
+                      >
+                        <div className="space-y-1 border border-lisere bg-white p-3 text-xs leading-snug text-encre shadow-lg">
+                          {note.map((line, j) => (
+                            <p key={j}>{line}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="font-display text-3xl md:text-4xl font-medium leading-none text-creme">
+                      {value}
+                    </p>
+                  )}
                   <p className="text-sm text-creme/80 mt-2 leading-snug">{label}</p>
                 </div>
               ))}
@@ -183,51 +219,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Teaser figures ───────────────────────────────────────────── */}
-      <section className="bg-white border-b border-lisere">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <p className="text-xs uppercase tracking-[0.18em] text-gris mb-6">
-            Panel de modélisation &mdash; données ouvertes françaises
+      {/* ── Collective housing and modest households ─────────────────── */}
+      <CollectiveHousingBanner
+        impact={impact}
+        gaps={gaps}
+        footer={
+          <p className="text-sm">
+            <Link href="/resultats" className="underline underline-offset-2 hover:text-rouge">
+              Détail par territoire
+            </Link>
           </p>
-
-          {/* Grid trick: gap-px on bg-lisere creates ruled dividers between white cells */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-lisere border border-lisere">
-            <div className="bg-white p-6">
-              <p className="font-display text-5xl font-medium text-marine leading-none">
-                {totalCommunes}
-              </p>
-              <p className="text-sm text-gris mt-2 leading-snug">
-                communes modélisées dans ce panel
-              </p>
-            </div>
-
-            <div className="bg-white p-6">
-              <p className="font-display text-5xl font-medium text-marine leading-none">
-                {totalParcels.toLocaleString("fr-FR")}
-              </p>
-              <p className="text-sm text-gris mt-2 leading-snug">
-                parcelles analysées au total
-              </p>
-            </div>
-
-            <div className="bg-white p-6">
-              <p className="font-display text-2xl font-medium text-marine leading-snug">
-                {pct(landShareMin)} à {pct(landShareMax)}
-              </p>
-              <p className="text-sm text-gris mt-2 leading-snug">
-                fourchette de la part du sol dans la base taxable, sur
-                les {landShares.length} communes
-              </p>
-            </div>
-          </div>
-
-          <p className="text-xs text-gris mt-3 leading-relaxed">
-            Résultats issus de la modélisation LVTShiftFR à partir du cadastre,
-            de DVF et des données DGCL/OFGL. Valeurs exprimées en ordres de
-            grandeur agrégés &mdash; aucun résultat individuel ou par parcelle.
-          </p>
-        </div>
-      </section>
+        }
+      />
 
       {/* ── Who pays ─────────────────────────────────────────────────── */}
       <section className="border-b border-lisere">
@@ -243,7 +246,7 @@ export default function Home() {
           {/* Figures computed from the published payloads (lib/impactSummary):
               the card used to promise owner-occupiers "une baisse ou une
               quasi-neutralité", which the model contradicts for houses. */}
-          <div className="grid md:grid-cols-3 gap-4 max-w-5xl">
+          <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
             <div className="border border-lisere bg-creme p-5">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-gris mb-3">
                 La maison individuelle
@@ -260,49 +263,6 @@ export default function Home() {
                 central). Le sol étant évalué comme s&apos;il était nu, à la
                 densité habituelle de son quartier, c&apos;est la maison basse
                 au milieu d&apos;immeubles qui paie le plus.
-              </p>
-            </div>
-
-            <div className="border border-lisere bg-creme p-5">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-gris mb-3">
-                L&apos;immeuble collectif et les ménages modestes
-              </p>
-              <p className="font-body text-base text-encre leading-relaxed">
-                Sur les {impact.poorestAnalysable} territoires où le découpage
-                par revenu est possible, le cinquième des ménages le plus
-                modeste, pris dans son ensemble, s&apos;en sort{" "}
-                <strong>mieux</strong> que le cinquième le plus aisé dans{" "}
-                {impact.poorestBelowRichest} d&apos;entre eux
-                {impact.alt ? (
-                  <>
-                    {" "}dans le cas central, {impact.alt.poorestBelowRichest} dans
-                    la variante locale. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
-                    {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
-                    {impact.alt.poorestPayLess} dans la variante locale. Dans
-                    l&apos;immeuble collectif, où vivent la plupart des ménages, le
-                    sol est partagé entre de nombreux logements : il paie moins
-                    dans {impact.blocksPayLess} territoires sur{" "}
-                    {impact.territories} dans le cas central,{" "}
-                    {impact.alt.blocksPayLess} dans la variante locale. Le petit
-                    immeuble de 2 à 4 logements, souvent moins dense que ses
-                    voisins, paie moins dans {impact.smallBuildingsPayLess}{" "}
-                    territoires seulement dans le cas central.
-                  </>
-                ) : (
-                  <>
-                    , et paie moins qu&apos;aujourd&apos;hui dans{" "}
-                    {impact.poorestPayLess} d&apos;entre eux.
-                    Dans l&apos;immeuble collectif, où vivent la plupart des
-                    ménages, le sol est partagé : il paie moins dans{" "}
-                    {impact.blocksPayLess} territoires sur {impact.territories}.
-                    Le petit immeuble de 2 à 4 logements, souvent moins dense
-                    que ses voisins, paie moins dans{" "}
-                    {impact.smallBuildingsPayLess} territoires seulement.
-                  </>
-                )}{" "}
-                Les logements sociaux ne sont pas comptés parmi les ménages :
-                leur taxe foncière n&apos;étant pas récupérable sur les
-                locataires, sa variation pèse sur les bailleurs.
               </p>
             </div>
 
@@ -351,6 +311,52 @@ export default function Home() {
             disponibles dans les résultats. Les imputations sont agrégées
             &mdash; aucune facture individuelle ou par parcelle n&apos;est
             publiée ni ne peut être inférée.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Teaser figures ───────────────────────────────────────────── */}
+      <section className="bg-white border-b border-lisere">
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <p className="text-xs uppercase tracking-[0.18em] text-gris mb-6">
+            Panel de modélisation &mdash; données ouvertes françaises
+          </p>
+
+          {/* Grid trick: gap-px on bg-lisere creates ruled dividers between white cells */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-lisere border border-lisere">
+            <div className="bg-white p-6">
+              <p className="font-display text-5xl font-medium text-marine leading-none">
+                {totalCommunes}
+              </p>
+              <p className="text-sm text-gris mt-2 leading-snug">
+                communes modélisées dans ce panel
+              </p>
+            </div>
+
+            <div className="bg-white p-6">
+              <p className="font-display text-5xl font-medium text-marine leading-none">
+                {totalParcels.toLocaleString("fr-FR")}
+              </p>
+              <p className="text-sm text-gris mt-2 leading-snug">
+                parcelles analysées au total
+              </p>
+            </div>
+
+            <div className="bg-white p-6">
+              <p className="font-display text-2xl font-medium text-marine leading-snug">
+                {pct(landShareMin)} à {pct(landShareMax)}
+              </p>
+              <p className="text-sm text-gris mt-2 leading-snug">
+                fourchette de la part du sol dans la base taxable, sur
+                les {landShares.length} communes
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-gris mt-3 leading-relaxed">
+            Résultats issus de la modélisation LVTShiftFR à partir du cadastre,
+            de DVF et des données DGCL/OFGL. Valeurs exprimées en ordres de
+            grandeur agrégés &mdash; aucun résultat individuel ou par parcelle.
           </p>
         </div>
       </section>

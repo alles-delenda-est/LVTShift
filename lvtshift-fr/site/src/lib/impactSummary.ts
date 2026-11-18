@@ -1,5 +1,6 @@
 import type { BandCategoryRow, BandQuintileRow, Commune, SensitivityLeg } from "@/lib/types";
 import { shiftedPct } from "@/lib/shift";
+import { signedPct } from "@/lib/format";
 
 /**
  * Counts behind the home page's "who pays" card, computed from the published
@@ -25,6 +26,21 @@ export interface LegCounts {
   poorestBelowRichest: number;
 }
 
+/** Poorest and richest fifths' total change under one hypothesis, %. */
+export interface FifthsPair {
+  poorest: number;
+  richest: number;
+}
+
+/** A territory where the poorest fifth does NOT do better than the richest
+ *  under both hypotheses (so it is missing from `poorestBelowRichestBoth`). */
+export interface PoorestException {
+  name: string;
+  central: FifthsPair;
+  /** Null when no comparable local variant is published. */
+  local: FifthsPair | null;
+}
+
 export interface ImpactSummary extends LegCounts {
   territories: number;
   houseMedianMin: number | null;
@@ -39,6 +55,9 @@ export interface ImpactSummary extends LegCounts {
   /** Territories where the poorest fifth does better than the richest under
    *  both hypotheses (equals poorestBelowRichest when alt is null). */
   poorestBelowRichestBoth: number;
+  /** The territories behind the gap between `poorestAnalysable` and
+   *  `poorestBelowRichestBoth`. */
+  poorestExceptions: PoorestException[];
 }
 
 interface Inputs {
@@ -114,6 +133,15 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
       (a, k) => (a.q1 == null) === (central[k].q1 == null) && (a.q5 == null) === (central[k].q5 == null),
     );
 
+  const pair = (i: Inputs): FifthsPair => ({ poorest: i.q1!, richest: i.q5! });
+  const exceptions: PoorestException[] = [];
+  central.forEach((i, k) => {
+    if (i.q1 == null || i.q5 == null) return;
+    const a = comparable ? alt![k] : null;
+    if (below(i) && (a == null || below(a))) return;
+    exceptions.push({ name: communes[k].name, central: pair(i), local: a ? pair(a) : null });
+  });
+
   return {
     territories: communes.length,
     ...count(central),
@@ -125,7 +153,74 @@ export function impactSummary(communes: Commune[]): ImpactSummary {
     poorestBelowRichestBoth: comparable
       ? central.filter((i, k) => below(i) && below(alt![k])).length
       : central.filter(below).length,
+    poorestExceptions: exceptions,
   };
+}
+
+const fifths = (p: FifthsPair) =>
+  `les plus modestes ${signedPct(p.poorest)}, les plus aisés ${signedPct(p.richest)}`;
+const doesWorse = (p: FifthsPair) => !(p.poorest < p.richest);
+
+/**
+ * Plain-French note for the exception(s) to the « X sur Y » headline, two
+ * short lines, or null when there is none. With a single exception it gives
+ * the hypothesis where the poorest fifth does not do better, and the gap in
+ * the other; several exceptions are only named.
+ */
+export function exceptionNote(exceptions: PoorestException[]): string[] | null {
+  if (exceptions.length === 0) return null;
+  if (exceptions.length > 1) {
+    return [
+      `Exceptions : ${exceptions.map((e) => e.name).join(", ")}.`,
+      "Dans ces territoires, les plus modestes ne s’en sortent pas mieux que les plus aisés dans au moins une hypothèse.",
+    ];
+  }
+  const e = exceptions[0];
+  const worseCentral = doesWorse(e.central);
+  if (worseCentral && (e.local == null || doesWorse(e.local))) {
+    return [
+      `Exception : ${e.name}, dans le cas central : ${fifths(e.central)}.`,
+      ...(e.local ? [`Dans la variante locale : ${fifths(e.local)}.`] : []),
+    ];
+  }
+  const [failing, ok, failLabel, okLabel] = worseCentral
+    ? [e.central, e.local!, "dans le cas central", "Dans la variante locale"]
+    : [e.local!, e.central, "dans la variante locale", "Dans le cas central"];
+  const gap = (ok.richest - ok.poorest).toLocaleString("fr-FR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  return [
+    `Exception : ${e.name}, ${failLabel} : ${fifths(failing)}.`,
+    `${okLabel}, l’écart y est de ${gap} point${Number(gap.replace(",", ".")) >= 2 ? "s" : ""} en faveur des plus modestes.`,
+  ];
+}
+
+/** One territory's poorest-fifth and richest-fifth total change (central case). */
+export interface QuintileGap {
+  commune_key: string;
+  name: string;
+  /** Total change in today's tax for the poorest fifth of households, %. */
+  poorest: number;
+  /** Same for the richest fifth, %. */
+  richest: number;
+}
+
+/**
+ * The poorest and richest fifths side by side, one row per territory that
+ * can be split by income (the same ones `poorestAnalysable` counts, chosen by
+ * the same rule), ordered from the widest advantage for the poorest to the
+ * narrowest. Feeds the home page's chart so it cannot drift from the counts.
+ */
+export function quintileGaps(communes: Commune[]): QuintileGap[] {
+  const rows: QuintileGap[] = [];
+  for (const c of communes) {
+    const { q1, q5 } = centralInputs(c);
+    if (q1 != null && q5 != null) {
+      rows.push({ commune_key: c.commune_key, name: c.name, poorest: q1, richest: q5 });
+    }
+  }
+  return rows.sort((a, b) => a.poorest - a.richest - (b.poorest - b.richest));
 }
 
 /** "9 sur 13" when both hypotheses agree, "6 à 9 sur 13" otherwise (no-break spaces). */
