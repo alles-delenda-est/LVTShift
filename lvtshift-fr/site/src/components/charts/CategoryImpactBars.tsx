@@ -3,17 +3,36 @@
 /**
  * CategoryImpactBars — horizontal diverging bars per property category,
  * with a 3-mode switcher:
- *   - "household" (default): Par logement (ménage type) — uses
+ *   - "median" (default): Par parcelle (médiane) — median_change_pct, one
+ *     metric for every category, so every bar is comparable with every other.
+ *   - "household": Par logement (ménage type) — uses
  *     household_median_change_pct for residential categories, falling back to
  *     median_change_pct with a "(par parcelle)" indicator for non-residential
  *     categories so every category stays visible.
- *   - "median": Par parcelle (médiane) — parcel-weighted median_change_pct.
  *   - "total": Total catégorie — total_change_pct across the whole category.
  *
  * Colour convention:
  *   positive (pays more)  → rouge  (#b5281e)
  *   negative (pays less)  → green  (#2a6244)
  *   null (no % defined)   → gris pâle — bar at 0, value shown in € or "—"
+ *
+ * Null categories (e.g. Terrain nu / non bâti — 100 % pay more, but today's
+ * modelled tax is 0 € so the % change is undefined) are kept visible:
+ * zero-width bar at the reference line, the median change in euros in the
+ * value column, and a footnote saying why.
+ *
+ * Where the run counts the unbuilt-land tax the reform replaces, vacant land
+ * has a real percentage, usually far off the scale of the other categories
+ * (today's tax rests on 1961 cadastral values): its bar is cut at the edge,
+ * its value shown as a multiple, and a note gives the euro median.
+ *
+ * Values sit in a fixed column on the right (a second, label-only Y axis)
+ * rather than at the bar ends: on phones the end labels ran into the
+ * category names and the band whiskers.
+ *
+ * A second column gives the category's total change: medians can all fall
+ * while the levy stays the same, when a minority pays much more (La Rochelle:
+ * houses −5.4 % at the median, +14.7 % in total).
  */
 
 import { ReactElement, useState } from "react";
@@ -42,8 +61,8 @@ import { useNarrow } from "./useNarrow";
 export type CategoryBarMode = "household" | "median" | "total";
 
 const MODE_OPTIONS: { id: CategoryBarMode; label: string }[] = [
-  { id: "household", label: "Par logement (ménage type)" },
   { id: "median", label: "Par parcelle (médiane)" },
+  { id: "household", label: "Par logement (ménage type)" },
   { id: "total", label: "Total catégorie" },
 ];
 
@@ -135,7 +154,9 @@ function makeCatTooltip(mode: CategoryBarMode) {
               {row.isNull ? "n. d." : signedChange(row.displayPct)}
             </p>
             <p>
-              En montant&nbsp;: {signedEurosExact(eur)}/logement/an
+              {row.median_change_eur_per_dwelling != null
+                ? <>En montant&nbsp;: {signedEurosExact(eur)}/logement/an</>
+                : <>En montant, par parcelle&nbsp;: {signedEurosExact(eur)}</>}
             </p>
             {row.share_dwellings_paying_more_pct != null && (
               <p>
@@ -300,7 +321,9 @@ export default function CategoryImpactBars({
   const narrow = useNarrow();
   const hasHouseholdData = byCategory.some((r) => r.household_median_change_pct != null);
   const hasTotals = byCategory.some((r) => totalText(r) !== "—");
-  const [requestedMode, setRequestedMode] = useState<CategoryBarMode>("household");
+  // Parcel median by default: one metric for every category, so no bar is
+  // compared with a bar measured differently; the per-dwelling view is one click away.
+  const [requestedMode, setRequestedMode] = useState<CategoryBarMode>("median");
   const mode: CategoryBarMode =
     requestedMode === "household" && !hasHouseholdData
       ? "median"

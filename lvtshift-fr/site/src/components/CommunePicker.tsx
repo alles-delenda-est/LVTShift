@@ -28,7 +28,9 @@ import SocialHousingNote from "@/components/SocialHousingNote";
 import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
 import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
+import { categoryNotes, hasCategoryNotes } from "@/lib/categoryNotes";
 import { pct } from "@/lib/format";
+import { ROUGE, GREEN } from "@/components/charts/theme";
 
 /** Caption under charts that carry the building-cost whiskers. */
 function BandNote() {
@@ -95,6 +97,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
       : commune.name;
 
   const householdWinners = computePrivateHouseholdWinners(commune.by_category);
+  const notes = categoryNotes(publishedCategories(commune.by_category));
 
   return (
     <div>
@@ -196,32 +199,44 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             >
               Indicateurs clés
             </h3>
-            {householdWinners && (
-              <div className="mb-4 border border-lisere border-l-4 border-l-[#2a6244] bg-creme px-5 py-4">
-                <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-gris font-body mb-1">
-                  Effet par ménage (logements privés)
-                </p>
-                <p className="font-display text-lg md:text-xl font-medium text-marine leading-snug">
-                  Part des ménages privés dont la taxe baisse&nbsp;:{" "}
-                  <span className="text-[#2a6244] font-semibold">
-                    {pct(householdWinners.pctPayingLess)}
-                  </span>
-                </p>
-                <p className="text-xs text-gris font-body italic mt-1 leading-relaxed">
-                  Sur {householdWinners.totalDwellings.toLocaleString("fr-FR")} logements
-                  privés modélisés (maisons, petits immeubles et collectifs&nbsp;;
-                  baisse ou stabilité, hors logement social dont la taxe pèse sur les
-                  bailleurs). Par comparaison, la part de parcelles payant davantage
-                  ci-dessous compte un immeuble collectif pour une seule parcelle.
-                </p>
-              </div>
-            )}
             <HeadlineCards
               headline={commune.headline}
               sharePayingMorePct={
                 commune.headline_sensitivity.base.share_paying_more_pct
               }
             />
+            {/* Per-dwelling view, after the parcel figures and showing both
+                sides: it complements the headline, it does not replace it. */}
+            {householdWinners && (
+              <div className="mt-4 border border-lisere bg-creme px-5 py-4">
+                <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-gris font-body mb-1">
+                  Par logement (parc privé)
+                </p>
+                <p className="font-display text-base md:text-lg font-medium text-marine leading-snug">
+                  Logements privés dont la taxe foncière augmente&nbsp;:{" "}
+                  <span className="font-semibold" style={{ color: ROUGE }}>
+                    {pct(householdWinners.pctPayingMore)}
+                  </span>
+                  <span className="text-gris font-normal"> · </span>
+                  baisse ou reste stable&nbsp;:{" "}
+                  <span className="font-semibold" style={{ color: GREEN }}>
+                    {pct(householdWinners.pctPayingLess)}
+                  </span>
+                </p>
+                <p className="text-xs text-gris font-body italic mt-1 leading-relaxed">
+                  Sur {householdWinners.totalDwellings.toLocaleString("fr-FR")} logements
+                  privés modélisés (maisons, petits immeubles de 2 à 4 logements et
+                  immeubles collectifs de 5 logements et plus), chacun affecté de la
+                  variation de sa parcelle. Ce chiffre compte des logements, occupés ou
+                  non, et non des ménages&nbsp;: la taxe foncière est due par le
+                  propriétaire, qu&apos;il occupe son logement ou le loue. Le logement
+                  social, détenu par des bailleurs institutionnels et présenté à part
+                  plus bas, n&apos;est pas inclus. La proportion de parcelles payant
+                  davantage, ci-dessus, compte un immeuble collectif comme une seule
+                  parcelle&nbsp;; ici, chaque logement compte.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* 2. Sensitivity band */}
@@ -298,51 +313,59 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             />
             <BandNote />
             <SocialHousingNote commune={commune} />
-            <div className="mt-4 border border-lisere bg-creme px-4 py-3.5 max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.14em] text-gris font-body mb-2">
-                Notes de lecture par catégorie
-              </p>
-              <ul className="font-body text-xs text-encre leading-relaxed space-y-2 list-disc pl-4">
-                <li>
-                  <strong className="font-semibold">Immeuble collectif (5+ logements)</strong>&nbsp;:
-                  regroupe toutes les copropriétés et immeubles d&apos;au moins 5 logements,
-                  depuis les petits collectifs jusqu&apos;aux grands immeubles plus denses
-                  où le terrain est partagé entre de nombreux logements et où la baisse
-                  par logement est la plus marquée.
-                </li>
-                <li>
-                  <strong className="font-semibold">Logement social (bailleurs)</strong>&nbsp;:
-                  la variation médiane par parcelle intègre la fin modélisée des exonérations
-                  temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et 1384&nbsp;C du CGI) sur
-                  les opérations récentes&nbsp;; à l&apos;échelle de l&apos;ensemble du parc
-                  social, la charge totale baisse néanmoins dans la majorité des territoires
-                  denses (−14,1&nbsp;% en Petite couronne, −30,7&nbsp;% à Grenoble,
-                  −33,7&nbsp;% à La Rochelle). Pour les opérations en cours, la réforme
-                  prévoit une transition (compensation par aide budgétaire directe sur la
-                  durée restante des exonérations, ou maintien jusqu&apos;à leur terme), sans
-                  effet sur les loyers sociaux plafonnés (voir{" "}
-                  <Link href="/exonerations-protections" className="underline underline-offset-2">
-                    Exonérations et protections
-                  </Link>
-                  ).
-                </li>
-                <li>
-                  <strong className="font-semibold">Industriel</strong>&nbsp;:
-                  dans la plupart des territoires modélisés, le recul marqué (jusqu&apos;à
-                  −88&nbsp;% en médiane, avec des exceptions locales comme Grenoble où les
-                  sites industriels occupent un foncier plus valorisé) s&apos;explique avant
-                  tout par la faible valeur au m² du foncier industriel en zones
-                  d&apos;activités, combinée au fait que la fiscalité actuelle (méthode
-                  comptable de l&apos;art. 1499 du CGI, même après la réduction de moitié
-                  de 2021) impose lourdement les bâtiments et installations fixes, alors
-                  que la TVTN n&apos;impose que le sol (voir{" "}
-                  <Link href="/methodologie" className="underline underline-offset-2">
-                    la méthodologie
-                  </Link>
-                  ).
-                </li>
-              </ul>
-            </div>
+            {hasCategoryNotes(notes) && (
+              <div className="mt-4 border border-lisere bg-creme px-4 py-3.5 max-w-3xl">
+                <p className="text-xs uppercase tracking-[0.14em] text-gris font-body mb-2">
+                  Notes de lecture par catégorie
+                </p>
+                <ul className="font-body text-xs text-encre leading-relaxed space-y-2 list-disc pl-4">
+                  {notes.collective && (
+                    <li>
+                      <strong className="font-semibold">{notes.collective.label}</strong>&nbsp;:
+                      regroupe les immeubles d&apos;au moins 5 logements, en copropriété
+                      ou détenus par un seul propriétaire. Le terrain y est partagé entre
+                      de nombreux logements&nbsp;: c&apos;est là que la baisse par logement
+                      est en général la plus marquée. Les petits immeubles de 2 à 4
+                      logements forment une catégorie à part.
+                    </li>
+                  )}
+                  {notes.social && (
+                    <li>
+                      <strong className="font-semibold">{notes.social.label}</strong>&nbsp;:
+                      {notes.social.totalSentence ? ` ${notes.social.totalSentence}` : ""}{" "}
+                      La variation médiane par parcelle intègre la fin modélisée des
+                      exonérations temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et
+                      1384&nbsp;C du CGI) sur les opérations récentes. Le traitement des
+                      exonérations en cours reste à arrêter (compensation budgétaire sur
+                      leur durée restante, ou maintien jusqu&apos;à leur terme)&nbsp;: voir{" "}
+                      <Link href="/exonerations-protections" className="underline underline-offset-2">
+                        Exonérations et protections
+                      </Link>
+                      .
+                    </li>
+                  )}
+                  {notes.industrial && (
+                    <li>
+                      <strong className="font-semibold">{notes.industrial.label}</strong>&nbsp;:
+                      {notes.industrial.median
+                        ? ` ici, ${notes.industrial.median} en médiane par parcelle.`
+                        : ""}{" "}
+                      L&apos;impôt actuel des établissements industriels (méthode comptable
+                      de l&apos;art. 1499 du CGI, même après la réduction de moitié de 2021)
+                      pèse lourdement sur les bâtiments et installations fixes, alors que le
+                      foncier des zones d&apos;activités vaut peu au m². La TVTN, qui
+                      n&apos;impose que le sol, l&apos;allège donc le plus souvent&nbsp;; là
+                      où les sites industriels occupent un foncier cher, l&apos;impôt peut au
+                      contraire augmenter (voir{" "}
+                      <Link href="/methodologie" className="underline underline-offset-2">
+                        la méthodologie
+                      </Link>
+                      ).
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </section>
 
           {/* 5. Income quintile chart (or explanatory note if unavailable) */}
