@@ -477,27 +477,29 @@ export default function ScenariosPage() {
 
           <article className="border border-lisere bg-creme p-5 flex flex-col gap-2.5">
             <h4 className="font-display text-base font-medium text-marine leading-snug">
-              Comment protéger les retraités et ménages modestes propriétaires d&apos;une maison&nbsp;? (Viager fiscal &amp; lissage sur 10 ans)
+              Comment protéger les retraités et ménages modestes propriétaires d&apos;une maison&nbsp;? (Pistes&nbsp;: lissage et viager fiscal)
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
               Pour respecter l&apos;exigence constitutionnelle d&apos;égalité devant les
               charges publiques (<em>art. 13 de la DDHC</em>) et écarter tout effet
-              confiscatoire, la mise en œuvre repose sur deux garde-fous&nbsp;:
+              confiscatoire, la mise en œuvre pourrait reposer sur deux garde-fous,
+              dont les paramètres restent à arrêter&nbsp;:
             </p>
             <ul className="font-body text-sm text-encre leading-relaxed list-disc pl-5 space-y-1.5">
               <li>
-                <strong className="font-semibold">Lissage linéaire sur 10 ans</strong>&nbsp;:
-                basculement progressif de 10&nbsp;% par an de l&apos;assiette bâtie vers
-                l&apos;assiette terrain (transition graduelle par taux scindé jusqu&apos;à
-                100&nbsp;% TVTN en année&nbsp;10).
+                <strong className="font-semibold">Lissage progressif</strong>&nbsp;:
+                par exemple, un basculement de 10&nbsp;% par an de l&apos;assiette bâtie
+                vers l&apos;assiette terrain sur dix ans (taux scindé transitoire
+                jusqu&apos;à 100&nbsp;% TVTN).
               </li>
               <li>
                 <strong className="font-semibold">Report d&apos;impôt à la mutation ou succession (<em>viager fiscal</em>)</strong>&nbsp;:
-                tout propriétaire occupant dont la cotisation augmente au-delà d&apos;un
-                plafond rapporté à son revenu peut différer de droit le paiement du
-                supplément, garanti par une hypothèque légale du Trésor, jusqu&apos;à la
-                vente ou la succession du bien. Aucun ménage modeste ou retraité
-                n&apos;est contraint de vendre faute de liquidités.{" "}
+                un propriétaire occupant dont la cotisation dépasserait un plafond
+                rapporté à son revenu pourrait différer le paiement du supplément
+                jusqu&apos;à la vente ou la succession du bien, la créance étant
+                garantie par une sûreté sur le bien (une hypothèque légale du Trésor,
+                par exemple). L&apos;objectif&nbsp;: qu&apos;aucun ménage modeste ou
+                retraité ne soit contraint de vendre faute de liquidités.{" "}
                 <Link href="/exonerations-protections" className="text-marine underline underline-offset-2">
                   Voir les protections
                 </Link>
@@ -522,12 +524,13 @@ export default function ScenariosPage() {
               de taxe foncière de 15 à 25&nbsp;ans (<em>art. 1384&nbsp;A et 1384&nbsp;C
               du CGI</em>) et d&apos;un abattement de 30&nbsp;% en quartier prioritaire
               (<em>art. 1388&nbsp;bis</em>), sur lesquels reposaient leurs plans de
-              financement avec loyers plafonnés (<em>PLAI, PLUS, PLS</em>). Dans la loi
-              de mise en œuvre, la durée restante de ces exonérations fait l&apos;objet
-              d&apos;une transition dédiée — compensée par une aide budgétaire directe
-              (ou maintenue jusqu&apos;à son terme) — afin de protéger les plans de
-              financement engagés, sans effet sur les loyers sociaux plafonnés (la taxe
-              foncière n&apos;est pas récupérable sur les locataires). Pour le parc non
+              financement avec loyers plafonnés (<em>PLAI, PLUS, PLS</em>). La durée
+              restante de ces exonérations appellerait une transition dédiée, dont la
+              forme reste à arrêter&nbsp;: compensation par une aide budgétaire
+              directe, ou maintien jusqu&apos;à leur terme. L&apos;objectif serait de
+              protéger les plans de financement engagés&nbsp;; les loyers sociaux
+              plafonnés ne seraient pas directement touchés, la taxe foncière
+              n&apos;étant pas récupérable sur les locataires. Pour le parc non
               exonéré où l&apos;impôt du bailleur augmente, la hausse pèse sur son
               autofinancement et suppose un suivi budgétaire transparent.{" "}
               <Link href="/exonerations-protections" className="text-marine underline underline-offset-2">
@@ -543,14 +546,18 @@ export default function ScenariosPage() {
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
               Si le zonage local (<em>k<sub>z</sub></em>) entre dans l&apos;évaluation du
-              sol, un maire pourrait subir la pression de propriétaires de maisons
-              individuelles souhaitant abaisser les droits à construire de leur rue.
-              Pour prévenir ce risque de sous-zonage opportuniste, les valeurs
-              foncières de référence sont lissées sur des surfaces de prix continues
-              supervisées à l&apos;échelle intercommunale (EPCI / Métropole) et par la
-              DGFiP, et les critères de dotations (<em>DGF / potentiel fiscal</em>)
-              indexent la capacité fiscale sur les objectifs régionaux de logement
-              (<em>PLH / SRU</em>).
+              sol, des propriétaires de maisons individuelles pourraient pousser le
+              maire à abaisser les droits à construire de leur rue pour alléger leur
+              impôt. À produit constant, ce sous-zonage ne réduirait pas la recette de
+              la commune&nbsp;: il déplacerait l&apos;impôt vers les autres
+              propriétaires. Plusieurs garde-fous sont envisageables&nbsp;: des valeurs
+              foncières de référence établies par la DGFiP et lissées à l&apos;échelle
+              intercommunale (EPCI / métropole), qui limitent la portée d&apos;une
+              modification rue par rue&nbsp;; et une prise en compte, dans les
+              dotations (<em>DGF / potentiel fiscal</em>), des objectifs de
+              construction du programme local de l&apos;habitat (<em>PLH</em>,
+              intercommunal) et des obligations de la loi <em>SRU</em>, pour que
+              restreindre la construction ait un coût pour la commune.
             </p>
           </article>
         </div>

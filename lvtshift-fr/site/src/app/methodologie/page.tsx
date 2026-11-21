@@ -1083,30 +1083,47 @@ export default function MethodologiePage() {
           {/* General-equilibrium tax capitalization */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
-              Capitalisation fiscale en équilibre général
+              Capitalisation fiscale
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
               Les prix DVF observés (2021–2025) capitalisent le régime fiscal actuel
-              (imposition quasi nulle du terrain nu, forte taxation du bâti). En
-              équilibre de long terme, après le basculement sur le sol de la taxe
-              foncière (environ 43&nbsp;Md€ de TFPB, jusqu&apos;à 67&nbsp;Md€ dans le
-              scénario&nbsp;1), le prix de vente du terrain nu diminue par
-              capitalisation fiscale —{" "}
+              (imposition quasi nulle du terrain nu, forte taxation du bâti). Après le
+              basculement de la taxe foncière sur le sol (environ 43&nbsp;Md€ de TFPB,
+              jusqu&apos;à 67&nbsp;Md€ dans le scénario&nbsp;1), le prix du terrain
+              baisserait par capitalisation&nbsp;:{" "}
               <span className="whitespace-nowrap">
                 <em>V&prime;</em> = (<em>R</em> &minus; <em>T</em>) / <em>r</em>
               </span>{" "}
-              (avec <em>R</em> la rente foncière économique annuelle brute,{" "}
-              <em>T</em> l&apos;impôt annuel en euros et <em>r</em> le taux de
-              capitalisation, soit de façon équivalente{" "}
+              (avec <em>R</em> la rente foncière annuelle brute, <em>T</em>{" "}
+              l&apos;impôt annuel en euros et <em>r</em> le taux de capitalisation),
+              soit{" "}
               <span className="whitespace-nowrap">
                 <em>V&prime;</em> = <em>R</em> / (<em>r</em> + <em>&tau;</em>)
               </span>{" "}
-              pour un taux ad valorem <em>&tau;</em>) —, tandis que la rente{" "}
-              <em>R</em> demeure invariante. L&apos;assiette légale pérenne de la TVTN
-              doit donc être définie comme la{" "}
-              <strong>valeur locative foncière pure</strong> (rente annuelle du sol) —
-              ou la valeur vénale reconstituée avant impôt —, actualisée par des
-              révisions glissantes périodiques.
+              pour un taux <em>&tau;</em> appliqué à la valeur après impôt. Le modèle,
+              statique, ne simule pas cette baisse. Elle ne fausse pas, à elle seule,
+              la répartition publiée&nbsp;: à produit constant dans chaque commune,
+              avec un taux unique et un <em>r</em> uniforme, toutes les valeurs
+              foncières de la commune baissent du même facteur{" "}
+              <span className="whitespace-nowrap">
+                <em>r</em> / (<em>r</em> + <em>&tau;</em>)
+              </span>&nbsp;; la part de
+              chaque propriétaire dans l&apos;impôt, donc sa cotisation, est
+              inchangée, et seul le taux rapporté aux valeurs d&apos;après réforme
+              serait plus élevé que le taux affiché. Les biais réels tiennent à ce que
+              cette hypothèse simplifie&nbsp;: des taux de capitalisation qui
+              diffèrent selon les quartiers ou les biens&nbsp;; une rente <em>R</em>{" "}
+              elle-même relevée par la suppression de l&apos;impôt sur le bâti,
+              inégalement selon les parcelles&nbsp;; et la part de l&apos;impôt actuel
+              déjà capitalisée dans les prix observés, qui n&apos;est pas
+              proportionnelle à la rente du sol (valeurs locatives de 1970). Une
+              assiette en valeur vénale reste cohérente&nbsp;: l&apos;équation a une
+              solution pour tout <em>&tau;</em>, l&apos;assiette se contracte sans
+              disparaître et le même produit demande un taux plus élevé. La
+              définir plutôt comme une <strong>valeur locative foncière</strong>{" "}
+              (rente annuelle du sol), dans le prolongement de la valeur locative
+              cadastrale et révisée périodiquement, est une option qui éviterait
+              cette circularité&nbsp;; le choix reste ouvert.
             </p>
           </div>
 
