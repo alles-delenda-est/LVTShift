@@ -1536,19 +1536,30 @@ Ranked by how much they move published (category/quintile) results.
     would. A parcel holding a co-ownership counts as one. The Fichiers fonciers' per-local rental
     values would give the true starting point (§7).
 
-17. **Tax capitalization in general equilibrium.** Observed DVF sales prices
-    (2021–2025) capitalize today's fiscal regime (near-zero tax on bare land,
-    high tax on buildings). In steady state after shifting property taxation
-    onto land (~€43B of TFPB alone, up to ~€67B under Scenario 1), the market
-    sales price of bare land decreases through tax capitalization
-    (`V' = (R − T) / r`, where `R` is gross annual economic land rent, `T` is
-    the annual tax in euros and `r` is the capitalization rate — or equivalently
-    `V' = R / (r + τ)` for an ad valorem rate `τ`), while gross annual land rent
-    `R` is invariant. Because the model is static (pre-reform land values), it
-    does not simulate this price adjustment. Accordingly, the permanent
-    statutory base of the TVTN must be defined as **pure annual land rental
-    value** (*valeur locative foncière pure*) — or reconstructed pre-tax capital
-    land value — updated through periodic rolling assessments.
+17. **Tax capitalization.** Observed DVF sales prices (2021–2025) capitalize
+    today's fiscal regime (near-zero tax on bare land, high tax on buildings).
+    After shifting the taxe foncière onto land (~€43B of TFPB, up to ~€67B
+    under Scenario 1), land prices would fall through capitalization:
+    `V' = (R − T) / r`, where `R` is gross annual land rent, `T` the annual tax
+    in euros and `r` the capitalization rate, i.e. `V' = R / (r + τ)` for a rate
+    `τ` applied to the post-tax value. The model is static and does not
+    simulate this fall. On its own, the fall does not bias the published
+    distribution: with revenue held constant in each commune, a single rate and
+    a uniform `r`, every land value in the commune is scaled by the same factor
+    `r / (r + τ)`; each owner's share of the levy, and so their bill, is
+    unchanged, and only the rate quoted on post-reform values would be higher
+    than the rate shown. The real biases lie in what that assumption
+    simplifies: capitalization rates that differ across neighbourhoods or
+    property types (expected rent growth); a rent `R` itself raised by
+    abolishing the tax on buildings (building becomes more profitable), unevenly
+    across parcels; and the part of today's tax already capitalized in observed
+    prices, which is not proportional to land rent (1970 rental values). A
+    market-value base remains consistent: the equation has a solution for every
+    `τ`, so the base shrinks without vanishing and the same revenue needs a
+    higher rate. Defining the base instead as an annual **land rental value**
+    (*valeur locative foncière*), continuing the cadastral rental-value logic
+    and revised periodically, is an option that would avoid this circularity;
+    the choice remains open.
 
 18. **Empirical permitted density (`k_z`) vs. statutory PLU capacity.** As
     noted in item 2 and §3.4, because machine-readable height, setback and
