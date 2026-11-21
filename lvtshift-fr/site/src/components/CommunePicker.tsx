@@ -13,6 +13,7 @@
  *    already enforces this with its rouge accent treatment.
  */
 
+import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import type { Commune } from "@/lib/types";
 import HeadlineCards from "@/components/charts/HeadlineCards";
@@ -26,6 +27,10 @@ import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
 import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
+import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
+import { categoryNotes, hasCategoryNotes } from "@/lib/categoryNotes";
+import { pct } from "@/lib/format";
+import { ROUGE, GREEN } from "@/components/charts/theme";
 
 /** Caption under charts that carry the building-cost whiskers. */
 function BandNote() {
@@ -90,6 +95,9 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
     commune.reference_year != null
       ? `${commune.name} — exercice ${commune.reference_year}`
       : commune.name;
+
+  const householdWinners = computePrivateHouseholdWinners(commune.by_category);
+  const notes = categoryNotes(publishedCategories(commune.by_category));
 
   return (
     <div>
@@ -197,6 +205,38 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                 commune.headline_sensitivity.base.share_paying_more_pct
               }
             />
+            {/* Per-dwelling view, after the parcel figures and showing both
+                sides: it complements the headline, it does not replace it. */}
+            {householdWinners && (
+              <div className="mt-4 border border-lisere bg-creme px-5 py-4">
+                <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-gris font-body mb-1">
+                  Par logement (parc privé)
+                </p>
+                <p className="font-display text-base md:text-lg font-medium text-marine leading-snug">
+                  Logements privés dont la taxe foncière augmente&nbsp;:{" "}
+                  <span className="font-semibold" style={{ color: ROUGE }}>
+                    {pct(householdWinners.pctPayingMore)}
+                  </span>
+                  <span className="text-gris font-normal"> · </span>
+                  baisse ou reste stable&nbsp;:{" "}
+                  <span className="font-semibold" style={{ color: GREEN }}>
+                    {pct(householdWinners.pctPayingLess)}
+                  </span>
+                </p>
+                <p className="text-xs text-gris font-body italic mt-1 leading-relaxed">
+                  Sur {householdWinners.totalDwellings.toLocaleString("fr-FR")} logements
+                  privés modélisés (maisons, petits immeubles de 2 à 4 logements et
+                  immeubles collectifs de 5 logements et plus), chacun affecté de la
+                  variation de sa parcelle. Ce chiffre compte des logements, occupés ou
+                  non, et non des ménages&nbsp;: la taxe foncière est due par le
+                  propriétaire, qu&apos;il occupe son logement ou le loue. Le logement
+                  social, détenu par des bailleurs institutionnels et présenté à part
+                  plus bas, n&apos;est pas inclus. La proportion de parcelles payant
+                  davantage, ci-dessus, compte un immeuble collectif comme une seule
+                  parcelle&nbsp;; ici, chaque logement compte.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* 2. Sensitivity band */}
@@ -255,13 +295,13 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             )}
           </section>
 
-          {/* 4. Category impact (diverging median bars) */}
+          {/* 4. Category impact (diverging bars: household / parcel / total) */}
           <section aria-labelledby="section-categories">
             <h3
               id="section-categories"
               className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
             >
-              Impact médian par catégorie de bien
+              Impact par catégorie de bien
             </h3>
             <CategoryImpactBars
               byCategory={publishedCategories(commune.by_category)}
@@ -273,6 +313,59 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             />
             <BandNote />
             <SocialHousingNote commune={commune} />
+            {hasCategoryNotes(notes) && (
+              <div className="mt-4 border border-lisere bg-creme px-4 py-3.5 max-w-3xl">
+                <p className="text-xs uppercase tracking-[0.14em] text-gris font-body mb-2">
+                  Notes de lecture par catégorie
+                </p>
+                <ul className="font-body text-xs text-encre leading-relaxed space-y-2 list-disc pl-4">
+                  {notes.collective && (
+                    <li>
+                      <strong className="font-semibold">{notes.collective.label}</strong>&nbsp;:
+                      regroupe les immeubles d&apos;au moins 5 logements, en copropriété
+                      ou détenus par un seul propriétaire. Le terrain y est partagé entre
+                      de nombreux logements&nbsp;: c&apos;est là que la baisse par logement
+                      est en général la plus marquée. Les petits immeubles de 2 à 4
+                      logements forment une catégorie à part.
+                    </li>
+                  )}
+                  {notes.social && (
+                    <li>
+                      <strong className="font-semibold">{notes.social.label}</strong>&nbsp;:
+                      {notes.social.totalSentence ? ` ${notes.social.totalSentence}` : ""}{" "}
+                      La variation médiane par parcelle intègre la fin modélisée des
+                      exonérations temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et
+                      1384&nbsp;C du CGI) sur les opérations récentes. Le traitement des
+                      exonérations en cours reste à arrêter (compensation budgétaire sur
+                      leur durée restante, ou maintien jusqu&apos;à leur terme)&nbsp;: voir{" "}
+                      <Link href="/exonerations-protections" className="underline underline-offset-2">
+                        Exonérations et protections
+                      </Link>
+                      .
+                    </li>
+                  )}
+                  {notes.industrial && (
+                    <li>
+                      <strong className="font-semibold">{notes.industrial.label}</strong>&nbsp;:
+                      {notes.industrial.median
+                        ? ` ici, ${notes.industrial.median} en médiane par parcelle.`
+                        : ""}{" "}
+                      L&apos;impôt actuel des établissements industriels (méthode comptable
+                      de l&apos;art. 1499 du CGI, même après la réduction de moitié de 2021)
+                      pèse lourdement sur les bâtiments et installations fixes, alors que le
+                      foncier des zones d&apos;activités vaut souvent peu au m². La TVTN,
+                      qui n&apos;impose que le sol, allège donc l&apos;impôt là où ce
+                      foncier est bon marché, et l&apos;alourdit là où les sites industriels
+                      occupent un foncier cher (voir{" "}
+                      <Link href="/methodologie" className="underline underline-offset-2">
+                        la méthodologie
+                      </Link>
+                      ).
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </section>
 
           {/* 5. Income quintile chart (or explanatory note if unavailable) */}
