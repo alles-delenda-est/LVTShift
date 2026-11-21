@@ -604,3 +604,96 @@ def test_a_withheld_category_total_cannot_be_recovered_from_the_others():
     else:
         raise AssertionError("a row with both totals passed the guard")
     ew._check_small_groups({"by_category": payload_rows})
+
+
+def test_income_quintile_exports_dwelling_weighted_metrics():
+    # Each quintile has 12 houses (+10 %, 1 dwelling each) and 10 blocks (-20 %,
+    # 10 dwellings each), across 2 distinct IRIS incomes per quintile (10 total).
+    # Each block holds 10/112 = 8.9 % <= MAX_DWELLING_SHARE (10 %), so household
+    # metrics are disclosable.
+    houses = dict(property_category="Single Family Residential", current_tax=1000.0,
+                  tax_change=100.0, tax_change_pct=10.0, n_dwellings=1.0)
+    block = dict(property_category="Large Multi-Family (5+ units)", current_tax=20000.0,
+                 tax_change=-4000.0, tax_change_pct=-20.0, n_dwellings=10.0)
+    rows = []
+    for q in range(5):
+        for i, r in enumerate([houses] * 12 + [block] * 10):
+            rows.append({**r, "median_income": 20000.0 + 1000 * q + 500 * (i % 2),
+                         "_commune": "c1"})
+    df = pd.DataFrame(rows)
+
+    q_rows = ew.build_by_income_quintile(df)
+    assert q_rows is not None and len(q_rows) == 5
+    q1 = q_rows[0]
+    assert q1["parcels"] == 22
+    assert q1["median_change_pct_residential"] == 10.0
+    assert q1["dwellings"] == 112
+    assert q1["household_median_change_pct"] == -20.0
+    assert q1["share_dwellings_paying_more_pct"] == round(100.0 * 12 / 112, 1)
+
+    within_rows, cov = ew.build_by_income_quintile_within(df)
+    assert cov == 100.0 and within_rows is not None
+    assert within_rows[0]["dwellings"] == 112
+    assert within_rows[0]["household_median_change_pct"] == -20.0
+    assert within_rows[0]["share_dwellings_paying_more_pct"] == round(100.0 * 12 / 112, 1)
+
+    # Dominance guard: one block > 10 % of dwellings blanks all household fields.
+    dom = df.copy()
+    dom.loc[dom["property_category"] == "Large Multi-Family (5+ units)", "n_dwellings"] = 1.0
+    dom.loc[12, "n_dwellings"] = 100.0  # 100 / 121 = 82.6 % in Q1
+    dom_q1 = ew.build_by_income_quintile(dom)[0]
+    assert dom_q1["household_median_change_pct"] is None
+    assert dom_q1["share_dwellings_paying_more_pct"] is None
+    assert dom_q1["dwellings"] is None
+
+    # Older runs without n_dwellings leave share_dwellings_paying_more_pct unset.
+    no_dw = ew.build_by_income_quintile(df.drop(columns="n_dwellings"))[0]
+    assert no_dw["share_dwellings_paying_more_pct"] is None
+
+
+def test_sensitivity_bands_export_per_dwelling_metrics_and_pass_guard():
+    df = _solved_frame(n=500, seed=11)
+    rng = np.random.default_rng(11)
+    # Attach disclosable dwelling counts on residential parcels (<= 10 % per parcel).
+    df["n_dwellings"] = np.where(
+        df["property_category"] == "Single Family Residential", 1.0,
+        np.where(df["property_category"] == "Condominium",
+                 rng.integers(2, 5, len(df)).astype(float), 0.0),
+    )
+    sens = ew.build_headline_sensitivity(df, ratio=4.0)
+    central_cat = {r["category"]: r for r in ew.build_by_category(df)}
+    central_q = {r["quintile"]: r for r in ew.build_by_income_quintile(df)}
+
+    for leg in ("base", "low", "high"):
+        assert sens[leg]["by_category"]
+        for row in sens[leg]["by_category"]:
+            for key in ("household_median_change_pct",
+                        "median_change_eur_per_dwelling",
+                        "share_dwellings_paying_more_pct"):
+                assert key in row
+        assert sens[leg]["by_income_quintile"]
+        for qrow in sens[leg]["by_income_quintile"]:
+            assert "household_median_change_pct" in qrow
+            assert "share_dwellings_paying_more_pct" in qrow
+
+    # Base sensitivity leg matches central per-dwelling figures.
+    for row in sens["base"]["by_category"]:
+        c = central_cat[row["category"]]
+        assert row["household_median_change_pct"] == c["household_median_change_pct"]
+        assert row["share_dwellings_paying_more_pct"] == c["share_dwellings_paying_more_pct"]
+        if c["median_change_eur_per_dwelling"] is None:
+            assert row["median_change_eur_per_dwelling"] is None
+        else:
+            assert abs(row["median_change_eur_per_dwelling"] - c["median_change_eur_per_dwelling"]) <= 1
+    for qrow in sens["base"]["by_income_quintile"]:
+        cq = central_q[qrow["quintile"]]
+        assert qrow["household_median_change_pct"] == cq["household_median_change_pct"]
+        assert qrow["share_dwellings_paying_more_pct"] == cq["share_dwellings_paying_more_pct"]
+
+    payload = {
+        "commune_key": "x",
+        "headline_sensitivity": sens,
+        "by_category": ew.build_by_category(df),
+        "by_income_quintile": ew.build_by_income_quintile(df),
+    }
+    ew.assert_aggregate_only(payload)
