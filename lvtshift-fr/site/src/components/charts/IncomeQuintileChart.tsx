@@ -3,20 +3,21 @@
 /**
  * IncomeQuintileChart — tax change across income quintiles Q1→Q5.
  *
- * Bar: the whole group's total change on its residential parcels.
- * Diamond: the typical household's change (parcel change weighted by
- * dwellings). See lib/quintile.ts for why a plain parcel median misleads.
+ * Offers a 2-mode toggle when household-weighted metrics are present:
+ *   - "total" (default): bars show the whole group's total change on its
+ *     residential parcels (with ±20 % whiskers), and outlined diamonds (◇)
+ *     overlay the typical household's change.
+ *   - "household": bars show the typical household's change (parcel change
+ *     weighted by dwellings) with its own ±20 % whiskers.
+ *
  * Older payloads without those figures fall back to the residential parcel
  * median, and the caption says so.
  *
  * When quintiles === null (IRIS income too homogeneous to slice), renders
  * an explanatory note instead of a chart.
- *
- * Bar colours: rouge when positive (pays more), institutional green when
- * negative (pays less). A reference line at y=0 makes the sign clear.
  */
 
-import { ReactElement } from "react";
+import { ReactElement, useState } from "react";
 import {
   ComposedChart,
   Bar,
@@ -31,14 +32,19 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import type { BandQuintileRow, QuintileRow } from "@/lib/types";
-import { euros, signedPct, signedPctAxis } from "@/lib/format";
-import { quintileBars, type QuintileBar } from "@/lib/quintile";
+import { euros, pct, signedPct, signedPctAxis } from "@/lib/format";
+import { quintileBars, type QuintileBar, type QuintileMode } from "@/lib/quintile";
 import { symmetricAxis } from "@/lib/axis";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 
+const QUINTILE_MODES: { id: QuintileMode; label: string }[] = [
+  { id: "total", label: "Ensemble du groupe (total)" },
+  { id: "household", label: "Ménage type (par logement)" },
+];
+
 /* ── tooltip ──────────────────────────────────────────────────────── */
 
-function makeTooltip(isTotal: boolean) {
+function makeTooltip(isTotal: boolean, mode: QuintileMode) {
   return function QuintileTooltip({ active, payload, label }: TooltipProps<number, string>) {
     if (!active || !payload?.length) return null;
     const row = payload[0]?.payload as QuintileBar;
@@ -56,8 +62,22 @@ function makeTooltip(isTotal: boolean) {
       >
         <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>Quintile {label}</p>
         <p>Revenu médian IRIS&nbsp;: {euros(row.median_income_eur)}</p>
-        {isTotal && <p>Ensemble du groupe&nbsp;: {signedPct(row.bar)}</p>}
-        {row.household != null && <p>Ménage type&nbsp;: {signedPct(row.household)}</p>}
+        {row.household != null && (
+          <p style={mode === "household" ? { fontWeight: 600 } : undefined}>
+            Ménage type (par logement)&nbsp;: {signedPct(row.household)}
+          </p>
+        )}
+        {row.share_dwellings_paying_more_pct != null && (
+          <p>
+            Logements payant davantage&nbsp;:{" "}
+            {pct(row.share_dwellings_paying_more_pct)}
+          </p>
+        )}
+        {(isTotal || row.total_change_pct != null) && (
+          <p style={mode === "total" && isTotal ? { fontWeight: 600 } : undefined}>
+            Ensemble du groupe (total)&nbsp;: {signedPct(row.total_change_pct ?? row.bar)}
+          </p>
+        )}
         <p>
           Parcelle résidentielle médiane&nbsp;:{" "}
           {signedPct(row.median_change_pct_residential)}
@@ -77,14 +97,9 @@ function makeTooltip(isTotal: boolean) {
   };
 }
 
-/* ── values under each quintile ─────────────────────────────────────
-   The group figure and the household figure are printed under the Q label
-   instead of next to the bars: placed at the bar end, the group label sat
-   beyond the diamond and read as the diamond's value, and the household
-   figure was not shown at all.
-────────────────────────────────────────────────────────────────────── */
+/* ── values under each quintile ───────────────────────────────────── */
 
-function makeQuintileTick(data: QuintileBar[], hasHousehold: boolean) {
+function makeQuintileTick(data: QuintileBar[], showDiamond: boolean) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function QuintileTick(props: any): ReactElement<SVGElement> {
     const row = data.find((r) => r.quintile === props.payload?.value);
@@ -108,7 +123,7 @@ function makeQuintileTick(data: QuintileBar[], hasHousehold: boolean) {
             {signedPct(row.bar)}
           </text>
         )}
-        {hasHousehold && row?.household != null && (
+        {showDiamond && row?.household != null && (
           <text x={x} y={y + 43} fontSize={10} fill={ENCRE} {...font}>
             ◇&#8239;{signedPct(row.household)}
           </text>
@@ -159,7 +174,15 @@ function NullQuintileNote() {
 
 /* ── caption: what the bar and the diamond measure ───────────────── */
 
-function QuintileCaption({ isTotal, hasHousehold }: { isTotal: boolean; hasHousehold: boolean }) {
+function QuintileCaption({
+  mode,
+  isTotal,
+  hasHousehold,
+}: {
+  mode: QuintileMode;
+  isTotal: boolean;
+  hasHousehold: boolean;
+}) {
   const style = {
     fontFamily: "var(--font-body)",
     fontSize: "0.8125rem",
@@ -168,6 +191,15 @@ function QuintileCaption({ isTotal, hasHousehold }: { isTotal: boolean; hasHouse
     marginTop: "0.5rem",
     maxWidth: "48rem",
   } as const;
+  if (mode === "household") {
+    return (
+      <p style={style}>
+        <strong>Barres</strong> (chiffre en couleur sous chaque quintile)&nbsp;:
+        variation médiane pour le ménage type du groupe — chaque parcelle
+        résidentielle compte autant de fois qu&apos;elle a de logements.
+      </p>
+    );
+  }
   if (!isTotal) {
     return (
       <p style={style}>
@@ -209,12 +241,22 @@ export default function IncomeQuintileChart({
   quintiles,
   band,
 }: IncomeQuintileChartProps) {
+  const [requestedMode, setRequestedMode] = useState<QuintileMode>("total");
   if (!quintiles) return <NullQuintileNote />;
 
-  const { rows: data, isTotal, hasHousehold } = quintileBars(quintiles, band?.low, band?.high);
+  const {
+    rows: data,
+    isTotal,
+    hasHousehold,
+    mode,
+  } = quintileBars(quintiles, band?.low, band?.high, requestedMode);
+
+  const showDiamond = mode === "total" && hasHousehold;
 
   const vals = data.flatMap((r) =>
-    [r.bar, r.bandLo, r.bandHi, r.household].filter((v): v is number => v != null),
+    [r.bar, r.bandLo, r.bandHi, showDiamond ? r.household : null].filter(
+      (v): v is number => v != null,
+    ),
   );
   // symmetric axis on round ticks (values are printed under the axis)
   const absMax = Math.max(...vals.map(Math.abs), 5);
@@ -229,7 +271,34 @@ export default function IncomeQuintileChart({
 
   return (
     <figure aria-label="Variation de l'impôt par quintile de revenu">
-      <ResponsiveContainer width="100%" height={hasHousehold ? 330 : 315}>
+      {hasHousehold && (
+        <div
+          role="group"
+          aria-label="Mode d'affichage du graphique par quintile"
+          className="flex flex-wrap gap-1.5 mb-3"
+        >
+          {QUINTILE_MODES.map((opt) => {
+            const active = opt.id === mode;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setRequestedMode(opt.id)}
+                className={`px-3 py-1.5 text-xs font-body border transition-colors cursor-pointer ${
+                  active
+                    ? "bg-marine text-creme border-marine font-medium"
+                    : "bg-creme text-encre border-lisere hover:border-marine/50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <ResponsiveContainer width="100%" height={showDiamond ? 330 : 315}>
         <ComposedChart
           data={data}
           margin={{ top: 12, right: 8, bottom: 8, left: 0 }}
@@ -237,8 +306,8 @@ export default function IncomeQuintileChart({
         >
           <XAxis
             dataKey="quintile"
-            tick={makeQuintileTick(data, hasHousehold)}
-            height={hasHousehold ? 52 : 36}
+            tick={makeQuintileTick(data, showDiamond)}
+            height={showDiamond ? 52 : 36}
             interval={0}
             axisLine={{ stroke: LISERE }}
             tickLine={{ stroke: LISERE }}
@@ -253,7 +322,7 @@ export default function IncomeQuintileChart({
             tickLine={false}
             width={52}
           />
-          <Tooltip content={makeTooltip(isTotal)} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+          <Tooltip content={makeTooltip(isTotal, mode)} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
           <ReferenceLine y={0} stroke={ENCRE} strokeWidth={1.5} />
           <Bar
             dataKey="bar"
@@ -265,7 +334,7 @@ export default function IncomeQuintileChart({
             ))}
             <ErrorBar dataKey="err" direction="y" width={8} stroke={ENCRE} strokeWidth={1} />
           </Bar>
-          {hasHousehold && (
+          {showDiamond && (
             <Scatter dataKey="household" shape={<Diamond />} isAnimationActive={false} />
           )}
         </ComposedChart>
@@ -285,13 +354,13 @@ export default function IncomeQuintileChart({
           {incomeRange}
         </p>
       )}
-      <QuintileCaption isTotal={isTotal} hasHousehold={hasHousehold} />
+      <QuintileCaption mode={mode} isTotal={isTotal} hasHousehold={hasHousehold} />
       <figcaption className="sr-only">
         {data
           .map(
             (r) =>
               `Q${r.quintile} : ${signedPct(r.bar)}` +
-              (r.household != null ? `, ménage type ${signedPct(r.household)}` : ""),
+              (showDiamond && r.household != null ? `, ménage type ${signedPct(r.household)}` : ""),
           )
           .join(" ; ")}
       </figcaption>

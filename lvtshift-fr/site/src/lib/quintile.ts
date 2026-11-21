@@ -13,7 +13,9 @@
  */
 
 import type { BandQuintileRow, QuintileRow } from "./types";
-import { bandSpan, byKey } from "./band";
+import { bandSpan, byKey, quintileBandValue } from "./band";
+
+export type QuintileMode = "total" | "household";
 
 export interface QuintileBar extends QuintileRow {
   /** Value drawn as the bar. */
@@ -32,20 +34,22 @@ export interface QuintileBars {
   isTotal: boolean;
   /** true when at least one row has a household marker. */
   hasHousehold: boolean;
+  /** Active display mode ("household" falls back to "total" if unavailable). */
+  mode: QuintileMode;
 }
 
 export function quintileBars(
   quintiles: QuintileRow[],
   low?: BandQuintileRow[] | null,
   high?: BandQuintileRow[] | null,
+  requestedMode: QuintileMode = "total",
 ): QuintileBars {
-  const isTotal = quintiles.some((r) => r.total_change_pct != null);
+  const hasHousehold = quintiles.some((r) => r.household_median_change_pct != null);
+  const mode: QuintileMode = requestedMode === "household" && hasHousehold ? "household" : "total";
+  const isTotal = mode === "total" && quintiles.some((r) => r.total_change_pct != null);
+  const metric = mode === "household" ? "household" : isTotal ? "total" : "residential";
   const pick = (r: QuintileRow | BandQuintileRow | undefined) =>
-    r == null
-      ? undefined
-      : isTotal
-        ? r.total_change_pct
-        : r.median_change_pct_residential;
+    quintileBandValue(r, metric);
   const lo = byKey(low, "quintile");
   const hi = byKey(high, "quintile");
   const rows = [...quintiles]
@@ -62,5 +66,5 @@ export function quintileBars(
         bandHi: span?.hi ?? null,
       };
     });
-  return { rows, isTotal, hasHousehold: rows.some((r) => r.household != null) };
+  return { rows, isTotal, hasHousehold, mode };
 }

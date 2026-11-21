@@ -13,6 +13,7 @@
  *    already enforces this with its rouge accent treatment.
  */
 
+import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import type { Commune } from "@/lib/types";
 import HeadlineCards from "@/components/charts/HeadlineCards";
@@ -26,6 +27,8 @@ import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
 import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
+import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
+import { pct } from "@/lib/format";
 
 /** Caption under charts that carry the building-cost whiskers. */
 function BandNote() {
@@ -90,6 +93,8 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
     commune.reference_year != null
       ? `${commune.name} — exercice ${commune.reference_year}`
       : commune.name;
+
+  const householdWinners = computePrivateHouseholdWinners(commune.by_category);
 
   return (
     <div>
@@ -191,6 +196,26 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             >
               Indicateurs clés
             </h3>
+            {householdWinners && (
+              <div className="mb-4 border border-lisere border-l-4 border-l-[#2a6244] bg-creme px-5 py-4">
+                <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-gris font-body mb-1">
+                  Effet par ménage (logements privés)
+                </p>
+                <p className="font-display text-lg md:text-xl font-medium text-marine leading-snug">
+                  Part des ménages privés dont la taxe baisse&nbsp;:{" "}
+                  <span className="text-[#2a6244] font-semibold">
+                    {pct(householdWinners.pctPayingLess)}
+                  </span>
+                </p>
+                <p className="text-xs text-gris font-body italic mt-1 leading-relaxed">
+                  Sur {householdWinners.totalDwellings.toLocaleString("fr-FR")} logements
+                  privés modélisés (maisons, petits immeubles et collectifs&nbsp;;
+                  baisse ou stabilité, hors logement social dont la taxe pèse sur les
+                  bailleurs). Par comparaison, la part de parcelles payant davantage
+                  ci-dessous compte un immeuble collectif pour une seule parcelle.
+                </p>
+              </div>
+            )}
             <HeadlineCards
               headline={commune.headline}
               sharePayingMorePct={
@@ -255,13 +280,13 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             )}
           </section>
 
-          {/* 4. Category impact (diverging median bars) */}
+          {/* 4. Category impact (diverging bars: household / parcel / total) */}
           <section aria-labelledby="section-categories">
             <h3
               id="section-categories"
               className="text-xs uppercase tracking-[0.18em] text-gris mb-3"
             >
-              Impact médian par catégorie de bien
+              Impact par catégorie de bien
             </h3>
             <CategoryImpactBars
               byCategory={publishedCategories(commune.by_category)}
@@ -273,6 +298,51 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             />
             <BandNote />
             <SocialHousingNote commune={commune} />
+            <div className="mt-4 border border-lisere bg-creme px-4 py-3.5 max-w-3xl">
+              <p className="text-xs uppercase tracking-[0.14em] text-gris font-body mb-2">
+                Notes de lecture par catégorie
+              </p>
+              <ul className="font-body text-xs text-encre leading-relaxed space-y-2 list-disc pl-4">
+                <li>
+                  <strong className="font-semibold">Immeuble collectif (5+ logements)</strong>&nbsp;:
+                  regroupe toutes les copropriétés et immeubles d&apos;au moins 5 logements,
+                  depuis les petits collectifs jusqu&apos;aux grands immeubles plus denses
+                  où le terrain est partagé entre de nombreux logements et où la baisse
+                  par logement est la plus marquée.
+                </li>
+                <li>
+                  <strong className="font-semibold">Logement social (bailleurs)</strong>&nbsp;:
+                  la variation médiane par parcelle intègre la fin modélisée des exonérations
+                  temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et 1384&nbsp;C du CGI) sur
+                  les opérations récentes&nbsp;; à l&apos;échelle de l&apos;ensemble du parc
+                  social, la charge totale baisse néanmoins dans la majorité des territoires
+                  denses (−14,1&nbsp;% en Petite couronne, −30,7&nbsp;% à Grenoble,
+                  −33,7&nbsp;% à La Rochelle). Pour les opérations en cours, la réforme
+                  prévoit une transition (compensation par aide budgétaire directe sur la
+                  durée restante des exonérations, ou maintien jusqu&apos;à leur terme), sans
+                  effet sur les loyers sociaux plafonnés (voir{" "}
+                  <Link href="/exonerations-protections" className="underline underline-offset-2">
+                    Exonérations et protections
+                  </Link>
+                  ).
+                </li>
+                <li>
+                  <strong className="font-semibold">Industriel</strong>&nbsp;:
+                  dans la plupart des territoires modélisés, le recul marqué (jusqu&apos;à
+                  −88&nbsp;% en médiane, avec des exceptions locales comme Grenoble où les
+                  sites industriels occupent un foncier plus valorisé) s&apos;explique avant
+                  tout par la faible valeur au m² du foncier industriel en zones
+                  d&apos;activités, combinée au fait que la fiscalité actuelle (méthode
+                  comptable de l&apos;art. 1499 du CGI, même après la réduction de moitié
+                  de 2021) impose lourdement les bâtiments et installations fixes, alors
+                  que la TVTN n&apos;impose que le sol (voir{" "}
+                  <Link href="/methodologie" className="underline underline-offset-2">
+                    la méthodologie
+                  </Link>
+                  ).
+                </li>
+              </ul>
+            </div>
           </section>
 
           {/* 5. Income quintile chart (or explanatory note if unavailable) */}

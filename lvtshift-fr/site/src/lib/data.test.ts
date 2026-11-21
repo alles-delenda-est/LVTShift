@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { loadIndex, loadCommune, loadValidation, loadRegister } from "@/lib/data";
+import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
 
 describe("data loaders", () => {
   it("loads the index with the 9 modelled communes", () => {
@@ -30,5 +31,13 @@ describe("data loaders", () => {
     const reg = loadRegister();
     const m = reg.communes.find((c) => c.commune_key === "mulhouse");
     expect(m?.modellable).toBe(false);
+  });
+  it("computes private household winners from the published Paris payload", () => {
+    const paris = loadCommune("paris");
+    const winners = computePrivateHouseholdWinners(paris.by_category);
+    expect(winners).not.toBeNull();
+    expect(winners?.totalDwellings).toBe(1026625);
+    expect(winners?.pctPayingLess).toBe(71.4);
+    expect(winners?.pctPayingMore).toBe(28.6);
   });
 });
