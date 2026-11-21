@@ -249,7 +249,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
                 for c in ("current_tax", "new_tax") + STEP_TAX_COLS if c in rsub.columns)
             if total is not None and not dominated:
                 steps = _steps(rsub)
-    hh_median, dwellings = None, None
+    hh_median, dwellings, share_dw_more = None, None, None
     n = rsub["n_dwellings"] if "n_dwellings" in rsub.columns else None
     # every residential parcel must carry a count (a member commune without a
     # sidecar would otherwise drop out of the weights but not of the total)
@@ -260,10 +260,13 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         hh = weighted_median(pct, n)
         hh_median = None if hh is None else round(hh, 1)
         dwellings = int(round(float(n.sum())))
+        if "tax_change" in rsub.columns and rsub["tax_change"].notna().all():
+            more = float(n[rsub["tax_change"] > 0].sum())
+            share_dw_more = _pct(more, float(n.sum()))
         # one building dominating the group would make its figures that
         # building's own: publish nothing household-level then
         if float(n.max()) > MAX_DWELLING_SHARE * float(n.sum()):
-            hh_median, dwellings, total = None, None, None
+            hh_median, dwellings, share_dw_more, total = None, None, None, None
             steps = dict(NO_STEPS)
     if _small(len(sub)):
         sp = sp.iloc[:0]
@@ -277,6 +280,7 @@ def _quintile_row(q: int, sub: pd.DataFrame) -> dict:
         "total_change_pct": total,
         **steps,
         "household_median_change_pct": hh_median,
+        "share_dwellings_paying_more_pct": share_dw_more,
         "parcels": int(len(sub)),
         "dwellings": dwellings,
     }
@@ -719,12 +723,15 @@ def _tilted_change(df: pd.DataFrame, target_share: float, ratio: float,
 
 
 BAND_CATEGORY_KEYS = ("category", "median_change_pct", "median_change_eur",
-                      "share_paying_more_pct")
+                      "share_paying_more_pct", "household_median_change_pct",
+                      "median_change_eur_per_dwelling", "share_dwellings_paying_more_pct")
 QUINTILE_KEYS = {"quintile", "median_income_eur", "median_change_pct",
                  "median_change_pct_residential", "total_change_pct",
-                 "household_median_change_pct", "parcels", "dwellings", *STEP_KEYS}
+                 "household_median_change_pct", "share_dwellings_paying_more_pct",
+                 "parcels", "dwellings", *STEP_KEYS}
 BAND_QUINTILE_KEYS = ("quintile", "median_change_pct", "median_change_pct_residential",
-                      "total_change_pct", "household_median_change_pct")
+                      "total_change_pct", "household_median_change_pct",
+                      "share_dwellings_paying_more_pct")
 
 
 def _band_groups(df: pd.DataFrame, chg: np.ndarray, within: bool = False) -> dict:
@@ -939,7 +946,7 @@ SMALL_GROUP_BLANK = {
                     "total_change_pct", "total_change_eur", "dwellings") + STEP_KEYS,
     "by_income_quintile": ("median_change_pct", "median_change_pct_residential",
                            "total_change_pct", "household_median_change_pct",
-                           "dwellings") + STEP_KEYS,
+                           "share_dwellings_paying_more_pct", "dwellings") + STEP_KEYS,
 }
 
 
