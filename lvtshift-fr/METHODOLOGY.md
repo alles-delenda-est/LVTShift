@@ -1536,6 +1536,31 @@ Ranked by how much they move published (category/quintile) results.
     would. A parcel holding a co-ownership counts as one. The Fichiers fonciers' per-local rental
     values would give the true starting point (§7).
 
+17. **Tax capitalization in general equilibrium.** Observed DVF sales prices
+    (2021–2025) capitalize today's fiscal regime (near-zero tax on bare land,
+    high tax on buildings). In steady state after shifting property taxation
+    onto land (~€43B of TFPB alone, up to ~€67B under Scenario 1), the market
+    sales price of bare land decreases through tax capitalization
+    (`V' = (R − T) / r`, where `R` is gross annual economic land rent, `T` is
+    the annual tax in euros and `r` is the capitalization rate — or equivalently
+    `V' = R / (r + τ)` for an ad valorem rate `τ`), while gross annual land rent
+    `R` is invariant. Because the model is static (pre-reform land values), it
+    does not simulate this price adjustment. Accordingly, the permanent
+    statutory base of the TVTN must be defined as **pure annual land rental
+    value** (*valeur locative foncière pure*) — or reconstructed pre-tax capital
+    land value — updated through periodic rolling assessments.
+
+18. **Empirical permitted density (`k_z`) vs. statutory PLU capacity.** As
+    noted in item 2 and §3.4, because machine-readable height, setback and
+    footprint (CES) rules are not uniformly digitized across all communes in
+    the national GPU, permitted zone density `k_z` is estimated from the 75th
+    percentile (3rd quartile) of existing built density within each PLU zone.
+    In corridors recently upzoned for densification where most plots still hold
+    single-storey or two-storey houses, the empirical 75th percentile
+    understates statutory PLU building capacity; future integration of
+    standardized GPU / BDNB regulatory envelopes will allow direct measurement
+    of legal building rights.
+
 ## 7. The Fichiers Fonciers access argument
 
 Each open-data compromise maps to a specific Fichiers Fonciers (CEREMA/DGFiP)
