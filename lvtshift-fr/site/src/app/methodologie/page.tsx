@@ -1079,6 +1079,56 @@ export default function MethodologiePage() {
               d&apos;ingestion pour chaque commune concernée.
             </p>
           </div>
+
+          {/* General-equilibrium tax capitalization */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Capitalisation fiscale en équilibre général
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Les prix DVF observés (2021–2025) capitalisent le régime fiscal actuel
+              (imposition quasi nulle du terrain nu, forte taxation du bâti). En
+              équilibre de long terme, après le basculement sur le sol de la taxe
+              foncière (environ 43&nbsp;Md€ de TFPB, jusqu&apos;à 67&nbsp;Md€ dans le
+              scénario&nbsp;1), le prix de vente du terrain nu diminue par
+              capitalisation fiscale —{" "}
+              <span className="whitespace-nowrap">
+                <em>V&prime;</em> = (<em>R</em> &minus; <em>T</em>) / <em>r</em>
+              </span>{" "}
+              (avec <em>R</em> la rente foncière économique annuelle brute,{" "}
+              <em>T</em> l&apos;impôt annuel en euros et <em>r</em> le taux de
+              capitalisation, soit de façon équivalente{" "}
+              <span className="whitespace-nowrap">
+                <em>V&prime;</em> = <em>R</em> / (<em>r</em> + <em>&tau;</em>)
+              </span>{" "}
+              pour un taux ad valorem <em>&tau;</em>) —, tandis que la rente{" "}
+              <em>R</em> demeure invariante. L&apos;assiette légale pérenne de la TVTN
+              doit donc être définie comme la{" "}
+              <strong>valeur locative foncière pure</strong> (rente annuelle du sol) —
+              ou la valeur vénale reconstituée avant impôt —, actualisée par des
+              révisions glissantes périodiques.
+            </p>
+          </div>
+
+          {/* Empirical p75 k_z vs statutory PLU capacity */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Densité permise empirique (<em>k<sub>z</sub></em>) et gabarit légal du PLU
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Les règles de hauteur, de retrait et d&apos;emprise au sol (CES)
+              n&apos;étant pas numérisées de manière homogène et exploitable par machine
+              dans le Géoportail de l&apos;Urbanisme (GPU) pour toutes les communes, la
+              densité permise par zone <em>k<sub>z</sub></em> est estimée par le
+              75<sup>e</sup>&nbsp;centile (3<sup>e</sup>&nbsp;quartile) de la densité
+              bâtie existante dans chaque zone du PLU. Dans les secteurs récemment
+              ouverts à la densification où la plupart des parcelles portent encore des
+              maisons de plain-pied ou R+1, ce 75<sup>e</sup>&nbsp;centile empirique
+              sous-estime les droits à construire légaux du PLU&nbsp;; l&apos;intégration
+              future d&apos;enveloppes réglementaires normalisées (GPU / BDNB) permettra
+              une mesure directe du gabarit légal.
+            </p>
+          </div>
         </div>
       </section>
     </div>

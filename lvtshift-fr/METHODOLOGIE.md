@@ -1718,6 +1718,33 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     localisation de la révision. Une parcelle en copropriété compte pour une. Les valeurs locatives par
     local des Fichiers fonciers donneraient le vrai point de départ (§7).
 
+17. **Capitalisation fiscale en équilibre général.** Les prix DVF observés
+    (2021–2025) capitalisent le régime fiscal actuel (imposition quasi nulle du
+    terrain nu, forte taxation du bâti). En équilibre de long terme, après le
+    basculement sur le sol de la taxe foncière (~43 Md€ de TFPB, jusqu'à
+    ~67 Md€ dans le scénario 1), le prix de vente du terrain nu diminue par
+    capitalisation fiscale (`V' = (R − T) / r`, où `R` est la rente foncière
+    économique annuelle brute, `T` l'impôt annuel en euros et `r` le taux de
+    capitalisation — ou de façon équivalente `V' = R / (r + τ)` pour un taux
+    ad valorem `τ`), tandis que la rente `R` demeure invariante. Le modèle étant
+    statique (valeurs foncières pré-réforme), il n'intègre pas cette baisse des
+    prix de marché. En conséquence, l'assiette légale pérenne de la TVTN doit
+    être définie comme la **valeur locative foncière pure** (rente annuelle du
+    sol) — ou la valeur vénale reconstituée avant impôt —, actualisée par des
+    révisions glissantes périodiques.
+
+18. **Densité permise empirique (`k_z`) vs gabarit légal du PLU.** Comme
+    indiqué au point 2 et au §3.4, les règles de hauteur, de retrait et
+    d'emprise au sol (CES) n'étant pas numérisées de manière homogène et
+    exploitable par machine dans le GPU national pour toutes les communes, la
+    densité permise par zone `k_z` est approchée par le 75ᵉ centile
+    (3ᵉ quartile) de la densité bâtie existante dans chaque zone du PLU. Dans
+    les secteurs récemment ouverts à la densification où la plupart des
+    parcelles portent encore des maisons de plain-pied ou R+1, ce 75ᵉ centile
+    empirique sous-estime la capacité légale du PLU ; l'intégration future
+    d'enveloppes réglementaires normalisées (GPU / BDNB) permettra de mesurer
+    directement les droits à construire légaux.
+
 ## 7. L'argument d'accès aux Fichiers fonciers
 
 Chaque compromis lié aux données ouvertes correspond à un champ précis des
