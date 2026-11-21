@@ -353,10 +353,10 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                       L&apos;impôt actuel des établissements industriels (méthode comptable
                       de l&apos;art. 1499 du CGI, même après la réduction de moitié de 2021)
                       pèse lourdement sur les bâtiments et installations fixes, alors que le
-                      foncier des zones d&apos;activités vaut peu au m². La TVTN, qui
-                      n&apos;impose que le sol, l&apos;allège donc le plus souvent&nbsp;; là
-                      où les sites industriels occupent un foncier cher, l&apos;impôt peut au
-                      contraire augmenter (voir{" "}
+                      foncier des zones d&apos;activités vaut souvent peu au m². La TVTN,
+                      qui n&apos;impose que le sol, allège donc l&apos;impôt là où ce
+                      foncier est bon marché, et l&apos;alourdit là où les sites industriels
+                      occupent un foncier cher (voir{" "}
                       <Link href="/methodologie" className="underline underline-offset-2">
                         la méthodologie
                       </Link>

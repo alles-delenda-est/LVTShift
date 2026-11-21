@@ -16,6 +16,8 @@ describe("socialTotalSentence", () => {
   });
   it("handles a flat total and a withheld one", () => {
     expect(socialTotalSentence(0)).toMatch(/reste stable/);
+    expect(socialTotalSentence(0.04)).toMatch(/reste stable/);
+    expect(socialTotalSentence(-0.04)).toMatch(/reste stable/);
     expect(socialTotalSentence(null)).toBeNull();
     expect(socialTotalSentence(undefined)).toBeNull();
   });

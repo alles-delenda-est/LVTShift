@@ -19,11 +19,13 @@ export interface CategoryNotes {
 
 export function socialTotalSentence(totalPct: number | null | undefined): string | null {
   if (totalPct == null || !Number.isFinite(totalPct)) return null;
-  if (totalPct === 0) {
+  // decide on the figure as printed (one decimal), so +0.04 reads « stable »
+  const shown = Math.round(totalPct * 10) / 10;
+  if (shown === 0) {
     return "Dans ce territoire, l'impôt total des bailleurs sociaux reste stable.";
   }
-  const sens = totalPct > 0 ? "hausse" : "baisse";
-  return `Dans ce territoire, l'impôt total des bailleurs sociaux est en ${sens} de ${pct(Math.abs(totalPct))}.`;
+  const sens = shown > 0 ? "hausse" : "baisse";
+  return `Dans ce territoire, l'impôt total des bailleurs sociaux est en ${sens} de ${pct(Math.abs(shown))}.`;
 }
 
 export function categoryNotes(rows: PublishedCategoryRow[]): CategoryNotes {
