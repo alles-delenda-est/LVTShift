@@ -1718,6 +1718,45 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     localisation de la révision. Une parcelle en copropriété compte pour une. Les valeurs locatives par
     local des Fichiers fonciers donneraient le vrai point de départ (§7).
 
+17. **Capitalisation fiscale.** Les prix DVF observés (2021–2025) capitalisent
+    le régime fiscal actuel (imposition quasi nulle du terrain nu, forte
+    taxation du bâti). Après le basculement de la taxe foncière sur le sol
+    (~43 Md€ de TFPB, jusqu'à ~67 Md€ dans le scénario 1), le prix du terrain
+    baisserait par capitalisation : `V' = (R − T) / r`, où `R` est la rente
+    foncière annuelle brute, `T` l'impôt annuel en euros et `r` le taux de
+    capitalisation, soit `V' = R / (r + τ)` pour un taux `τ` appliqué à la
+    valeur après impôt. Le modèle, statique, ne simule pas cette baisse. Elle
+    ne fausse pas, à elle seule, la répartition publiée : à produit constant
+    dans chaque commune, avec un taux unique et un `r` uniforme, toutes les
+    valeurs foncières de la commune baissent du même facteur `r / (r + τ)` ; la
+    part de chaque propriétaire dans l'impôt, donc sa cotisation, est
+    inchangée, et seul le taux rapporté aux valeurs d'après réforme serait plus
+    élevé que le taux affiché. Les biais réels tiennent à ce que cette
+    hypothèse simplifie : des taux de capitalisation qui diffèrent selon les
+    quartiers ou les biens (perspectives de croissance des loyers) ; une rente
+    `R` elle-même relevée par la suppression de l'impôt sur le bâti (construire
+    devient plus rentable), inégalement selon les parcelles ; et la part de
+    l'impôt actuel déjà capitalisée dans les prix observés, qui n'est pas
+    proportionnelle à la rente du sol (valeurs locatives de 1970). Une assiette
+    en valeur vénale reste cohérente : l'équation a une solution pour tout `τ`,
+    l'assiette se contracte sans disparaître et le même produit demande un taux
+    plus élevé. Définir plutôt l'assiette comme une **valeur locative
+    foncière** (rente annuelle du sol), dans le prolongement de la valeur
+    locative cadastrale et révisée périodiquement, est une option qui éviterait
+    cette circularité ; le choix reste ouvert.
+
+18. **Densité permise empirique (`k_z`) vs gabarit légal du PLU.** Comme
+    indiqué au point 2 et au §3.4, les règles de hauteur, de retrait et
+    d'emprise au sol (CES) n'étant pas numérisées de manière homogène et
+    exploitable par machine dans le GPU national pour toutes les communes, la
+    densité permise par zone `k_z` est approchée par le 75ᵉ centile
+    (3ᵉ quartile) de la densité bâtie existante dans chaque zone du PLU. Dans
+    les secteurs récemment ouverts à la densification où la plupart des
+    parcelles portent encore des maisons de plain-pied ou R+1, ce 75ᵉ centile
+    empirique sous-estime la capacité légale du PLU ; l'intégration future
+    d'enveloppes réglementaires normalisées (GPU / BDNB) permettra de mesurer
+    directement les droits à construire légaux.
+
 ## 7. L'argument d'accès aux Fichiers fonciers
 
 Chaque compromis lié aux données ouvertes correspond à un champ précis des

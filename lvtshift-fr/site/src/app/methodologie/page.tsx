@@ -1079,6 +1079,73 @@ export default function MethodologiePage() {
               d&apos;ingestion pour chaque commune concernée.
             </p>
           </div>
+
+          {/* General-equilibrium tax capitalization */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Capitalisation fiscale
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Les prix DVF observés (2021–2025) capitalisent le régime fiscal actuel
+              (imposition quasi nulle du terrain nu, forte taxation du bâti). Après le
+              basculement de la taxe foncière sur le sol (environ 43&nbsp;Md€ de TFPB,
+              jusqu&apos;à 67&nbsp;Md€ dans le scénario&nbsp;1), le prix du terrain
+              baisserait par capitalisation&nbsp;:{" "}
+              <span className="whitespace-nowrap">
+                <em>V&prime;</em> = (<em>R</em> &minus; <em>T</em>) / <em>r</em>
+              </span>{" "}
+              (avec <em>R</em> la rente foncière annuelle brute, <em>T</em>{" "}
+              l&apos;impôt annuel en euros et <em>r</em> le taux de capitalisation),
+              soit{" "}
+              <span className="whitespace-nowrap">
+                <em>V&prime;</em> = <em>R</em> / (<em>r</em> + <em>&tau;</em>)
+              </span>{" "}
+              pour un taux <em>&tau;</em> appliqué à la valeur après impôt. Le modèle,
+              statique, ne simule pas cette baisse. Elle ne fausse pas, à elle seule,
+              la répartition publiée&nbsp;: à produit constant dans chaque commune,
+              avec un taux unique et un <em>r</em> uniforme, toutes les valeurs
+              foncières de la commune baissent du même facteur{" "}
+              <span className="whitespace-nowrap">
+                <em>r</em> / (<em>r</em> + <em>&tau;</em>)
+              </span>&nbsp;; la part de
+              chaque propriétaire dans l&apos;impôt, donc sa cotisation, est
+              inchangée, et seul le taux rapporté aux valeurs d&apos;après réforme
+              serait plus élevé que le taux affiché. Les biais réels tiennent à ce que
+              cette hypothèse simplifie&nbsp;: des taux de capitalisation qui
+              diffèrent selon les quartiers ou les biens&nbsp;; une rente <em>R</em>{" "}
+              elle-même relevée par la suppression de l&apos;impôt sur le bâti,
+              inégalement selon les parcelles&nbsp;; et la part de l&apos;impôt actuel
+              déjà capitalisée dans les prix observés, qui n&apos;est pas
+              proportionnelle à la rente du sol (valeurs locatives de 1970). Une
+              assiette en valeur vénale reste cohérente&nbsp;: l&apos;équation a une
+              solution pour tout <em>&tau;</em>, l&apos;assiette se contracte sans
+              disparaître et le même produit demande un taux plus élevé. La
+              définir plutôt comme une <strong>valeur locative foncière</strong>{" "}
+              (rente annuelle du sol), dans le prolongement de la valeur locative
+              cadastrale et révisée périodiquement, est une option qui éviterait
+              cette circularité&nbsp;; le choix reste ouvert.
+            </p>
+          </div>
+
+          {/* Empirical p75 k_z vs statutory PLU capacity */}
+          <div>
+            <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
+              Densité permise empirique (<em>k<sub>z</sub></em>) et gabarit légal du PLU
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Les règles de hauteur, de retrait et d&apos;emprise au sol (CES)
+              n&apos;étant pas numérisées de manière homogène et exploitable par machine
+              dans le Géoportail de l&apos;Urbanisme (GPU) pour toutes les communes, la
+              densité permise par zone <em>k<sub>z</sub></em> est estimée par le
+              75<sup>e</sup>&nbsp;centile (3<sup>e</sup>&nbsp;quartile) de la densité
+              bâtie existante dans chaque zone du PLU. Dans les secteurs récemment
+              ouverts à la densification où la plupart des parcelles portent encore des
+              maisons de plain-pied ou R+1, ce 75<sup>e</sup>&nbsp;centile empirique
+              sous-estime les droits à construire légaux du PLU&nbsp;; l&apos;intégration
+              future d&apos;enveloppes réglementaires normalisées (GPU / BDNB) permettra
+              une mesure directe du gabarit légal.
+            </p>
+          </div>
         </div>
       </section>
     </div>
