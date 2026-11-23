@@ -10,6 +10,10 @@ export interface Headline {
 export interface BandCategoryRow {
   category: string; median_change_pct: number | null; median_change_eur: number | null;
   share_paying_more_pct: number | null;
+  /** Per-dwelling figures in this leg (absent in older payloads). */
+  household_median_change_pct?: number | null;
+  median_change_eur_per_dwelling?: number | null;
+  share_dwellings_paying_more_pct?: number | null;
 }
 /** One income quintile's figures in a sensitivity leg (subset of QuintileRow). */
 export interface BandQuintileRow {
@@ -17,6 +21,7 @@ export interface BandQuintileRow {
   median_change_pct_residential: number | null;
   /** Absent in older payloads. */
   total_change_pct?: number | null; household_median_change_pct?: number | null;
+  share_dwellings_paying_more_pct?: number | null;
 }
 export interface SensitivityLeg {
   land_share_pct: number; gross_pct_of_levy: number | null; net_pct_of_levy: number | null;
@@ -87,6 +92,8 @@ export interface QuintileRow {
   step_land_pct?: number | null;
   /** Typical household's change: parcel change weighted by dwellings. */
   household_median_change_pct?: number | null;
+  /** % of the quintile's dwellings in parcels paying more (absent in older payloads). */
+  share_dwellings_paying_more_pct?: number | null;
   dwellings?: number | null;
 }
 export interface BucketRow {

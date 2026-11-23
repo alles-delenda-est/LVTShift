@@ -30,6 +30,37 @@ describe("quintileBars", () => {
     const out = quintileBars([row(1)]);
     expect(out.isTotal).toBe(false);
     expect(out.hasHousehold).toBe(false);
+    expect(out.mode).toBe("total");
     expect(out.rows[0].bar).toBe(6);
+  });
+
+  it("supports household mode with household sensitivity whiskers", () => {
+    const out = quintileBars(
+      [
+        row(1, { total_change_pct: -8.4, household_median_change_pct: -21.0 }),
+        row(2, { total_change_pct: 1.0, household_median_change_pct: null }),
+      ],
+      [{ quintile: 1, median_change_pct: 0, median_change_pct_residential: 0, total_change_pct: -10, household_median_change_pct: -24.0 }],
+      [{ quintile: 1, median_change_pct: 0, median_change_pct_residential: 0, total_change_pct: -7, household_median_change_pct: -19.0 }],
+      "household",
+    );
+    expect(out.mode).toBe("household");
+    expect(out.isTotal).toBe(false);
+    expect(out.rows[0].bar).toBe(-21.0);
+    expect(out.rows[0].bandLo).toBe(-24.0);
+    expect(out.rows[0].bandHi).toBe(-19.0);
+    // Withheld household quintile stays null rather than silently substituting parcel median
+    expect(out.rows[1].bar).toBeNull();
+  });
+
+  it("omits whiskers in household mode when band legs lack household_median_change_pct", () => {
+    const out = quintileBars(
+      [row(1, { total_change_pct: -8.4, household_median_change_pct: -21.0 })],
+      [{ quintile: 1, median_change_pct: 0, median_change_pct_residential: -5.0, total_change_pct: -10 }],
+      [{ quintile: 1, median_change_pct: 0, median_change_pct_residential: -2.0, total_change_pct: -7 }],
+      "household",
+    );
+    expect(out.rows[0].bar).toBe(-21.0);
+    expect(out.rows[0].err).toBeNull();
   });
 });
