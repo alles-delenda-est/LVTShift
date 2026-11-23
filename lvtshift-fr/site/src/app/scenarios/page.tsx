@@ -459,7 +459,8 @@ export default function ScenariosPage() {
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
               En droit français, la taxe foncière n&apos;est pas une charge
-              récupérable sur le locataire (<em>décret n°&nbsp;82-955</em>). En
+              récupérable sur le locataire (<em>décrets n°&nbsp;87-713</em> pour le
+              parc privé et <em>n°&nbsp;82-955</em> pour le parc social). En
               économie, à la différence d&apos;une taxe sur la construction ou de la
               TVA — qui découragent de bâtir et finissent répercutées par la rareté
               des logements —, la quantité de sol à un emplacement donné est fixe.

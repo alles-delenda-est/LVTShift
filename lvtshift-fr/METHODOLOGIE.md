@@ -1726,8 +1726,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 17. **Capitalisation fiscale.** Les prix DVF observés (2021–2025) capitalisent
     le régime fiscal actuel (imposition quasi nulle du terrain nu, forte
     taxation du bâti). Après le basculement de la taxe foncière sur le sol
-    (~43 Md€ de TFPB dans le modèle communal, et ~67 à ~82 Md€ dans les
-    scénarios nationaux), le prix du terrain
+    (à l'échelle nationale, ~43 Md€ pour la seule TFPB, et ~67 à ~82 Md€
+    dans les scénarios nationaux), le prix du terrain
     baisserait par capitalisation : `V' = (R − T) / r`, où `R` est la rente
     foncière annuelle brute, `T` l'impôt annuel en euros et `r` le taux de
     capitalisation, soit `V' = R / (r + τ)` pour un taux `τ` appliqué à la

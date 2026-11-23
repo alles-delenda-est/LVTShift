@@ -1544,8 +1544,8 @@ Ranked by how much they move published (category/quintile) results.
 
 17. **Tax capitalization.** Observed DVF sales prices (2021–2025) capitalize
     today's fiscal regime (near-zero tax on bare land, high tax on buildings).
-    After shifting the taxe foncière onto land (~€43B of TFPB in the commune
-    model, and ~€67B to ~€82B across the national scenarios), land prices would
+    After shifting the taxe foncière onto land (nationally ~€43B of TFPB alone,
+    and ~€67B to ~€82B across the national scenarios), land prices would
     fall through capitalization:
     `V' = (R − T) / r`, where `R` is gross annual land rent, `T` the annual tax
     in euros and `r` the capitalization rate, i.e. `V' = R / (r + τ)` for a rate

@@ -1088,9 +1088,9 @@ export default function MethodologiePage() {
             <p className="font-body text-sm text-encre leading-relaxed">
               Les prix DVF observés (2021–2025) capitalisent le régime fiscal actuel
               (imposition quasi nulle du terrain nu, forte taxation du bâti). Après le
-              basculement de la taxe foncière sur le sol (environ 43&nbsp;Md€ de TFPB
-              dans le modèle communal, et de 67 à 82&nbsp;Md€ dans les scénarios
-              nationaux), le prix du terrain
+              basculement de la taxe foncière sur le sol (à l&apos;échelle nationale,
+              environ 43&nbsp;Md€ pour la seule TFPB, et de 67 à 82&nbsp;Md€ dans les
+              scénarios nationaux), le prix du terrain
               baisserait par capitalisation&nbsp;:{" "}
               <span className="whitespace-nowrap">
                 <em>V&prime;</em> = (<em>R</em> &minus; <em>T</em>) / <em>r</em>
