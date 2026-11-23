@@ -1363,17 +1363,23 @@ Ranked by how much they move published (category/quintile) results.
    - **No direct check.** Site value (§3.4) cannot be checked against sales of
      built property; the only direct evidence is rare vacant building-plot sales
      and teardown sales, which are hard to identify in open data.
-   - **Proxy parameters.** Permitted density is proxied by the zone's
-     75th-percentile realised density, because PLU rules (heights, setbacks,
-     heritage protections) are not machine-readable nationally. The square-root
-     density term and the surplus and yard rules are borrowed, not estimated.
+   - **Proxy parameters.** Permitted density (`k_z`, §3.4) is proxied by the
+     zone's 75th-percentile realised density, because PLU rules (heights,
+     setbacks, footprint/CES, heritage protections) are not machine-readable
+     nationally. In corridors recently upzoned for densification where most
+     plots still hold single- or two-storey houses, this empirical 75th
+     percentile understates statutory PLU capacity; future integration of
+     standardized GPU / BDNB regulatory envelopes will allow direct measurement
+     of legal building rights. The square-root density term and the surplus and
+     yard rules are borrowed, not estimated.
    - **Linear plot area elsewhere.** Outside the yard and surplus rules, land is
      linear in plot area: a large plot in a dense zone is valued as a building
      site even where its shape or access would not allow it. The largest-plot
      tenth of Villeurbanne's houses pays about five times today's tax
      (+394 %).
    - **Deferral.** Many such owners would need a payment deferral, which the
-     project's reform includes (`/exonerations-protections`).
+     project's reform includes and whose exact parameters remain to be set
+     (`/exonerations-protections`).
    - **What moves with these choices.** Category results for houses and small
      buildings move most. Income-fifth totals barely move: IRIS land totals
      are kept, but those totals are still the residual's.
@@ -1535,6 +1541,32 @@ Ranked by how much they move published (category/quintile) results.
     or floor, which the revision's categories and localisation coefficients
     would. A parcel holding a co-ownership counts as one. The Fichiers fonciers' per-local rental
     values would give the true starting point (§7).
+
+17. **Tax capitalization.** Observed DVF sales prices (2021–2025) capitalize
+    today's fiscal regime (near-zero tax on bare land, high tax on buildings).
+    After shifting the taxe foncière onto land (nationally ~€43B of TFPB alone,
+    and ~€67B to ~€82B across the national scenarios), land prices would
+    fall through capitalization:
+    `V' = (R − T) / r`, where `R` is gross annual land rent, `T` the annual tax
+    in euros and `r` the capitalization rate, i.e. `V' = R / (r + τ)` for a rate
+    `τ` applied to the post-tax value. The model is static and does not
+    simulate this fall. On its own, the fall does not bias the published
+    distribution: with revenue held constant in each commune, a single rate and
+    a uniform `r`, every land value in the commune is scaled by the same factor
+    `r / (r + τ)`; each owner's share of the levy, and so their bill, is
+    unchanged, and only the rate quoted on post-reform values would be higher
+    than the rate shown. The real biases lie in what that assumption
+    simplifies: capitalization rates that differ across neighbourhoods or
+    property types (expected rent growth); a rent `R` itself raised by
+    abolishing the tax on buildings (building becomes more profitable), unevenly
+    across parcels; and the part of today's tax already capitalized in observed
+    prices, which is not proportional to land rent (1970 rental values). A
+    market-value base remains consistent: the equation has a solution for every
+    `τ`, so the base shrinks without vanishing and the same revenue needs a
+    higher rate. Defining the base instead as an annual **land rental value**
+    (*valeur locative foncière*), continuing the cadastral rental-value logic
+    and revised periodically, is an option that would avoid this circularity;
+    the choice remains open.
 
 ## 7. The Fichiers Fonciers access argument
 

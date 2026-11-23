@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadYields } from "@/lib/data";
 import YieldsChart from "@/components/charts/YieldsChart";
 import {
@@ -439,6 +440,137 @@ export default function ScenariosPage() {
           . Le calcul est statique : les effets attendus de la réforme sur les
           prix, les ventes et les loyers ne sont pas intégrés à ces montants.
         </p>
+      </section>
+
+      <section
+        aria-labelledby="mise-en-oeuvre"
+        className="mt-12 pt-10 border-t border-lisere"
+      >
+        <H3 id="mise-en-oeuvre">Mise en œuvre, transition et réponses aux objections</H3>
+        <p className="font-body text-sm text-gris max-w-3xl leading-relaxed mb-6">
+          Passer d&apos;une taxe sur le bâti à une taxe sur le sol soulève quatre
+          questions concrètes d&apos;incidence économique, de protection des ménages
+          et de gouvernance locale.
+        </p>
+        <div className="grid gap-6 md:grid-cols-2">
+          <article className="border border-lisere bg-creme p-5 flex flex-col gap-2.5">
+            <h4 className="font-display text-base font-medium text-marine leading-snug">
+              Pourquoi le propriétaire ne peut-il pas répercuter la taxe sur le loyer&nbsp;? (Incidence fiscale)
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              En droit français, la taxe foncière n&apos;est pas une charge
+              récupérable sur le locataire (<em>décrets n°&nbsp;87-713</em> pour le
+              parc privé et <em>n°&nbsp;82-955</em> pour le parc social). En
+              économie, à la différence d&apos;une taxe sur la construction ou de la
+              TVA — qui découragent de bâtir et finissent répercutées par la rareté
+              des logements —, la quantité de sol à un emplacement donné est fixe.
+              À l&apos;équilibre du marché (et davantage encore là où l&apos;IRL ou
+              l&apos;encadrement des loyers bornent les hausses), les loyers sont
+              fixés par l&apos;offre et la demande locales, pas par l&apos;impôt du
+              propriétaire. En zone dense, les petits biens sous-bâtis restent en
+              concurrence avec les immeubles collectifs, dont la taxe foncière baisse
+              dans tous les territoires modélisés, tandis que taxer les terrains
+              constructibles nus encourage la mise sur le marché de nouveaux
+              logements — ce qui pèse sur les loyers plutôt que de les faire monter.{" "}
+              <Link href="/sceptiques" className="text-marine underline underline-offset-2">
+                En savoir plus
+              </Link>
+              .
+            </p>
+          </article>
+
+          <article className="border border-lisere bg-creme p-5 flex flex-col gap-2.5">
+            <h4 className="font-display text-base font-medium text-marine leading-snug">
+              Comment protéger les retraités et ménages modestes propriétaires d&apos;une maison&nbsp;? (Lissage et report de paiement)
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Toutes les protections existantes sous conditions de ressources
+              (<em>art. 1390, 1391, 1391&nbsp;B et 1391&nbsp;B&nbsp;ter du CGI</em>)
+              sont maintenues. Pour respecter en outre l&apos;exigence
+              constitutionnelle d&apos;égalité devant les charges publiques
+              (<em>art. 13 de la DDHC</em>) et écarter tout effet confiscatoire, la
+              réforme inclut une montée en charge progressive et un report de
+              paiement, dont les paramètres précis restent à arrêter&nbsp;:
+            </p>
+            <ul className="font-body text-sm text-encre leading-relaxed list-disc pl-5 space-y-1.5">
+              <li>
+                <strong className="font-semibold">Montée en charge progressive</strong>&nbsp;:
+                par exemple, un basculement de 10&nbsp;% par an de l&apos;assiette bâtie
+                vers l&apos;assiette terrain sur dix ans (taux scindé transitoire
+                jusqu&apos;à 100&nbsp;% TVTN).
+              </li>
+              <li>
+                <strong className="font-semibold">Report de paiement à la mutation ou succession (<em>viager fiscal</em>) et plafonnement selon le revenu</strong>&nbsp;:
+                un propriétaire occupant dont la cotisation dépasserait un plafond
+                rapporté à son revenu peut différer le paiement du supplément
+                jusqu&apos;à la vente ou la succession du bien, la créance étant
+                garantie par une sûreté sur le bien (une hypothèque légale du Trésor,
+                par exemple). L&apos;objectif&nbsp;: qu&apos;aucun ménage modeste ou
+                retraité ne soit contraint de vendre faute de liquidités.{" "}
+                <Link href="/exonerations-protections" className="text-marine underline underline-offset-2">
+                  Voir les protections
+                </Link>
+                {" "}et{" "}
+                <Link href="/voie-juridique" className="text-marine underline underline-offset-2">
+                  la voie juridique
+                </Link>
+                .
+              </li>
+            </ul>
+          </article>
+
+          <article className="border border-lisere bg-creme p-5 flex flex-col gap-2.5">
+            <h4 className="font-display text-base font-medium text-marine leading-snug">
+              Quel traitement pour le logement social (HLM) et les exonérations en cours&nbsp;?
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Le modèle de référence applique un taux foncier unique sans exonérations
+              fiscales locales, afin de remplacer une aide cachée payée par les
+              communes d&apos;accueil par un soutien budgétaire transparent. Toutefois,
+              les opérations HLM récentes bénéficient aujourd&apos;hui d&apos;exonérations
+              de taxe foncière de 15 à 25&nbsp;ans (<em>art. 1384&nbsp;A et 1384&nbsp;C
+              du CGI</em>) — sur lesquelles reposaient leurs plans de financement avec
+              loyers plafonnés (<em>PLAI, PLUS, PLS</em>) —, ainsi que d&apos;un
+              abattement conventionné de 30&nbsp;% en quartier prioritaire
+              (<em>art. 1388&nbsp;bis</em>). Les exonérations de 15 à 25&nbsp;ans déjà
+              engagées et les conventions QPV en cours appelleraient une transition
+              dédiée, dont la forme reste à arrêter&nbsp;: compensation par une aide
+              budgétaire directe, ou maintien jusqu&apos;à leur terme. L&apos;objectif
+              serait de protéger les plans de financement engagés&nbsp;; les loyers
+              sociaux plafonnés ne seraient pas directement touchés, la taxe foncière
+              n&apos;étant pas récupérable sur les locataires. Pour le parc non
+              exonéré où l&apos;impôt du bailleur augmente, la hausse pèse sur son
+              autofinancement et suppose un suivi budgétaire transparent.{" "}
+              <Link href="/exonerations-protections" className="text-marine underline underline-offset-2">
+                Voir le détail HLM
+              </Link>
+              .
+            </p>
+          </article>
+
+          <article className="border border-lisere bg-creme p-5 flex flex-col gap-2.5">
+            <h4 className="font-display text-base font-medium text-marine leading-snug">
+              Comment éviter qu&apos;une commune ne restreigne son PLU pour réduire l&apos;impôt&nbsp;?
+            </h4>
+            <p className="font-body text-sm text-encre leading-relaxed">
+              Si les droits à construire fixés par le zonage entrent dans
+              l&apos;évaluation du sol, des propriétaires de maisons individuelles
+              pourraient pousser le maire à abaisser la constructibilité de leur rue
+              pour alléger leur impôt. À produit constant, ce sous-zonage ne
+              réduirait pas la recette de la commune&nbsp;: il déplacerait l&apos;impôt
+              vers les autres propriétaires. Plusieurs garde-fous institutionnels
+              existent ou sont envisageables&nbsp;: le transfert déjà engagé de
+              l&apos;urbanisme à l&apos;échelle intercommunale (<em>PLUi</em>), qui
+              soustrait le zonage à un arbitrage rue par rue&nbsp;; des valeurs
+              foncières de référence établies par la DGFiP et lissées à l&apos;échelle
+              de l&apos;EPCI ou de la métropole (au prix d&apos;un lien moins strict
+              avec les micro-zonages locaux)&nbsp;; et, en complément des sanctions
+              déjà prévues par la loi <em>SRU</em>, une prise en compte des objectifs
+              du programme local de l&apos;habitat (<em>PLH</em>, intercommunal) dans
+              les dotations (<em>DGF / potentiel fiscal</em>).
+            </p>
+          </article>
+        </div>
       </section>
     </div>
   );

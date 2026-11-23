@@ -1519,19 +1519,24 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      vérifiée sur les ventes de biens bâtis ; les seules preuves directes sont
      les rares ventes de terrains à bâtir nus et les ventes de biens destinés à
      la démolition, difficiles à repérer dans les données ouvertes.
-   - **Paramètres de substitution.** La densité permise est approchée par la
-     densité réalisée au 75ᵉ centile de la zone, faute de règles du PLU
-     (hauteurs, reculs, protections patrimoniales) lisibles par machine à
-     l'échelle nationale. La racine carrée de la densité et les règles du
-     surplus et de la cour sont empruntées, non estimées.
+   - **Paramètres de substitution.** La densité permise (`k_z`, §3.4) est
+     approchée par la densité réalisée au 75ᵉ centile de la zone, faute de
+     règles du PLU (hauteurs, reculs, emprise au sol, protections patrimoniales)
+     lisibles par machine à l'échelle nationale. Dans les secteurs récemment
+     ouverts à la densification où la plupart des parcelles portent encore des
+     maisons de plain-pied ou R+1, ce 75ᵉ centile empirique sous-estime la
+     capacité légale du PLU ; l'intégration future d'enveloppes réglementaires
+     normalisées (GPU / BDNB) permettra de mesurer directement les droits à
+     construire légaux. La racine carrée de la densité et les règles du surplus
+     et de la cour sont empruntées, non estimées.
    - **Surface linéaire ailleurs.** Hors ces deux règles, le terrain est
      linéaire en surface : une grande parcelle en zone dense est évaluée comme
      un terrain à bâtir même là où sa forme ou son accès ne le permettraient
      pas. Le dixième des maisons de Villeurbanne aux plus grandes parcelles paie
      environ cinq fois l'impôt actuel (+394 %).
    - **Report de paiement.** Beaucoup de ces propriétaires auraient besoin d'un
-     report de paiement, que prévoit la réforme du projet
-     (`/exonerations-protections`).
+     report de paiement, que la réforme du projet inclut et dont les paramètres
+     précis restent à arrêter (`/exonerations-protections`).
    - **Ce qui dépend de ces choix.** Les résultats par catégorie pour les
      maisons et les petits immeubles bougent le plus. Les totaux par cinquième
      de revenu bougent peu : les totaux de terrain par IRIS sont conservés,
@@ -1717,6 +1722,34 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     ni son étage, que verraient les catégories et coefficients de
     localisation de la révision. Une parcelle en copropriété compte pour une. Les valeurs locatives par
     local des Fichiers fonciers donneraient le vrai point de départ (§7).
+
+17. **Capitalisation fiscale.** Les prix DVF observés (2021–2025) capitalisent
+    le régime fiscal actuel (imposition quasi nulle du terrain nu, forte
+    taxation du bâti). Après le basculement de la taxe foncière sur le sol
+    (à l'échelle nationale, ~43 Md€ pour la seule TFPB, et ~67 à ~82 Md€
+    dans les scénarios nationaux), le prix du terrain
+    baisserait par capitalisation : `V' = (R − T) / r`, où `R` est la rente
+    foncière annuelle brute, `T` l'impôt annuel en euros et `r` le taux de
+    capitalisation, soit `V' = R / (r + τ)` pour un taux `τ` appliqué à la
+    valeur après impôt. Le modèle, statique, ne simule pas cette baisse. Elle
+    ne fausse pas, à elle seule, la répartition publiée : à produit constant
+    dans chaque commune, avec un taux unique et un `r` uniforme, toutes les
+    valeurs foncières de la commune baissent du même facteur `r / (r + τ)` ; la
+    part de chaque propriétaire dans l'impôt, donc sa cotisation, est
+    inchangée, et seul le taux rapporté aux valeurs d'après réforme serait plus
+    élevé que le taux affiché. Les biais réels tiennent à ce que cette
+    hypothèse simplifie : des taux de capitalisation qui diffèrent selon les
+    quartiers ou les biens (perspectives de croissance des loyers) ; une rente
+    `R` elle-même relevée par la suppression de l'impôt sur le bâti (construire
+    devient plus rentable), inégalement selon les parcelles ; et la part de
+    l'impôt actuel déjà capitalisée dans les prix observés, qui n'est pas
+    proportionnelle à la rente du sol (valeurs locatives de 1970). Une assiette
+    en valeur vénale reste cohérente : l'équation a une solution pour tout `τ`,
+    l'assiette se contracte sans disparaître et le même produit demande un taux
+    plus élevé. Définir plutôt l'assiette comme une **valeur locative
+    foncière** (rente annuelle du sol), dans le prolongement de la valeur
+    locative cadastrale et révisée périodiquement, est une option qui éviterait
+    cette circularité ; le choix reste ouvert.
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 
