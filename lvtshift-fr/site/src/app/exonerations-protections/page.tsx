@@ -6,7 +6,7 @@ import { socialSummary, socialSummarySentence } from "@/lib/socialHousing";
 export const metadata = {
   title: "Exonérations et protections — Pour une terre productive",
   description:
-    "Aucune protection des ménages n'est supprimée. La réforme allège l'impôt sur le logement occupé, ajoute un report de paiement pour les propriétaires fragiles et met fin à l'exonération des bailleurs sociaux, une aide cachée payée par les communes.",
+    "Aucune protection des ménages n'est supprimée. La réforme inclut un report de paiement (dont les paramètres restent à arrêter) pour les propriétaires fragiles et met fin à l'exonération des bailleurs sociaux, une aide cachée payée par les communes.",
 };
 
 export default function ExonerationsProtectionsPage() {

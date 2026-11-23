@@ -1088,8 +1088,9 @@ export default function MethodologiePage() {
             <p className="font-body text-sm text-encre leading-relaxed">
               Les prix DVF observés (2021–2025) capitalisent le régime fiscal actuel
               (imposition quasi nulle du terrain nu, forte taxation du bâti). Après le
-              basculement de la taxe foncière sur le sol (environ 43&nbsp;Md€ de TFPB,
-              jusqu&apos;à 67&nbsp;Md€ dans le scénario&nbsp;1), le prix du terrain
+              basculement de la taxe foncière sur le sol (environ 43&nbsp;Md€ de TFPB
+              dans le modèle communal, et de 67 à 82&nbsp;Md€ dans les scénarios
+              nationaux), le prix du terrain
               baisserait par capitalisation&nbsp;:{" "}
               <span className="whitespace-nowrap">
                 <em>V&prime;</em> = (<em>R</em> &minus; <em>T</em>) / <em>r</em>
@@ -1127,16 +1128,17 @@ export default function MethodologiePage() {
             </p>
           </div>
 
-          {/* Empirical p75 k_z vs statutory PLU capacity */}
+          {/* Empirical p75 permitted density vs statutory PLU capacity */}
           <div>
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
-              Densité permise empirique (<em>k<sub>z</sub></em>) et gabarit légal du PLU
+              Densité permise empirique et gabarit légal du PLU
             </h4>
             <p className="font-body text-sm text-encre leading-relaxed">
               Les règles de hauteur, de retrait et d&apos;emprise au sol (CES)
               n&apos;étant pas numérisées de manière homogène et exploitable par machine
               dans le Géoportail de l&apos;Urbanisme (GPU) pour toutes les communes, la
-              densité permise par zone <em>k<sub>z</sub></em> est estimée par le
+              densité permise par zone (notée <em>k<sub>z</sub></em> dans la
+              documentation technique) est estimée par le
               75<sup>e</sup>&nbsp;centile (3<sup>e</sup>&nbsp;quartile) de la densité
               bâtie existante dans chaque zone du PLU. Dans les secteurs récemment
               ouverts à la densification où la plupart des parcelles portent encore des

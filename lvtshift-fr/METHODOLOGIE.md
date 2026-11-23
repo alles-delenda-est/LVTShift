@@ -1519,19 +1519,24 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      vérifiée sur les ventes de biens bâtis ; les seules preuves directes sont
      les rares ventes de terrains à bâtir nus et les ventes de biens destinés à
      la démolition, difficiles à repérer dans les données ouvertes.
-   - **Paramètres de substitution.** La densité permise est approchée par la
-     densité réalisée au 75ᵉ centile de la zone, faute de règles du PLU
-     (hauteurs, reculs, protections patrimoniales) lisibles par machine à
-     l'échelle nationale. La racine carrée de la densité et les règles du
-     surplus et de la cour sont empruntées, non estimées.
+   - **Paramètres de substitution.** La densité permise (`k_z`, §3.4) est
+     approchée par la densité réalisée au 75ᵉ centile de la zone, faute de
+     règles du PLU (hauteurs, reculs, emprise au sol, protections patrimoniales)
+     lisibles par machine à l'échelle nationale. Dans les secteurs récemment
+     ouverts à la densification où la plupart des parcelles portent encore des
+     maisons de plain-pied ou R+1, ce 75ᵉ centile empirique sous-estime la
+     capacité légale du PLU ; l'intégration future d'enveloppes réglementaires
+     normalisées (GPU / BDNB) permettra de mesurer directement les droits à
+     construire légaux. La racine carrée de la densité et les règles du surplus
+     et de la cour sont empruntées, non estimées.
    - **Surface linéaire ailleurs.** Hors ces deux règles, le terrain est
      linéaire en surface : une grande parcelle en zone dense est évaluée comme
      un terrain à bâtir même là où sa forme ou son accès ne le permettraient
      pas. Le dixième des maisons de Villeurbanne aux plus grandes parcelles paie
      environ cinq fois l'impôt actuel (+394 %).
    - **Report de paiement.** Beaucoup de ces propriétaires auraient besoin d'un
-     report de paiement, que prévoit la réforme du projet
-     (`/exonerations-protections`).
+     report de paiement, que la réforme du projet inclut et dont les paramètres
+     précis restent à arrêter (`/exonerations-protections`).
    - **Ce qui dépend de ces choix.** Les résultats par catégorie pour les
      maisons et les petits immeubles bougent le plus. Les totaux par cinquième
      de revenu bougent peu : les totaux de terrain par IRIS sont conservés,
@@ -1721,7 +1726,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 17. **Capitalisation fiscale.** Les prix DVF observés (2021–2025) capitalisent
     le régime fiscal actuel (imposition quasi nulle du terrain nu, forte
     taxation du bâti). Après le basculement de la taxe foncière sur le sol
-    (~43 Md€ de TFPB, jusqu'à ~67 Md€ dans le scénario 1), le prix du terrain
+    (~43 Md€ de TFPB dans le modèle communal, et ~67 à ~82 Md€ dans les
+    scénarios nationaux), le prix du terrain
     baisserait par capitalisation : `V' = (R − T) / r`, où `R` est la rente
     foncière annuelle brute, `T` l'impôt annuel en euros et `r` le taux de
     capitalisation, soit `V' = R / (r + τ)` pour un taux `τ` appliqué à la
@@ -1744,18 +1750,6 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     foncière** (rente annuelle du sol), dans le prolongement de la valeur
     locative cadastrale et révisée périodiquement, est une option qui éviterait
     cette circularité ; le choix reste ouvert.
-
-18. **Densité permise empirique (`k_z`) vs gabarit légal du PLU.** Comme
-    indiqué au point 2 et au §3.4, les règles de hauteur, de retrait et
-    d'emprise au sol (CES) n'étant pas numérisées de manière homogène et
-    exploitable par machine dans le GPU national pour toutes les communes, la
-    densité permise par zone `k_z` est approchée par le 75ᵉ centile
-    (3ᵉ quartile) de la densité bâtie existante dans chaque zone du PLU. Dans
-    les secteurs récemment ouverts à la densification où la plupart des
-    parcelles portent encore des maisons de plain-pied ou R+1, ce 75ᵉ centile
-    empirique sous-estime la capacité légale du PLU ; l'intégration future
-    d'enveloppes réglementaires normalisées (GPU / BDNB) permettra de mesurer
-    directement les droits à construire légaux.
 
 ## 7. L'argument d'accès aux Fichiers fonciers
 

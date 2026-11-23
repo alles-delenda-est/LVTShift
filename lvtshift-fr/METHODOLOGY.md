@@ -1363,17 +1363,23 @@ Ranked by how much they move published (category/quintile) results.
    - **No direct check.** Site value (§3.4) cannot be checked against sales of
      built property; the only direct evidence is rare vacant building-plot sales
      and teardown sales, which are hard to identify in open data.
-   - **Proxy parameters.** Permitted density is proxied by the zone's
-     75th-percentile realised density, because PLU rules (heights, setbacks,
-     heritage protections) are not machine-readable nationally. The square-root
-     density term and the surplus and yard rules are borrowed, not estimated.
+   - **Proxy parameters.** Permitted density (`k_z`, §3.4) is proxied by the
+     zone's 75th-percentile realised density, because PLU rules (heights,
+     setbacks, footprint/CES, heritage protections) are not machine-readable
+     nationally. In corridors recently upzoned for densification where most
+     plots still hold single- or two-storey houses, this empirical 75th
+     percentile understates statutory PLU capacity; future integration of
+     standardized GPU / BDNB regulatory envelopes will allow direct measurement
+     of legal building rights. The square-root density term and the surplus and
+     yard rules are borrowed, not estimated.
    - **Linear plot area elsewhere.** Outside the yard and surplus rules, land is
      linear in plot area: a large plot in a dense zone is valued as a building
      site even where its shape or access would not allow it. The largest-plot
      tenth of Villeurbanne's houses pays about five times today's tax
      (+394 %).
    - **Deferral.** Many such owners would need a payment deferral, which the
-     project's reform includes (`/exonerations-protections`).
+     project's reform includes and whose exact parameters remain to be set
+     (`/exonerations-protections`).
    - **What moves with these choices.** Category results for houses and small
      buildings move most. Income-fifth totals barely move: IRIS land totals
      are kept, but those totals are still the residual's.
@@ -1538,8 +1544,9 @@ Ranked by how much they move published (category/quintile) results.
 
 17. **Tax capitalization.** Observed DVF sales prices (2021–2025) capitalize
     today's fiscal regime (near-zero tax on bare land, high tax on buildings).
-    After shifting the taxe foncière onto land (~€43B of TFPB, up to ~€67B
-    under Scenario 1), land prices would fall through capitalization:
+    After shifting the taxe foncière onto land (~€43B of TFPB in the commune
+    model, and ~€67B to ~€82B across the national scenarios), land prices would
+    fall through capitalization:
     `V' = (R − T) / r`, where `R` is gross annual land rent, `T` the annual tax
     in euros and `r` the capitalization rate, i.e. `V' = R / (r + τ)` for a rate
     `τ` applied to the post-tax value. The model is static and does not
@@ -1560,17 +1567,6 @@ Ranked by how much they move published (category/quintile) results.
     (*valeur locative foncière*), continuing the cadastral rental-value logic
     and revised periodically, is an option that would avoid this circularity;
     the choice remains open.
-
-18. **Empirical permitted density (`k_z`) vs. statutory PLU capacity.** As
-    noted in item 2 and §3.4, because machine-readable height, setback and
-    footprint (CES) rules are not uniformly digitized across all communes in
-    the national GPU, permitted zone density `k_z` is estimated from the 75th
-    percentile (3rd quartile) of existing built density within each PLU zone.
-    In corridors recently upzoned for densification where most plots still hold
-    single-storey or two-storey houses, the empirical 75th percentile
-    understates statutory PLU building capacity; future integration of
-    standardized GPU / BDNB regulatory envelopes will allow direct measurement
-    of legal building rights.
 
 ## 7. The Fichiers Fonciers access argument
 
