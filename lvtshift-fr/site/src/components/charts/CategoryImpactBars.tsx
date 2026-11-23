@@ -3,12 +3,13 @@
 /**
  * CategoryImpactBars — horizontal diverging bars per property category,
  * with a 3-mode switcher:
- *   - "median" (default): Par parcelle (médiane) — median_change_pct, one
- *     metric for every category, so every bar is comparable with every other.
- *   - "household": Par logement (ménage type) — uses
- *     household_median_change_pct for residential categories, falling back to
- *     median_change_pct with a "(par parcelle)" indicator for non-residential
- *     categories so every category stays visible.
+ *   - "household" (default): Par logement (ménage type) — uses
+ *     household_median_change_pct for private residential categories (grouped
+ *     at the top), separated by a dashed divider from non-residential and
+ *     social-landlord categories displayed below by parcel ("(par parcelle)"),
+ *     so two different units are never interleaved on the same sort order.
+ *   - "median": Par parcelle (médiane) — median_change_pct, one metric for
+ *     every category, so every bar is comparable with every other.
  *   - "total": Total catégorie — total_change_pct across the whole category.
  *
  * Colour convention:
@@ -61,8 +62,8 @@ import { useNarrow } from "./useNarrow";
 export type CategoryBarMode = "household" | "median" | "total";
 
 const MODE_OPTIONS: { id: CategoryBarMode; label: string }[] = [
-  { id: "median", label: "Par parcelle (médiane)" },
   { id: "household", label: "Par logement (ménage type)" },
+  { id: "median", label: "Par parcelle (médiane)" },
   { id: "total", label: "Total catégorie" },
 ];
 
@@ -147,6 +148,18 @@ function makeCatTooltip(mode: CategoryBarMode) {
           )}
         </p>
 
+        {mode === "total" && (
+          totalText(row) !== "—" ? (
+            <p style={{ fontWeight: 600 }}>
+              Variation totale de la catégorie&nbsp;: {totalText(row)}
+            </p>
+          ) : (
+            <p style={{ color: GRIS_PALE }}>
+              Total non publié (une parcelle pèse plus d&apos;un dixième)
+            </p>
+          )
+        )}
+
         {useDwelling ? (
           <>
             <p>
@@ -179,13 +192,8 @@ function makeCatTooltip(mode: CategoryBarMode) {
           </>
         )}
 
-        {totalText(row) !== "—" && (
+        {mode !== "total" && totalText(row) !== "—" && (
           <p>Variation totale de la catégorie&nbsp;: {totalText(row)}</p>
-        )}
-        {mode === "total" && totalText(row) === "—" && (
-          <p style={{ color: GRIS_PALE }}>
-            Total non publié (une parcelle pèse plus d&apos;un dixième)
-          </p>
         )}
         {row.bandLo !== null && row.bandHi !== null && (
           <p style={{ color: GRIS_PALE }}>
@@ -321,9 +329,10 @@ export default function CategoryImpactBars({
   const narrow = useNarrow();
   const hasHouseholdData = byCategory.some((r) => r.household_median_change_pct != null);
   const hasTotals = byCategory.some((r) => totalText(r) !== "—");
-  // Parcel median by default: one metric for every category, so no bar is
-  // compared with a bar measured differently; the per-dwelling view is one click away.
-  const [requestedMode, setRequestedMode] = useState<CategoryBarMode>("median");
+  // Per-dwelling by default (falling back to parcel median on payloads
+  // without dwelling figures); in "household" mode, residential per-dwelling
+  // rows are grouped above non-residential per-parcel rows with a divider.
+  const [requestedMode, setRequestedMode] = useState<CategoryBarMode>("household");
   const mode: CategoryBarMode =
     requestedMode === "household" && !hasHouseholdData
       ? "median"
@@ -334,7 +343,9 @@ export default function CategoryImpactBars({
   const low = byKey(band?.low, "category");
   const high = byKey(band?.high, "category");
 
-  /* Sort: most positive → least positive → negative; null rows last */
+  /* Sort: in "household" mode, per-dwelling residential categories first, then
+     per-parcel fallback categories below (never interleaving two units). Within
+     each group: most positive → least positive → negative; null rows last. */
   const sortedData: ProcessedRow[] = [...byCategory]
     .map((row) => {
       let displayPct: number | null;
@@ -379,6 +390,9 @@ export default function CategoryImpactBars({
       };
     })
     .sort((a, b) => {
+      if (mode === "household" && a.isParcelFallback !== b.isParcelFallback) {
+        return a.isParcelFallback ? 1 : -1;
+      }
       if (a.isNull && !b.isNull) return 1;
       if (!a.isNull && b.isNull) return -1;
       return b.barValue - a.barValue;
@@ -414,7 +428,9 @@ export default function CategoryImpactBars({
   const totalTick = makeTotalTick(sortedData);
   const withheldTotal = hasTotals && sortedData.some((r) => totalText(r) === "—");
   const colWidth = narrow ? 58 : 80;
-  const vacant = sortedData.find((r) => r.isNull && r.category === "Vacant Land");
+  const vacant = sortedData.find(
+    (r) => r.isNull && r.category === "Vacant Land" && (mode !== "total" || r.total_change_eur != null),
+  );
   const offScale = sortedData.filter((r) => r.offScale);
   const vacantTaxed = unbuiltReplaced
     ? sortedData.find((r) => !r.isNull && r.category === "Vacant Land")
@@ -422,7 +438,14 @@ export default function CategoryImpactBars({
   const otherNull = sortedData.find(
     (r) => r.isNull && r.category !== "Vacant Land" && (mode !== "total" || r.total_change_eur != null),
   );
+  const hasDwellingRows = mode === "household" && sortedData.some((r) => !r.isParcelFallback);
   const hasFallbackRows = mode === "household" && sortedData.some((r) => r.isParcelFallback);
+  const firstFallbackLabel =
+    hasDwellingRows && hasFallbackRows
+      ? sortedData.find((r) => r.isParcelFallback)?.label_fr
+      : undefined;
+  const hasAnyBand = sortedData.some((r) => r.bandLo !== null && r.bandHi !== null);
+  const hasBandProp = Boolean(band?.low?.length || band?.high?.length);
   const availableModes = MODE_OPTIONS.filter(
     (m) => (m.id !== "household" || hasHouseholdData) && (m.id !== "total" || hasTotals),
   );
@@ -532,6 +555,15 @@ export default function CategoryImpactBars({
             cursor={{ fill: "rgba(0,0,0,0.04)" }}
           />
           <ReferenceLine x={0} stroke={ENCRE} strokeWidth={1.5} />
+          {firstFallbackLabel && (
+            <ReferenceLine
+              y={firstFallbackLabel}
+              position="start"
+              stroke={LISERE}
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+            />
+          )}
           <Bar dataKey="barValue" isAnimationActive={false}>
             {sortedData.map((entry, idx) => (
               <Cell key={`cat-cell-${idx}`} fill={cellFill(entry)} />
@@ -560,9 +592,10 @@ export default function CategoryImpactBars({
       {hasFallbackRows && (
         <p className="text-xs text-gris font-body mt-1 max-w-3xl leading-relaxed">
           {narrow ? "‡ " : ""}En mode «&nbsp;Par logement&nbsp;», les catégories
-          résidentielles privées sont pondérées par le nombre de logements (un
-          immeuble de 40 logements compte 40 fois). Les catégories non
-          résidentielles et les bailleurs sociaux restent affichés par parcelle.
+          résidentielles privées figurent en haut, pondérées par le nombre de
+          logements (un immeuble de 40 logements compte 40 fois). Sous le trait
+          pointillé, les catégories non résidentielles et les bailleurs sociaux
+          sont affichés à part par parcelle.
         </p>
       )}
       {mode === "median" && hasHouseholdData && (
@@ -594,9 +627,9 @@ export default function CategoryImpactBars({
           que la taxe foncière sur les propriétés non bâties et sa taxe
           additionnelle, que la réforme remplace. Assises sur des valeurs
           cadastrales de 1961, elles sont très faibles : la hausse est donc
-          forte en proportion, pour un montant médian de{" "}
+          forte en proportion (montant médian&nbsp;:{" "}
           {eurosExact(Math.abs(vacantTaxed.median_change_eur))} par parcelle et
-          par an. Faute de données par parcelle, le modèle répartit la taxe
+          par an). Faute de données par parcelle, le modèle répartit la taxe
           actuelle selon la surface : ce chiffre est une moyenne communale.
         </p>
       )}
@@ -618,6 +651,21 @@ export default function CategoryImpactBars({
               pèserait plus d&apos;un dixième.
             </>
           )}
+        </p>
+      )}
+      {hasAnyBand && (
+        <p className="text-xs text-gris font-body italic mt-2 max-w-3xl leading-relaxed">
+          Les traits fins indiquent la fourchette obtenue en faisant varier le coût
+          du bâti de ±20&nbsp;% (hypothèses basse et haute), ce qui déplace la
+          valeur du sol des parcelles bâties d&apos;un quartier à l&apos;autre : la
+          valeur du sol étant imputée, seule une conclusion qui tient sur toute la
+          fourchette est robuste.
+        </p>
+      )}
+      {mode === "total" && !hasAnyBand && hasBandProp && (
+        <p className="text-xs text-gris font-body italic mt-2 max-w-3xl leading-relaxed">
+          La fourchette sur le coût du bâti (±20&nbsp;%) est publiée pour les
+          médianes (par logement et par parcelle), pas pour les totaux par catégorie.
         </p>
       )}
     </figure>

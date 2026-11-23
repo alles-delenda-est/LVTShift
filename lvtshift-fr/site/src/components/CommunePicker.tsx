@@ -27,8 +27,13 @@ import TerritoryMembers from "@/components/TerritoryMembers";
 import SocialHousingNote from "@/components/SocialHousingNote";
 import PoorestNote from "@/components/PoorestNote";
 import { publishedCategories, withheldCategories } from "@/lib/disclosure";
-import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
+import {
+  computePrivateHouseholdWinners,
+  computePrivateHouseholdWinnersForLeg,
+} from "@/lib/householdWinners";
+import { altColumn } from "@/lib/baselineRange";
 import { categoryNotes, hasCategoryNotes } from "@/lib/categoryNotes";
+import { socialNote } from "@/lib/socialHousing";
 import { pct } from "@/lib/format";
 import { ROUGE, GREEN } from "@/components/charts/theme";
 
@@ -97,7 +102,15 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
       : commune.name;
 
   const householdWinners = computePrivateHouseholdWinners(commune.by_category);
+  const householdWinnersAlt = computePrivateHouseholdWinnersForLeg(
+    commune.by_category,
+    commune.baseline_sensitivity?.low?.by_category,
+  );
+  const altLabel = commune.baseline_sensitivity
+    ? altColumn(commune.baseline_sensitivity)
+    : null;
   const notes = categoryNotes(publishedCategories(commune.by_category));
+  const social = socialNote(commune);
 
   return (
     <div>
@@ -210,7 +223,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
             {householdWinners && (
               <div className="mt-4 border border-lisere bg-creme px-5 py-4">
                 <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-gris font-body mb-1">
-                  Par logement (parc privé)
+                  Par logement (parc privé{householdWinnersAlt ? " — cas central" : ""})
                 </p>
                 <p className="font-display text-base md:text-lg font-medium text-marine leading-snug">
                   Logements privés dont la taxe foncière augmente&nbsp;:{" "}
@@ -223,6 +236,19 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                     {pct(householdWinners.pctPayingLess)}
                   </span>
                 </p>
+                {householdWinnersAlt && altLabel && (
+                  <p className="text-xs text-encre font-body mt-1 leading-relaxed">
+                    {altLabel.label} ({altLabel.sub})&nbsp;:{" "}
+                    <span className="font-medium" style={{ color: ROUGE }}>
+                      {pct(householdWinnersAlt.pctPayingMore)}
+                    </span>{" "}
+                    augmentent ·{" "}
+                    <span className="font-medium" style={{ color: GREEN }}>
+                      {pct(householdWinnersAlt.pctPayingLess)}
+                    </span>{" "}
+                    baissent ou restent stables.
+                  </p>
+                )}
                 <p className="text-xs text-gris font-body italic mt-1 leading-relaxed">
                   Sur {householdWinners.totalDwellings.toLocaleString("fr-FR")} logements
                   privés modélisés (maisons, petits immeubles de 2 à 4 logements et
@@ -311,8 +337,7 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                 high: commune.headline_sensitivity?.high?.by_category,
               }}
             />
-            <BandNote />
-            <SocialHousingNote commune={commune} />
+            {!notes.social && <SocialHousingNote commune={commune} />}
             {hasCategoryNotes(notes) && (
               <div className="mt-4 border border-lisere bg-creme px-4 py-3.5 max-w-3xl">
                 <p className="text-xs uppercase tracking-[0.14em] text-gris font-body mb-2">
@@ -332,16 +357,21 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                   {notes.social && (
                     <li>
                       <strong className="font-semibold">{notes.social.label}</strong>&nbsp;:
+                      parcelles détenues surtout par des organismes HLM ou des SEM
+                      {social?.kind === "category" && social.counts ? ` (${social.counts})` : ""}.
                       {notes.social.totalSentence ? ` ${notes.social.totalSentence}` : ""}{" "}
-                      La variation médiane par parcelle intègre la fin modélisée des
-                      exonérations temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et
-                      1384&nbsp;C du CGI) sur les opérations récentes. Le traitement des
-                      exonérations en cours reste à arrêter (compensation budgétaire sur
-                      leur durée restante, ou maintien jusqu&apos;à leur terme)&nbsp;: voir{" "}
+                      Le modèle simule la fin des exonérations temporaires de 15 à 25&nbsp;ans
+                      (art. 1384&nbsp;A et 1384&nbsp;C du CGI) et de l&apos;abattement de 30&nbsp;%
+                      en quartier prioritaire (art. 1388&nbsp;bis) ; les modalités de transition
+                      pour les exonérations en cours restent à arrêter (compensation budgétaire
+                      sur leur durée restante, ou maintien jusqu&apos;à leur terme). Cette taxe
+                      n&apos;étant pas récupérable sur les loyers sociaux plafonnés, elle pèse
+                      sur le bailleur et n&apos;entre dans aucun graphique par revenu des ménages
+                      (voir{" "}
                       <Link href="/exonerations-protections" className="underline underline-offset-2">
                         Exonérations et protections
                       </Link>
-                      .
+                      ).
                     </li>
                   )}
                   {notes.industrial && (

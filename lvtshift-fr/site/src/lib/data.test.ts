@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { loadIndex, loadCommune, loadValidation, loadRegister } from "@/lib/data";
-import { computePrivateHouseholdWinners } from "@/lib/householdWinners";
+import {
+  computePrivateHouseholdWinners,
+  computePrivateHouseholdWinnersForLeg,
+} from "@/lib/householdWinners";
 
 describe("data loaders", () => {
   it("loads the index with the 9 modelled communes", () => {
@@ -39,5 +42,15 @@ describe("data loaders", () => {
     expect(winners?.totalDwellings).toBe(1026625);
     expect(winners?.pctPayingLess).toBe(71.4);
     expect(winners?.pctPayingMore).toBe(28.6);
+
+    const alt = computePrivateHouseholdWinnersForLeg(
+      paris.by_category,
+      paris.baseline_sensitivity?.low?.by_category,
+    );
+    expect(alt).toEqual({
+      totalDwellings: 1026625,
+      pctPayingMore: 41.3,
+      pctPayingLess: 58.7,
+    });
   });
 });
