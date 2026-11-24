@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
-import { countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
+import { bothPayLessNote, countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
 import { CollectiveHousingBanner } from "@/components/CollectiveHousingBanner";
+import VariantTerm from "@/components/VariantTerm";
 import { panelLandShares } from "@/lib/panel";
 
 /** One decimal, French comma ("9,8"); "n. d." when missing. */
@@ -35,6 +36,7 @@ export default function Home() {
   const payloads = communes.map((c) => loadCommune(c.commune_key));
   const impact = impactSummary(payloads);
   const gaps = quintileGaps(payloads);
+  const gapNote = bothPayLessNote(payloads, gaps);
 
   return (
     <div>
@@ -188,8 +190,11 @@ export default function Home() {
               catégorie.{" "}
               {impact.alt && (
                 <>
-                  Deux nombres : l&apos;un pour le cas central, l&apos;autre
-                  pour la variante locale, deux estimations de la part des
+                  Deux nombres : l&apos;un pour le{" "}
+                  <VariantTerm kind="central" tone="dark">cas central</VariantTerm>,
+                  l&apos;autre pour la{" "}
+                  <VariantTerm kind="local" tone="dark">variante locale</VariantTerm>,
+                  deux estimations de la part des
                   locaux professionnels dans la taxe actuelle. Part qui change
                   de payeur : cas central.{" "}
                 </>
@@ -223,6 +228,7 @@ export default function Home() {
       <CollectiveHousingBanner
         impact={impact}
         gaps={gaps}
+        gapNote={gapNote}
         footer={
           <p className="text-sm">
             <Link href="/resultats" className="underline underline-offset-2 hover:text-rouge">
@@ -283,9 +289,10 @@ export default function Home() {
             <strong>Incertitude principale.</strong> Pour savoir qui gagne, il
             faut connaître ce que chaque type de bien paie aujourd&apos;hui. Aucune
             donnée publique ne donne la part des bureaux et commerces dans la
-            taxe foncière d&apos;une commune ; nous l&apos;estimons. Une variante
-            locale, tirée de la taxe d&apos;habitation de 2017, la place plus
-            haut que notre estimation centrale dans presque toutes les villes
+            taxe foncière d&apos;une commune ; nous l&apos;estimons. Une{" "}
+            <VariantTerm kind="local">variante locale</VariantTerm>, tirée de la
+            taxe d&apos;habitation de 2017, la place plus haut que notre{" "}
+            <VariantTerm kind="central">estimation centrale</VariantTerm> dans presque toutes les villes
             modélisées : les ménages paieraient alors aujourd&apos;hui moins, et
             la réforme leur serait moins favorable. Le classement, lui, change
             peu : les plus modestes s&apos;en sortent mieux que les plus aisés

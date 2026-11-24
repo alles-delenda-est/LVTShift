@@ -596,6 +596,9 @@ LAND_MODEL = {
     # below this we shrink toward / fall back to the commune median.
     "min_tab_sales_cell": 8,
     "min_tab_sales_commune": 5,
+    # Building-less urban land counts as open space or business land when BD
+    # TOPO covers at least this share of it with that use (land_use.vacant_use).
+    "land_use_cover_threshold": 0.5,
     # Fallback buffer (m) around buildings to call a parcel constructible where
     # GPU has no coverage (RNU communes / uncovered slivers).
     "rnu_building_buffer_m": 25.0,
@@ -650,6 +653,12 @@ SITE_VALUE = {
     # zones run 0.2–0.9 (Lyon URi1a 0.93, Villeurbanne 0.78, Cahors Ub 0.47),
     # mixed and collective zones 1.4–6.6.
     "surplus_max_ref_far": 1.0,
+    # Building-less land (estimate.vacant_site_value) is valued like built land
+    # of its IRIS and zone. A building-less parcel smaller than this fraction of
+    # its zone's median built plot (strips, passages, leftover corners) cannot
+    # carry a building on its own: it counts at surplus_plot_weight, as garden
+    # ground does.
+    "vacant_sliver_fraction": 0.25,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

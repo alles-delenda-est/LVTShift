@@ -32,6 +32,7 @@ import ingest
 import run_pipeline as rp
 import social_housing
 from config import (COMMUNES, AG_EUR_M2_BY_DEP, EPTB_EUR_M2_FALLBACK, LAND_MODEL)
+import land_use
 from ingest import CRS_METRIC, CRS_WGS84
 
 GRID_M = 400  # spatial fixed-effect cell size (metres) for the hedonic
@@ -115,11 +116,18 @@ def _grid_cell(xs, ys) -> list:
     return [f"{int(x // GRID_M)}_{int(y // GRID_M)}" for x, y in zip(xs, ys)]
 
 
-def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
+def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None,
+                            land_use_shares=None):
     """Add land_type + per-parcel land prices (classify-then-price).
 
     - land_type from GPU zoning (U/AU->constructible, A->agricultural,
       N->natural) for building-less parcels; parcels with a building are 'built'.
+    - inside U/AU, a building-less parcel's use (land_use.vacant_use) from the
+      plan's stated use and BD TOPO's land cover (land_use_shares, from
+      ingest.fetch_land_use_shares; None reads the plan alone): open space
+      (parks, cemeteries, sports grounds, water) becomes 'open_space', valued at
+      the natural-land price but kept inside the reform; business land keeps
+      'constructible' with vacant_price_factor = cfg.activity_land_ratio.
     - constructible_eur_m2: DVF terrain-à-bâtir median by grid cell (shrunk to
       the commune median; EPTB national fallback when comparables are thin),
       discounted for AU 'fermée/stricte' zones.
@@ -168,16 +176,53 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None):
     # AU fermée/stricte discount (Gemini review: deferred development potential)
     parcels.loc[deferred.values, "constructible_eur_m2"] *= LAND_MODEL["au_strict_factor"]
 
+    # --- use of building-less urban land: plan's stated use × BD TOPO cover ---
+    plan = land_use.zone_use(z, parcels.get("zone_destdomi"), parcels.get("zone_libelong"))
+    if land_use_shares is not None and len(land_use_shares):
+        sh = parcels[["idpar"]].merge(land_use_shares, on="idpar", how="left")
+        open_sh = sh["bdtopo_open_share"].fillna(0.0).set_axis(parcels.index)
+        act_sh = sh["bdtopo_activity_share"].fillna(0.0).set_axis(parcels.index)
+    else:
+        open_sh = act_sh = pd.Series(0.0, index=parcels.index)
+    parcels["bdtopo_open_share"] = open_sh
+    parcels["bdtopo_activity_share"] = act_sh
+    vac = parcels["land_type"].isin(["constructible", "constructible_deferred"])
+    uses = land_use.vacant_use(plan, open_sh, act_sh, LAND_MODEL["land_use_cover_threshold"])
+    parcels["vacant_use"] = uses["vacant_use"].where(vac, None)
+    parcels["vacant_use_source"] = uses["vacant_use_source"].where(vac, None)
+    open_space = vac & parcels["vacant_use"].eq(land_use.OPEN_SPACE)
+    activity = vac & parcels["vacant_use"].eq(land_use.ACTIVITY)
+    # open space stays inside the reform (it carries its share of today's tax
+    # on unbuilt land), valued as natural land
+    parcels.loc[open_space, "land_type"] = "open_space"
+    parcels.loc[open_space, "ag_eur_m2"] = n_rate
+    factor = pd.Series(1.0, index=parcels.index)
+    factor = factor.mask(deferred.values & vac, LAND_MODEL["au_strict_factor"])
+    factor = factor.mask(activity, factor * cfg.activity_land_ratio)
+    parcels["vacant_price_factor"] = factor.where(vac & ~open_space, np.nan)
+    parcels.loc[activity, "constructible_eur_m2"] *= cfg.activity_land_ratio
+    if vac.any():
+        a = pd.to_numeric(parcels["parcel_area_m2"], errors="coerce").fillna(0.0)
+        tab_x = land_use.cross_check(plan[vac], open_sh[vac], act_sh[vac], a[vac] / 1e4,
+                                     LAND_MODEL["land_use_cover_threshold"])
+        print(f"  [{cfg.name}] building-less urban land: "
+              f"{int(open_space.sum())} open space at the natural-land price ({a[open_space].sum() / 1e4:.1f} ha), "
+              f"{int(activity.sum())} business land ({a[activity].sum() / 1e4:.1f} ha), "
+              f"{int((vac & ~open_space & ~activity).sum())} housing land; "
+              f"plan × BD TOPO (ha):\n{tab_x.round(1).to_string()}")
+
     return parcels
 
 
 def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None,
-            use_social=True):
+            use_social=True, use_bdtopo_land_use=True):
     """Fetch + shape all inputs for one commune. `deflator` (see
     estimate.deflator_factors) brings terrain-à-bâtir prices to reference-year €.
     use_social: model social housing's exemptions today and its landlord
     category (social_housing.py); the commune-level counts are returned in
-    parcels.attrs["social_housing"]."""
+    parcels.attrs["social_housing"].
+    use_bdtopo_land_use: cross-check the use of building-less urban land
+    against BD TOPO's land cover (land_use.py); False reads the plan alone."""
     parcels = ingest.fetch_parcels(cfg)
     sales, tab = ingest.fetch_dvf(cfg)
     buildings = ingest.fetch_buildings(cfg, parcels)
@@ -236,7 +281,12 @@ def prepare(cfg, layers, use_dpe=True, use_exemptions=True, deflator=None,
         parcels["category_fr"] == "maison", "Maison", "Appartement")
 
     # Classify-then-price land (GPU zoning + TAB comparables + SAFER)
-    parcels = classify_and_price_land(cfg, parcels, buildings, tab, deflator=deflator)
+    shares = ingest.fetch_land_use_shares(cfg, parcels) if use_bdtopo_land_use else None
+    if not use_bdtopo_land_use:
+        print(f"  [{cfg.name}] BD TOPO land-use cross-check OFF: plan zoning alone "
+              f"decides the use of building-less land (not for publication)")
+    parcels = classify_and_price_land(cfg, parcels, buildings, tab, deflator=deflator,
+                                      land_use_shares=shares)
 
     # Obviously TFPB-exempt public property (DGFiP personnes morales, spec 0003)
     if use_exemptions:
@@ -300,6 +350,10 @@ def main():
     ap.add_argument("--no-social-housing", action="store_true",
                     help="don't model social housing's exemptions today nor its "
                          "landlord category (before/after comparison)")
+    ap.add_argument("--no-bdtopo-land-use", action="store_true",
+                    help="don't cross-check building-less urban land against BD TOPO's "
+                         "land cover; the plan's zoning alone decides its use "
+                         "(offline validation only, not for publication)")
     ap.add_argument("--no-unbuilt-tax", action="store_true",
                     help="don't replace the tax on non-agricultural unbuilt land "
                          "(TFPNB, TAFNB): building-less parcels then pay nothing "
@@ -341,7 +395,8 @@ def main():
     parcels, buildings, sales, tfpb, iris_income = prepare(
         cfg, tuple(args.layers), use_dpe=not args.no_dpe,
         use_exemptions=not args.no_exemptions, deflator=deflator,
-        use_social=not args.no_social_housing)
+        use_social=not args.no_social_housing,
+        use_bdtopo_land_use=not args.no_bdtopo_land_use)
     social_summary = parcels.attrs.get("social_housing")
 
     split = None

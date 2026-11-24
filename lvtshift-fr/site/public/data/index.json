@@ -9,8 +9,8 @@
       "insee": "38185",
       "departement": "38",
       "parcels_modeled": 11889,
-      "land_share_pct": 60.0,
-      "gross_pct_of_levy": 86.6
+      "land_share_pct": 57.8,
+      "gross_pct_of_levy": 80.3
     },
     {
       "n_communes_unique": 1,
@@ -21,44 +21,44 @@
       "insee": "74012",
       "departement": "74",
       "parcels_modeled": 4261,
-      "land_share_pct": 52.5,
-      "gross_pct_of_levy": 66.8
+      "land_share_pct": 54.3,
+      "gross_pct_of_levy": 72.8
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 9640,
+      "parcels_unique": 9642,
       "commune_key": "villeurbanne",
       "name": "Villeurbanne",
       "kind": "commune",
       "insee": "69266",
       "departement": "69",
-      "parcels_modeled": 9640,
-      "land_share_pct": 52.6,
-      "gross_pct_of_levy": 63.4
+      "parcels_modeled": 9642,
+      "land_share_pct": 53.2,
+      "gross_pct_of_levy": 65.2
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 31714,
+      "parcels_unique": 31713,
       "commune_key": "roubaix",
       "name": "Roubaix",
       "kind": "commune",
       "insee": "59512",
       "departement": "59",
-      "parcels_modeled": 31714,
-      "land_share_pct": 41.1,
-      "gross_pct_of_levy": 79.7
+      "parcels_modeled": 31713,
+      "land_share_pct": 40.9,
+      "gross_pct_of_levy": 79.0
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 12209,
+      "parcels_unique": 12219,
       "commune_key": "cahors",
       "name": "Cahors",
       "kind": "commune",
       "insee": "46042",
       "departement": "46",
-      "parcels_modeled": 12209,
-      "land_share_pct": 36.5,
-      "gross_pct_of_levy": 73.1
+      "parcels_modeled": 12219,
+      "land_share_pct": 38.1,
+      "gross_pct_of_levy": 77.4
     },
     {
       "n_communes_unique": 1,
@@ -69,32 +69,32 @@
       "insee": "93048",
       "departement": "93",
       "parcels_modeled": 13275,
-      "land_share_pct": 64.2,
-      "gross_pct_of_levy": 66.4
+      "land_share_pct": 64.5,
+      "gross_pct_of_levy": 67.2
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 7279,
+      "parcels_unique": 7283,
       "commune_key": "figeac",
       "name": "Figeac",
       "kind": "commune",
       "insee": "46102",
       "departement": "46",
-      "parcels_modeled": 7279,
-      "land_share_pct": 43.8,
-      "gross_pct_of_levy": 73.6
+      "parcels_modeled": 7283,
+      "land_share_pct": 44.8,
+      "gross_pct_of_levy": 76.4
     },
     {
       "n_communes_unique": 1,
-      "parcels_unique": 10262,
+      "parcels_unique": 10261,
       "commune_key": "sete",
       "name": "Sète",
       "kind": "commune",
       "insee": "34301",
       "departement": "34",
-      "parcels_modeled": 10262,
-      "land_share_pct": 55.2,
-      "gross_pct_of_levy": 65.4
+      "parcels_modeled": 10261,
+      "land_share_pct": 56.1,
+      "gross_pct_of_levy": 68.0
     },
     {
       "n_communes_unique": 1,
@@ -105,8 +105,8 @@
       "insee": "17300",
       "departement": "17",
       "parcels_modeled": 27032,
-      "land_share_pct": 69.2,
-      "gross_pct_of_levy": 75.1
+      "land_share_pct": 68.3,
+      "gross_pct_of_levy": 72.3
     },
     {
       "n_communes_unique": 1,
@@ -117,8 +117,8 @@
       "insee": "75056",
       "departement": "75",
       "parcels_modeled": 75081,
-      "land_share_pct": 75.3,
-      "gross_pct_of_levy": 45.9
+      "land_share_pct": 75.4,
+      "gross_pct_of_levy": 46.5
     },
     {
       "n_communes_unique": 1,
@@ -129,8 +129,8 @@
       "insee": "69123",
       "departement": "69",
       "parcels_modeled": 30913,
-      "land_share_pct": 60.0,
-      "gross_pct_of_levy": 55.4
+      "land_share_pct": 60.4,
+      "gross_pct_of_levy": 56.6
     },
     {
       "n_communes_unique": 121,
@@ -141,8 +141,8 @@
       "insee": null,
       "departement": "92/93/94",
       "parcels_modeled": 559654,
-      "land_share_pct": 63.5,
-      "gross_pct_of_levy": 69.7
+      "land_share_pct": 63.7,
+      "gross_pct_of_levy": 70.2
     },
     {
       "n_communes_unique": 56,
@@ -153,8 +153,8 @@
       "insee": null,
       "departement": "69",
       "parcels_modeled": 191984,
-      "land_share_pct": 55.2,
-      "gross_pct_of_levy": 79.2
+      "land_share_pct": 54.5,
+      "gross_pct_of_levy": 77.7
     }
   ],
   "currency": "EUR"

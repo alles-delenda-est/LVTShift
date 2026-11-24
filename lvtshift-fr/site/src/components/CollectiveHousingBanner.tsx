@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { signedPct, signedPctAxis } from "@/lib/format";
 import type { ImpactSummary, QuintileGap } from "@/lib/impactSummary";
+import VariantTerm from "@/components/VariantTerm";
 
 /**
  * Home-page banner « L'immeuble collectif et les ménages modestes »: the prose
@@ -151,11 +152,13 @@ function GapChart({ gaps }: { gaps: QuintileGap[] }) {
 interface Props {
   impact: ImpactSummary;
   gaps: QuintileGap[];
+  /** who pays more where both income groups pay less (lib/impactSummary) */
+  gapNote?: string | null;
   /** Link to the detailed results, shown under the charts. */
   footer?: ReactNode;
 }
 
-export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
+export function CollectiveHousingBanner({ impact, gaps, gapNote, footer }: Props) {
   const { alt } = impact;
   return (
     <section aria-labelledby="immeuble-collectif" className="bg-creme border-b border-lisere">
@@ -177,8 +180,10 @@ export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
               d&apos;entre eux
               {alt ? (
                 <>
-                  {" "}dans le cas central, {alt.poorestBelowRichest} dans la
-                  variante locale. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
+                  {" "}dans le{" "}
+                  <VariantTerm kind="central">cas central</VariantTerm>,{" "}
+                  {alt.poorestBelowRichest} dans la{" "}
+                  <VariantTerm kind="local">variante locale</VariantTerm>. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
                   {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
                   {alt.poorestPayLess} dans la variante locale.
                 </>
@@ -258,6 +263,9 @@ export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
 
             <div className="bg-white border border-lisere p-5">
               <GapChart gaps={gaps} />
+              {gapNote && (
+                <p className="text-xs text-encre mt-4 leading-relaxed">{gapNote}</p>
+              )}
             </div>
           </div>
         </div>

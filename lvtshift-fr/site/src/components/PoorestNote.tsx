@@ -18,11 +18,15 @@ export default function PoorestNote({
 }) {
   const n = poorestNote(commune);
   if (!n) return null;
+  // the building-cost range reaching zero: "no less", not "more"
+  const marginal = n.q1Band != null && n.q1Band[0] <= 0;
   return (
     <div className="border-l-4 border-lisere pl-4 mt-3 max-w-3xl">
       <p className="text-sm text-encre font-body leading-relaxed">
         <strong className="font-medium">
-          Pourquoi le cinquième le plus modeste paie-t-il davantage à {commune.name}&nbsp;?
+          {marginal
+            ? <>Pourquoi le cinquième le plus modeste ne paie-t-il pas moins à {commune.name}&nbsp;?</>
+            : <>Pourquoi le cinquième le plus modeste paie-t-il davantage à {commune.name}&nbsp;?</>}
         </strong>{" "}
         Ici, les quartiers aisés ne détiennent pas plus de sol que les autres au
         regard de l&apos;impôt qu&apos;ils paient aujourd&apos;hui : l&apos;écart de

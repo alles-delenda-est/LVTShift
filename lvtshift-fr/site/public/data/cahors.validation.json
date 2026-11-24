@@ -7,7 +7,7 @@
     {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
-      "model_land_share_pct": 37.7,
+      "model_land_share_pct": 38.1,
       "band": [
         40.0,
         65.0
@@ -20,10 +20,10 @@
       "benchmark": "Carte du bâti (cadastre DGFiP vs BD TOPO)",
       "independence": "data-quality",
       "cadastre_built_share_pct": 51.7,
-      "model_built_share_pct": 47.4,
+      "model_built_share_pct": 47.5,
       "n_parcels_cadastre": 21906,
       "n_buildings_cadastre": 17153,
-      "gap_pt": 4.3,
+      "gap_pt": 4.2,
       "status": "ok",
       "note": "Accord entre deux cartes du bâti d'agences différentes ; contrôle qualité de l'entrée 'bâti', pas de la valorisation."
     }

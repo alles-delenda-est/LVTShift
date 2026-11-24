@@ -179,18 +179,19 @@ export CSV seul : `run(..., make_report=False)`.
 
 ## Limites connues (à reproduire dans toute publication)
 
-- **Toujours publier côte à côte le cas central et la borne basse.** La part
-  des locaux professionnels dans la taxe actuelle est un indicateur CFE
-  multiplié par un facteur national (2,5, cas central) ; l'indicateur brut
-  (× 1,0) est la borne basse. Ce facteur déplace les résultats des ménages de
-  10 à 15 points : premier quintile de revenu à Paris −17,4 % (central) contre
-  −27,6 % (borne basse), couronne lyonnaise +0,6 % contre −15,9 %. Les
-  nouvelles cotisations sont identiques ; seul le point de départ bouge. Le
-  site affiche désormais les deux côte à côte sur chaque page de résultats
-  (tableau « Incertitude sur la taxe actuelle des locaux professionnels »,
-  champ `baseline_sensitivity` des fichiers publiés). Un facteur national
-  unique ne peut convenir à toutes les communes ; les Fichiers fonciers le
-  remplaceraient par les vraies valeurs.
+- **Toujours publier côte à côte le cas central et la variante locale.** La
+  part des locaux professionnels dans la taxe actuelle est un indicateur CFE
+  multiplié par un facteur national (2,5, cas central) ; la variante locale
+  l'estime commune par commune à partir de la taxe d'habitation de 2017, qui
+  portait sur tous les logements occupés. En ville, l'écart déplace les
+  résultats des ménages d'environ 10 points : premier quintile de revenu à
+  Paris −25,4 % (central) contre −15,2 % (variante locale), à Lyon −17,1 %
+  contre −6,5 %. Les nouvelles cotisations sont identiques ; seul le point de
+  départ bouge. Le site affiche les deux côte à côte sur chaque page de
+  résultats (tableau « Incertitude sur la taxe actuelle des locaux
+  professionnels », champ `baseline_sensitivity` des fichiers publiés). Un
+  facteur national unique ne peut convenir à toutes les communes ; les
+  Fichiers fonciers le remplaceraient par les vraies valeurs.
 - **Constat inverse de l'attendu.** Les entreprises paient aujourd'hui plus au
   m² que ne le supposait la surface plancher (valeurs industrielles incluant
   l'outillage, locaux professionnels réévalués sur les loyers de 2013 quand le

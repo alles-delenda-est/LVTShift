@@ -382,7 +382,7 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     kept for the synthetic test.
 
     Expects per-parcel columns set upstream (run_commune):
-        land_type   built | constructible | constructible_deferred
+        land_type   built | constructible | constructible_deferred | open_space
                     | agricultural | natural | unknown
         market_value, improvement_value, parcel_area_m2, floor_area_m2,
         constructible_eur_m2  (AU-discounted development €/m², from DVF TAB),
@@ -400,7 +400,8 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
         value. market = land + building; no residential price and no
         land-share clip.
       * constructible vacant: land = development €/m² × parcel area.
-      * agricultural/natural vacant: land = ag €/m² × parcel area.
+      * agricultural/natural vacant, and urban open space (land_use.py):
+        land = ag €/m² × parcel area.
       * unknown vacant: priced as agricultural (conservative).
     """
     lo, hi = cfg.land_share_bounds
@@ -438,7 +439,7 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     no_floor = ~built & out["land_type"].eq("built")
     is_con = ~built & out["land_type"].isin(["constructible", "constructible_deferred"])
     is_un = (~built & ~is_con & ~no_floor
-             & ~out["land_type"].isin(["agricultural", "natural"]))
+             & ~out["land_type"].isin(["agricultural", "natural", "open_space"]))
     land = land.mask(is_con, con * area)
     land = land.mask(~built & ~is_con, ag * area)   # ag/natural/unknown -> dirt
     flag = flag.mask(is_un, "vacant_unknown_ag")
@@ -635,29 +636,8 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     if not pool.any():
         return out
 
-    far = floor[pool] / area[pool]
-    plot = area[pool].clip(upper=area[pool].quantile(q_cap))
-    if "zone_typ" in out.columns:            # A/N: only the house's yard is building land
-        from config import DRC_CURTILAGE_FACTOR
-        rural = out.loc[pool, "zone_typ"].isin(["A", "N"])
-        plot = plot.where(~rural, np.minimum(plot, DRC_CURTILAGE_FACTOR * floor[pool]))
-        # ...so its density is measured on that yard, not on the fields around it
-        far = far.where(~rural, floor[pool] / plot)
-    zones = [out.loc[pool, c].astype("object") for c in ("zone_typ", "zone_libelle")
-             if c in out.columns]
-    ref = _zone_quantile(far, zones, q_ref, min_n)
-    typical_plot = _zone_quantile(plot, zones, 0.5, min_n)
-    if rule == "zone":          # permitted use: the zone's density, not the plot's
-        density = ref
-        house_scale = ref < far_sur
-    else:
-        density = np.maximum(far, ref)
-        house_scale = (far < ref) & (ref < far_sur)
-    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
-    weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
-
-    group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
-             if "iris" in out.columns else pd.Series("_commune", index=far.index))
+    sp = _site_pool(out, pool, prm)
+    density, weight, group = sp["density"], sp["weight"], sp["group"]
     total = out.loc[pool, "land_value"].groupby(group).transform("sum")
     land = total * weight / weight.groupby(group).transform("sum")
 
@@ -669,6 +649,161 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     out.loc[pool, "land_share_raw"] = share
     out.loc[pool, "lv_flag"] = "built_site_value"
     out.loc[pool, "site_density"] = density
+    return out
+
+
+def _site_pool(out: pd.DataFrame, pool: pd.Series, prm: dict) -> dict:
+    """Weights of the pooled built parcels for the site-value sharing
+    (site_value_land), and what vacant_site_value needs to weigh building-less
+    plots on the same scale: the pooled plot areas, floor-area ratios and zone
+    keys, and the plot-area cap."""
+    theta = float(prm["density_elasticity"])
+    q_ref = float(prm["ref_density_quantile"])
+    min_n = int(prm["min_zone_parcels"])
+    k_sur = float(prm["surplus_plot_multiple"])
+    w_sur = float(prm["surplus_plot_weight"])
+    far_sur = float(prm["surplus_max_ref_far"])
+    rule = prm.get("density_rule", "zone")
+    area = pd.to_numeric(out["parcel_area_m2"], errors="coerce")
+    floor = pd.to_numeric(out["floor_area_m2"], errors="coerce")
+
+    far = floor[pool] / area[pool]
+    cap = float(area[pool].quantile(float(prm["plot_cap_quantile"])))
+    plot = area[pool].clip(upper=cap)
+    if "zone_typ" in out.columns:            # A/N: only the house's yard is building land
+        from config import DRC_CURTILAGE_FACTOR
+        rural = out.loc[pool, "zone_typ"].isin(["A", "N"])
+        plot = plot.where(~rural, np.minimum(plot, DRC_CURTILAGE_FACTOR * floor[pool]))
+        # ...so its density is measured on that yard, not on the fields around it
+        far = far.where(~rural, floor[pool] / plot)
+    zone_cols = [c for c in ("zone_typ", "zone_libelle") if c in out.columns]
+    zones = [out.loc[pool, c].astype("object") for c in zone_cols]
+    ref = _zone_quantile(far, zones, q_ref, min_n)
+    typical_plot = _zone_quantile(plot, zones, 0.5, min_n)
+    if rule == "zone":          # permitted use: the zone's density, not the plot's
+        density = ref
+        house_scale = ref < far_sur
+    else:
+        density = np.maximum(far, ref)
+        house_scale = (far < ref) & (ref < far_sur)
+    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
+    weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
+    group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
+             if "iris" in out.columns else pd.Series("_commune", index=far.index))
+    return {"density": density, "weight": weight, "group": group, "far": far,
+            "plot": plot, "cap": cap, "zone_cols": zone_cols}
+
+
+def _zone_lookup(values: pd.Series, zones: list, targets: list, q: float,
+                 min_n: int) -> pd.Series:
+    """_zone_quantile's rule read for other rows: the quantile q of the pooled
+    `values` in each target row's zone (finest key of `zones`, coarse to fine,
+    with at least min_n pooled rows; else the commune's). targets: the same
+    keys for the rows to look up, aligned with each other."""
+    idx = targets[0].index if targets else values.index
+    out = pd.Series(float(values.quantile(q)), index=idx)
+    for key, tkey in zip(zones, targets):
+        known = key.dropna()
+        n = known.value_counts()
+        ok = n[n >= min_n].index
+        by_zone = values[known.index][known.isin(ok)].groupby(known[known.isin(ok)]).quantile(q)
+        hit = tkey.map(by_zone)
+        out = out.mask(hit.notna(), hit)
+    return out
+
+
+VACANT_PRICED_FLAGS = frozenset({"constructible", "constructible_deferred"})
+
+
+def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
+    """
+    Building-less urban land valued as the land under buildings is: run after
+    site_value_land, each building-less plot inside the reform takes its
+    IRIS's land per unit of weight (the commune's where the IRIS has no pooled
+    built parcel) times its own weight,
+
+        effective plot area × density ** density_elasticity × vacant_price_factor,
+
+    with the density and surplus rule of site_value_land read for its PLU zone
+    label (then zone type, then commune). The built plots' area cap does not
+    apply: it is there for estates and copropriété parks attached to a
+    building, and a large building-less site is development land. A plot smaller than
+    vacant_sliver_fraction × its zone's median built plot counts at
+    surplus_plot_weight: a strip or leftover corner cannot carry a building on
+    its own. vacant_price_factor (run_commune.classify_and_price_land) is the
+    business-land ratio for business zones and sites and the AU strict
+    discount; missing means 1.
+
+    Before this rule, building-less land was priced at the commune's (or grid
+    cell's) median building-plot sale, the same €/m² for a housing plot, a
+    private park and a port estate. That price is kept in land_value_current
+    for comparison.
+
+    p: frame after site_value_land. Only parcels flagged constructible /
+    constructible_deferred, with no floor area, not exempt, are revalued;
+    lv_flag becomes 'vacant_site_value'. With no pooled built parcel at all the
+    frame is returned unchanged.
+    """
+    from config import SITE_VALUE
+    prm = {**SITE_VALUE, **(params or {})}
+    theta = float(prm["density_elasticity"])
+    q_ref = float(prm["ref_density_quantile"])
+    min_n = int(prm["min_zone_parcels"])
+    k_sur = float(prm["surplus_plot_multiple"])
+    w_sur = float(prm["surplus_plot_weight"])
+    far_sur = float(prm["surplus_max_ref_far"])
+    frac = float(prm["vacant_sliver_fraction"])
+    if not 0.0 <= frac <= 1.0:
+        raise ValueError(f"vacant_sliver_fraction must be in [0, 1], got {frac}")
+
+    out = p.copy()
+    area = pd.to_numeric(out["parcel_area_m2"], errors="coerce")
+    floor = pd.to_numeric(out["floor_area_m2"], errors="coerce").fillna(0.0)
+    exempt = (out["is_exempt_public"].fillna(False).astype(bool)
+              if "is_exempt_public" in out.columns
+              else pd.Series(False, index=out.index))
+    pooled = out["lv_flag"].eq("built_site_value")
+    vacant = (out["lv_flag"].isin(VACANT_PRICED_FLAGS) & (floor <= 0)
+              & ~exempt & (area > 0))
+    if not pooled.any() or not vacant.any():
+        return out
+    sp = _site_pool(out, pooled, prm)
+    lam_g = (out.loc[pooled, "land_value"].groupby(sp["group"]).sum()
+             / sp["weight"].groupby(sp["group"]).sum())
+    lam_commune = float(out.loc[pooled, "land_value"].sum() / sp["weight"].sum())
+
+    pooled_zones = [out.loc[pooled, c].astype("object") for c in sp["zone_cols"]]
+    target_zones = [out.loc[vacant, c].astype("object") for c in sp["zone_cols"]]
+    if target_zones:
+        density = _zone_lookup(sp["far"], pooled_zones, target_zones, q_ref, min_n)
+        typical = _zone_lookup(sp["plot"], pooled_zones, target_zones, 0.5, min_n)
+    else:
+        density = pd.Series(float(sp["far"].quantile(q_ref)), index=out.index[vacant])
+        typical = pd.Series(float(sp["plot"].median()), index=out.index[vacant])
+    a = area[vacant]
+    plot = a       # no plot cap: a large vacant site is development land
+    house_scale = density < far_sur
+    surplus = (plot - k_sur * typical).clip(lower=0.0).where(house_scale, 0.0)
+    eff = plot - (1.0 - w_sur) * surplus
+    sliver = a < frac * typical
+    eff = eff.where(~sliver, plot * w_sur)
+    factor = (pd.to_numeric(out.loc[vacant, "vacant_price_factor"], errors="coerce").fillna(1.0)
+              if "vacant_price_factor" in out.columns else 1.0)
+    grp = (out.loc[vacant, "iris"].astype("object").fillna("_commune")
+           if "iris" in out.columns else pd.Series("_commune", index=a.index))
+    lam = grp.map(lam_g).fillna(lam_commune)
+    land = lam * eff * density ** theta * factor
+
+    out.loc[vacant, "land_value"] = land
+    out.loc[vacant, "improvement_value"] = 0.0
+    out.loc[vacant, "market_value"] = land
+    for c in ("land_share", "land_share_raw"):
+        if c in out.columns:
+            out.loc[vacant, c] = 1.0
+    out.loc[vacant, "lv_flag"] = "vacant_site_value"
+    out.loc[vacant, "site_density"] = density
+    out["vacant_sliver"] = False
+    out.loc[vacant, "vacant_sliver"] = sliver
     return out
 
 

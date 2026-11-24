@@ -39,18 +39,18 @@ describe("data loaders", () => {
     const paris = loadCommune("paris");
     const winners = computePrivateHouseholdWinners(paris.by_category);
     expect(winners).not.toBeNull();
-    expect(winners?.totalDwellings).toBe(1026625);
-    expect(winners?.pctPayingLess).toBe(71.4);
-    expect(winners?.pctPayingMore).toBe(28.6);
+    expect(winners?.totalDwellings).toBe(1026838);
+    expect(winners?.pctPayingLess).toBe(71.9);
+    expect(winners?.pctPayingMore).toBe(28.1);
 
     const alt = computePrivateHouseholdWinnersForLeg(
       paris.by_category,
       paris.baseline_sensitivity?.low?.by_category,
     );
     expect(alt).toEqual({
-      totalDwellings: 1026625,
-      pctPayingMore: 41.3,
-      pctPayingLess: 58.7,
+      totalDwellings: 1026838,
+      pctPayingMore: 40.6,
+      pctPayingLess: 59.4,
     });
   });
 });

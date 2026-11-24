@@ -213,6 +213,8 @@ def run(parcels: pd.DataFrame, buildings: pd.DataFrame, dvf: pd.DataFrame,
     if getattr(cfg, "land_concept", "site") == "site":
         p = estimate.site_value_land(p, site_value)
         _report_site_value(p, cfg)
+        p = estimate.vacant_site_value(p, site_value)
+        _report_vacant_value(p, cfg)
     stale = Path(out_dir) / f"{slug_of(cfg)}.baseline.json"
     if stale.exists():          # never pair a new export with an old sidecar
         stale.unlink()
@@ -389,6 +391,21 @@ def _report_site_value(p: pd.DataFrame, cfg) -> None:
           f"{100 * over:.1f}% now have land above their old floor-based market value")
 
 
+def _report_vacant_value(p: pd.DataFrame, cfg) -> None:
+    """One log line on building-less urban land valued at site value."""
+    v = p["lv_flag"].eq("vacant_site_value")
+    if not v.any():
+        print(f"[{cfg.name}] vacant land: none valued at site value")
+        return
+    a = pd.to_numeric(p.loc[v, "parcel_area_m2"], errors="coerce")
+    new, old = float(p.loc[v, "land_value"].sum()), float(p.loc[v, "land_value_current"].sum())
+    sl = p.get("vacant_sliver", pd.Series(False, index=p.index)).fillna(False).astype(bool) & v
+    print(f"[{cfg.name}] vacant land at site value: {int(v.sum())} parcels, "
+          f"{a.sum() / 1e4:.1f} ha, €{new / 1e6:,.1f}M (plot-sale price gave €{old / 1e6:,.1f}M; "
+          f"{new / max(a.sum(), 1):,.0f} €/m² against {old / max(a.sum(), 1):,.0f}); "
+          f"{int(sl.sum())} slivers")
+
+
 def _baseline_weights(p: pd.DataFrame, buildings: pd.DataFrame,
                       split: dict | None, cfg) -> dict:
     """Per-m² weights of the current-tax groups (estimate.calibrated_weights)
@@ -548,6 +565,9 @@ def _write_households(p: pd.DataFrame, buildings: pd.DataFrame, out_dir: str,
     flag = p["lv_flag"] if "lv_flag" in p.columns else pd.Series("", index=p.index)
     side["residual_land"] = flag.isin(
         set(estimate.SITE_POOLED_FLAGS) | {"built_site_value"}).values
+    # building-less land valued off its IRIS's residual land (estimate.
+    # vacant_site_value) follows that land under the band, without adding to it
+    side["site_vacant"] = flag.eq("vacant_site_value").values
     # the decomposition's intermediate bill (METHODOLOGY §3.6)
     if "revalued_tax" in p.columns:
         side["revalued_tax"] = p["revalued_tax"].values

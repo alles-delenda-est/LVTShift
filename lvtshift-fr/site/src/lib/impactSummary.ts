@@ -228,3 +228,48 @@ export function countRange(central: number, alt: number | undefined, of: number)
   if (alt == null || alt === central) return `${central} sur ${of}`;
   return `${Math.min(central, alt)} à ${Math.max(central, alt)} sur ${of}`;
 }
+
+
+/** Where both income groups pay less, who pays more: one sentence for the
+ *  income chart, or null when every territory has a group paying more. The
+ *  levy is unchanged, so the rise falls on categories whose TOTAL rises
+ *  (never medians, which can have the opposite sign from the category total):
+ *  outside the household figures (vacant land, plus any non-household category
+ *  with total_change_pct > 0), and within households (houses / small buildings
+ *  whose total rises). */
+export function bothPayLessNote(communes: Commune[], gaps: QuintileGap[]): string | null {
+  const both = gaps.filter((g) => g.poorest < 0 && g.richest < 0);
+  if (both.length === 0) return null;
+  const byKey = new Map(communes.map((c) => [c.commune_key, c]));
+  const median = (c: Commune | undefined, cat: string) =>
+    c?.by_category.find((r) => r.category === cat)?.median_change_pct ?? null;
+  const total = (c: Commune | undefined, cat: string) =>
+    c?.by_category.find((r) => r.category === cat)?.total_change_pct ?? null;
+  const place = (name: string) =>
+    /extra-muros/.test(name) ? (/^Lyon/.test(name) ? "dans la couronne lyonnaise" : "dans la petite couronne")
+      : `à ${name}`;
+  const multiples = both
+    .map((g) => ({ g, m: median(byKey.get(g.commune_key), "Vacant Land") }))
+    .filter((x) => x.m != null && x.m > 0)
+    .map(({ g, m }) => `×${Math.round(1 + (m as number) / 100)} ${place(g.name)}`);
+  const nonHousehold = [
+    ["Social Housing", "les bailleurs sociaux"],
+    ["Commercial", "les commerces"],
+    ["Industrial", "l'industrie"],
+    ["Other", "les autres bâtiments"],
+  ].filter(([cat]) => both.some((g) => (total(byKey.get(g.commune_key), cat) ?? 0) > 0))
+    .map(([, label]) => label);
+  const housesRise = both.some((g) => (total(byKey.get(g.commune_key), "Single Family Residential") ?? 0) > 0);
+  const list = (xs: string[], conj: string) =>
+    xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${conj} ${xs[xs.length - 1]}`;
+  const where = list(both.map((g) => place(g.name)), "et");
+  return (
+    `${where.charAt(0).toUpperCase()}${where.slice(1)}, les ménages modestes comme aisés ` +
+    `paient moins au total. À recettes égales, ` +
+    `la hausse porte hors des ménages sur le terrain constructible laissé vide` +
+    (multiples.length ? ` (impôt ${multiples.join(", ")})` : "") +
+    (nonHousehold.length ? ` et, selon le territoire, sur ${list(nonHousehold, "ou")}` : "") +
+    (housesRise ? " — ainsi que, au sein même des ménages, sur les maisons individuelles" : "") +
+    "."
+  );
+}

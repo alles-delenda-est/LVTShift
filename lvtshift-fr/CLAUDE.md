@@ -17,6 +17,8 @@ ingest.py        all fetchers: cadastre, DVF, BD TOPO buildings, DPE year,
                  GPU zoning, terrain-à-bâtir comparables, REI (OFGL), IRIS, Filosofi
 estimate.py      improvement value, hedonic market value, classify-then-price
                  land value, current-tax baseline
+land_use.py      use of building-less urban land: the plan's stated use (GPU
+                 libelong/destdomi) cross-checked with BD TOPO land cover
 exemptions.py    exempt public property and farm buildings (DGFiP personnes
                  morales, BD TOPO usage)
 social_housing.py  social landlords' parcels, RPLS dwellings' exemption or QPV
