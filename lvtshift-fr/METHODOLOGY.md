@@ -31,7 +31,8 @@ and export (`save_standard_export`). Upstream improvements flow through automati
 | Transactions | DVF géolocalisé (Etalab) | CSV per commune | 5 rolling years | hedonic market value; terrain-à-bâtir comparables |
 | Buildings | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, commune bbox | current | footprint, storeys, height, dwellings, usage, FF-match flag |
 | Construction era | DPE logements existants (ADEME) | data-fair API by `code_insee_ban` | since 07/2021 | depreciation (period band → year) |
-| Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels; A/N test for exempt farm buildings (§3.5) |
+| Zoning | GPU `zone_urba` (IGN) | WFS, commune bbox | current PLU/PLUi | constructibility (U/AU vs A/N) of building-less parcels and, inside U, their stated use (`libelong`, `destdomi`); A/N test for exempt farm buildings (§3.5) |
+| Land cover | BD TOPO V3 (IGN): `zone_d_activite_ou_d_interet`, `cimetiere`, `terrain_de_sport`, `equipement_de_transport`, `surface_hydrographique` | WFS, commune bbox | current edition | cross-check of the use of building-less urban land: open space vs business and transport sites (§3.4) |
 | Agricultural prices | SAFER « Le prix des terres » | départemental table (config) | 2025 edition (2024 sales) | non-constructible land €/m² |
 | Building-plot fallback | EPTB (SDES) | national figure (config) | 2023 | constructible €/m² when local comparables are thin |
 | Tax target | REI foncier bâti, via OFGL | Opendatasoft API by `idcom` | latest | exact revenue-neutrality target (`MONTANT RÉEL`) |
@@ -249,13 +250,51 @@ each class is priced against the right benchmark:
 |---|---|
 | **Built** | **site value** (below): each IRIS's residual land (`market − building`, floored at the agricultural €/m², land share clipped to [0.15, 0.85]) is shared again by plot area and the zone's typical density; building at depreciated cost, value = land + building, no clip (`lv_flag` `built_site_value`) |
 | **Built, largest building shed-type** (DRC) | terrain-à-bâtir €/m² × `activity_land_ratio` (business types) or × 1 (sports halls, annexes) × parcel area, floored at the agricultural €/m²; outside urban zoning only a yard of 3 × floor area takes that price. Market value = land + depreciated building; no residential price, no clip (`lv_flag` `built_drc`) |
-| **Constructible vacant** (zone U/AUc) | DVF terrain-à-bâtir €/m² × area (cell median where ≥8 sales, else commune median, else EPTB national fallback) |
+| **Constructible vacant** (zone U/AUc) | **site value** like built land of its IRIS and zone (*Building-less urban land* below): × `activity_land_ratio` on business land; open space becomes natural land (row below). Strips and leftover corners count at the garden weight (`lv_flag` `vacant_site_value`) |
 | **Constructible deferred** (AU/AUs) | as above × `au_strict_factor` (development deferred) |
 | **Agricultural / natural** (zone A/N) | SAFER départemental €/m² × area; **outside the reform**: the parcel keeps today's TFPNB, takes no share of the new tax and leaves the published results (counted in `farmland_excluded_parcels`) |
 
 Only DVF rows coded *terrains à bâtir* are trusted for constructible prices —
 raw `valeur_fonciere/surface_terrain` is contaminated for other cultures because
 mutations bundle buildings and several parcels.
+
+**Building-less urban land: use first, then site value** (`land_use.py`,
+`estimate.vacant_site_value`; review of 2026-11-24). Until then every
+building-less parcel in a U zone took the commune's median building-plot sale,
+whatever the plan allowed there: in Grenoble one price, €3,558/m² of plot (more
+than a flat sells for per m² of floor), for housing plots, private parks (PLUi
+*UV*, "parcs urbains": housing and offices banned) and business estates (*UE4*);
+in La Rochelle two-thirds of vacant land's tax fell on port and business land
+(*UX*, *UPM*); in Paris the price sat at a third of built land's. The use of
+each building-less urban parcel is now read twice:
+
+- **The plan.** The CNIG code `destdomi` where filled (2 % of zones in the
+  published territories) and otherwise the zone's long label `libelong`
+  (98 %): the class of the keyword that comes first in its statement of
+  purpose ("dédié aux…", "à vocation…"), else in the label. Short labels (UV,
+  UX, UE…) mean different things in different plans and are never read alone.
+  Open-space words count in U zones only.
+- **BD TOPO.** The share of the parcel under public open space (*espace
+  public*: parks, squares, gardens), cemeteries, sports grounds and water, or
+  under business, transport and public-facility sites.
+
+Open space when either reading says so (at least half the parcel for BD TOPO,
+`LAND_MODEL["land_use_cover_threshold"]`): the parcel becomes natural land,
+outside the reform like zone N. Business land when either says so: valued ×
+`activity_land_ratio`. Housing land otherwise. The run log tabulates where the
+two readings agree. Each remaining plot is then valued as the land under
+buildings is: its IRIS's land per unit of weight (the commune's where the IRIS
+has no built land in the pool) × effective plot area × its zone's reference
+density^0.5, with the same plot cap and surplus rule. A plot under a quarter of
+its zone's median built plot (`SITE_VALUE["vacant_sliver_fraction"]`: strips,
+passages, leftover corners, most building-less parcels by count) cannot carry a
+building alone and counts at the garden weight (0.25). The building-plot price
+stays in `land_value_current` for comparison. Valuing vacant and built land of
+one zone alike is what a tax on land "as if vacant" requires; it also avoids the
+thin, atypical building-plot sales of dense cities (Lyon €735/m² against
+€1,220 for built land under the residual, §3.4 above). The correction runs both
+ways: where those sales were dear (Grenoble) vacant land falls, where they were
+cheap (Annemasse, Paris) it rises.
 
 **Depreciated replacement cost for shed-type parcels.** Warehouses, workshops,
 retail boxes, farm sheds, greenhouses, sports halls and garage plots rarely sell
@@ -819,9 +858,11 @@ site-value sharing, so each IRIS's residual land total becomes L − 0.2 B (or
 L + 0.2 B), clipped to [0, L + B], and every parcel the residual priced moves
 by the same factor. Only those parcels move, pooled as the site value pools
 them (by IRIS, else the whole commune; both recorded in the households
-sidecar): building-less parcels, priced from plot sales, parcels valued at
-replacement cost (sheds, retail boxes) and parcels floored at the farmland
-value do not (`export_web._cost_shocked_land`; code review, 2026-11-12). Each
+sidecar): parcels valued at replacement cost (sheds, retail boxes) and
+parcels floored at the farmland value do not. Building-less land valued at
+site value moves by its IRIS's factor (the commune's where it took the
+commune's rate) without entering the IRIS total (`export_web._cost_shocked_land`;
+code review, 2026-11-12; sidecar flag `site_vacant`, 2026-11-24). Each
 leg re-shares each commune's levy and reports the land share it implies. The
 shock is applied to the exported land values, not by re-running the
 site-value step: parcels clipped to the land-share bounds move with their
@@ -1460,12 +1501,13 @@ Ranked by how much they move published (category/quintile) results.
 9. **Coverage**: DVF excludes Alsace-Moselle and Mayotte. Paris and Lyon are
    modelled as whole communes from their arrondissements (§3.7); Marseille could
    be added the same way.
-10. **Building-less land in U zones is priced as building land.** Public open
-    space zoned urban (Paris PLU *UV*: parks, cemeteries, sports grounds; Lyon
-    PLU-H *USP* public-service land) and vacant *industrial-zone* land (*UEi*)
-    take the residential terrain-à-bâtir €/m² (built sheds there take the
-    business-land ratio, §3.4). `audit_land.py <commune>`
-    quantifies the levy this land carries per zoning label.
+10. **The use of building-less urban land rests on labels and a land-cover
+    map.** Since 2026-11-24 open space leaves the reform and business land takes
+    the business-land ratio (§3.4), but a plan's long label can be vague
+    ("secteurs sans règlement", ZAC names) and BD TOPO maps public open space,
+    not private gardens or estates. A plan that states nothing leaves a U zone
+    as housing land. `audit_land.py <commune>` quantifies the levy this land
+    carries per zoning label.
 11. **Exemptions are only partly modelled.** Obviously exempt public property is
     flagged (§3.5), but deliberately conservatively: public units inside
     condominiums or under leases, worship buildings owned by associations,

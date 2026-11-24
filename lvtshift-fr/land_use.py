@@ -70,12 +70,28 @@ ACTIVITY_WORDS = (
     "voie ferree", "grands services urbains", "infrastructure", "aeroport",
     "aerodrome", "autoroute", "zone d equipement", "secteur d equipement",
     "equipements d interet collectif", "equipements collectifs", "equipements publics",
-    "services publics", "hospital", "universit", "militaire",
+    "services publics", "hospital", "hopital", "du chu", "universit", "militaire",
+    "defense nationale", "penitentiaire", "ports de", "plaisance", "nautique",
+    "touristi",
 )
+# Words introducing what a zone is for: the first keyword after the earliest of
+# them decides ("secteur situé en frange de tissus résidentiels et dédié aux
+# activités économiques" is business land).
+PURPOSE_WORDS = ("dedie", "vocation", "destine", "dominante", "devolu", "reserve aux")
 
 
 def _label_use(label: str, allow_open: bool) -> str | None:
-    """Class of the keyword appearing earliest in a normalised label."""
+    """Class of the keyword appearing earliest in a normalised label, read
+    from its statement of purpose when it has one (PURPOSE_WORDS)."""
+    anchors = [i for i in (label.find(w) for w in PURPOSE_WORDS) if i >= 0]
+    if anchors:
+        hit = _earliest(label[min(anchors):], allow_open)
+        if hit is not None:
+            return hit
+    return _earliest(label, allow_open)
+
+
+def _earliest(label: str, allow_open: bool) -> str | None:
     best, pos = None, None
     for use, words in ((HOUSING, HOUSING_WORDS), (OPEN_SPACE, OPEN_SPACE_WORDS),
                        (ACTIVITY, ACTIVITY_WORDS)):

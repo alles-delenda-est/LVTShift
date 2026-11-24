@@ -247,3 +247,16 @@ def test_zone_label_earliest_keyword_wins_and_au_is_never_open_space():
     assert pd.isna(out[3])                       # AU: priced by the AU discount
     assert out[4] == lu.OPEN_SPACE and out[5] == lu.ACTIVITY
     assert pd.isna(out[6])
+
+
+def test_zone_label_statement_of_purpose_overrides_word_order():
+    typ = pd.Series(["U", "AU", "U", "U", "U"])
+    label = pd.Series([
+        "secteur urbain situé en frange de tissus résidentiels et dédié aux activités économiques",
+        "espaces naturels ou agricoles destinés à recevoir une urbanisation à long terme : principalement de l'habitat.",
+        "espaces dévolus aux jardins familiaux ou partagés situés en zone urbaine",
+        "espaces spécifiques des ports de plaisance",
+        "Défense nationale et administration pénitentiaire",
+    ])
+    out = lu.zone_use(typ, None, label)
+    assert list(out) == [lu.ACTIVITY, lu.HOUSING, lu.OPEN_SPACE, lu.ACTIVITY, lu.ACTIVITY]

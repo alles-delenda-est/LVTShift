@@ -34,7 +34,8 @@ française.
 | Transactions | DVF géolocalisé (Etalab) | CSV par commune | 5 ans glissants | valeur de marché hédonique ; comparables terrains à bâtir |
 | Bâtiments | BD TOPO V3 (IGN) | WFS `BDTOPO_V3:batiment`, emprise communale | courant | emprise, niveaux, hauteur, logements, usage, flag d'appariement FF |
 | Année de construction | DPE logements existants (ADEME) | API data-fair par `code_insee_ban` | depuis 07/2021 | dépréciation (tranche → année) |
-| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties ; critère A/N des bâtiments agricoles exonérés (§3.5) |
+| Zonage | GPU `zone_urba` (IGN) | WFS, emprise communale | PLU/PLUi courant | constructibilité (U/AU vs A/N) des parcelles non bâties et, en zone U, leur vocation déclarée (`libelong`, `destdomi`) ; critère A/N des bâtiments agricoles exonérés (§3.5) |
+| Occupation du sol | BD TOPO V3 (IGN) : `zone_d_activite_ou_d_interet`, `cimetiere`, `terrain_de_sport`, `equipement_de_transport`, `surface_hydrographique` | WFS, emprise communale | édition courante | contrôle croisé de l'usage du foncier urbain non bâti : espace ouvert, ou sites d'activité et de transport (§3.4) |
 | Prix agricoles | SAFER « Le prix des terres » | barème départemental (config) | édition 2025 (marché 2024) | €/m² du foncier non constructible |
 | Repli terrain à bâtir | EPTB (SDES) | valeur nationale (config) | 2023 | €/m² constructible quand les comparables locaux manquent |
 | Cible fiscale | REI foncier bâti, via OFGL | API Opendatasoft par `idcom` | dernier | cible exacte de neutralité (`MONTANT RÉEL`) |
@@ -277,7 +278,7 @@ référentiel :
 |---|---|
 | **Bâtie** | **valeur du site** (ci-dessous) : le terrain résiduel de chaque IRIS (`marché − bâti`, plancher à la valeur agricole €/m², part foncière bornée à [0,15 ; 0,85]) est réparti à nouveau selon la surface de la parcelle et la densité habituelle de la zone ; bâti au coût déprécié, valeur = terrain + bâti, sans bornage (`lv_flag` `built_site_value`) |
 | **Bâtie, plus grand bâtiment de type hangar** (CRD) | €/m² terrain à bâtir × `activity_land_ratio` (types professionnels) ou × 1 (salles de sport, annexes) × surface, plancher à la valeur agricole €/m² ; hors zone urbaine, seule une cour de 3 × la surface plancher prend ce prix. Valeur de marché = terrain + bâti déprécié ; ni prix résidentiel ni bornage (`lv_flag` `built_drc`) |
-| **Constructible vacante** (zone U/AUc) | €/m² terrain à bâtir DVF × surface (médiane cellule si ≥ 8 ventes, sinon médiane communale, sinon repli national EPTB) |
+| **Constructible vacante** (zone U/AUc) | **valeur du site**, comme le terrain bâti de son IRIS et de sa zone (*Foncier urbain non bâti* ci-dessous) : × `activity_land_ratio` sur le foncier d'activité ; l'espace ouvert devient du terrain naturel (ligne suivante). Bandes et délaissés comptent au poids d'un jardin (`lv_flag` `vacant_site_value`) |
 | **Constructible différée** (AU/AUs) | idem × `au_strict_factor` (urbanisation différée) |
 | **Agricole / naturelle** (zone A/N) | €/m² départemental SAFER × surface ; **hors de la réforme** : la parcelle garde la TFPNB actuelle, ne prend aucune part du nouvel impôt et sort des résultats publiés (comptée dans `farmland_excluded_parcels`) |
 
@@ -285,6 +286,49 @@ Seules les lignes DVF codées *terrains à bâtir* sont utilisées pour les prix
 constructible — le brut `valeur_fonciere/surface_terrain` est contaminé pour les
 autres natures de culture car les mutations regroupent bâti et plusieurs
 parcelles.
+
+**Foncier urbain non bâti : l'usage d'abord, puis la valeur du site**
+(`land_use.py`, `estimate.vacant_site_value` ; revue du 24 novembre 2026).
+Jusque-là, toute parcelle non bâtie en zone U recevait la médiane communale des
+ventes de terrains à bâtir, quoi que le plan y autorise : à Grenoble un seul
+prix, 3 558 €/m² de terrain (plus qu'un appartement ne se vend au m² de
+plancher), pour les terrains d'habitat, les parcs privés (PLUi *UV*, « parcs
+urbains » : logement et bureaux interdits) et les zones d'activités (*UE4*) ; à
+La Rochelle, les deux tiers de l'impôt du terrain nu tombaient sur le foncier
+portuaire et d'activité (*UX*, *UPM*) ; à Paris, le prix valait le tiers de
+celui du terrain bâti. L'usage de chaque parcelle urbaine non bâtie est
+désormais lu deux fois :
+
+- **Le plan.** Le code CNIG `destdomi` s'il est rempli (2 % des zones des
+  territoires publiés), sinon le libellé long de la zone `libelong` (98 %) :
+  la catégorie du mot-clé qui vient en premier dans sa déclaration de vocation
+  (« dédié aux… », « à vocation… »), sinon dans le libellé. Les libellés courts
+  (UV, UX, UE…) n'ont pas le même sens d'un plan à l'autre et ne sont jamais
+  lus seuls. Les mots de l'espace ouvert ne comptent qu'en zone U.
+- **La BD TOPO.** La part de la parcelle couverte par l'espace public ouvert
+  (*espace public* : parcs, squares, jardins), les cimetières, les terrains de
+  sport et l'eau, ou par les sites d'activité, de transport et d'équipement.
+
+Espace ouvert si l'une des deux lectures le dit (au moins la moitié de la
+parcelle pour la BD TOPO, `LAND_MODEL["land_use_cover_threshold"]`) : la
+parcelle devient du terrain naturel, hors de la réforme comme en zone N.
+Foncier d'activité si l'une le dit : évalué × `activity_land_ratio`. Terrain
+d'habitat sinon. Le journal de calcul croise les deux lectures. Chaque parcelle
+restante est ensuite évaluée comme le terrain sous les bâtiments : le terrain
+par unité de poids de son IRIS (celui de la commune si l'IRIS n'a pas de
+terrain bâti dans le regroupement) × surface effective × densité de référence
+de sa zone^0,5, avec le même plafond de surface et la même règle de surplus. Une
+parcelle de moins du quart de la parcelle bâtie médiane de sa zone
+(`SITE_VALUE["vacant_sliver_fraction"]` : bandes, passages, délaissés, la
+plupart des parcelles non bâties en nombre) ne peut porter seule un bâtiment et
+compte au poids d'un jardin (0,25). Le prix des terrains à bâtir reste dans
+`land_value_current` pour comparaison. Évaluer de la même façon le terrain nu et
+le terrain bâti d'une même zone est ce qu'exige un impôt sur le sol « comme
+s'il était nu » ; cela évite aussi les ventes de terrains à bâtir rares et
+atypiques des villes denses (Lyon 735 €/m² contre 1 220 € pour le terrain bâti
+au résiduel, §3.4 ci-dessus). La correction joue dans les deux sens : là où ces
+ventes étaient chères (Grenoble) le terrain nu baisse, là où elles étaient bon
+marché (Annemasse, Paris) il monte.
 
 **Coût de remplacement déprécié pour les parcelles de type hangar.** Entrepôts,
 ateliers, grandes surfaces, hangars agricoles, serres, salles de sport et
@@ -917,10 +961,12 @@ de site : le total foncier résiduel de chaque IRIS devient L − 0,2 B (ou
 L + 0,2 B), borné à [0, L + B], et toutes les parcelles évaluées au résiduel
 bougent du même facteur. Seules celles-là bougent, regroupées comme la valeur
 de site les regroupe (par IRIS, à défaut la commune entière ; l'un et l'autre
-notés dans le fichier annexe des ménages) : les parcelles non bâties,
-évaluées sur les ventes de terrains, les parcelles évaluées au coût (hangars,
-grandes surfaces) et celles au plancher agricole ne bougent pas
-(`export_web._cost_shocked_land` ; revue de code du 12 novembre 2026). Chaque
+notés dans le fichier annexe des ménages) : les parcelles évaluées au coût
+(hangars, grandes surfaces) et celles au plancher agricole ne bougent pas. Le
+terrain non bâti évalué à la valeur du site bouge du facteur de son IRIS (de la
+commune s'il en a pris le taux) sans entrer dans le total de l'IRIS
+(`export_web._cost_shocked_land` ; revue de code du 12 novembre 2026 ; indicateur
+`site_vacant` du fichier annexe, 24 novembre 2026). Chaque
 hypothèse répartit de nouveau le produit de chaque commune et indique la part
 foncière qu'elle implique. Le choc porte sur les valeurs du sol exportées,
 sans refaire l'étape de valeur de site : les parcelles bornées à la part
@@ -1630,13 +1676,14 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
 9. **Couverture** : DVF exclut l'Alsace-Moselle et Mayotte. Paris et Lyon sont
    modélisées comme communes entières à partir de leurs arrondissements (§3.7) ;
    Marseille pourrait l'être de la même façon.
-10. **Le foncier non bâti en zone U est évalué comme terrain à bâtir.** Les
-    espaces publics ouverts classés urbains (PLU de Paris *UV* : parcs,
-    cimetières, terrains de sport ; PLU-H de Lyon *USP* : services publics) et le
-    foncier vacant en *zone d'activités* (*UEi*) reçoivent le €/m² résidentiel des
-    terrains à bâtir (les hangars bâtis y prennent le ratio du foncier
-    d'activité, §3.4). `audit_land.py <commune>` chiffre, par libellé de zone, la
-    part de l'impôt qu'il porte.
+10. **L'usage du foncier urbain non bâti repose sur des libellés et une carte
+    d'occupation du sol.** Depuis le 24 novembre 2026, l'espace ouvert sort de la
+    réforme et le foncier d'activité prend le ratio du foncier d'activité
+    (§3.4), mais le libellé long d'un plan peut être vague (« secteurs sans
+    règlement », noms de ZAC) et la BD TOPO cartographie l'espace public ouvert,
+    pas les jardins ni les domaines privés. Un plan muet laisse une zone U en
+    terrain d'habitat. `audit_land.py <commune>` chiffre, par libellé de zone,
+    la part de l'impôt qu'il porte.
 11. **Les exonérations ne sont que partiellement modélisées.** Le foncier public
     manifestement exonéré est repéré (§3.5), mais prudemment : les locaux publics en
     copropriété ou sous bail, les lieux de culte détenus par des associations, les
