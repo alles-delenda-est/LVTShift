@@ -691,7 +691,7 @@ def _site_pool(out: pd.DataFrame, pool: pd.Series, prm: dict) -> dict:
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
              if "iris" in out.columns else pd.Series("_commune", index=far.index))
     return {"density": density, "weight": weight, "group": group, "far": far,
-            "plot": plot, "cap": cap, "zone_cols": zone_cols}
+            "ref": ref, "plot": plot, "cap": cap, "zone_cols": zone_cols}
 
 
 def _zone_lookup(values: pd.Series, zones: list, targets: list, q: float,
@@ -713,6 +713,83 @@ def _zone_lookup(values: pd.Series, zones: list, targets: list, q: float,
 
 
 VACANT_PRICED_FLAGS = frozenset({"constructible", "constructible_deferred"})
+
+
+def _au_density(out: pd.DataFrame, pooled: pd.Series, au: pd.Series, sp: dict,
+                q_ref: float, min_n: int) -> pd.Series:
+    """Reference density for building-less parcels in AU zones (see
+    vacant_site_value), first available of:
+      1. the AU label's own reference density, when the label has min_n
+         pooled built parcels;
+      2. the median, over the built parcels in U zones of the same stated use
+         in the parcel's IRIS (min_n of them at least), of each parcel's own
+         zone reference density: a greenfield site is planned against the
+         fabric next to it, not against the town centre. Reference densities,
+         not realised ones, so the level matches steps 1 and 3 and does not
+         jump when an IRIS crosses min_n (fresh-context review, PR #84);
+      3. the median, over the commune's U labels of the same stated use with
+         min_n pooled parcels, of each label's reference density;
+      4. the median over all such U labels, whatever their use; else the
+         commune's q_ref density.
+
+    Parameters
+    ----------
+    out : parcel frame (zone_typ required; zone_libelle, iris, zone_destdomi,
+        zone_libelong used when present)
+    pooled : boolean mask of the built parcels in the site-value pool
+    au : boolean Series, indexed on the building-less parcels, True for AU
+    sp : the _site_pool dict (far, ref indexed on the pooled rows)
+
+    Returns
+    -------
+    pd.Series of reference densities indexed on the AU parcels.
+    """
+    import land_use
+    idx = au[au].index
+    far, ref = sp["far"], sp["ref"]
+    rows = far.index
+
+    def col(name, at):
+        return (out.loc[at, name].astype("object") if name in out.columns
+                else pd.Series(None, index=at, dtype="object"))
+
+    def use_of(at):
+        return land_use.zone_use(
+            out.loc[at, "zone_typ"].astype("object").fillna(""),
+            out.loc[at, "zone_destdomi"] if "zone_destdomi" in out.columns else None,
+            out.loc[at, "zone_libelong"] if "zone_libelong" in out.columns else None,
+        ).fillna(land_use.HOUSING).replace({land_use.OPEN_SPACE: land_use.HOUSING})
+
+    lab = col("zone_libelle", rows)
+    is_u = out.loc[rows, "zone_typ"].astype("object").fillna("").astype(str) \
+        .str.upper().str.startswith("U")
+    use = use_of(rows)
+    commune = float(far.quantile(q_ref))
+
+    # labels with min_n pooled parcels: reference density, dominant type and use
+    counts = lab.value_counts()
+    big = lab.isin(counts[counts >= min_n].index)
+    ref_by_label = far[big].groupby(lab[big]).quantile(q_ref)
+    label_is_u = is_u[big].groupby(lab[big]).agg(lambda x: x.mode().iloc[0])
+    label_use = use[big].groupby(lab[big]).agg(lambda x: x.mode().iloc[0])
+    u_labels = label_is_u[label_is_u].index
+    all_u = float(ref_by_label[u_labels].median()) if len(u_labels) else commune
+    by_use = ref_by_label[u_labels].groupby(label_use[u_labels]).median()
+
+    target_use = use_of(idx)
+    density = col("zone_libelle", idx).map(ref_by_label)                    # step 1
+    if "iris" in out.columns:                                               # step 2
+        iris = out.loc[rows, "iris"]
+        ok = is_u & iris.notna()
+        key = iris[ok].astype(str) + "|" + use[ok].astype(str)
+        n = key.value_counts()
+        key = key[key.isin(n[n >= min_n].index)]
+        ref_iris = ref.loc[key.index].groupby(key).median()
+        t_iris = out.loc[idx, "iris"]
+        tkey = (t_iris.astype(str) + "|" + target_use.astype(str)).where(t_iris.notna())
+        density = density.fillna(tkey.map(ref_iris))
+    density = density.fillna(target_use.map(by_use))                       # step 3
+    return density.fillna(all_u).astype(float)                              # step 4
 
 
 def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
@@ -787,6 +864,32 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     eff = plot - (1.0 - w_sur) * surplus
     sliver = a < frac * typical
     eff = eff.where(~sliver, plot * w_sur)
+
+    # To-be-urbanised zones (AU…): greenfield development sites. Few built
+    # parcels stand in them, so their zone label rarely has min_n pooled
+    # parcels and the lookup above fell back to the zone type or the commune,
+    # i.e. to the dense urban fabric: raw AU land came out dearer per m² than
+    # serviced urban housing land (review of PR #83, La Rochelle, Sète). An AU
+    # parcel takes the density _au_density gives (its label's, else its IRIS's
+    # same-use U fabric, else the commune's same-use U labels) and is then
+    # valued exactly as U land of that density would be (same surplus and
+    # sliver rules), net of the share roads and public space take when it is
+    # developed (au_net_share). One rule on both sides of the U/AU boundary, so
+    # AU land never comes out dearer than U land of the same IRIS, use, density
+    # and size (fresh-context review, PR #84).
+    zt = (out.loc[vacant, "zone_typ"].astype("object").fillna("")
+          if "zone_typ" in out.columns else pd.Series("", index=a.index))
+    au = zt.astype(str).str.upper().str.startswith("AU")
+    if au.any():
+        net = float(prm["au_net_share"])
+        if not 0.0 < net <= 1.0:
+            raise ValueError(f"au_net_share must be in (0, 1], got {net}")
+        density.loc[au] = _au_density(out, pooled, au, sp, q_ref, min_n)
+        house_scale = density < far_sur
+        surplus = (plot - k_sur * typical).clip(lower=0.0).where(house_scale, 0.0)
+        eff = plot - (1.0 - w_sur) * surplus
+        eff = eff.where(~sliver, plot * w_sur)
+        eff = eff.mask(au, eff * net)
     factor = (pd.to_numeric(out.loc[vacant, "vacant_price_factor"], errors="coerce").fillna(1.0)
               if "vacant_price_factor" in out.columns else 1.0)
     grp = (out.loc[vacant, "iris"].astype("object").fillna("_commune")
@@ -804,6 +907,8 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     out.loc[vacant, "site_density"] = density
     out["vacant_sliver"] = False
     out.loc[vacant, "vacant_sliver"] = sliver
+    out["vacant_au"] = False
+    out.loc[vacant, "vacant_au"] = au
     return out
 
 

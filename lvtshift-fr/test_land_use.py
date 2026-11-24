@@ -382,3 +382,152 @@ def test_transport_zone_is_business_land_without_matching_inside_words():
                       None, pd.Series(["Ut : Zone à usage de transport collectif",
                                        "Habitat collectif desservi par les transports en commun"]))
     assert list(out) == [lu.ACTIVITY, lu.HOUSING]
+
+
+# ------------------------------------------------- AU (to-be-urbanised) land
+
+def _au_frame():
+    """One IRIS: three built parcels in a housing zone UA (FAR 2), three in a
+    business zone UX (FAR 0.5), and building-less parcels in AU zones."""
+    rows = []
+    for i in range(3):
+        rows.append(dict(idpar=f"H{i}", zone_typ="U", zone_libelle="UA",
+                         zone_libelong="Habitat collectif", floor_area_m2=1000.0,
+                         parcel_area_m2=500.0, land_value=800_000.0))
+        rows.append(dict(idpar=f"X{i}", zone_typ="U", zone_libelle="UX",
+                         zone_libelong="Zone d'activités économiques", floor_area_m2=250.0,
+                         parcel_area_m2=500.0, land_value=400_000.0))
+    for k, (typ, lab, long_, area) in {
+        "AUh": ("AUc", "1AUH", "Zone à urbaniser à vocation d'habitat", 20_000.0),
+        "AUx": ("AUc", "1AUX", "Zone à urbaniser à vocation d'activités", 20_000.0),
+        "AUs": ("AU", "2AU", "", 400.0),
+    }.items():
+        rows.append(dict(idpar=k, zone_typ=typ, zone_libelle=lab, zone_libelong=long_,
+                         floor_area_m2=0.0, parcel_area_m2=area, land_value=9e9))
+    p = pd.DataFrame(rows)
+    built = p["floor_area_m2"] > 0
+    p["iris"] = "I1"
+    p["building_cost"] = np.where(built, 1_000_000.0, 0.0)
+    p["improvement_value"] = p["building_cost"]
+    p["market_value"] = p["land_value"] + p["building_cost"]
+    p["land_share"] = p["land_value"] / p["market_value"]
+    p["land_share_raw"] = p["land_share"]
+    p["lv_flag"] = np.where(built, "built_residual", "constructible")
+    p["is_exempt_public"] = False
+    return p
+
+
+def test_au_land_takes_the_density_of_same_use_urban_zones_net_of_roads():
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "au_net_share": 0.75}
+    out = estimate.vacant_site_value(estimate.site_value_land(_au_frame(), prm), prm).set_index("idpar")
+    assert out.loc["AUh", "site_density"] == 2.0       # the housing zone's, not the commune's
+    assert out.loc["AUx", "site_density"] == 0.5       # the business zone's
+    # same IRIS rate as the built plots: land per m² of net area × density^0.5
+    rate = out.loc["H0", "land_value"] / (500.0 * 2.0 ** 0.5)
+    assert abs(out.loc["AUh", "land_value"] - rate * 20_000 * 0.75 * 2.0 ** 0.5) < 1e-3
+    assert bool(out.loc["AUs", "vacant_au"]) and not bool(out.loc["H0", "vacant_au"])
+    assert abs(out.loc["AUs", "land_value"] - rate * 400 * 0.75 * 2.0 ** 0.5) < 1e-3
+
+
+def test_au_land_takes_the_density_of_its_own_iris_before_the_commune():
+    p = _au_frame()
+    edge = p[p["idpar"].str.startswith("H")].copy()
+    edge["idpar"] = ["E0", "E1", "E2"]
+    edge["iris"], edge["zone_libelle"] = "I2", "UC"
+    edge["floor_area_m2"] = 200.0                       # low-density fabric, FAR 0.4
+    au = p[p["idpar"].eq("AUh")].copy()
+    au["idpar"], au["iris"] = "AUedge", "I2"
+    p = pd.concat([p, edge, au], ignore_index=True)
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0}
+    out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
+    assert abs(out.loc["AUedge", "site_density"] - 0.4) < 1e-9   # its IRIS's, not the town's
+    assert out.loc["AUh", "site_density"] == 2.0
+
+
+def test_au_label_with_enough_built_parcels_keeps_its_own_density():
+    p = _au_frame()
+    extra = p[p["idpar"].str.startswith("H")].copy()
+    extra["idpar"] = ["A0", "A1", "A2"]
+    extra["zone_typ"], extra["zone_libelle"] = "AUc", "1AUH"
+    extra["floor_area_m2"] = 500.0                      # FAR 1 inside the AU zone
+    p = pd.concat([p, extra], ignore_index=True)
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0}
+    out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
+    assert out.loc["AUh", "site_density"] == 1.0
+    with pytest.raises(ValueError):
+        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "au_net_share": 0.0})
+
+
+def _fabric(prefix, iris, label, long_, fars, area=500.0):
+    return [dict(idpar=f"{prefix}{i}", iris=iris, zone_typ="U", zone_libelle=label,
+                 zone_libelong=long_, floor_area_m2=far * area, parcel_area_m2=area,
+                 land_value=600_000.0) for i, far in enumerate(fars)]
+
+
+def _finish(rows):
+    p = pd.DataFrame(rows)
+    built = p["floor_area_m2"] > 0
+    p["building_cost"] = np.where(built, 1_000_000.0, 0.0)
+    p["improvement_value"] = p["building_cost"]
+    p["market_value"] = p["land_value"] + p["building_cost"]
+    p["land_share"] = p["land_value"] / p["market_value"]
+    p["land_share_raw"] = p["land_share"]
+    p["lv_flag"] = np.where(built, "built_residual", "constructible")
+    p["is_exempt_public"] = False
+    return p
+
+
+def _vacant(idpar, iris, typ, label, long_, area):
+    return dict(idpar=idpar, iris=iris, zone_typ=typ, zone_libelle=label, zone_libelong=long_,
+                floor_area_m2=0.0, parcel_area_m2=area, land_value=9e9)
+
+
+HAB, ACT = "Habitat", "Zone d'activités économiques"
+
+
+def test_au_density_steps_use_reference_densities_on_one_scale():
+    """Step 2 (the IRIS's U fabric) takes the median of the parcels' own label
+    references, so it lands on the same level as step 3 (the commune's labels)
+    instead of the lower realised median."""
+    rows = (_fabric("A", "I1", "UA", HAB, [0.5, 1.0, 4.0])      # ref p75 = 2.5
+            + _fabric("B", "I2", "UB", HAB, [0.2, 0.2, 0.4])    # ref p75 = 0.3
+            + _fabric("X", "I3", "UX", ACT, [0.3, 0.3, 0.3]))
+    rows += [_vacant("AU1", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 5000.0),
+             _vacant("AU3", "I3", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 5000.0)]
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0}
+    p = _finish(rows)
+    out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
+    assert abs(out.loc["AU1", "site_density"] - 2.5) < 1e-9     # step 2: UA's reference, not 1.0
+    # I3 has no housing fabric: step 3, median of the commune's housing labels (2.5, 0.3)
+    assert abs(out.loc["AU3", "site_density"] - 1.4) < 1e-9
+
+
+def test_au_land_is_valued_as_u_land_of_the_same_density_net_of_roads():
+    """Same IRIS, use, density and size: AU = U × au_net_share, surplus rule
+    included (fresh-context review of PR #84: a 2 ha AU site must not come out
+    dearer than a 2 ha U site)."""
+    rows = _fabric("H", "I1", "UC", HAB, [0.5] * 4)
+    rows += [_vacant("U2ha", "I1", "U", "UC", HAB, 20_000.0),
+             _vacant("AU2ha", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 20_000.0)]
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "au_net_share": 0.75}
+    out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
+    assert out.loc["AU2ha", "site_density"] == out.loc["U2ha", "site_density"] == 0.5
+    assert abs(out.loc["AU2ha", "land_value"] - 0.75 * out.loc["U2ha", "land_value"]) < 1e-6
+    # an AU strip is a strip: same sliver rule as in U
+    rows.append(_vacant("AUstrip", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 50.0))
+    out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
+    assert bool(out.loc["AUstrip", "vacant_sliver"])
+
+
+def test_au_density_ignores_parcels_without_iris_and_needs_no_optional_columns():
+    rows = _fabric("H", "I1", "UA", HAB, [2.0] * 3) + _fabric("N", None, "UB", HAB, [0.2] * 3)
+    rows.append(_vacant("AUn", None, "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 5000.0))
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0}
+    p = _finish(rows)
+    out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
+    # no IRIS: never pooled with other IRIS-less parcels; commune labels' median (2.0, 0.2)
+    assert abs(out.loc["AUn", "site_density"] - 1.1) < 1e-9
+    bare = p.drop(columns=["zone_libelong"])
+    estimate.vacant_site_value(estimate.site_value_land(bare, prm), prm)   # runs
+    with pytest.raises(ValueError):
+        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "au_net_share": 1.5})

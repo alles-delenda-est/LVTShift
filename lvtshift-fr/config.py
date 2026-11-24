@@ -659,6 +659,13 @@ SITE_VALUE = {
     # carry a building on its own: it counts at surplus_plot_weight, as garden
     # ground does.
     "vacant_sliver_fraction": 0.25,
+    # A building-less parcel in a to-be-urbanised (AU) zone is a greenfield
+    # site: part of it goes to roads, public space and facilities when it is
+    # developed. Share of the gross area that stays building land. In
+    # collective-housing blocks roads alone take 7–29 % (Institut Paris Région,
+    # Référentiel de densités et de formes urbaines); a greenfield scheme builds
+    # all of its roads, so the upper part of that range: 25 % deducted.
+    "au_net_share": 0.75,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.
