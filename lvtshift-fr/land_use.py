@@ -27,6 +27,7 @@ log and the methodology.
 """
 from __future__ import annotations
 
+import re
 import unicodedata
 
 import numpy as np
@@ -75,29 +76,39 @@ OPEN_SPACE_WORDS = (
 ACTIVITY_WORDS = (
     "tissu d activite", "tissus d activite", "village d entreprise",
     "activite", "economique", "industri", "artisan", "commerc", "tertiaire",
-    "technolog", "logisti", "portuaire", "port ", "bureaux", "ferroviaire",
+    "technolog", "logisti", "portuaire", r"\bports?\b", "bureaux", "ferroviaire",
     "voie ferree", "grands services urbains", "infrastructure", "aeroport",
     "aerodrome", "autoroute", "zone d equipement", "secteur d equipement",
     "equipements d interet collectif", "equipements collectifs", "equipements publics",
     "services publics", "hospital", "hopital", "du chu", "universit", "militaire",
-    "defense nationale", "penitentiaire", "ports de", "plaisance", "nautique",
+    "defense nationale", "penitentiaire", "plaisance", "nautique",
     "touristi",
 )
 # Words introducing what a zone is for: the first keyword after the earliest of
 # them decides ("secteur situé en frange de tissus résidentiels et dédié aux
-# activités économiques" is business land).
+# activités économiques" is business land). "emplacements réservés" and
+# "réserve foncière" are secondary planning overlays, not the zone's purpose.
 PURPOSE_WORDS = ("dedie", "vocation", "destine", "dominante", "devolu", "reserve")
+_NON_PURPOSE_RE = re.compile(r"\b(?:emplacements?\s+reserves?|reserves?\s+foncieres?)\b")
 
 
 def _label_use(label: str, allow_open: bool) -> str | None:
     """Class of the keyword appearing earliest in a normalised label, read
     from its statement of purpose when it has one (PURPOSE_WORDS)."""
-    anchors = [i for i in (label.find(w) for w in PURPOSE_WORDS) if i >= 0]
+    probe = _NON_PURPOSE_RE.sub(lambda m: " " * len(m.group(0)), label)
+    anchors = [i for i in (probe.find(w) for w in PURPOSE_WORDS) if i >= 0]
     if anchors:
         hit = _earliest(label[min(anchors):], allow_open)
         if hit is not None:
             return hit
     return _earliest(label, allow_open)
+
+
+def _find_word(label: str, word: str) -> int:
+    if word.startswith(r"\b"):
+        m = re.search(word, label)
+        return m.start() if m else -1
+    return label.find(word)
 
 
 def _earliest(label: str, allow_open: bool) -> str | None:
@@ -107,7 +118,7 @@ def _earliest(label: str, allow_open: bool) -> str | None:
         if use == OPEN_SPACE and not allow_open:
             continue
         for w in words:
-            i = label.find(w)
+            i = _find_word(label, w)
             if i >= 0 and (key is None or (i, -len(w)) < key):
                 best, key = use, (i, -len(w))
     return best
@@ -116,8 +127,13 @@ def _earliest(label: str, allow_open: bool) -> str | None:
 def _norm(text) -> str:
     if text is None or (isinstance(text, float) and np.isnan(text)):
         return ""
-    s = unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode()
-    return " ".join(s.lower().replace("'", " ").split())
+    # Replace curly and straight apostrophes BEFORE ASCII stripping so
+    # "d’activités" becomes "d activites" rather than "dactivites".
+    raw = str(text)
+    for ch in ("'", "\u2019", "\u2018", "\u02bc"):
+        raw = raw.replace(ch, " ")
+    s = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode()
+    return " ".join(s.lower().split())
 
 
 def _code(v) -> str:

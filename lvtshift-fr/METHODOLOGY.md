@@ -1559,8 +1559,15 @@ Ranked by how much they move published (category/quintile) results.
     land takes the business-land ratio (§3.4), but a plan's long label can be vague
     ("secteurs sans règlement", ZAC names) and BD TOPO maps public open space,
     not private gardens or estates. A plan that states nothing leaves a U zone
-    as housing land. `audit_land.py <commune>` quantifies the levy this land
-    carries per zoning label.
+    as housing land. Two valuation caveats remain: (a) sparsely built `AUc`/`AUs`
+    zones fall back to the commune's reference built density with no servicing
+    (VRD) or public-space cession deduction, which can value raw `AU` land above
+    serviced `U` housing land (Sète, La Rochelle); (b) *built* shed-type business
+    land (DRC, §3.4) remains anchored to DVF terrain-à-bâtir sales while *vacant*
+    business land now uses site value × `activity_land_ratio`, opening a gap
+    where DVF plot sales diverge from the residual (Villeurbanne, Grenoble).
+    `audit_land.py <commune>` quantifies the levy this land carries per zoning
+    label.
 11. **Exemptions are only partly modelled.** Obviously exempt public property is
     flagged (§3.5), but deliberately conservatively: public units inside
     condominiums or under leases, worship buildings owned by associations,

@@ -12,7 +12,7 @@
  */
 
 import Link from "next/link";
-import { ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 export type VariantKind = "central" | "local";
 
@@ -45,8 +45,21 @@ export default function VariantTerm({
 }) {
   const [open, setOpen] = useState(false);
   const [shift, setShift] = useState(0);
+  const rootRef = useRef<HTMLSpanElement>(null);
   const boxRef = useRef<HTMLSpanElement>(null);
   const id = useId();
+  // Dismiss on outside tap/click (critical on touch devices where hover/blur
+  // do not fire reliably).
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
   // Keep the note on screen: measure once it is open, nudge it left if it
   // would run past the right edge (8 px margin).
   useLayoutEffect(() => {
@@ -64,6 +77,7 @@ export default function VariantTerm({
     tone === "dark" ? "decoration-creme/60 focus-visible:outline-creme" : "decoration-gris focus-visible:outline-marine";
   return (
     <span
+      ref={rootRef}
       className="relative inline-block"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -78,7 +92,7 @@ export default function VariantTerm({
         type="button"
         aria-expanded={open}
         aria-describedby={id}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((v) => !v)}
         className={`cursor-help underline decoration-dotted underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 ${underline}`}
       >
         {children}

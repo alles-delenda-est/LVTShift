@@ -236,15 +236,20 @@ export default function MethodologiePage() {
           </p>
 
           <p>
-            <strong>Pour les parcelles non bâties,</strong> la méthode est
-            différente : le zonage du Plan Local d&apos;Urbanisme (GPU, via
-            le Géoportail de l&apos;Urbanisme) détermine la catégorie de
-            constructibilité de chaque parcelle. Les parcelles constructibles
-            sont valorisées à partir des prix de terrains à bâtir extraits de
-            DVF ; les terres agricoles ou naturelles sont valorisées au
-            barème SAFER (prix au m² par département). On ne leur applique
-            pas le résiduel marché&nbsp;&minus;&nbsp;bâti, dont la fiabilité
-            serait nulle en l&apos;absence de bâtiment.{" "}
+            <strong>Pour les parcelles non bâties,</strong> la méthode commence
+            par lire le zonage du Plan Local d&apos;Urbanisme (GPU, via le
+            Géoportail de l&apos;Urbanisme) et, en zone urbaine, la vocation
+            déclarée de chaque zone (code CNIG ou libellé long, complétés par la
+            BD TOPO là où le plan est muet). Les parcelles constructibles
+            urbaines d&apos;habitat et d&apos;activité sont ensuite valorisées à
+            la <strong>valeur du site</strong>, sur la même surface que le
+            terrain bâti de leur quartier et de leur zone (×&nbsp;0,45 ou 0,35
+            pour le foncier d&apos;activité ; les bandes et délaissés comptent
+            au poids d&apos;un jardin) ; les espaces ouverts urbains (parcs
+            urbains, cimetières, terrains de sport) restent dans la réforme mais
+            sont valorisés au barème SAFER du terrain naturel. Les terres
+            agricoles ou naturelles sont valorisées au barème SAFER (prix au m²
+            par département).{" "}
             <strong>Les terres agricoles et naturelles non bâties</strong>{" "}
             (zones A et N du PLU), de faible valeur au regard du reste
             (environ 3,5&nbsp;% de la base à l&apos;échelle nationale), sont
@@ -948,11 +953,11 @@ export default function MethodologiePage() {
               marché et une valeur du bâti calculées toutes deux sur la surface
               habitable, des coûts de construction recalés et une
               valorisation propre aux locaux d&apos;activité, la part
-              foncière de Paris ressort à 75,3&nbsp;%, avec 3,6&nbsp;% des
+              foncière de Paris ressort à 75,4&nbsp;%, avec 3,6&nbsp;% des
               parcelles bâties dont le résiduel atteint le plafond : elle est
               désormais mesurée. Aucune commune n&apos;a plus de la moitié de
               ses parcelles bâties au plafond (Neuilly-sur-Seine en a le plus,
-              19,0&nbsp;%). Lyon est à 60,0&nbsp;%. Le plafond ne borne plus
+              19,0&nbsp;%). Lyon est à 60,4&nbsp;%. Le plafond ne borne plus
               que le résiduel, qui fixe le total de sol de chaque quartier :
               le sol de chaque parcelle, évalué comme s&apos;il était nu, peut
               ensuite le dépasser. Les prix de vente sont d&apos;abord ramenés en euros 2025 par
@@ -974,10 +979,10 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en forte hausse (+21,6&nbsp;%), alors que son ménage
-              type paie 21&nbsp;% de moins : les grands immeubles, où vivent la
+              plus pauvre en forte hausse (+18,7&nbsp;%), alors que son ménage
+              type paie 22,8&nbsp;% de moins : les grands immeubles, où vivent la
               plupart de ses ménages, sont les plus gagnants. Le groupe paie
-              pourtant 3,4&nbsp;% de plus au total, la hausse se concentrant sur
+              pourtant 0,9&nbsp;% de plus au total, la hausse se concentrant sur
               ses maisons et petits immeubles. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.

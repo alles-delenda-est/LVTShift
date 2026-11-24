@@ -185,8 +185,8 @@ export CSV seul : `run(..., make_report=False)`.
   l'estime commune par commune à partir de la taxe d'habitation de 2017, qui
   portait sur tous les logements occupés. En ville, l'écart déplace les
   résultats des ménages d'environ 10 points : premier quintile de revenu à
-  Paris −24,9 % (central) contre −14,7 % (variante locale), à Lyon −15,7 %
-  contre −5,0 %. Les nouvelles cotisations sont identiques ; seul le point de
+  Paris −25,4 % (central) contre −15,2 % (variante locale), à Lyon −17,1 %
+  contre −6,5 %. Les nouvelles cotisations sont identiques ; seul le point de
   départ bouge. Le site affiche les deux côte à côte sur chaque page de
   résultats (tableau « Incertitude sur la taxe actuelle des locaux
   professionnels », champ `baseline_sensitivity` des fichiers publiés). Un

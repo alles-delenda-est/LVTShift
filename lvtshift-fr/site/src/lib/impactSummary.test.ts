@@ -144,13 +144,17 @@ describe("countRange", () => {
 describe("bothPayLessNote", () => {
   const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
   const gaps = quintileGaps(communes);
-  it("names the territories where both groups pay less and who pays instead", () => {
+  it("names the territories where both groups pay less and who pays more in total", () => {
     const note = bothPayLessNote(communes, gaps)!;
     // November 2026: Grenoble, Annemasse and the Lyon ring
     expect(note).toMatch(/^À Grenoble, à Annemasse et dans la couronne lyonnaise, les ménages/);
     expect(note).toContain("×5 à Grenoble");
     expect(note).toContain("dans la couronne lyonnaise");
-    expect(note).toContain("les maisons");
+    // Commercial pays LESS in total in all 3 territories, even where its median rises
+    expect(note).not.toContain("les commerces");
+    expect(note).toContain("les bailleurs sociaux");
+    expect(note).toContain("les autres bâtiments");
+    expect(note).toContain("au sein même des ménages, sur les maisons individuelles");
   });
   it("says nothing when a group pays more everywhere", () => {
     expect(bothPayLessNote(communes, gaps.filter((g) => g.richest > 0))).toBeNull();

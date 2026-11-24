@@ -1744,8 +1744,16 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (§3.4), mais le libellé long d'un plan peut être vague (« secteurs sans
     règlement », noms de ZAC) et la BD TOPO cartographie l'espace public ouvert,
     pas les jardins ni les domaines privés. Un plan muet laisse une zone U en
-    terrain d'habitat. `audit_land.py <commune>` chiffre, par libellé de zone,
-    la part de l'impôt qu'il porte.
+    terrain d'habitat. Deux limites de valorisation subsistent : (a) les zones
+    à urbaniser (`AUc`/`AUs`), peu bâties, reprennent par repli la densité
+    bâtie de référence de la commune sans abattement pour viabilisation (VRD) ni
+    cession d'emprises publiques, ce qui peut les évaluer au-dessus des zones
+    `U` déjà équipées (Sète, La Rochelle) ; (b) le foncier d'activité *bâti*
+    (CRD, §3.4) reste ancré sur les ventes DVF de terrains à bâtir alors que le
+    foncier d'activité *non bâti* suit désormais la valeur du site ×
+    `activity_land_ratio`, créant un écart là où les ventes DVF s'éloignent du
+    résiduel (Villeurbanne, Grenoble). `audit_land.py <commune>` chiffre, par
+    libellé de zone, la part de l'impôt qu'il porte.
 11. **Les exonérations ne sont que partiellement modélisées.** Le foncier public
     manifestement exonéré est repéré (§3.5), mais prudemment : les locaux publics en
     copropriété ou sous bail, les lieux de culte détenus par des associations, les

@@ -206,12 +206,13 @@ def test_band_moves_vacant_land_with_its_iris_without_adding_to_it():
 
 # ------------------------------------------------- classification in a run
 
-def test_open_space_becomes_natural_land_outside_the_reform(monkeypatch):
+def test_open_space_becomes_natural_land_inside_the_reform(monkeypatch):
     import run_commune
     import run_pipeline
-    from config import COMMUNES
+    from config import AG_EUR_M2_BY_DEP, COMMUNES
 
     cfg = next(iter(COMMUNES.values()))
+    _a_rate, n_rate = AG_EUR_M2_BY_DEP.get(cfg.departement, AG_EUR_M2_BY_DEP["_default"])
     monkeypatch.setattr(run_commune.ingest, "tab_comparables",
                         lambda cfg, tab, deflator=None: pd.DataFrame(
                             columns=["eur_m2_land", "lon", "lat"]))
@@ -232,7 +233,7 @@ def test_open_space_becomes_natural_land_outside_the_reform(monkeypatch):
                                               land_use_shares=shares).set_index("idpar")
     assert out.loc["park", "land_type"] == "open_space"
     assert out.loc["park", "vacant_use_source"] == "both"
-    assert out.loc["park", "ag_eur_m2"] == out.loc["park", "ag_eur_m2"]   # natural rate set
+    assert out.loc["park", "ag_eur_m2"] == n_rate
     assert out.loc["biz", "land_type"] == "constructible"
     assert abs(out.loc["biz", "vacant_price_factor"] - cfg.activity_land_ratio) < 1e-12
     assert out.loc["home", "vacant_price_factor"] == 1.0
@@ -290,6 +291,22 @@ def test_compound_terms_do_not_misclassify():
     assert list(out[:3]) == [lu.HOUSING, None, lu.HOUSING] or (
         out[0] == lu.HOUSING and pd.isna(out[1]) and out[2] == lu.HOUSING)
     assert list(out[3:]) == [lu.ACTIVITY, lu.ACTIVITY, lu.ACTIVITY, lu.HOUSING, lu.OPEN_SPACE]
+
+
+def test_curly_apostrophes_port_word_and_emplacements_reserves():
+    typ = pd.Series(["U"] * 6)
+    label = pd.Series([
+        "Tissu d\u2019activités économiques",
+        "Village d\u2019entreprises",
+        "Zone d\u2019équipements",
+        "Zone du port",
+        "Quartiers comportant des immeubles de logement",
+        "Zone d'habitat collectif, emplacements réservés pour équipements publics",
+    ])
+    out = lu.zone_use(typ, None, label)
+    assert list(out) == [
+        lu.ACTIVITY, lu.ACTIVITY, lu.ACTIVITY, lu.ACTIVITY, lu.HOUSING, lu.HOUSING
+    ]
 
 
 def test_vacant_land_takes_its_own_iris_rate_not_the_communes():
