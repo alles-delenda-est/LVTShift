@@ -375,3 +375,10 @@ def test_wfs_json_evicts_and_retries_a_non_json_reply(monkeypatch, tmp_path):
     assert ingest._wfs_json("https://example.org/wfs") == {"features": []}
     assert evicted == ["https://example.org/wfs"]
     assert not ingest._cacheable(b"# HELP jmx_exporter_build_info A metric")
+
+
+def test_transport_zone_is_business_land_without_matching_inside_words():
+    out = lu.zone_use(pd.Series(["U", "U"]),
+                      None, pd.Series(["Ut : Zone à usage de transport collectif",
+                                       "Habitat collectif desservi par les transports en commun"]))
+    assert list(out) == [lu.ACTIVITY, lu.HOUSING]

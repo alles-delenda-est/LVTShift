@@ -77,7 +77,7 @@ ACTIVITY_WORDS = (
     "tissu d activite", "tissus d activite", "village d entreprise",
     "activite", "economique", "industri", "artisan", "commerc", "tertiaire",
     "technolog", "logisti", "portuaire", r"\bports?\b", "bureaux", "ferroviaire",
-    "voie ferree", "grands services urbains", "infrastructure", "aeroport",
+    "voie ferree", "transport collectif", "grands services urbains", "infrastructure", "aeroport",
     "aerodrome", "autoroute", "zone d equipement", "secteur d equipement",
     "equipements d interet collectif", "equipements collectifs", "equipements publics",
     "services publics", "hospital", "hopital", "du chu", "universit", "militaire",

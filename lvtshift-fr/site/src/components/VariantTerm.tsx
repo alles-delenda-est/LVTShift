@@ -46,6 +46,10 @@ export default function VariantTerm({
   const [open, setOpen] = useState(false);
   const [shift, setShift] = useState(0);
   const rootRef = useRef<HTMLSpanElement>(null);
+  // How the last press began: a touch tap also fires an emulated mouseenter
+  // and (on Android) a focus before its click, so hover and focus must not
+  // open the note for touch, or the click's toggle would close it at once.
+  const pointerType = useRef<string>("");
   const boxRef = useRef<HTMLSpanElement>(null);
   const id = useId();
   // Dismiss on outside tap/click (critical on touch devices where hover/blur
@@ -79,9 +83,10 @@ export default function VariantTerm({
     <span
       ref={rootRef}
       className="relative inline-block"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(false)}
+      onPointerDown={(e) => { pointerType.current = e.pointerType; }}
+      onFocus={() => { if (!pointerType.current) setOpen(true); }}   // keyboard
       onBlur={(e) => {
         // stay open while focus moves to the "En savoir plus" link inside
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
@@ -92,7 +97,13 @@ export default function VariantTerm({
         type="button"
         aria-expanded={open}
         aria-describedby={id}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          // mouse: hover already opened it, a click keeps it open; touch and
+          // pen: a tap toggles; keyboard (Enter/Space, no pointer): toggles
+          if (pointerType.current === "mouse") setOpen(true);
+          else setOpen((v) => !v);
+          pointerType.current = "";
+        }}
         className={`cursor-help underline decoration-dotted underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 ${underline}`}
       >
         {children}
