@@ -11,9 +11,10 @@ plot was valued as housing land.
 Two independent readings decide the use of each building-less parcel:
 
 * the plan itself (`zone_use`): the CNIG "vocation dominante" code
-  (`destdomi`) and, where it is missing or "sans objet", keywords in the
-  zone's long label (`libelong`). Short labels (UV, UX, UE…) mean different
-  things in different plans and are never read on their own;
+  (`destdomi`) and, where it is missing or "sans objet" (most plans: 2 % of
+  the zones in the published territories carry it), keywords in the zone's
+  long label (`libelong`, filled for 98 %). Short labels (UV, UX, UE…) mean
+  different things in different plans and are never read on their own;
 * BD TOPO (`bdtopo_use_shares`): the share of the parcel covered by public
   open space (parks, squares, gardens), cemeteries, sports grounds and water,
   or by business, transport and public-facility sites.
@@ -46,20 +47,44 @@ DESTDOMI_USE = {
 }
 # "00" (sans objet), "99" (autre) and blanks fall through to the long label.
 
-# Keywords in the zone's long label, accents and case removed. Open space is
-# tested first: "parc d'activités" is caught by the business list only
-# because "parc" alone is not an open-space keyword.
+# Keywords in the zone's long label, accents and case removed. A label often
+# names its main use first and then what else it allows ("Habitat collectif en
+# R+5 avec bureaux autorisés", "Parc d'activités … comprenant du logement"), so
+# the class whose keyword appears EARLIEST in the label wins. Open-space words
+# count in U zones only: an AU zone "naturel ou agricole destiné à recevoir une
+# urbanisation à long terme" is future building land, which the AU discount
+# already prices.
+HOUSING_WORDS = (
+    "habitat", "logement", "residenti", "tissu", "centre-ville", "centres-villes",
+    "centre ancien", "centre-bourg", "bourg", "village", "hameau", "pavillon",
+    "individuel", "faubourg",
+)
 OPEN_SPACE_WORDS = (
-    "parc urbain", "parcs urbains", "espace vert", "espaces verts", "zone verte",
-    "jardin", "square", "cimetiere", "naturel", "paysager", "coulee verte",
-    "loisirs de plein air", "equipements sportifs de plein air",
+    "parc urbain", "parcs urbains", "urbaine verte", "zone verte", "espace vert",
+    "espaces verts", "jardin", "square", "cimetiere", "naturel", "paysager",
+    "coulee verte", "loisirs de plein air",
 )
 ACTIVITY_WORDS = (
     "activite", "economique", "industri", "artisan", "commerc", "tertiaire",
-    "technolog", "logisti", "portuaire", "port de", "bureaux", "ferroviaire",
+    "technolog", "logisti", "portuaire", "port ", "bureaux", "ferroviaire",
     "voie ferree", "grands services urbains", "infrastructure", "aeroport",
-    "autoroute", "equipement", "hospital", "universit", "militaire",
+    "aerodrome", "autoroute", "zone d equipement", "secteur d equipement",
+    "equipements d interet collectif", "equipements collectifs", "equipements publics",
+    "services publics", "hospital", "universit", "militaire",
 )
+
+
+def _label_use(label: str, allow_open: bool) -> str | None:
+    """Class of the keyword appearing earliest in a normalised label."""
+    best, pos = None, None
+    for use, words in ((HOUSING, HOUSING_WORDS), (OPEN_SPACE, OPEN_SPACE_WORDS),
+                       (ACTIVITY, ACTIVITY_WORDS)):
+        if use == OPEN_SPACE and not allow_open:
+            continue
+        hits = [i for i in (label.find(w) for w in words) if i >= 0]
+        if hits and (pos is None or min(hits) < pos):
+            best, pos = use, min(hits)
+    return best
 
 
 def _norm(text) -> str:
@@ -86,11 +111,10 @@ def zone_use(zone_typ: pd.Series, destdomi: pd.Series | None = None,
     out = pd.Series(None, index=idx, dtype="object")
     by_code = code.map(DESTDOMI_USE)
     out = out.where(by_code.isna(), by_code)
-    undecided = out.isna()
-    has_open = label.map(lambda s: any(w in s for w in OPEN_SPACE_WORDS))
-    has_act = label.map(lambda s: any(w in s for w in ACTIVITY_WORDS))
-    out = out.mask(undecided & has_open, OPEN_SPACE)
-    out = out.mask(undecided & ~has_open & has_act, ACTIVITY)
+    urban = typ.astype(str).str.startswith("U")
+    by_label = pd.Series([_label_use(lab, bool(u)) for lab, u in zip(label, urban)],
+                         index=idx, dtype="object")
+    out = out.where(out.notna(), by_label)
     out = out.mask(typ.isin(["A", "N"]), OPEN_SPACE)
     return out
 

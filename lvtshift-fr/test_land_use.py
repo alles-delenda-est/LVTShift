@@ -38,7 +38,7 @@ def test_zone_use_falls_back_to_the_long_label_and_never_to_the_short_one():
                        "Centre ancien", None])
     out = lu.zone_use(typ, code, label)
     assert list(out[:4]) == [lu.OPEN_SPACE, lu.ACTIVITY, lu.ACTIVITY, lu.ACTIVITY]
-    assert pd.isna(out[4]) and pd.isna(out[5])       # silent plan: model default
+    assert out[4] == lu.HOUSING and pd.isna(out[5])   # housing word; silent plan
 
 
 def test_zone_use_treats_a_and_n_as_open_space():
@@ -229,3 +229,21 @@ def test_open_space_becomes_natural_land_outside_the_reform(monkeypatch):
     assert out.loc["house", "land_type"] == "built" and pd.isna(out.loc["house", "vacant_use"])
     excluded = run_pipeline.farmland_excluded(out.reset_index())
     assert list(excluded) == [True, False, False, False]
+
+
+def test_zone_label_earliest_keyword_wins_and_au_is_never_open_space():
+    typ = pd.Series(["U", "U", "U", "AU", "U", "U", "AU"])
+    label = pd.Series([
+        "Habitat collectif en R+5 avec bureaux autorisés sans limitation de surface",
+        "parc d'activités « Bas Carbone » Atlantech: mixité fonctionnelle comprenant du logement",
+        "Tissus urbains hétérogènes du coeur métropolitain avec bureaux autorisés",
+        "espaces naturels ou agricoles destinés à recevoir une urbanisation à long terme",
+        "Zone urbaine verte",
+        "Zone d'équipements",
+        "Zone à urbaniser ; opération réalisée au fur et à mesure de la réalisation des équipements",
+    ])
+    out = lu.zone_use(typ, None, label)
+    assert list(out[:3]) == [lu.HOUSING, lu.ACTIVITY, lu.HOUSING]
+    assert pd.isna(out[3])                       # AU: priced by the AU discount
+    assert out[4] == lu.OPEN_SPACE and out[5] == lu.ACTIVITY
+    assert pd.isna(out[6])
