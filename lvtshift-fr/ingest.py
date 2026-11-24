@@ -471,9 +471,13 @@ def _fetch_parcel_zoning_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
 
     Classifies building-less parcels' legal constructibility. Spatial-joins each
     parcel to the PLU/PLUi `zone_urba` polygons (dominant overlap area) and
-    returns its `typezone` (U / AUc / AUs / AU / A / N) plus the detailed
-    `libelle`. Parcels with no zoning coverage (RNU communes, slivers) come back
-    with zone_typ=None so the caller can fall back.
+    returns its `typezone` (U / AUc / AUs / AU / A / N), the detailed
+    `libelle`, and the zone's stated use: `libelong` (long label) and
+    `destdomi` (CNIG "vocation dominante": 01 habitat, 02 activité, 03 mixte,
+    04 loisirs et tourisme, 05 équipement, 07 agricole, 08 espace naturel…),
+    which land_use.zone_use reads to tell a park or business zone from a
+    housing zone inside type U. Parcels with no zoning coverage (RNU communes,
+    slivers) come back with zone_typ=None so the caller can fall back.
     """
     import geopandas as gpd
 
@@ -483,24 +487,65 @@ def _fetch_parcel_zoning_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
     if not feats:
         print(f"  [{cfg.name}] no GPU zoning (likely RNU commune); fallback used")
         return pd.DataFrame({"idpar": pg["idpar"], "zone_typ": None,
-                             "zone_libelle": None})
+                             "zone_libelle": None, "zone_libelong": None,
+                             "zone_destdomi": None})
 
-    keep = ["geometry", "typezone", "libelle"]
+    keep = ["geometry", "typezone", "libelle", "libelong", "destdomi"]
     zg = gpd.GeoDataFrame.from_features(feats, crs=CRS_METRIC)
     zg = zg[[c for c in keep if c in zg.columns]].copy()
 
     inter = gpd.overlay(pg, zg, how="intersection", keep_geom_type=True)
     inter["ov_area"] = inter.geometry.area
     # dominant zone per parcel = largest overlap
+    cols = [c for c in ("typezone", "libelle", "libelong", "destdomi") if c in inter.columns]
     dom = (inter.sort_values("ov_area")
-                .groupby("idpar").tail(1)[["idpar", "typezone", "libelle"]])
+                .groupby("idpar").tail(1)[["idpar", *cols]])
     out = pg[["idpar"]].merge(
-        dom.rename(columns={"typezone": "zone_typ", "libelle": "zone_libelle"}),
+        dom.rename(columns={"typezone": "zone_typ", "libelle": "zone_libelle",
+                            "libelong": "zone_libelong", "destdomi": "zone_destdomi"}),
         on="idpar", how="left")
+    for c in ("zone_libelong", "zone_destdomi"):     # older GPU layers lack them
+        if c not in out.columns:
+            out[c] = None
     cov = out["zone_typ"].notna().mean()
     print(f"  [{cfg.name}] GPU zoning: {cov:.0%} of parcels covered "
           f"({out['zone_typ'].value_counts().to_dict()})")
     return out
+
+
+def fetch_land_use_shares(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    """BD TOPO land-use cover of each parcel (land_use.bdtopo_use_shares):
+    the share of its area under public open space, cemeteries, sports grounds
+    and water, and under business, transport and public-facility sites.
+
+    Reads the BD TOPO V3 layers in land_use.BDTOPO_LAND_USE_LAYERS from the
+    same Géoplateforme WFS as the buildings, one arrondissement bbox at a time
+    for Paris and Lyon. Returns idpar, bdtopo_open_share,
+    bdtopo_activity_share."""
+    return _per_code(_fetch_land_use_shares_one, cfg, parcels)
+
+
+def _fetch_land_use_shares_one(cfg, parcels: pd.DataFrame) -> pd.DataFrame:
+    import geopandas as gpd
+    import land_use
+
+    pg = parcels_to_gdf(parcels)[["idpar", "geometry"]]
+    rows = []
+    for layer in land_use.BDTOPO_LAND_USE_LAYERS:
+        for f in _wfs_features(layer, pg.total_bounds):
+            use = land_use.bdtopo_feature_use(layer, f.get("properties") or {})
+            if use is not None and f.get("geometry"):
+                rows.append({"geometry": f["geometry"], "use": use, "layer": layer})
+    if rows:
+        fg = gpd.GeoDataFrame.from_features(
+            [{"type": "Feature", "geometry": r["geometry"],
+              "properties": {"use": r["use"], "layer": r["layer"]}} for r in rows],
+            crs=CRS_METRIC)
+    else:
+        fg = gpd.GeoDataFrame({"use": [], "layer": []}, geometry=[], crs=CRS_METRIC)
+    print(f"  [{cfg.name}] BD TOPO land use: "
+          f"{fg['layer'].str.split(':').str[-1].value_counts().to_dict() if len(fg) else {}} features")
+    return land_use.bdtopo_use_shares(pg, fg)
 
 
 def tab_comparables(cfg, tab: pd.DataFrame,

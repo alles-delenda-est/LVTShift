@@ -177,6 +177,9 @@ def _attach_dwellings(df: pd.DataFrame, path: Path, commune_key: str) -> pd.Data
     if "residual_land" in side.columns:     # which parcels the band shocks
         df = df.assign(_residual_land=_strict_flag(side["residual_land"],
                                                    side_path.name).to_numpy())
+    if "site_vacant" in side.columns:       # building-less land priced off that land
+        df = df.assign(_site_vacant=_strict_flag(side["site_vacant"],
+                                                 side_path.name).to_numpy())
     if "landlord_key" in side.columns:      # hashed label: for counting landlords only
         keys = side["landlord_key"].fillna("").astype(str).to_numpy()
         df = df.assign(landlord_key=keys)
@@ -656,7 +659,11 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     farmland value do not. Older sidecars without the flag fall back to
     every parcel with a building. Parcels without an IRIS form one group.
     An IRIS whose residual land is zero stays at zero: the site value shares
-    its total by weights, and a zero total gives no shares to scale."""
+    its total by weights, and a zero total gives no shares to scale.
+    Building-less land valued at its IRIS's land per unit of weight
+    (`_site_vacant`, estimate.vacant_site_value) moves by its IRIS's factor
+    without entering the IRIS total; one in an IRIS with no residual land was
+    valued at the commune's rate and moves by the commune's factor."""
     land = df["taxable_land_value"].to_numpy(dtype=float)
     imp = df["taxable_improvement_value"].to_numpy(dtype=float)
     # a territory member from an older run has no flag (NaN after stacking):
@@ -678,7 +685,20 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
     new_g = np.clip(l_g - shock * b_g, 0.0, l_g + b_g)
     with np.errstate(divide="ignore", invalid="ignore"):
         factor = np.where(l_g > 0, new_g / l_g, 1.0)
-    return np.where(built, land * factor, land)
+    out = np.where(built, land * factor, land)
+    if "_site_vacant" in df.columns:
+        sv = df["_site_vacant"].map({True: True, False: False, 1: True, 0: False,
+                                     "True": True, "False": False})
+        if (df["_site_vacant"].notna() & sv.isna()).any():
+            raise ValueError("site_vacant flag has values other than True/False")
+        sv = sv.fillna(False).astype(bool).to_numpy()
+        l_all = float(np.where(built, land, 0.0).sum())
+        b_all = float(np.where(built, imp, 0.0).sum())
+        f_commune = (float(np.clip(l_all - shock * b_all, 0.0, l_all + b_all)) / l_all
+                     if l_all > 0 else 1.0)
+        f_vac = np.where(l_g > 0, factor, f_commune)
+        out = np.where(sv & ~built, land * f_vac, out)
+    return out
 
 
 def _share_levy(land: np.ndarray, df: pd.DataFrame) -> np.ndarray:
