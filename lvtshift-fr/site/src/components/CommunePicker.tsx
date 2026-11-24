@@ -360,11 +360,11 @@ export default function CommunePicker({ communes }: CommunePickerProps) {
                       parcelles détenues surtout par des organismes HLM ou des SEM
                       {social?.kind === "category" && social.counts ? ` (${social.counts})` : ""}.
                       {notes.social.totalSentence ? ` ${notes.social.totalSentence}` : ""}{" "}
-                      Le modèle simule la fin des exonérations temporaires de 15 à 25&nbsp;ans
-                      (art. 1384&nbsp;A et 1384&nbsp;C du CGI) et de l&apos;abattement de 30&nbsp;%
-                      en quartier prioritaire (art. 1388&nbsp;bis) ; les modalités de transition
-                      pour les exonérations en cours restent à arrêter (compensation budgétaire
-                      sur leur durée restante, ou maintien jusqu&apos;à leur terme). Cette taxe
+                      Le modèle montre l&apos;état final, une fois éteintes les exonérations
+                      temporaires de 15 à 25&nbsp;ans (art. 1384&nbsp;A et 1384&nbsp;C du CGI)
+                      et l&apos;abattement de 30&nbsp;% en quartier prioritaire
+                      (art. 1388&nbsp;bis) : la réforme maintient celles en cours jusqu&apos;à
+                      leur terme et n&apos;en accorde aucune nouvelle. Cette taxe
                       n&apos;étant pas récupérable sur les loyers sociaux plafonnés, elle pèse
                       sur le bailleur et n&apos;entre dans aucun graphique par revenu des ménages
                       (voir{" "}

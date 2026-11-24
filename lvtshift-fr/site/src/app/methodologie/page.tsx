@@ -159,6 +159,62 @@ export default function MethodologiePage() {
         </p>
       </div>
 
+      {/* ── Positions de la réforme (hors modèle) ─────────────────────── */}
+      <section aria-labelledby="positions" className="mb-12">
+        <h3 id="positions" className="font-display text-xl font-medium text-marine mb-4">
+          Positions de la réforme (hors modèle)
+        </h3>
+        <div className="font-body text-base text-encre leading-relaxed space-y-4 max-w-3xl">
+          <p>
+            Le modèle compare deux répartitions d&apos;un même produit, à
+            l&apos;<strong>état final</strong>. La réforme défendue ici arrête en
+            outre les positions suivantes, que le modèle ne simule pas&nbsp;:
+          </p>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>
+              <strong>Montée en charge sur cinq ans.</strong> Chaque année,
+              20&nbsp;% de l&apos;assiette bâtie bascule vers l&apos;assiette
+              terrain (taux scindé transitoire)&nbsp;; la TVTN est complète la
+              cinquième année. Les résultats publiés décrivent cette cinquième
+              année.
+            </li>
+            <li>
+              <strong>Protections existantes maintenues.</strong> Les
+              dégrèvements et exonérations sous conditions de ressources (CGI,
+              art. 1390, 1391, 1391&nbsp;B, 1391&nbsp;B&nbsp;ter) restent en
+              vigueur.
+            </li>
+            <li>
+              <strong>Report de paiement plafonné selon le revenu.</strong> Un
+              propriétaire occupant dont la cotisation dépasse un plafond
+              rapporté à son revenu peut différer le supplément jusqu&apos;à la
+              vente ou la succession, la créance étant garantie par une sûreté
+              sur le bien (une hypothèque légale du Trésor, par exemple). Le
+              seuil et le plafond restent à arrêter.
+            </li>
+            <li>
+              <strong>Réforme coordonnée des droits de succession.</strong> Le
+              report doit aller de pair avec une réforme des droits de
+              succession&nbsp;: sans elle, l&apos;impôt ne fait que changer de
+              poche — l&apos;occupant ne le ressent pas, les héritiers
+              l&apos;acquittent sur la succession — et l&apos;incitation à
+              mobiliser le sol est largement diluée.
+            </li>
+            <li>
+              <strong>Logement social&nbsp;: extinction des exonérations.</strong>{" "}
+              Les exonérations de 15 à 25&nbsp;ans (art. 1384&nbsp;A et
+              1384&nbsp;C) et les abattements en quartier prioritaire
+              (art. 1388&nbsp;bis) en cours sont maintenus jusqu&apos;à leur
+              terme&nbsp;; aucun nouveau n&apos;est accordé. Le modèle montre
+              l&apos;état après leur extinction&nbsp;: pendant la transition, les
+              bases encore exonérées restent hors assiette et leur part de
+              l&apos;impôt est portée par les autres contribuables, comme
+              aujourd&apos;hui.
+            </li>
+          </ol>
+        </div>
+      </section>
+
       {/* ── Section (a) : Imputation ──────────────────────────────────── */}
       <section className="mb-12">
         <h3 className="font-display text-xl font-medium text-marine mb-4">
@@ -329,8 +385,9 @@ export default function MethodologiePage() {
             d&apos;un bailleur social à un autre ne rouvre pas d&apos;exonération.
             À Montreuil, 23,7&nbsp;% des logements sociaux sont ainsi exonérés en
             2025, à Villeurbanne 25,3&nbsp;%, dans la fourchette de 20 à
-            25&nbsp;% estimée à l&apos;échelle nationale. La réforme met fin à ces
-            exonérations (voir{" "}
+            25&nbsp;% estimée à l&apos;échelle nationale. La réforme n&apos;en
+            accorde plus et laisse celles en cours s&apos;éteindre ; le modèle
+            montre l&apos;état final, sans elles (voir{" "}
             <Link href="/exonerations-protections" className="underline">
               Exonérations et protections
             </Link>
