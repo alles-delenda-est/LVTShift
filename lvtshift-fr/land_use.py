@@ -168,10 +168,16 @@ BDTOPO_LAND_USE_LAYERS = (
 )
 ZAI_OPEN_NATURES = {"espace public", "parc de loisirs", "jardin public"}
 ZAI_OPEN_CATEGORIES = {"sport"}
+# Values checked live on the WFS (Grenoble, 2026-11-24): categorie
+# "Culture et loisirs" with nature "Espace public" (parks, squares); schools
+# and research share one category, "Science et enseignement".
 ZAI_ACTIVITY_CATEGORIES = {
-    "industriel et commercial", "transport", "enseignement", "sante",
-    "administratif ou militaire", "science", "gestion des eaux",
+    "industriel et commercial", "transport", "science et enseignement", "sante",
+    "administratif ou militaire", "gestion des eaux",
 }
+# equipement_de_transport natures that are road space or under-used land,
+# not business land
+TRANSPORT_NOT_ACTIVITY = ("parking", "carrefour")
 
 
 def bdtopo_feature_use(layer: str, props: dict) -> str | None:
@@ -181,7 +187,8 @@ def bdtopo_feature_use(layer: str, props: dict) -> str | None:
         return OPEN_SPACE
     if layer == "equipement_de_transport":
         # a surface car park is under-used land, not business land
-        return None if "parking" in _norm(props.get("nature")) else ACTIVITY
+        nature = _norm(props.get("nature"))
+        return None if any(w in nature for w in TRANSPORT_NOT_ACTIVITY) else ACTIVITY
     if layer == "zone_d_activite_ou_d_interet":
         nature = _norm(props.get("nature"))
         cat = _norm(props.get("categorie"))

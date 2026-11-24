@@ -58,6 +58,10 @@ def test_bdtopo_feature_use():
     assert lu.bdtopo_feature_use("BDTOPO_V3:cimetiere", {}) == lu.OPEN_SPACE
     assert lu.bdtopo_feature_use("BDTOPO_V3:equipement_de_transport", {"nature": "Parking"}) is None
     assert lu.bdtopo_feature_use("BDTOPO_V3:equipement_de_transport", {"nature": "Gare"}) == lu.ACTIVITY
+    assert lu.bdtopo_feature_use("BDTOPO_V3:equipement_de_transport", {"nature": "Carrefour"}) is None
+    # live values (Grenoble WFS, 2026-11-24)
+    assert lu.bdtopo_feature_use(zai, {"nature": "Lycée", "categorie": "Science et enseignement"}) == lu.ACTIVITY
+    assert lu.bdtopo_feature_use(zai, {"nature": "Culte chrétien", "categorie": "Religieux"}) is None
 
 
 def test_bdtopo_use_shares_dissolves_overlaps():
