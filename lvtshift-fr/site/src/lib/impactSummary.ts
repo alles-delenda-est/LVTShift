@@ -228,3 +228,42 @@ export function countRange(central: number, alt: number | undefined, of: number)
   if (alt == null || alt === central) return `${central} sur ${of}`;
   return `${Math.min(central, alt)} à ${Math.max(central, alt)} sur ${of}`;
 }
+
+
+/** Where both income groups pay less, who pays more: one sentence for the
+ *  income chart, or null when every territory has a group paying more. The
+ *  levy is unchanged, so the rise falls on parcels outside the household
+ *  figures; vacant land's multiple and the categories whose median rises are
+ *  read from the payloads (category totals in euros are withheld, so no
+ *  ranking of who pays most is claimed). */
+export function bothPayLessNote(communes: Commune[], gaps: QuintileGap[]): string | null {
+  const both = gaps.filter((g) => g.poorest < 0 && g.richest < 0);
+  if (both.length === 0) return null;
+  const byKey = new Map(communes.map((c) => [c.commune_key, c]));
+  const median = (c: Commune | undefined, cat: string) =>
+    c?.by_category.find((r) => r.category === cat)?.median_change_pct ?? null;
+  const place = (name: string) =>
+    /extra-muros/.test(name) ? (/^Lyon/.test(name) ? "dans la couronne lyonnaise" : "dans la petite couronne")
+      : `à ${name}`;
+  const multiples = both
+    .map((g) => ({ g, m: median(byKey.get(g.commune_key), "Vacant Land") }))
+    .filter((x) => x.m != null && x.m > 0)
+    .map(({ g, m }) => `×${Math.round(1 + (m as number) / 100)} ${place(g.name)}`);
+  const others = [
+    ["Single Family Residential", "les maisons"],
+    ["Commercial", "les commerces"],
+    ["Industrial", "l'industrie"],
+  ].filter(([cat]) => both.some((g) => (median(byKey.get(g.commune_key), cat) ?? 0) > 0))
+    .map(([, label]) => label);
+  const list = (xs: string[], conj: string) =>
+    xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${conj} ${xs[xs.length - 1]}`;
+  const where = list(both.map((g) => place(g.name)), "et");
+  return (
+    `${where.charAt(0).toUpperCase()}${where.slice(1)}, les ménages modestes comme aisés ` +
+    `paient moins. À recettes égales, ` +
+    `d'autres paient donc davantage : le terrain constructible laissé vide` +
+    (multiples.length ? ` (impôt ${multiples.join(", ")})` : "") +
+    (others.length ? ` et, selon le territoire, ${list(others, "ou")}` : "") +
+    "."
+  );
+}

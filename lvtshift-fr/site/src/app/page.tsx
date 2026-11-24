@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadCommune, loadIndex } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
-import { countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
+import { bothPayLessNote, countRange, exceptionNote, impactSummary, quintileGaps } from "@/lib/impactSummary";
 import { CollectiveHousingBanner } from "@/components/CollectiveHousingBanner";
 import VariantTerm from "@/components/VariantTerm";
 import { panelLandShares } from "@/lib/panel";
@@ -36,6 +36,7 @@ export default function Home() {
   const payloads = communes.map((c) => loadCommune(c.commune_key));
   const impact = impactSummary(payloads);
   const gaps = quintileGaps(payloads);
+  const gapNote = bothPayLessNote(payloads, gaps);
 
   return (
     <div>
@@ -227,6 +228,7 @@ export default function Home() {
       <CollectiveHousingBanner
         impact={impact}
         gaps={gaps}
+        gapNote={gapNote}
         footer={
           <p className="text-sm">
             <Link href="/resultats" className="underline underline-offset-2 hover:text-rouge">

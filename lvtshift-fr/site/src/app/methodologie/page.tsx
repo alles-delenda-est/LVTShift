@@ -218,8 +218,8 @@ export default function MethodologiePage() {
             l&apos;on ne peut guère construire au-delà de l&apos;existant, seule
             une cour autour du bâtiment compte. Le sol passe ainsi des
             immeubles denses aux parcelles peu bâties : à Villeurbanne, les
-            maisons paient au total +135&nbsp;%, les grands immeubles
-            &minus;21&nbsp;%. Deux éléments reflètent encore l&apos;usage
+            maisons paient au total +130&nbsp;%, les grands immeubles
+            &minus;23&nbsp;%. Deux éléments reflètent encore l&apos;usage
             actuel : le total foncier de chaque quartier, tiré des prix de
             marché de ce qui y est bâti, et le prix du sol des entrepôts et
             hangars, plus bas que celui des terrains à bâtir, qui suit le type

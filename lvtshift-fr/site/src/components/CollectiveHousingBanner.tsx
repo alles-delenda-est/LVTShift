@@ -152,11 +152,13 @@ function GapChart({ gaps }: { gaps: QuintileGap[] }) {
 interface Props {
   impact: ImpactSummary;
   gaps: QuintileGap[];
+  /** who pays more where both income groups pay less (lib/impactSummary) */
+  gapNote?: string | null;
   /** Link to the detailed results, shown under the charts. */
   footer?: ReactNode;
 }
 
-export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
+export function CollectiveHousingBanner({ impact, gaps, gapNote, footer }: Props) {
   const { alt } = impact;
   return (
     <section aria-labelledby="immeuble-collectif" className="bg-creme border-b border-lisere">
@@ -261,6 +263,9 @@ export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
 
             <div className="bg-white border border-lisere p-5">
               <GapChart gaps={gaps} />
+              {gapNote && (
+                <p className="text-xs text-encre mt-4 leading-relaxed">{gapNote}</p>
+              )}
             </div>
           </div>
         </div>

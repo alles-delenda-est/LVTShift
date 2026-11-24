@@ -19,7 +19,8 @@ Les résultats sont reportés par **catégorie de bien** et **quintile de revenu
 jamais comme des montants individuels.
 
 **Lire les chiffres datés.** Les résultats actuels sont ceux des fichiers
-publiés et du tableau sur le seul sol du §4 (*Le seul sol, à l'usage permis*).
+publiés et du dernier tableau du §4 (*Le terrain nu à la valeur du site*,
+24 novembre 2026).
 Les passages qui décrivent une évolution du modèle donnent les chiffres avant →
 après du calcul qui l'a introduite ; jusqu'au 11 novembre 2026, ces calculs se
 faisaient au taux scindé 4:1 : ils montrent l'ampleur et le sens de cette
@@ -493,7 +494,7 @@ grandes parcelles et les maisons en zone dense. Les paramètres (la racine carr�
 et d'études françaises sur les ventes de terrains ; aucun n'est estimé sur des
 ventes françaises de biens bâtis. Sensibilité (Lyon, Villeurbanne, Cahors ; calculs de début novembre 2026 au
 taux scindé 4:1, pas encore refaits pour l'impôt sur le seul sol, qui porte la
-maison type à +78 % à Lyon et +68 % à Villeurbanne) :
+maison type à +75 % à Lyon et +64 % à Villeurbanne) :
 - **Élasticité à la densité.** À 0,3 ou 0,7 au lieu de 0,5, la maison type
   passe de +85 à +53 % à Lyon (+69 % en valeur centrale) et de +72 à +39 % à
   Villeurbanne (+55 %).
@@ -721,11 +722,12 @@ attribuée aux jardins. Le poids double
 qu'elle suggérait pour les terrains à bâtir n'avait pas de source et n'a pas été
 retenu.
 
-*Résultats* (données publiées du 12 novembre 2026, impôt sur le seul sol). Le
-terrain nu compris dans la réforme a désormais une vraie variation : son impôt
-est multiplié par environ 4 à Villeurbanne, 6 à Sète, 8 à Montreuil, 16 à Lyon,
-19 à Paris, 52 à La Rochelle et 73 à Annemasse, pour une médiane de 88 € à 973 €
-par parcelle et par an. Lors de l'introduction de la part des jardins (calcul du
+*Résultats* (données publiées du 24 novembre 2026, terrain nu à la valeur du
+site, §3.4 ci-dessus). Le terrain nu compris dans la réforme a désormais une
+vraie variation : son impôt est multiplié par environ 12 à Villeurbanne, 6 à
+Sète, 6,5 à Montreuil, 18 à Lyon, 17 à Paris, 20 à La Rochelle et 50 à
+Annemasse, pour une médiane de 65 € à 472 € par parcelle et par an (la plupart
+des parcelles non bâties sont des délaissés, comptés comme jardin). Lors de l'introduction de la part des jardins (calcul du
 11 novembre, taux scindé 4:1), les autres chiffres bougeaient de moins d'un
 point, sauf le total des maisons, qui baissait jusqu'à 25 points là où les
 grands jardins paient désormais aujourd'hui (Paris +261 % → +236 %). Le site affiche les hausses d'au moins ×3 sous forme
@@ -1023,8 +1025,8 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +21,6 % et le groupe +3,4 %,
-alors que son ménage type paie −21,0 % (base centrale), car les grands
+parcelle médiane du quintile le plus pauvre paie +18,7 % et le groupe +0,9 %,
+alors que son ménage type paie −22,8 % (base centrale), car les grands
 immeubles, où vivent la plupart de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
@@ -1047,11 +1049,11 @@ comme des appartements payant trois fois plus, alors qu'en pourcentage
 l'immeuble (+9,6 %) payait deux fois moins que la maison (+20,6 %). Par logement,
 l'écart s'inversait : +34 € en immeuble collectif contre +287 € en maison. Depuis
 l'impôt sur le seul sol, la parcelle médiane d'un immeuble lyonnais paie
-−1 327 € et son logement type −161 €, une maison +906 € et +939 €. Le site affiche le chiffre par logement ; faute de décompte, il présente
+−1 453 € et son logement type −170 €, une maison +873 € et +901 €. Le site affiche le chiffre par logement ; faute de décompte, il présente
 celui d'une catégorie d'immeubles comme « par immeuble ». Le pourcentage du
 graphique reste une médiane par parcelle : les deux chiffres peuvent donc
 différer de signe, car le grand immeuble pèse davantage dans la médiane par
-logement (Sète, appartements en copropriété : +4,1 % par parcelle, −10 €
+logement (Sète, appartements en copropriété : +0,3 % par parcelle, −46 €
 par logement). La règle de diffusion est celle des groupes de revenu : au moins
 11 parcelles portant des logements, toutes décomptées, aucune ne réunissant plus
 d'un dixième des logements (`MAX_DWELLING_SHARE`). La limite était de la moitié
@@ -1065,7 +1067,7 @@ variation du ménage type en % (`share_dwellings_paying_more_pct`,
 perdants de la page Résultats, à côté de la part des parcelles. Chaque catégorie
 publie aussi sa **variation totale** (`total_change_pct`) : les médianes peuvent
 toutes baisser à produit constant quand une minorité paie beaucoup plus
-(La Rochelle, maisons : −4,8 % en médiane, +16,7 % au total). Le terrain nu, qui
+(La Rochelle, maisons : −1,1 % en médiane, +21,2 % au total). Le terrain nu, qui
 ne paie rien aujourd'hui et n'a donc pas de %, publie son total en euros
 (`total_change_eur`, au millier d'euros). Aucune catégorie ne publie les deux :
 la réforme étant à produit constant, les totaux en euros des catégories d'une
@@ -1327,10 +1329,47 @@ publiées depuis (mêmes colonnes) :
 - **La part de l'impôt qui change de payeur** augmente encore, de 23 % (Paris)
   à 43 % (Grenoble).
 
+*Le terrain nu à la valeur du site (calcul du 24 novembre 2026).* Le foncier
+urbain non bâti est évalué comme le terrain bâti de son IRIS et de sa zone,
+l'espace ouvert comme du terrain naturel, le foncier d'activité au ratio du
+foncier d'activité (§3.4, *Foncier urbain non bâti*), avec le contrôle croisé
+BD TOPO. Mêmes colonnes que ci-dessus, données publiées depuis :
+
+| | Part déplacée, % du produit | Maisons | 2–4 | 5+ | Commerce | Totaux Q1 / Q5 |
+|---|---|---|---|---|---|---|
+| Grenoble | 40,1 | +71,9 | +26,2 | −29,8 | +24,5 | −49,1 / −0,4 |
+| Annemasse | 36,4 | +105,9 | +13,8 | −34,5 | +12,8 | −19,3 / −14,3 |
+| Villeurbanne | 32,6 | +63,8 | +28,8 | −26,0 | +58,0 | +0,9 / −4,6 |
+| Roubaix | 39,5 | −23,0 | −28,4 | −41,9 | −22,6 | −32,7 / +49,1 |
+| Cahors | 38,7 | +6,4 | −16,6 | −39,4 | −38,3 | — / — |
+| Montreuil | 33,6 | +49,9 | +22,5 | −31,3 | +33,1 | −10,5 / +11,4 |
+| Figeac | 38,2 | −4,0 | −27,9 | −54,7 | −31,5 | — / — |
+| Sète | 34,0 | +38,2 | +0,3 | −37,8 | +34,1 | −22,2 / +4,7 |
+| La Rochelle | 36,1 | −1,1 | −15,7 | −36,8 | −0,5 | −8,5 / +0,2 |
+| Paris | 23,2 | +116,7 | +35,7 | −14,7 | +67,3 | −25,4 / +6,3 |
+| Lyon | 28,3 | +75,4 | +22,8 | −15,9 | +11,7 | −17,1 / +9,2 |
+| Paris extra-muros (petite couronne) | 35,1 | +41,9 | +14,0 | −35,3 | +29,2 | −7,3 / +2,5 |
+| Lyon extra-muros (Métropole hors Lyon) | 38,8 | +43,5 | +2,1 | −39,4 | −27,3 | −4,6 / −0,8 |
+
+- **La correction joue dans les deux sens.** La part du terrain nu dans le
+  produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
+  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 9,7 %) et monte là où
+  elles le plaçaient en dessous (Annemasse 7,0 → 13,3 %, Paris 1,1 → 1,7 % ; le
+  prix des terrains de Villeurbanne était de 141 €/m², contre 1 229 € désormais).
+- **Robuste :** les grands immeubles paient moins partout ; les maisons paient
+  davantage dans 10 territoires sur 13 ; le cinquième le plus modeste s'en sort
+  mieux que le plus aisé dans 10 des 11 territoires découpés par revenu.
+  Villeurbanne reste l'exception, plus étroite : le cinquième le plus modeste
+  +0,9 % (fourchette −0,3 à +1,8 %) contre −4,6 % pour le plus aisé.
+- **Ce qui bouge le plus :** le cinquième le plus aisé de Grenoble (−9,0 →
+  −0,4 %) et de La Rochelle (−3,5 → +0,2 %) ; les petits immeubles de 2 à 4
+  logements paient désormais davantage dans la couronne lyonnaise (−1,0 →
+  +2,1 %) et donc moins dans 4 territoires, et non 5.
+
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas
-central (cotisations industrielles au total : Saint-Fons −79 %,
-Marcy-l'Étoile −91 % ; calcul sur le seul sol du 12 novembre 2026).
+central (cotisations industrielles au total : Saint-Fons −82 %,
+Marcy-l'Étoile −91 % ; calcul du 24 novembre 2026).
 
 *Outillage : un choix de conception.* La réforme modélisée ne taxe que le sol,
 donc ni le bâti ni l'outillage industriel fixe (ce paragraphe date du modèle
@@ -1518,7 +1557,7 @@ ces règles à l'export et sur chaque fichier publié (test CI).
   porte rien du prélèvement (il en portait 1,1 % à Cahors avant son exclusion) ; le foncier constructible sous-utilisé paie
   *davantage* (l'incitation LVT) ; le gradient de revenu de Montreuil est
   progressif (totaux de groupe, base centrale : quintile le plus pauvre
-  −9,5 %, le plus aisé +12,6 %).
+  −10,5 %, le plus aisé +11,4 %).
 - **Répartition de la taxe actuelle** — la reconstitution industrielle (WC75 ÷
   taux 2020), appliquée à toutes les communes de France, donne 5,7 % de la base
   TFPB, exactement le chiffre de la Cour des comptes ; la ligne industrielle de
@@ -1601,8 +1640,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
      linéaire en surface : une grande parcelle en zone dense est évaluée comme
      un terrain à bâtir même là où sa forme ou son accès ne le permettraient
      pas. Le dixième des maisons de Villeurbanne aux plus grandes parcelles paie
-     environ cinq fois l'impôt actuel (+413 % au total, calcul sur le seul sol du
-     12 novembre 2026).
+     environ cinq fois l'impôt actuel (+401 % au total, calcul du 24 novembre
+     2026).
    - **Report de paiement.** Beaucoup de ces propriétaires auraient besoin d'un
      report de paiement, que la réforme du projet inclut et dont les paramètres
      précis restent à arrêter (`/exonerations-protections`).

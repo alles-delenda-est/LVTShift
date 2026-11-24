@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countRange, exceptionNote, impactSummary, quintileGaps } from "./impactSummary";
+import { bothPayLessNote, countRange, exceptionNote, impactSummary, quintileGaps } from "./impactSummary";
 import { loadCommune, loadIndex } from "./data";
 import type { Commune } from "./types";
 
@@ -15,28 +15,29 @@ describe("impactSummary on the published data", () => {
 
   // November 2026 payloads: the land-only tax at permitted use (the reform
   // also replaces the tax on non-agricultural unbuilt land; social
-  // landlords' parcels are outside the household figures)
+  // landlords' parcels are outside the household figures; building-less
+  // urban land at site value, open space as natural land, 2026-11-24)
   it("matches the central-case figures in the November 2026 payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
-    expect(s.smallBuildingsPayLess).toBe(5);
+    expect(s.smallBuildingsPayLess).toBe(4); // the Lyon ring's 2–4 now +2.1 %
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
-    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +3.4 %
-    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +3.4 % vs −2.2 %
-    expect(s.houseMedianMin).toBe(-24.4); // Roubaix
-    expect(s.houseMedianMax).toBe(120.8); // Annemasse
-    expect(s.shiftMin).toBe(23); // Paris
-    expect(s.shiftMax).toBe(43.3); // Grenoble
+    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +0.9 %
+    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +0.9 % vs −4.6 %
+    expect(s.houseMedianMin).toBe(-23); // Roubaix
+    expect(s.houseMedianMax).toBe(116.7); // Paris
+    expect(s.shiftMin).toBe(23.2); // Paris
+    expect(s.shiftMax).toBe(40.1); // Grenoble
   });
 
   it("matches the local-variant figures in the November 2026 payloads", () => {
     expect(s.alt).toEqual({
-      housesPayMore: 10,
-      smallBuildingsPayLess: 5,
+      housesPayMore: 11, // La Rochelle's houses +3.2 % in the local variant
+      smallBuildingsPayLess: 4,
       blocksPayLess: 13,
       poorestAnalysable: 11,
       poorestPayLess: 8,
-      poorestBelowRichest: 10, // Villeurbanne: +16.5 % vs +9.1 %
+      poorestBelowRichest: 10, // Villeurbanne: +13.7 % vs +6.5 %
     });
     expect(s.poorestBelowRichestBoth).toBe(10);
   });
@@ -50,8 +51,8 @@ describe("the exception to the « sur 11 » headline", () => {
     expect(s.poorestExceptions).toEqual([
       {
         name: "Villeurbanne",
-        central: { poorest: 3.4, richest: -2.2 },
-        local: { poorest: 16.5, richest: 9.1 },
+        central: { poorest: 0.9, richest: -4.6 },
+        local: { poorest: 13.7, richest: 6.5 },
       },
     ]);
     expect(s.poorestAnalysable - s.poorestExceptions.length).toBe(s.poorestBelowRichestBoth);
@@ -60,8 +61,8 @@ describe("the exception to the « sur 11 » headline", () => {
   it("is written in two lines from the figures", () => {
     const nb = (t: string) => t.replace(/ /g, " ");
     expect(exceptionNote(s.poorestExceptions)!.map(nb)).toEqual([
-      nb("Exception : Villeurbanne, dans le cas central : les plus modestes +3,4 %, les plus aisés −2,2 %."),
-      nb("Dans la variante locale : les plus modestes +16,5 %, les plus aisés +9,1 %."),
+      nb("Exception : Villeurbanne, dans le cas central : les plus modestes +0,9 %, les plus aisés −4,6 %."),
+      nb("Dans la variante locale : les plus modestes +13,7 %, les plus aisés +6,5 %."),
     ]);
   });
 
@@ -94,9 +95,9 @@ describe("quintileGaps on the published data", () => {
   });
 
   it("orders the widest advantage for the poorest first", () => {
-    expect(gaps[0].commune_key).toBe("roubaix"); // −33,8 % vs +47,2 %
-    expect(gaps[0]).toMatchObject({ poorest: -33.8, richest: 47.2 });
-    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +3,4 % vs −2,2 %: the poorest fifth does worse
+    expect(gaps[0].commune_key).toBe("roubaix"); // −32,7 % vs +49,1 %
+    expect(gaps[0]).toMatchObject({ poorest: -32.7, richest: 49.1 });
+    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +0,9 % vs −4,6 %: the poorest fifth does worse
     const diffs = gaps.map((g) => g.poorest - g.richest);
     expect(diffs).toEqual([...diffs].sort((a, b) => a - b));
   });
@@ -137,5 +138,21 @@ describe("countRange", () => {
   it("gives the lower count first", () => {
     expect(countRange(9, 6, 13)).toBe("6 à 9 sur 13");
     expect(countRange(11, 12, 13)).toBe("11 à 12 sur 13");
+  });
+});
+
+describe("bothPayLessNote", () => {
+  const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
+  const gaps = quintileGaps(communes);
+  it("names the territories where both groups pay less and who pays instead", () => {
+    const note = bothPayLessNote(communes, gaps)!;
+    // November 2026: Grenoble, Annemasse and the Lyon ring
+    expect(note).toMatch(/^À Grenoble, à Annemasse et dans la couronne lyonnaise, les ménages/);
+    expect(note).toContain("×5 à Grenoble");
+    expect(note).toContain("dans la couronne lyonnaise");
+    expect(note).toContain("les maisons");
+  });
+  it("says nothing when a group pays more everywhere", () => {
+    expect(bothPayLessNote(communes, gaps.filter((g) => g.richest > 0))).toBeNull();
   });
 });

@@ -7,13 +7,13 @@
     {
       "benchmark": "Part du foncier dans la valeur (ancrage national)",
       "independence": "independent",
-      "model_land_share_pct": 66.6,
+      "model_land_share_pct": 64.5,
       "band": [
         40.0,
         65.0
       ],
-      "within_band": false,
-      "status": "flag",
+      "within_band": true,
+      "status": "ok",
       "note": "Ancrage INSEE (patrimoine économique national, fin 2023) : terrains bâtis ≈ 51 % de la valeur terrains + logements, 44 % pour les seuls ménages ; bande élargie (cœurs denses plus haut). Pas de cible par commune."
     },
     {

@@ -26,7 +26,7 @@ describe("socialTotalSentence", () => {
 describe("categoryNotes on published payloads", () => {
   it("Paris: social housing total rises, so the note says « hausse »", () => {
     const notes = categoryNotes(publishedCategories(loadCommune("paris").by_category));
-    expect(notes.social?.totalSentence).toMatch(/en hausse de 3,4/);
+    expect(notes.social?.totalSentence).toMatch(/en hausse de 2,7/);
     expect(notes.industrial?.median).toBe(`−87,5${NBSP}%`);
     expect(notes.collective).not.toBeNull();
   });
@@ -38,7 +38,7 @@ describe("categoryNotes on published payloads", () => {
   it("Grenoble: industrial median rises; the note gives the local figure", () => {
     const notes = categoryNotes(publishedCategories(loadCommune("grenoble").by_category));
     expect(notes.industrial?.median).toMatch(/^\+/);
-    expect(notes.social?.totalSentence).toMatch(/en baisse de 30,7/);
+    expect(notes.social?.totalSentence).toMatch(/en baisse de 24,2/);
   });
   it("no rows, no notes", () => {
     expect(hasCategoryNotes(categoryNotes([]))).toBe(false);
