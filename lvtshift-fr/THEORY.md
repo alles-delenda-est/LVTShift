@@ -52,8 +52,12 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   rarely sell and match no residential price, so they take depreciated
   replacement cost (land at the local building-plot price, × 0.45/0.35 for
   business land, building at depreciated cost). Building-less parcels are
-  classified by legal constructibility (GPU zoning) and priced against
-  terrain-à-bâtir comparables or SAFER farmland. Unbuilt A/N land is then
+  classified by legal constructibility (GPU zoning); in urban zones by the
+  plan's stated use too, cross-checked with BD TOPO where the plan is silent
+  (land_use.py, 2026-11-24): housing and business land are valued at site
+  value like the built land of their IRIS and zone (business × 0.45/0.35),
+  urban open space at the SAFER natural-land price, and A/N land at SAFER
+  farmland prices. Unbuilt A/N land is then
   left out of the reform: it keeps today's TFPNB (decision D6, 2026-10-29).
   The TFPNB and TAFNB on the other unbuilt land are replaced (decision of
   2026-11-11): that amount, rebuilt from the REI, joins the levy and is

@@ -19,9 +19,10 @@ Two independent readings decide the use of each building-less parcel:
   open space (parks, squares, gardens), cemeteries, sports grounds and water,
   or by business, transport and public-facility sites.
 
-`vacant_use` combines them: open space if either reading says so (the land
-cannot be built on), business land if either says business, housing land
-otherwise. `cross_check` tabulates where the two readings agree, for the run
+`vacant_use` combines them: the plan decides where it states a use (the tax
+is on land at its permitted use; BD TOPO maps current use); BD TOPO fills in
+where the plan is silent. Open space stays inside the reform, valued as
+natural land. `cross_check` tabulates where the two readings agree, for the run
 log and the methodology.
 """
 from __future__ import annotations
@@ -54,17 +55,25 @@ DESTDOMI_USE = {
 # count in U zones only: an AU zone "naturel ou agricole destiné à recevoir une
 # urbanisation à long terme" is future building land, which the AU discount
 # already prices.
+# Words are matched as substrings, so each must not occur inside a compound
+# of another class ("cités-jardins" are housing estates, "zone urbaine
+# paysagère" is housing with landscape rules): open-space words are specific
+# phrases, never bare "jardin", "paysager" or "naturel". At equal position the
+# longer keyword wins ("tissu d'activités" over "tissu", "village
+# d'entreprises" over "village").
 HOUSING_WORDS = (
-    "habitat", "logement", "residenti", "tissu", "centre-ville", "centres-villes",
-    "centre ancien", "centre-bourg", "bourg", "village", "hameau", "pavillon",
-    "individuel", "faubourg",
+    "habitat", "logement", "residenti", "tissu urbain", "tissus urbains", "tissu",
+    "centre-ville", "centres-villes", "centre ancien", "centre-bourg", "bourg",
+    "village", "hameau", "pavillon", "individuel", "faubourg", "maison",
+    "cite jardin", "cites jardins", "cite-jardin", "cites-jardins",
 )
 OPEN_SPACE_WORDS = (
     "parc urbain", "parcs urbains", "urbaine verte", "zone verte", "espace vert",
-    "espaces verts", "jardin", "square", "cimetiere", "naturel", "paysager",
-    "coulee verte", "loisirs de plein air",
+    "espaces verts", "jardins familiaux", "jardins partages", "jardin public",
+    "jardins publics", "square", "cimetiere", "coulee verte", "loisirs de plein air",
 )
 ACTIVITY_WORDS = (
+    "tissu d activite", "tissus d activite", "village d entreprise",
     "activite", "economique", "industri", "artisan", "commerc", "tertiaire",
     "technolog", "logisti", "portuaire", "port ", "bureaux", "ferroviaire",
     "voie ferree", "grands services urbains", "infrastructure", "aeroport",
@@ -77,7 +86,7 @@ ACTIVITY_WORDS = (
 # Words introducing what a zone is for: the first keyword after the earliest of
 # them decides ("secteur situé en frange de tissus résidentiels et dédié aux
 # activités économiques" is business land).
-PURPOSE_WORDS = ("dedie", "vocation", "destine", "dominante", "devolu", "reserve aux")
+PURPOSE_WORDS = ("dedie", "vocation", "destine", "dominante", "devolu", "reserve")
 
 
 def _label_use(label: str, allow_open: bool) -> str | None:
@@ -92,14 +101,15 @@ def _label_use(label: str, allow_open: bool) -> str | None:
 
 
 def _earliest(label: str, allow_open: bool) -> str | None:
-    best, pos = None, None
+    best, key = None, None
     for use, words in ((HOUSING, HOUSING_WORDS), (OPEN_SPACE, OPEN_SPACE_WORDS),
                        (ACTIVITY, ACTIVITY_WORDS)):
         if use == OPEN_SPACE and not allow_open:
             continue
-        hits = [i for i in (label.find(w) for w in words) if i >= 0]
-        if hits and (pos is None or min(hits) < pos):
-            best, pos = use, min(hits)
+        for w in words:
+            i = label.find(w)
+            if i >= 0 and (key is None or (i, -len(w)) < key):
+                best, key = use, (i, -len(w))
     return best
 
 
@@ -108,6 +118,17 @@ def _norm(text) -> str:
         return ""
     s = unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode()
     return " ".join(s.lower().replace("'", " ").split())
+
+
+def _code(v) -> str:
+    """A destdomi value as its two-digit code ("1", 1, 1.0 -> "01")."""
+    s = _norm(v)
+    if not s:
+        return ""
+    try:
+        return f"{int(float(s)):02d}"
+    except ValueError:
+        return s
 
 
 def zone_use(zone_typ: pd.Series, destdomi: pd.Series | None = None,
@@ -120,8 +141,8 @@ def zone_use(zone_typ: pd.Series, destdomi: pd.Series | None = None,
     treated as housing land, the model's default for type U."""
     idx = zone_typ.index
     typ = zone_typ.astype("object")
-    code = (destdomi.astype("object").map(lambda v: _norm(v).zfill(2) if _norm(v) else "")
-            if destdomi is not None else pd.Series("", index=idx))
+    code = (destdomi.astype("object").map(_code) if destdomi is not None
+            else pd.Series("", index=idx))
     label = (libelong.map(_norm) if libelong is not None else pd.Series("", index=idx))
 
     out = pd.Series(None, index=idx, dtype="object")
@@ -159,7 +180,8 @@ def bdtopo_feature_use(layer: str, props: dict) -> str | None:
     if layer in ("cimetiere", "terrain_de_sport", "surface_hydrographique"):
         return OPEN_SPACE
     if layer == "equipement_de_transport":
-        return ACTIVITY
+        # a surface car park is under-used land, not business land
+        return None if "parking" in _norm(props.get("nature")) else ACTIVITY
     if layer == "zone_d_activite_ou_d_interet":
         nature = _norm(props.get("nature"))
         cat = _norm(props.get("categorie"))
@@ -203,10 +225,14 @@ def vacant_use(plan_use: pd.Series, open_share: pd.Series, activity_share: pd.Se
                threshold: float = 0.5) -> pd.DataFrame:
     """Use of each building-less parcel from the two readings.
 
-    open_space where the plan says open space or BD TOPO covers at least
-    `threshold` of the parcel with open space; else activity where either
-    reading says business land; else housing. Returns columns vacant_use and
-    vacant_use_source ("plan", "bdtopo", "both" or "default")."""
+    The plan decides where it states a use: the tax is on land at its
+    permitted use, and BD TOPO maps current use (a car park or a private
+    sports ground in a housing zone stays housing land). Where the plan is
+    silent, BD TOPO fills in: open space where it covers at least `threshold`
+    of the parcel with open space, else business land at the same cover, else
+    housing land. Returns columns vacant_use and vacant_use_source ("plan",
+    "both" where BD TOPO agrees, "bdtopo" where it filled a silent plan, or
+    "default")."""
     if not 0.0 < threshold <= 1.0:
         raise ValueError(f"threshold must be in (0, 1], got {threshold}")
     plan = plan_use.astype("object")
@@ -214,11 +240,13 @@ def vacant_use(plan_use: pd.Series, open_share: pd.Series, activity_share: pd.Se
     bt_act = pd.to_numeric(activity_share, errors="coerce").fillna(0.0) >= threshold
     p_open, p_act = plan.eq(OPEN_SPACE), plan.eq(ACTIVITY)
 
-    use = np.select([p_open | bt_open, p_act | bt_act], [OPEN_SPACE, ACTIVITY], HOUSING)
+    p_house, silent = plan.eq(HOUSING), plan.isna()
+    use = np.select([p_open, p_act, p_house, silent & bt_open, silent & bt_act],
+                    [OPEN_SPACE, ACTIVITY, HOUSING, OPEN_SPACE, ACTIVITY], HOUSING)
     src = np.select(
-        [p_open & bt_open, p_open, bt_open,
-         p_act & bt_act, p_act, bt_act],
-        ["both", "plan", "bdtopo", "both", "plan", "bdtopo"], "default")
+        [p_open & bt_open, p_act & bt_act, p_house & ~bt_open & ~bt_act,
+         p_open | p_act | p_house, silent & (bt_open | bt_act)],
+        ["both", "both", "both", "plan", "bdtopo"], "default")
     return pd.DataFrame({"vacant_use": use, "vacant_use_source": src}, index=plan.index)
 
 
@@ -227,7 +255,7 @@ def cross_check(plan_use: pd.Series, open_share: pd.Series, activity_share: pd.S
     """Agreement table between the plan's use and BD TOPO's, for the run log:
     rows = plan reading, columns = BD TOPO reading, cells = parcel count (or
     the sum of `weight`, e.g. area)."""
-    plan = plan_use.astype("object").fillna("unstated")
+    plan = plan_use.astype("object").fillna("unstated").rename("plan")
     bt = np.select(
         [pd.to_numeric(open_share, errors="coerce").fillna(0) >= threshold,
          pd.to_numeric(activity_share, errors="coerce").fillna(0) >= threshold],

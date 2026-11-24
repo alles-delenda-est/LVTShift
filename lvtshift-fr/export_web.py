@@ -692,10 +692,10 @@ def _cost_shocked_land(df: pd.DataFrame, shock: float) -> np.ndarray:
         if (df["_site_vacant"].notna() & sv.isna()).any():
             raise ValueError("site_vacant flag has values other than True/False")
         sv = sv.fillna(False).astype(bool).to_numpy()
-        l_all = float(np.where(built, land, 0.0).sum())
-        b_all = float(np.where(built, imp, 0.0).sum())
-        f_commune = (float(np.clip(l_all - shock * b_all, 0.0, l_all + b_all)) / l_all
-                     if l_all > 0 else 1.0)
+        # the commune's rate moves as the sum of its IRIS's clipped totals
+        per_g = pd.DataFrame({"g": group, "l": l_g, "n": new_g}).drop_duplicates("g")
+        l_all = float(per_g["l"].sum())
+        f_commune = float(per_g["n"].sum()) / l_all if l_all > 0 else 1.0
         f_vac = np.where(l_g > 0, factor, f_commune)
         out = np.where(sv & ~built, land * f_vac, out)
     return out

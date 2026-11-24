@@ -125,9 +125,9 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None,
     - inside U/AU, a building-less parcel's use (land_use.vacant_use) from the
       plan's stated use and BD TOPO's land cover (land_use_shares, from
       ingest.fetch_land_use_shares; None reads the plan alone): open space
-      (parks, cemeteries, sports grounds, water) becomes 'natural', priced and
-      treated as natural land; business land keeps 'constructible' with
-      vacant_price_factor = cfg.activity_land_ratio.
+      (parks, cemeteries, sports grounds, water) becomes 'open_space', valued at
+      the natural-land price but kept inside the reform; business land keeps
+      'constructible' with vacant_price_factor = cfg.activity_land_ratio.
     - constructible_eur_m2: DVF terrain-à-bâtir median by grid cell (shrunk to
       the commune median; EPTB national fallback when comparables are thin),
       discounted for AU 'fermée/stricte' zones.
@@ -192,7 +192,9 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None,
     parcels["vacant_use_source"] = uses["vacant_use_source"].where(vac, None)
     open_space = vac & parcels["vacant_use"].eq(land_use.OPEN_SPACE)
     activity = vac & parcels["vacant_use"].eq(land_use.ACTIVITY)
-    parcels.loc[open_space, "land_type"] = "natural"
+    # open space stays inside the reform (it carries its share of today's tax
+    # on unbuilt land), valued as natural land
+    parcels.loc[open_space, "land_type"] = "open_space"
     parcels.loc[open_space, "ag_eur_m2"] = n_rate
     factor = pd.Series(1.0, index=parcels.index)
     factor = factor.mask(deferred.values & vac, LAND_MODEL["au_strict_factor"])
@@ -204,7 +206,7 @@ def classify_and_price_land(cfg, parcels, buildings, tab, deflator=None,
         tab_x = land_use.cross_check(plan[vac], open_sh[vac], act_sh[vac], a[vac] / 1e4,
                                      LAND_MODEL["land_use_cover_threshold"])
         print(f"  [{cfg.name}] building-less urban land: "
-              f"{int(open_space.sum())} open space -> natural ({a[open_space].sum() / 1e4:.1f} ha), "
+              f"{int(open_space.sum())} open space at the natural-land price ({a[open_space].sum() / 1e4:.1f} ha), "
               f"{int(activity.sum())} business land ({a[activity].sum() / 1e4:.1f} ha), "
               f"{int((vac & ~open_space & ~activity).sum())} housing land; "
               f"plan × BD TOPO (ha):\n{tab_x.round(1).to_string()}")

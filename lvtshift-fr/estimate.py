@@ -382,7 +382,7 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     kept for the synthetic test.
 
     Expects per-parcel columns set upstream (run_commune):
-        land_type   built | constructible | constructible_deferred
+        land_type   built | constructible | constructible_deferred | open_space
                     | agricultural | natural | unknown
         market_value, improvement_value, parcel_area_m2, floor_area_m2,
         constructible_eur_m2  (AU-discounted development €/m², from DVF TAB),
@@ -400,7 +400,8 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
         value. market = land + building; no residential price and no
         land-share clip.
       * constructible vacant: land = development €/m² × parcel area.
-      * agricultural/natural vacant: land = ag €/m² × parcel area.
+      * agricultural/natural vacant, and urban open space (land_use.py):
+        land = ag €/m² × parcel area.
       * unknown vacant: priced as agricultural (conservative).
     """
     lo, hi = cfg.land_share_bounds
@@ -438,7 +439,7 @@ def _land_value_classified(out: pd.DataFrame, cfg) -> pd.DataFrame:
     no_floor = ~built & out["land_type"].eq("built")
     is_con = ~built & out["land_type"].isin(["constructible", "constructible_deferred"])
     is_un = (~built & ~is_con & ~no_floor
-             & ~out["land_type"].isin(["agricultural", "natural"]))
+             & ~out["land_type"].isin(["agricultural", "natural", "open_space"]))
     land = land.mask(is_con, con * area)
     land = land.mask(~built & ~is_con, ag * area)   # ag/natural/unknown -> dirt
     flag = flag.mask(is_un, "vacant_unknown_ag")
@@ -723,8 +724,10 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
 
         effective plot area × density ** density_elasticity × vacant_price_factor,
 
-    with the density, plot cap and surplus rule of site_value_land read for its
-    PLU zone label (then zone type, then commune). A plot smaller than
+    with the density and surplus rule of site_value_land read for its PLU zone
+    label (then zone type, then commune). The built plots' area cap does not
+    apply: it is there for estates and copropriété parks attached to a
+    building, and a large building-less site is development land. A plot smaller than
     vacant_sliver_fraction × its zone's median built plot counts at
     surplus_plot_weight: a strip or leftover corner cannot carry a building on
     its own. vacant_price_factor (run_commune.classify_and_price_land) is the
@@ -778,7 +781,7 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
         density = pd.Series(float(sp["far"].quantile(q_ref)), index=out.index[vacant])
         typical = pd.Series(float(sp["plot"].median()), index=out.index[vacant])
     a = area[vacant]
-    plot = a.clip(upper=sp["cap"])
+    plot = a       # no plot cap: a large vacant site is development land
     house_scale = density < far_sur
     surplus = (plot - k_sur * typical).clip(lower=0.0).where(house_scale, 0.0)
     eff = plot - (1.0 - w_sur) * surplus

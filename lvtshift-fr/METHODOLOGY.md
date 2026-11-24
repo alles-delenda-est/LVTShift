@@ -250,7 +250,7 @@ each class is priced against the right benchmark:
 |---|---|
 | **Built** | **site value** (below): each IRIS's residual land (`market − building`, floored at the agricultural €/m², land share clipped to [0.15, 0.85]) is shared again by plot area and the zone's typical density; building at depreciated cost, value = land + building, no clip (`lv_flag` `built_site_value`) |
 | **Built, largest building shed-type** (DRC) | terrain-à-bâtir €/m² × `activity_land_ratio` (business types) or × 1 (sports halls, annexes) × parcel area, floored at the agricultural €/m²; outside urban zoning only a yard of 3 × floor area takes that price. Market value = land + depreciated building; no residential price, no clip (`lv_flag` `built_drc`) |
-| **Constructible vacant** (zone U/AUc) | **site value** like built land of its IRIS and zone (*Building-less urban land* below): × `activity_land_ratio` on business land; open space becomes natural land (row below). Strips and leftover corners count at the garden weight (`lv_flag` `vacant_site_value`) |
+| **Constructible vacant** (zone U/AUc) | **site value** like built land of its IRIS and zone (*Building-less urban land* below): × `activity_land_ratio` on business land; open space at the natural-land price, inside the reform (`lv_flag` `open_space`). Strips and leftover corners count at the garden weight (`lv_flag` `vacant_site_value`) |
 | **Constructible deferred** (AU/AUs) | as above × `au_strict_factor` (development deferred) |
 | **Agricultural / natural** (zone A/N) | SAFER départemental €/m² × area; **outside the reform**: the parcel keeps today's TFPNB, takes no share of the new tax and leaves the published results (counted in `farmland_excluded_parcels`) |
 
@@ -276,19 +276,26 @@ each building-less urban parcel is now read twice:
   Open-space words count in U zones only.
 - **BD TOPO.** The share of the parcel under public open space (*espace
   public*: parks, squares, gardens), cemeteries, sports grounds and water, or
-  under business, transport and public-facility sites.
+  under business, transport (car parks excepted) and public-facility sites.
 
-Open space when either reading says so (at least half the parcel for BD TOPO,
-`LAND_MODEL["land_use_cover_threshold"]`): the parcel becomes natural land,
-outside the reform like zone N. Business land when either says so: valued ×
-`activity_land_ratio`. Housing land otherwise. The run log tabulates where the
-two readings agree. Each remaining plot is then valued as the land under
+The plan decides where it states a use: the tax is on land at its permitted
+use, and BD TOPO maps current use, so a car park or a private sports ground in
+a housing zone stays housing land (fresh-context review, 2026-11-24). Where the
+plan is silent, BD TOPO fills in when it covers at least half the parcel
+(`LAND_MODEL["land_use_cover_threshold"]`); otherwise the land is housing land.
+The run log tabulates where the two readings agree. Open space is valued at the
+SAFER natural-land price and stays inside the reform: it carries its share of
+today's tax on unbuilt land, which the reform replaces (excluding it would
+have counted that tax twice). Business land is valued × `activity_land_ratio`. Each remaining plot is then valued as the land under
 buildings is: its IRIS's land per unit of weight (the commune's where the IRIS
 has no built land in the pool) × effective plot area × its zone's reference
-density^0.5, with the same plot cap and surplus rule. A plot under a quarter of
+density^0.5, with the same surplus rule in house-scale zones; the built plots'
+area cap does not apply (a large building-less site is development land). A plot under a quarter of
 its zone's median built plot (`SITE_VALUE["vacant_sliver_fraction"]`: strips,
 passages, leftover corners, most building-less parcels by count) cannot carry a
-building alone and counts at the garden weight (0.25). The building-plot price
+building alone and counts at the garden weight (0.25). The rule is a threshold:
+in a zone whose median built plot is 500 m², a 124 m² plot counts as 31 m² and a
+126 m² plot in full. The building-plot price
 stays in `land_value_current` for comparison. Valuing vacant and built land of
 one zone alike is what a tax on land "as if vacant" requires; it also avoids the
 thin, atypical building-plot sales of dense cities (Lyon €735/m² against
@@ -1502,8 +1509,8 @@ Ranked by how much they move published (category/quintile) results.
    modelled as whole communes from their arrondissements (§3.7); Marseille could
    be added the same way.
 10. **The use of building-less urban land rests on labels and a land-cover
-    map.** Since 2026-11-24 open space leaves the reform and business land takes
-    the business-land ratio (§3.4), but a plan's long label can be vague
+    map.** Since 2026-11-24 open space is valued as natural land and business
+    land takes the business-land ratio (§3.4), but a plan's long label can be vague
     ("secteurs sans règlement", ZAC names) and BD TOPO maps public open space,
     not private gardens or estates. A plan that states nothing leaves a U zone
     as housing land. `audit_land.py <commune>` quantifies the levy this land

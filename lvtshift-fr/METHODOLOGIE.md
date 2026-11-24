@@ -278,7 +278,7 @@ référentiel :
 |---|---|
 | **Bâtie** | **valeur du site** (ci-dessous) : le terrain résiduel de chaque IRIS (`marché − bâti`, plancher à la valeur agricole €/m², part foncière bornée à [0,15 ; 0,85]) est réparti à nouveau selon la surface de la parcelle et la densité habituelle de la zone ; bâti au coût déprécié, valeur = terrain + bâti, sans bornage (`lv_flag` `built_site_value`) |
 | **Bâtie, plus grand bâtiment de type hangar** (CRD) | €/m² terrain à bâtir × `activity_land_ratio` (types professionnels) ou × 1 (salles de sport, annexes) × surface, plancher à la valeur agricole €/m² ; hors zone urbaine, seule une cour de 3 × la surface plancher prend ce prix. Valeur de marché = terrain + bâti déprécié ; ni prix résidentiel ni bornage (`lv_flag` `built_drc`) |
-| **Constructible vacante** (zone U/AUc) | **valeur du site**, comme le terrain bâti de son IRIS et de sa zone (*Foncier urbain non bâti* ci-dessous) : × `activity_land_ratio` sur le foncier d'activité ; l'espace ouvert devient du terrain naturel (ligne suivante). Bandes et délaissés comptent au poids d'un jardin (`lv_flag` `vacant_site_value`) |
+| **Constructible vacante** (zone U/AUc) | **valeur du site**, comme le terrain bâti de son IRIS et de sa zone (*Foncier urbain non bâti* ci-dessous) : × `activity_land_ratio` sur le foncier d'activité ; l'espace ouvert au prix du terrain naturel, dans la réforme (`lv_flag` `open_space`). Bandes et délaissés comptent au poids d'un jardin (`lv_flag` `vacant_site_value`) |
 | **Constructible différée** (AU/AUs) | idem × `au_strict_factor` (urbanisation différée) |
 | **Agricole / naturelle** (zone A/N) | €/m² départemental SAFER × surface ; **hors de la réforme** : la parcelle garde la TFPNB actuelle, ne prend aucune part du nouvel impôt et sort des résultats publiés (comptée dans `farmland_excluded_parcels`) |
 
@@ -307,21 +307,32 @@ désormais lu deux fois :
   lus seuls. Les mots de l'espace ouvert ne comptent qu'en zone U.
 - **La BD TOPO.** La part de la parcelle couverte par l'espace public ouvert
   (*espace public* : parcs, squares, jardins), les cimetières, les terrains de
-  sport et l'eau, ou par les sites d'activité, de transport et d'équipement.
+  sport et l'eau, ou par les sites d'activité, de transport (hors parkings) et
+  d'équipement.
 
-Espace ouvert si l'une des deux lectures le dit (au moins la moitié de la
-parcelle pour la BD TOPO, `LAND_MODEL["land_use_cover_threshold"]`) : la
-parcelle devient du terrain naturel, hors de la réforme comme en zone N.
-Foncier d'activité si l'une le dit : évalué × `activity_land_ratio`. Terrain
-d'habitat sinon. Le journal de calcul croise les deux lectures. Chaque parcelle
+Le plan décide là où il déclare une vocation : l'impôt porte sur le sol à son
+usage permis, et la BD TOPO décrit l'usage actuel, si bien qu'un parking ou un
+terrain de sport privé en zone d'habitat reste du terrain d'habitat (revue à
+contexte neuf, 24 novembre 2026). Là où le plan est muet, la BD TOPO complète
+si elle couvre au moins la moitié de la parcelle
+(`LAND_MODEL["land_use_cover_threshold"]`) ; sinon le terrain est du terrain
+d'habitat. Le journal de calcul croise les deux lectures. L'espace ouvert est
+évalué au prix SAFER du terrain naturel et reste dans la réforme : il porte sa
+part de l'impôt actuel sur le non-bâti, que la réforme remplace (l'en exclure
+aurait compté cet impôt deux fois). Le foncier d'activité est évalué ×
+`activity_land_ratio`. Chaque parcelle
 restante est ensuite évaluée comme le terrain sous les bâtiments : le terrain
 par unité de poids de son IRIS (celui de la commune si l'IRIS n'a pas de
 terrain bâti dans le regroupement) × surface effective × densité de référence
-de sa zone^0,5, avec le même plafond de surface et la même règle de surplus. Une
+de sa zone^0,5, avec la même règle de surplus en zone d'habitat individuel ; le
+plafond de surface des parcelles bâties ne s'applique pas (un grand terrain nu
+est un terrain à aménager). Une
 parcelle de moins du quart de la parcelle bâtie médiane de sa zone
 (`SITE_VALUE["vacant_sliver_fraction"]` : bandes, passages, délaissés, la
 plupart des parcelles non bâties en nombre) ne peut porter seule un bâtiment et
-compte au poids d'un jardin (0,25). Le prix des terrains à bâtir reste dans
+compte au poids d'un jardin (0,25). La règle est un seuil : dans une zone dont la
+parcelle bâtie médiane fait 500 m², une parcelle de 124 m² compte pour 31 m² et
+une de 126 m² en entier. Le prix des terrains à bâtir reste dans
 `land_value_current` pour comparaison. Évaluer de la même façon le terrain nu et
 le terrain bâti d'une même zone est ce qu'exige un impôt sur le sol « comme
 s'il était nu » ; cela évite aussi les ventes de terrains à bâtir rares et
@@ -1677,8 +1688,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
    modélisées comme communes entières à partir de leurs arrondissements (§3.7) ;
    Marseille pourrait l'être de la même façon.
 10. **L'usage du foncier urbain non bâti repose sur des libellés et une carte
-    d'occupation du sol.** Depuis le 24 novembre 2026, l'espace ouvert sort de la
-    réforme et le foncier d'activité prend le ratio du foncier d'activité
+    d'occupation du sol.** Depuis le 24 novembre 2026, l'espace ouvert est évalué
+    comme du terrain naturel et le foncier d'activité prend le ratio du foncier d'activité
     (§3.4), mais le libellé long d'un plan peut être vague (« secteurs sans
     règlement », noms de ZAC) et la BD TOPO cartographie l'espace public ouvert,
     pas les jardins ni les domaines privés. Un plan muet laisse une zone U en
