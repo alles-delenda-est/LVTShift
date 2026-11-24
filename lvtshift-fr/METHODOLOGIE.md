@@ -34,6 +34,35 @@ partir des données ouvertes françaises, puis appelle ses solveurs
 (`save_standard_export`) **sans les modifier**. Les améliorations amont profitent ainsi automatiquement à la version
 française.
 
+### 1.1 Positions de la réforme (hors modèle)
+
+Le modèle compare deux répartitions d'un même produit, à l'**état final**. La
+réforme défendue par le projet arrête en outre les positions suivantes, que le
+modèle ne simule pas :
+
+1. **Montée en charge sur cinq ans.** Chaque année, 20 % de l'assiette bâtie
+   bascule vers l'assiette terrain (taux scindé transitoire) ; la TVTN est
+   complète la cinquième année. Les résultats publiés décrivent cette cinquième
+   année.
+2. **Protections existantes maintenues.** Les dégrèvements et exonérations sous
+   conditions de ressources (CGI, art. 1390, 1391, 1391 B, 1391 B ter) restent
+   en vigueur.
+3. **Report de paiement plafonné selon le revenu.** Un propriétaire occupant
+   dont la cotisation dépasse un plafond rapporté à son revenu peut différer le
+   supplément jusqu'à la vente ou la succession, la créance étant garantie par
+   une sûreté sur le bien (une hypothèque légale du Trésor, par exemple). Le
+   seuil et le plafond restent à arrêter.
+4. **Réforme coordonnée des droits de succession.** Le report doit aller de pair
+   avec une réforme des droits de succession : sans elle, l'impôt ne fait que
+   changer de poche — l'occupant ne le ressent pas, les héritiers l'acquittent
+   sur la succession — et l'incitation à mobiliser le sol est largement diluée.
+5. **Logement social : extinction des exonérations.** Les exonérations de 15 à
+   25 ans (art. 1384 A et 1384 C) et les abattements en quartier prioritaire
+   (art. 1388 bis) en cours sont maintenus jusqu'à leur terme ; aucun nouveau
+   n'est accordé. Le modèle montre l'état après leur extinction : pendant la
+   transition, les bases encore exonérées restent hors assiette et leur part
+   de l'impôt est portée par les autres contribuables, comme aujourd'hui.
+
 ## 2. Sources de données
 
 | Donnée | Source | Accès | Millésime | Rôle |
@@ -745,8 +774,9 @@ de 30 % la base des logements HLM et SEM imposables situés dans un quartier
 prioritaire (QPV) de 2024, pour les impositions 2025 à 2030. Le produit du REI
 exclut les bases exonérées et abattues (`E11` est la base après elles, `E13` les
 cotisations émises) : le modèle répartit donc l'impôt actuel sur la seule surface
-imposable. La réforme met fin aux deux régimes : les bailleurs sociaux paient
-l'impôt sur le sol comme tout propriétaire.
+imposable. La réforme n'accorde plus ni l'un ni l'autre régime et laisse ceux en
+cours s'éteindre à leur terme (§1.1) ; le modèle montre l'état final, où les
+bailleurs sociaux paient l'impôt sur le sol comme tout propriétaire.
 
 *Quelles parcelles* (`social_parcels`). D'après le fichier des personnes morales,
 par département : une société est un organisme HLM si la plupart de ses lignes

@@ -14,14 +14,14 @@ export default function SocialHousingNote({ commune }: { commune: Pick<Commune, 
           <strong className="font-medium text-encre">Logement social (bailleurs)</strong>
           &nbsp;: parcelles détenues surtout par des organismes HLM ou des SEM.
           Leur impôt actuel tient compte des exonérations du logement social
-          {note.counts ? ` (${note.counts})` : ""}, auxquelles la réforme met fin.
+          {note.counts ? ` (${note.counts})` : ""}, que la réforme laisse s&apos;éteindre à leur terme, sans en accorder de nouvelles.
         </>
       ) : (
         <>
           Les parcelles des bailleurs sociaux sont comptées dans «&nbsp;Autre
           bâtiment&nbsp;» : les montrer à part, ici, permettrait de reconnaître un
           bailleur. Leur impôt actuel tient compte des exonérations du logement
-          social, auxquelles la réforme met fin.
+          social, que la réforme laisse s&apos;éteindre à leur terme, sans en accorder de nouvelles.
         </>
       )}{" "}
       Cette taxe n&apos;étant pas récupérable sur les locataires, la variation
