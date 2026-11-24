@@ -1406,8 +1406,8 @@ publiées depuis :
 | La Rochelle | 36,0 | −0,7 | −15,3 | −36,5 | −0,1 | −8,1 / +0,6 |
 | Paris | 23,2 | +116,7 | +35,7 | −14,7 | +67,3 | −25,4 / +6,3 |
 | Lyon | 28,3 | +75,4 | +22,8 | −15,9 | +11,7 | −17,1 / +9,2 |
-| Paris extra-muros (petite couronne) | 35,1 | +41,9 | +14,0 | −35,3 | +29,2 | −7,3 / +2,5 |
-| Lyon extra-muros (Métropole hors Lyon) | 38,8 | +43,5 | +2,1 | −39,4 | −27,3 | −4,6 / −0,8 |
+| Paris extra-muros (petite couronne) | 35,1 | +41,9 | +13,9 | −35,3 | +29,2 | −7,3 / +2,5 |
+| Lyon extra-muros (Métropole hors Lyon) | 38,8 | +44,0 | +2,3 | −39,3 | −27,1 | −4,5 / −0,8 |
 
 - **La correction joue dans les deux sens.** La part du terrain nu dans le
   produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
@@ -1420,9 +1420,9 @@ publiées depuis :
   Villeurbanne reste l'exception, plus étroite : le cinquième le plus modeste
   +0,9 % (fourchette −0,3 à +1,8 %) contre −4,6 % pour le plus aisé.
 - **Ce qui bouge le plus :** le cinquième le plus aisé de Grenoble (−9,0 →
-  −0,4 %) et de La Rochelle (−3,5 → +0,2 %) ; les petits immeubles de 2 à 4
+  −0,4 %) et de La Rochelle (−3,5 → +0,6 %) ; les petits immeubles de 2 à 4
   logements paient désormais davantage dans la couronne lyonnaise (−1,0 →
-  +2,1 %) et donc moins dans 4 territoires, et non 5.
+  +2,3 %) et donc moins dans 4 territoires, et non 5.
 
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas

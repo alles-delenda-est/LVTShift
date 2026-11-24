@@ -1258,8 +1258,8 @@ Paris rings re-run). Same columns as above, payloads published since:
 | La Rochelle | 36.0 | −0.7 | −15.3 | −36.5 | −0.1 | −8.1 / +0.6 |
 | Paris | 23.2 | +116.7 | +35.7 | −14.7 | +67.3 | −25.4 / +6.3 |
 | Lyon | 28.3 | +75.4 | +22.8 | −15.9 | +11.7 | −17.1 / +9.2 |
-| Paris extra-muros (petite couronne) | 35.1 | +41.9 | +14.0 | −35.3 | +29.2 | −7.3 / +2.5 |
-| Lyon extra-muros (Métropole hors Lyon) | 38.8 | +43.5 | +2.1 | −39.4 | −27.3 | −4.6 / −0.8 |
+| Paris extra-muros (petite couronne) | 35.1 | +41.9 | +13.9 | −35.3 | +29.2 | −7.3 / +2.5 |
+| Lyon extra-muros (Métropole hors Lyon) | 38.8 | +44.0 | +2.3 | −39.3 | −27.1 | −4.5 / −0.8 |
 
 - **The correction runs both ways.** Vacant land's share of the levy falls
   where building-plot sales had priced it above built land (Grenoble
@@ -1271,8 +1271,8 @@ Paris rings re-run). Same columns as above, payloads published since:
   with income groups. Villeurbanne remains the exception, narrower: the
   poorest fifth +0.9 % (band −0.3 to +1.8 %) against −4.6 % for the richest.
 - **Moved most:** Grenoble's richest fifth (−9.0 → −0.4 %) and La Rochelle's
-  (−3.5 → +0.2 %); small 2–4-dwelling buildings now pay more in the Lyon ring
-  (−1.0 → +2.1 %), so they pay less in 4 territories, not 5.
+  (−3.5 → +0.6 %); small 2–4-dwelling buildings now pay more in the Lyon ring
+  (−1.0 → +2.3 %), so they pay less in 4 territories, not 5.
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (industrial
