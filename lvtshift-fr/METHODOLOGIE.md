@@ -369,7 +369,26 @@ parcelle de moins du quart de la parcelle bâtie médiane de sa zone
 plupart des parcelles non bâties en nombre) ne peut porter seule un bâtiment et
 compte au poids d'un jardin (0,25). La règle est un seuil : dans une zone dont la
 parcelle bâtie médiane fait 500 m², une parcelle de 124 m² compte pour 31 m² et
-une de 126 m² en entier. Le prix des terrains à bâtir reste dans
+une de 126 m² en entier. **Les zones à urbaniser (AU)** sont des terrains en
+extension, peu bâtis : leur libellé atteint rarement le seuil de 20 parcelles, et
+le repli sur le type de zone ou la commune leur donnait la densité du tissu
+dense de la ville (le terrain AU brut ressortait plus cher au m² que le terrain
+d'habitat équipé des zones U à La Rochelle et à Sète ; revue de la PR #83). Une
+parcelle AU prend, dans l'ordre : la densité de référence de son propre libellé
+s'il compte 20 parcelles bâties ; sinon la densité réalisée médiane des
+parcelles bâties des zones U de même vocation dans son IRIS (20 au moins : le
+tissu contre lequel elle sera aménagée) ; sinon la médiane des références des
+libellés U de même vocation de la commune. Toute la parcelle est terrain à
+aménager (ni surplus de jardin, ni règle des bandes), nette des 25 % que
+prennent voirie et espaces publics à l'aménagement
+(`SITE_VALUE["au_net_share"]` = 0,75 ; la voirie seule occupe 7 à 29 % des îlots
+d'habitat collectif, Institut Paris Région, *Référentiel de densités et de
+formes urbaines* ; une opération en extension crée toute sa voirie, d'où le
+haut de la fourchette : hypothèse étiquetée, aucun ratio national français
+n'a été trouvé). Dans un même IRIS, le terrain AU d'habitat est désormais
+sous le terrain U équipé (La Rochelle 1 400 contre 2 912 €/m², Sète 1 235
+contre 1 682), et le terrain AU d'activité au niveau du terrain U d'activité.
+Le prix des terrains à bâtir reste dans
 `land_value_current` pour comparaison. Évaluer de la même façon le terrain nu et
 le terrain bâti d'une même zone est ce qu'exige un impôt sur le sol « comme
 s'il était nu » ; cela évite aussi les ventes de terrains à bâtir rares et
@@ -1363,7 +1382,10 @@ publiées depuis (mêmes colonnes) :
 urbain non bâti est évalué comme le terrain bâti de son IRIS et de sa zone,
 l'espace ouvert comme du terrain naturel, le foncier d'activité au ratio du
 foncier d'activité (§3.4, *Foncier urbain non bâti*), avec le contrôle croisé
-BD TOPO. Mêmes colonnes que ci-dessus, données publiées depuis :
+BD TOPO ; le terrain AU évalué sur le tissu de même vocation de son IRIS, net de
+voirie (PR #84 : Cahors, Figeac, Sète, La Rochelle, Lyon et les couronnes
+lyonnaise et parisienne recalculées). Mêmes colonnes que ci-dessus, données
+publiées depuis :
 
 | | Part déplacée, % du produit | Maisons | 2–4 | 5+ | Commerce | Totaux Q1 / Q5 |
 |---|---|---|---|---|---|---|
@@ -1371,11 +1393,11 @@ BD TOPO. Mêmes colonnes que ci-dessus, données publiées depuis :
 | Annemasse | 36,4 | +105,9 | +13,8 | −34,5 | +12,8 | −19,3 / −14,3 |
 | Villeurbanne | 32,6 | +63,8 | +28,8 | −26,0 | +58,0 | +0,9 / −4,6 |
 | Roubaix | 39,5 | −23,0 | −28,4 | −41,9 | −22,6 | −32,7 / +49,1 |
-| Cahors | 38,7 | +6,4 | −16,6 | −39,4 | −38,3 | — / — |
+| Cahors | 38,7 | +6,6 | −16,4 | −39,3 | −38,2 | — / — |
 | Montreuil | 33,6 | +49,9 | +22,5 | −31,3 | +33,1 | −10,5 / +11,4 |
-| Figeac | 38,2 | −4,0 | −27,9 | −54,7 | −31,5 | — / — |
-| Sète | 34,0 | +38,2 | +0,3 | −37,8 | +34,1 | −22,2 / +4,7 |
-| La Rochelle | 36,1 | −1,1 | −15,7 | −36,8 | −0,5 | −8,5 / +0,2 |
+| Figeac | 38,3 | −4,2 | −27,9 | −54,8 | −31,6 | — / — |
+| Sète | 33,9 | +38,6 | +0,6 | −37,6 | +34,5 | −22,0 / +5,0 |
+| La Rochelle | 36,0 | −0,9 | −15,5 | −36,7 | −0,3 | −8,3 / +0,4 |
 | Paris | 23,2 | +116,7 | +35,7 | −14,7 | +67,3 | −25,4 / +6,3 |
 | Lyon | 28,3 | +75,4 | +22,8 | −15,9 | +11,7 | −17,1 / +9,2 |
 | Paris extra-muros (petite couronne) | 35,1 | +41,9 | +14,0 | −35,3 | +29,2 | −7,3 / +2,5 |
@@ -1383,7 +1405,7 @@ BD TOPO. Mêmes colonnes que ci-dessus, données publiées depuis :
 
 - **La correction joue dans les deux sens.** La part du terrain nu dans le
   produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
-  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 9,7 %) et monte là où
+  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 9,5 %) et monte là où
   elles le plaçaient en dessous (Annemasse 7,0 → 13,3 %, Paris 1,1 → 1,7 % ; le
   prix des terrains de Villeurbanne était de 141 €/m², contre 1 229 € désormais).
 - **Robuste :** les grands immeubles paient moins partout ; les maisons paient
@@ -1774,11 +1796,11 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (§3.4), mais le libellé long d'un plan peut être vague (« secteurs sans
     règlement », noms de ZAC) et la BD TOPO cartographie l'espace public ouvert,
     pas les jardins ni les domaines privés. Un plan muet laisse une zone U en
-    terrain d'habitat. Deux limites de valorisation subsistent : (a) les zones
-    à urbaniser (`AUc`/`AUs`), peu bâties, reprennent par repli la densité
-    bâtie de référence de la commune sans abattement pour viabilisation (VRD) ni
-    cession d'emprises publiques, ce qui peut les évaluer au-dessus des zones
-    `U` déjà équipées (Sète, La Rochelle) ; (b) le foncier d'activité *bâti*
+    terrain d'habitat. Deux limites de valorisation : (a) le terrain `AU` prend
+    la densité du tissu de même vocation de son IRIS, net d'une part de 25 %
+    pour voirie et espaces publics qui est une hypothèse (§3.4), non un ratio
+    national sourcé, et ignore l'objectif de densité propre à la zone (OAP) ;
+    (b) le foncier d'activité *bâti*
     (CRD, §3.4) reste ancré sur les ventes DVF de terrains à bâtir alors que le
     foncier d'activité *non bâti* suit désormais la valeur du site ×
     `activity_land_ratio`, créant un écart là où les ventes DVF s'éloignent du

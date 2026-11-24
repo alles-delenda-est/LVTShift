@@ -715,6 +715,61 @@ def _zone_lookup(values: pd.Series, zones: list, targets: list, q: float,
 VACANT_PRICED_FLAGS = frozenset({"constructible", "constructible_deferred"})
 
 
+def _au_density(out: pd.DataFrame, pooled: pd.Series, vacant: pd.Series,
+                au: pd.Series, sp: dict, q_ref: float, min_n: int) -> pd.Series:
+    """Reference density for building-less parcels in AU zones (see
+    vacant_site_value), first available of:
+      1. the AU label's own, when it has min_n pooled built parcels;
+      2. the median realised density of the built parcels of the same IRIS
+         standing in U zones of the same stated use, when there are min_n of
+         them: a greenfield site is planned against the fabric next to it, not
+         against the town centre. The median, not q_ref: q_ref over one zone
+         label stands for what that label permits; over an IRIS that mixes
+         labels it picks up the densest of them;
+      3. the median, over the commune's U labels with min_n pooled parcels and
+         the same stated use, of each label's reference density;
+      4. the median over all such U labels; else the commune's."""
+    import land_use
+    idx = au[au].index
+    far = sp["far"]
+    lab = out.loc[pooled, "zone_libelle"].astype("object") if "zone_libelle" in out.columns \
+        else pd.Series(None, index=far.index, dtype="object")
+    typ = out.loc[pooled, "zone_typ"].astype("object").fillna("").astype(str)
+    def use_of(rows):
+        return land_use.zone_use(
+            out.loc[rows, "zone_typ"].astype("object").fillna(""),
+            out.loc[rows, "zone_destdomi"] if "zone_destdomi" in out.columns else None,
+            out.loc[rows, "zone_libelong"] if "zone_libelong" in out.columns else None,
+        ).fillna(land_use.HOUSING).replace({land_use.OPEN_SPACE: land_use.HOUSING})
+    counts = lab.value_counts()
+    big = counts[counts >= min_n].index
+    ref_by_label = far[lab.isin(big)].groupby(lab[lab.isin(big)]).quantile(q_ref)
+    u_labels = pd.Series({l: t for l, t in zip(lab, typ)}).loc[lambda x: x.str.startswith("U")]
+    u_labels = u_labels[u_labels.index.isin(ref_by_label.index)]
+    label_use = use_of(lab[lab.isin(u_labels.index)].drop_duplicates().index)
+    label_use.index = lab.loc[label_use.index].values
+    commune = float(far.quantile(q_ref))
+    all_u = float(ref_by_label[u_labels.index].median()) if len(u_labels) else commune
+    by_use = {u: float(ref_by_label[label_use[label_use.eq(u)].index].median())
+              for u in label_use.unique()}
+    own_lab = out.loc[idx, "zone_libelle"].astype("object") if "zone_libelle" in out.columns \
+        else pd.Series(None, index=idx, dtype="object")
+    own = own_lab.map(ref_by_label)
+    target_use = use_of(idx)
+    fallback = target_use.map(by_use).fillna(all_u)
+    if "iris" in out.columns:
+        u_rows = typ[typ.str.upper().str.startswith("U")].index
+        if len(u_rows):
+            key = (out.loc[u_rows, "iris"].astype("object").astype(str) + "|"
+                   + use_of(u_rows).astype(str))
+            n = key.value_counts()
+            ok = key.isin(n[n >= min_n].index)
+            ref_iris = far.loc[u_rows][ok].groupby(key[ok]).median()
+            tkey = out.loc[idx, "iris"].astype("object").astype(str) + "|" + target_use.astype(str)
+            fallback = tkey.map(ref_iris).where(lambda x: x.notna(), fallback)
+    return own.where(own.notna(), fallback).astype(float)
+
+
 def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
     """
     Building-less urban land valued as the land under buildings is: run after
@@ -787,6 +842,27 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     eff = plot - (1.0 - w_sur) * surplus
     sliver = a < frac * typical
     eff = eff.where(~sliver, plot * w_sur)
+
+    # To-be-urbanised zones (AU…): greenfield development sites. Few built
+    # parcels stand in them, so their zone label rarely has min_n pooled
+    # parcels and the lookup above falls back to the zone type or the commune,
+    # i.e. to the dense urban fabric: raw AU land came out dearer per m² than
+    # serviced urban housing land (review of PR #83, La Rochelle, Sète). An AU
+    # label with enough built parcels keeps its own density; otherwise it takes
+    # the median reference density of the commune's U zone labels of the same
+    # stated use (land_use.zone_use: housing, or business). The whole site is
+    # development land (no garden surplus, no sliver rule), net of the share
+    # roads and public space take (au_net_share).
+    zt = (out.loc[vacant, "zone_typ"].astype("object").fillna("")
+          if "zone_typ" in out.columns else pd.Series("", index=a.index))
+    au = zt.astype(str).str.upper().str.startswith("AU")
+    if au.any():
+        net = float(prm["au_net_share"])
+        if not 0.0 < net <= 1.0:
+            raise ValueError(f"au_net_share must be in (0, 1], got {net}")
+        density.loc[au] = _au_density(out, pooled, vacant, au, sp, q_ref, min_n)
+        eff = eff.mask(au, a * net)
+        sliver = sliver.mask(au, False)
     factor = (pd.to_numeric(out.loc[vacant, "vacant_price_factor"], errors="coerce").fillna(1.0)
               if "vacant_price_factor" in out.columns else 1.0)
     grp = (out.loc[vacant, "iris"].astype("object").fillna("_commune")
@@ -804,6 +880,8 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     out.loc[vacant, "site_density"] = density
     out["vacant_sliver"] = False
     out.loc[vacant, "vacant_sliver"] = sliver
+    out["vacant_au"] = False
+    out.loc[vacant, "vacant_au"] = au
     return out
 
 

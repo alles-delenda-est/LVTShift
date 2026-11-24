@@ -924,6 +924,7 @@
     "land_value": {
       "concept": "site",
       "density_rule": "zone",
+      "au_net_share": 0.75,
       "density_elasticity": 0.5,
       "min_zone_parcels": 20.0,
       "plot_cap_quantile": 0.99,
