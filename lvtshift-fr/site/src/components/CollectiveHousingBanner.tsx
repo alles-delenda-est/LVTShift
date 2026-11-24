@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { signedPct, signedPctAxis } from "@/lib/format";
 import type { ImpactSummary, QuintileGap } from "@/lib/impactSummary";
+import VariantTerm from "@/components/VariantTerm";
 
 /**
  * Home-page banner « L'immeuble collectif et les ménages modestes »: the prose
@@ -177,8 +178,10 @@ export function CollectiveHousingBanner({ impact, gaps, footer }: Props) {
               d&apos;entre eux
               {alt ? (
                 <>
-                  {" "}dans le cas central, {alt.poorestBelowRichest} dans la
-                  variante locale. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
+                  {" "}dans le{" "}
+                  <VariantTerm kind="central">cas central</VariantTerm>,{" "}
+                  {alt.poorestBelowRichest} dans la{" "}
+                  <VariantTerm kind="local">variante locale</VariantTerm>. Il paie moins qu&apos;aujourd&apos;hui dans{" "}
                   {impact.poorestPayLess} d&apos;entre eux dans le cas central,{" "}
                   {alt.poorestPayLess} dans la variante locale.
                 </>
