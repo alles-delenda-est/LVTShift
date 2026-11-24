@@ -60,8 +60,8 @@ export default function PoorestNote({
         revenu est celui du quartier, non du ménage : le propriétaire d&apos;une maison 
         dans un quartier modeste n&apos;est pas forcément modeste.
         Pour les propriétaires riches en terrain mais pauvres en revenu, la réforme
-        inclut une montée en charge progressive, un report de paiement et un
-        plafonnement selon le revenu, dont les paramètres précis restent à arrêter (voir{" "}
+        inclut une montée en charge sur cinq ans, un report de paiement et un
+        plafonnement selon le revenu, dont le seuil et le plafond restent à arrêter (voir{" "}
         <Link href="/exonerations-protections" className="underline underline-offset-2">
           Exonérations et protections
         </Link>

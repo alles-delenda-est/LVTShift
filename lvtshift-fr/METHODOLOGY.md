@@ -23,6 +23,31 @@ data and calls its *unmodified* solvers (`model_full_building_abatement` at
 100 % for the land-only tax, `model_split_rate_tax` when a ratio is configured)
 and export (`save_standard_export`). Upstream improvements flow through automatically.
 
+### 1.1 The reform's policy positions (outside the model)
+
+The model compares two allocations of the same levy, in the **end state**. The
+reform the project argues for also sets the following positions, which the
+model does not simulate:
+
+1. **Five-year phase-in.** Each year 20 % of the building base moves to the
+   land base (a transitional split rate); the land-only tax is complete in year
+   five. Published results describe year five.
+2. **Existing protections kept.** Means-tested relief and exemptions (CGI art.
+   1390, 1391, 1391 B, 1391 B ter) stay in force.
+3. **Income-capped payment deferral.** An owner-occupier whose bill exceeds a
+   cap relative to income may defer the increase until sale or inheritance,
+   secured on the property (for example a Treasury legal charge). The threshold
+   and cap remain to be set.
+4. **Coordinated inheritance-tax reform.** Deferral must be coupled with a
+   reform of inheritance tax: without it the tax merely changes pockets — the
+   occupier does not feel it, the heirs pay it out of the estate — and the
+   incentive to put land to use is largely diluted.
+5. **Social housing: exemptions run off.** The 15- to 25-year exemptions (art.
+   1384 A and 1384 C) and priority-area abatements (art. 1388 bis) in force run
+   to term; no new ones are granted. The model shows the state after they have
+   expired: during the transition the still-exempt bases stay outside the base
+   and their share of the levy is borne by other taxpayers, as today.
+
 ## 2. Data sources
 
 | Datum | Source | Access | Vintage | Role |
@@ -605,7 +630,9 @@ art. 1388 bis abates by 30 % the base of taxable HLM and SEM dwellings in a 2024
 priority neighbourhood (QPV), for the tax years 2025 to 2030. The REI produit
 excludes exempt and abated bases (`E11` is the base after them, `E13` the
 cotisations issued), so the model shares today's produit over taxable floor only.
-The reform ends both regimes: social landlords pay the land tax like every owner.
+The reform grants neither regime any more and lets those in force run to term
+(§1.1); the model shows the end state, where social landlords pay the land tax
+like every owner.
 
 *Which parcels* (`social_parcels`). From the DGFiP « personnes morales » file, per
 département: a company is an HLM body if most of its rows carry groupe 5

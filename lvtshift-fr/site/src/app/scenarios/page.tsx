@@ -489,15 +489,15 @@ export default function ScenariosPage() {
               sont maintenues. Pour respecter en outre l&apos;exigence
               constitutionnelle d&apos;égalité devant les charges publiques
               (<em>art. 13 de la DDHC</em>) et écarter tout effet confiscatoire, la
-              réforme inclut une montée en charge progressive et un report de
-              paiement, dont les paramètres précis restent à arrêter&nbsp;:
+              réforme inclut une montée en charge sur cinq ans et un report de
+              paiement, dont le seuil et le plafond restent à arrêter&nbsp;:
             </p>
             <ul className="font-body text-sm text-encre leading-relaxed list-disc pl-5 space-y-1.5">
               <li>
-                <strong className="font-semibold">Montée en charge progressive</strong>&nbsp;:
-                par exemple, un basculement de 10&nbsp;% par an de l&apos;assiette bâtie
-                vers l&apos;assiette terrain sur dix ans (taux scindé transitoire
-                jusqu&apos;à 100&nbsp;% TVTN).
+                <strong className="font-semibold">Montée en charge sur cinq ans</strong>&nbsp;:
+                un basculement de 20&nbsp;% par an de l&apos;assiette bâtie vers
+                l&apos;assiette terrain (taux scindé transitoire), jusqu&apos;à la
+                TVTN complète la cinquième année.
               </li>
               <li>
                 <strong className="font-semibold">Report de paiement à la mutation ou succession (<em>viager fiscal</em>) et plafonnement selon le revenu</strong>&nbsp;:
@@ -506,7 +506,11 @@ export default function ScenariosPage() {
                 jusqu&apos;à la vente ou la succession du bien, la créance étant
                 garantie par une sûreté sur le bien (une hypothèque légale du Trésor,
                 par exemple). L&apos;objectif&nbsp;: qu&apos;aucun ménage modeste ou
-                retraité ne soit contraint de vendre faute de liquidités.{" "}
+                retraité ne soit contraint de vendre faute de liquidités. Ce report
+                va de pair avec une réforme des droits de succession&nbsp;: sans
+                elle, l&apos;impôt ne fait que changer de poche — l&apos;occupant ne
+                le ressent pas, les héritiers l&apos;acquittent sur la succession —
+                et l&apos;incitation à mobiliser le sol est largement diluée.{" "}
                 <Link href="/exonerations-protections" className="text-marine underline underline-offset-2">
                   Voir les protections
                 </Link>
@@ -532,11 +536,10 @@ export default function ScenariosPage() {
               du CGI</em>) — sur lesquelles reposaient leurs plans de financement avec
               loyers plafonnés (<em>PLAI, PLUS, PLS</em>) —, ainsi que d&apos;un
               abattement conventionné de 30&nbsp;% en quartier prioritaire
-              (<em>art. 1388&nbsp;bis</em>). Les exonérations de 15 à 25&nbsp;ans déjà
-              engagées et les conventions QPV en cours appelleraient une transition
-              dédiée, dont la forme reste à arrêter&nbsp;: compensation par une aide
-              budgétaire directe, ou maintien jusqu&apos;à leur terme. L&apos;objectif
-              serait de protéger les plans de financement engagés&nbsp;; les loyers
+              (<em>art. 1388&nbsp;bis</em>). La réforme maintient les exonérations
+              et abattements en cours jusqu&apos;à leur terme et n&apos;en accorde
+              aucun nouveau. Les plans de financement engagés sont ainsi
+              protégés&nbsp;; les loyers
               sociaux plafonnés ne seraient pas directement touchés, la taxe foncière
               n&apos;étant pas récupérable sur les locataires. Pour le parc non
               exonéré où l&apos;impôt du bailleur augmente, la hausse pèse sur son

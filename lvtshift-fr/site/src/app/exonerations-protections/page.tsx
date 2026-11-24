@@ -6,7 +6,7 @@ import { socialSummary, socialSummarySentence } from "@/lib/socialHousing";
 export const metadata = {
   title: "Exonérations et protections — Pour une terre productive",
   description:
-    "Aucune protection des ménages n'est supprimée. La réforme inclut un report de paiement (dont les paramètres restent à arrêter) pour les propriétaires fragiles et met fin à l'exonération des bailleurs sociaux, une aide cachée payée par les communes.",
+    "Aucune protection des ménages n'est supprimée. La réforme s'installe sur cinq ans, inclut un report de paiement pour les propriétaires fragiles et n'accorde plus d'exonération aux bailleurs sociaux (celles en cours vont à leur terme), une aide cachée payée par les communes.",
 };
 
 export default function ExonerationsProtectionsPage() {
