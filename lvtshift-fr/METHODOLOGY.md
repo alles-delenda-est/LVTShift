@@ -17,6 +17,12 @@ and buildings separately, so per-parcel land value is **imputed**, with the erro
 bars made explicit. Results are reported by **property category** and **income
 quintile**, never as individual bills.
 
+**Reading dated figures.** Current results are the published payloads and the
+land-only table in §4 (*Land only, at permitted use*). Passages that record a
+modelling change give before → after figures from the run that introduced it;
+runs before 11 November 2026 used a 4:1 split rate, so those figures show the
+size and direction of that change, not today's results.
+
 Architecturally this is a fork of the US LVTShift toolkit: the FR code in
 `lvtshift-fr/` manufactures LVTShift's expected input columns from French open
 data and calls its *unmodified* solvers (`model_full_building_abatement` at
@@ -429,7 +435,9 @@ so the check says nothing there. The typical house's land per m² moves little
 zones. The parameters (the square root, the 75th
 percentile, the surplus and yard rules) come from German tables and French
 plot-sale studies; none is estimated on French sales of built property.
-Sensitivity (Lyon, Villeurbanne, Cahors):
+Sensitivity (Lyon, Villeurbanne, Cahors; runs of early November 2026 under
+the 4:1 split rate, not yet re-run for the land-only tax, which raises the
+typical house to +78 % in Lyon and +68 % in Villeurbanne):
 - **Density elasticity.** At 0.3 or 0.7 instead of 0.5, the typical house goes
   from +85 to +53 % in Lyon (+69 % central) and from +72 to +39 % in
   Villeurbanne (+55 %).
@@ -632,11 +640,12 @@ ares carries a median of 37 % of the amount across the 188 communes (20–63 % i
 the published territories), hence the garden share.
 Its suggested double weight for building plots had no source and was not used.
 
-*Results* (run of 11 November 2026). Vacant land inside the reform now has a
-real change: its tax is multiplied by about 3.5 in Villeurbanne, 5 in Sète, 7 in
-Montreuil, 14 in Lyon, 17 in Paris, 47 in La Rochelle and 60 in Annemasse, for a
-median of €67 to €1,793 a parcel a year. Every other figure moves by under a
-point, except houses' totals, which fall by up to 25 points where large
+*Results* (land-only payloads of 12 November 2026). Vacant land inside the
+reform now has a real change: its tax is multiplied by about 4 in Villeurbanne,
+6 in Sète, 8 in Montreuil, 16 in Lyon, 19 in Paris, 52 in La Rochelle and 73 in
+Annemasse, for a median of €88 to €973 a parcel a year. When the garden share
+was introduced (run of 11 November, 4:1 split rate), every other figure moved by
+under a point, except houses' totals, which fell by up to 25 points where large
 gardens now pay today (Paris +261 % → +236 %). The site shows rises of ×3 or
 more as a multiple, with the bar cut at the edge of the scale.
 
@@ -742,8 +751,8 @@ estates gain from a land tax even once their exemptions end. The Social Housing
 category is shown in 11 of the 13 published territories; in Cahors and Figeac it
 joins "Other" under the disclosure rules. Taking social estates out of the
 household figures makes the poorest fifth's total less favourable where they
-house many of the poorest (Villeurbanne −6.1 % → −1.5 %, Montreuil −18.8 % →
-−8.4 %): the estates' gain goes to their landlords. A category median now
+house many of the poorest (4:1 run of 4 November: Villeurbanne −6.1 % → −1.5 %,
+Montreuil −18.8 % → −8.4 %): the estates' gain goes to their landlords. A category median now
 counts a parcel paying nothing today as a rise, not as undefined (§3.7).
 
 `--no-social-housing` reproduces the run without it.
@@ -899,9 +908,9 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+4.6 % while the group as a whole pays −6.1 % and its typical household −19.7 %
-(central baseline), because the large blocks, where most of its households live,
-gain the most.
++21.6 % and the group as a whole +3.4 %, while its typical household pays
+−21.0 % (central baseline), because the large blocks, where most of its
+households live, gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
 residential parcels without a count are imputed (a house = 1; flats = gross floor
 area ÷ 85 m²), which concerns 5–11 % of residential parcels in Paris, Lyon and
@@ -920,12 +929,13 @@ house: in the October 2026 payloads, before site value, a Lyon block's median
 change was +800 € against +267 € for a house, which read as flats paying three
 times more when in percentage the block (+9.6 %) paid half what the house did
 (+20.6 %). Per dwelling the gap reversed: +34 € in a block against +287 € in a
-house. Since site value, a Lyon block's median parcel pays −720 € and its typical
-dwelling −103 €, a house +769 € and +800 €. The site shows the
+house. Under the current land-only payloads, a Lyon block's median parcel pays
+−1,327 € and its typical dwelling −161 €, a house +906 € and +939 €. The site shows the
 per-dwelling figure; without counts, it labels a building category's figure
 "par immeuble". The chart's percentage remains a parcel median, so the two
 figures can differ in sign, because large blocks weigh more in the
-per-dwelling median (Roubaix, blocks: +7.2 % per parcel, −5 € per dwelling).
+per-dwelling median (Sète, flats in co-ownership: +4.1 % per parcel, −10 € per
+dwelling).
 The disclosure rule is the income groups' rule: at least 11 parcels with
 dwellings, every parcel counted, no parcel holding more than a tenth of the
 dwellings (`MAX_DWELLING_SHARE`). It was half until November 2026: a
@@ -937,7 +947,7 @@ typical household's change in % (`share_dwellings_paying_more_pct`,
 `household_median_change_pct`), shown under the Résultats win/lose chart beside
 the share of parcels. Each category also publishes its **total change**
 (`total_change_pct`): medians can all fall while the levy is unchanged when a
-minority pays much more (La Rochelle, houses: −5.4 % at the median, +14.7 % in
+minority pays much more (La Rochelle, houses: −4.8 % at the median, +16.7 % in
 total). Vacant land, which pays no tax today and so has no %, publishes its total
 in euros instead (`total_change_eur`, to the thousand). No category publishes
 both: the reform is revenue-neutral, so the euro totals of a commune's
@@ -1180,8 +1190,9 @@ density (§3.4, §3.6), on the payloads published since (same columns):
 - **The levy that changes payer** rises again, to 23 % (Paris) – 43 % (Grenoble).
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
-shifts tax from industry to households under the central baseline (Saint-Fons
-industrial bills −60 %, Marcy-l'Étoile −90 %).
+shifts tax from industry to households under the central baseline (industrial
+bills in total: Saint-Fons −79 %, Marcy-l'Étoile −91 %; land-only run of
+12 November 2026).
 
 *Plant: a design decision.* The modelled reform taxes land only, so neither
 buildings nor fixed industrial plant (this paragraph dates from the split-rate
@@ -1347,7 +1358,7 @@ published file (CI test).
 - **Sign checks** — agricultural/natural land, outside the reform, bears none of
   the levy (1.1 % in Cahors before it was excluded); under-used constructible land pays *more* (the LVT
   incentive); the Montreuil income gradient is progressive (group totals,
-  central baseline: poorest fifth −18.8 %, richest +17.9 %).
+  central baseline: poorest fifth −9.5 %, richest +12.6 %).
 - **Today's-tax split** — the industrial reconstruction (WC75 ÷ 2020 rate),
   run on every commune in France, gives 5.7 % of the TFPB base, exactly the
   Cour des comptes figure; the CFE industrial line agrees commune by commune
@@ -1424,7 +1435,7 @@ Ranked by how much they move published (category/quintile) results.
      linear in plot area: a large plot in a dense zone is valued as a building
      site even where its shape or access would not allow it. The largest-plot
      tenth of Villeurbanne's houses pays about five times today's tax
-     (+394 %).
+     (+413 % in total, land-only run of 12 November 2026).
    - **Deferral.** Many such owners would need a payment deferral, which the
      project's reform includes and whose exact parameters remain to be set
      (`/exonerations-protections`).

@@ -805,7 +805,7 @@ export default function MethodologiePage() {
         </h3>
         <div className="space-y-7 max-w-3xl">
           {/* Today's-tax baseline: calibrated by tax group, with a range */}
-          <div className="border-l-4 border-lisere pl-5">
+          <div id="taxe-actuelle" className="border-l-4 border-lisere pl-5 scroll-mt-24">
             <h4 className="font-body text-sm font-semibold text-encre uppercase tracking-[0.1em] mb-1.5">
               Taxe actuelle — calée sur les comptes officiels de chaque commune
             </h4>
