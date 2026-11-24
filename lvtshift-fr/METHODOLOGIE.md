@@ -375,19 +375,25 @@ le repli sur le type de zone ou la commune leur donnait la densité du tissu
 dense de la ville (le terrain AU brut ressortait plus cher au m² que le terrain
 d'habitat équipé des zones U à La Rochelle et à Sète ; revue de la PR #83). Une
 parcelle AU prend, dans l'ordre : la densité de référence de son propre libellé
-s'il compte 20 parcelles bâties ; sinon la densité réalisée médiane des
-parcelles bâties des zones U de même vocation dans son IRIS (20 au moins : le
-tissu contre lequel elle sera aménagée) ; sinon la médiane des références des
-libellés U de même vocation de la commune. Toute la parcelle est terrain à
-aménager (ni surplus de jardin, ni règle des bandes), nette des 25 % que
-prennent voirie et espaces publics à l'aménagement
+s'il compte 20 parcelles bâties ; sinon la médiane, sur les parcelles bâties des
+zones U de même vocation de son IRIS (20 au moins : le tissu contre lequel elle
+sera aménagée), des densités de référence de leurs zones ; sinon la médiane des
+références des libellés U de même vocation de la commune. Elle est ensuite
+évaluée exactement comme le serait un terrain U de cette densité, règles du
+surplus de jardin et des bandes comprises (le terrain AU ne ressort donc jamais
+plus cher qu'un terrain U de même IRIS, vocation, densité et taille), net des
+25 % que prennent voirie et espaces publics à l'aménagement
 (`SITE_VALUE["au_net_share"]` = 0,75 ; la voirie seule occupe 7 à 29 % des îlots
 d'habitat collectif, Institut Paris Région, *Référentiel de densités et de
 formes urbaines* ; une opération en extension crée toute sa voirie, d'où le
 haut de la fourchette : hypothèse étiquetée, aucun ratio national français
-n'a été trouvé). Dans un même IRIS, le terrain AU d'habitat est désormais
-sous le terrain U équipé (La Rochelle 1 400 contre 2 912 €/m², Sète 1 235
-contre 1 682), et le terrain AU d'activité au niveau du terrain U d'activité.
+n'a été trouvé). En zone AU stricte, l'abattement se cumule avec
+`au_strict_factor` : 0,55 × 0,75 ≈ 0,41 de la valeur U. Dans un même IRIS, le
+terrain AU est désormais sous le terrain U non bâti de même vocation : de 0,15
+(La Rochelle, un site de 2,1 ha face à de petites dents creuses) à 0,82 (Sète)
+de son prix au m² pour l'habitat, environ un tiers pour l'activité. Les grands
+sites prennent la règle du surplus de jardin en zone à l'échelle de la maison,
+en U comme en AU.
 Le prix des terrains à bâtir reste dans
 `land_value_current` pour comparaison. Évaluer de la même façon le terrain nu et
 le terrain bâti d'une même zone est ce qu'exige un impôt sur le sol « comme
@@ -1393,11 +1399,11 @@ publiées depuis :
 | Annemasse | 36,4 | +105,9 | +13,8 | −34,5 | +12,8 | −19,3 / −14,3 |
 | Villeurbanne | 32,6 | +63,8 | +28,8 | −26,0 | +58,0 | +0,9 / −4,6 |
 | Roubaix | 39,5 | −23,0 | −28,4 | −41,9 | −22,6 | −32,7 / +49,1 |
-| Cahors | 38,7 | +6,6 | −16,4 | −39,3 | −38,2 | — / — |
+| Cahors | 38,5 | +7,3 | −15,9 | −38,9 | −37,8 | — / — |
 | Montreuil | 33,6 | +49,9 | +22,5 | −31,3 | +33,1 | −10,5 / +11,4 |
-| Figeac | 38,3 | −4,2 | −27,9 | −54,8 | −31,6 | — / — |
-| Sète | 33,9 | +38,6 | +0,6 | −37,6 | +34,5 | −22,0 / +5,0 |
-| La Rochelle | 36,0 | −0,9 | −15,5 | −36,7 | −0,3 | −8,3 / +0,4 |
+| Figeac | 38,0 | −3,5 | −27,4 | −54,4 | −31,1 | — / — |
+| Sète | 33,9 | +38,5 | +0,5 | −37,7 | +34,4 | −22,0 / +4,9 |
+| La Rochelle | 36,0 | −0,7 | −15,3 | −36,5 | −0,1 | −8,1 / +0,6 |
 | Paris | 23,2 | +116,7 | +35,7 | −14,7 | +67,3 | −25,4 / +6,3 |
 | Lyon | 28,3 | +75,4 | +22,8 | −15,9 | +11,7 | −17,1 / +9,2 |
 | Paris extra-muros (petite couronne) | 35,1 | +41,9 | +14,0 | −35,3 | +29,2 | −7,3 / +2,5 |
@@ -1405,7 +1411,7 @@ publiées depuis :
 
 - **La correction joue dans les deux sens.** La part du terrain nu dans le
   produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
-  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 9,5 %) et monte là où
+  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 9,3 %) et monte là où
   elles le plaçaient en dessous (Annemasse 7,0 → 13,3 %, Paris 1,1 → 1,7 % ; le
   prix des terrains de Villeurbanne était de 141 €/m², contre 1 229 € désormais).
 - **Robuste :** les grands immeubles paient moins partout ; les maisons paient
@@ -1799,7 +1805,8 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     terrain d'habitat. Deux limites de valorisation : (a) le terrain `AU` prend
     la densité du tissu de même vocation de son IRIS, net d'une part de 25 %
     pour voirie et espaces publics qui est une hypothèse (§3.4), non un ratio
-    national sourcé, et ignore l'objectif de densité propre à la zone (OAP) ;
+    national sourcé ; elle retire l'emprise de la voirie, pas son coût de
+    réalisation (VRD), et ignore l'objectif de densité propre à la zone (OAP) ;
     (b) le foncier d'activité *bâti*
     (CRD, §3.4) reste ancré sur les ventes DVF de terrains à bâtir alors que le
     foncier d'activité *non bâti* suit désormais la valeur du site ×

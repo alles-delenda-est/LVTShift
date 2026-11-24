@@ -331,18 +331,23 @@ built parcels, so their own label rarely reaches the 20-parcel pool and the
 zone-type or commune fallback would give them the density of the town's dense
 fabric (raw AU land came out dearer per m² than serviced U housing land in
 La Rochelle and Sète; review of PR #83). An AU parcel takes, in order: its
-label's own reference density where it has 20 built parcels; else the median
-realised density of the built parcels in U zones of the same stated use in its
-IRIS (20 at least: the fabric it will be planned against); else the median of
-the commune's same-use U label references. The whole parcel is development
-land (no garden surplus, no strip rule), net of the 25 % taken by roads and
-public space when it is developed (`SITE_VALUE["au_net_share"]` = 0.75; roads
+label's own reference density where it has 20 built parcels; else the median,
+over the built parcels in U zones of the same stated use in its IRIS (20 at
+least: the fabric it will be planned against), of their zones' reference
+densities; else the median of the commune's same-use U label references. It
+is then valued exactly as U land of that density would be, garden-surplus and
+strip rules included (so AU land never comes out dearer than U land of the
+same IRIS, use, density and size), net of the 25 % taken by roads and public
+space when it is developed (`SITE_VALUE["au_net_share"]` = 0.75; roads
 alone take 7–29 % of collective-housing blocks, Institut Paris Région,
 *Référentiel de densités et de formes urbaines*; a greenfield scheme builds all
 its roads, hence the top of that range: a labelled assumption, no French
-national figure for the share was found). Within one IRIS, AU housing land now
-sits below serviced U land (La Rochelle €1,400 against €2,912/m², Sète €1,235
-against €1,682), and AU business land at par with U business land. The building-plot price
+national figure for the share was found). On strict AU zones the discount
+stacks with `au_strict_factor`: 0.55 × 0.75 ≈ 0.41 of the U value. Within one
+IRIS, AU land now sits below vacant U land of the same use: housing land at
+0.15 (La Rochelle, a 2.1 ha site against small infill plots) to 0.82 (Sète) of
+its €/m², business land at about a third. Large sites take the garden-surplus
+rule in house-scale zones, U or AU alike. The building-plot price
 stays in `land_value_current` for comparison. Valuing vacant and built land of
 one zone alike is what a tax on land "as if vacant" requires; it also avoids the
 thin, atypical building-plot sales of dense cities (Lyon €735/m² against
@@ -1246,11 +1251,11 @@ Paris rings re-run). Same columns as above, payloads published since:
 | Annemasse | 36.4 | +105.9 | +13.8 | −34.5 | +12.8 | −19.3 / −14.3 |
 | Villeurbanne | 32.6 | +63.8 | +28.8 | −26.0 | +58.0 | +0.9 / −4.6 |
 | Roubaix | 39.5 | −23.0 | −28.4 | −41.9 | −22.6 | −32.7 / +49.1 |
-| Cahors | 38.7 | +6.6 | −16.4 | −39.3 | −38.2 | — / — |
+| Cahors | 38.5 | +7.3 | −15.9 | −38.9 | −37.8 | — / — |
 | Montreuil | 33.6 | +49.9 | +22.5 | −31.3 | +33.1 | −10.5 / +11.4 |
-| Figeac | 38.3 | −4.2 | −27.9 | −54.8 | −31.6 | — / — |
-| Sète | 33.9 | +38.6 | +0.6 | −37.6 | +34.5 | −22.0 / +5.0 |
-| La Rochelle | 36.0 | −0.9 | −15.5 | −36.7 | −0.3 | −8.3 / +0.4 |
+| Figeac | 38.0 | −3.5 | −27.4 | −54.4 | −31.1 | — / — |
+| Sète | 33.9 | +38.5 | +0.5 | −37.7 | +34.4 | −22.0 / +4.9 |
+| La Rochelle | 36.0 | −0.7 | −15.3 | −36.5 | −0.1 | −8.1 / +0.6 |
 | Paris | 23.2 | +116.7 | +35.7 | −14.7 | +67.3 | −25.4 / +6.3 |
 | Lyon | 28.3 | +75.4 | +22.8 | −15.9 | +11.7 | −17.1 / +9.2 |
 | Paris extra-muros (petite couronne) | 35.1 | +41.9 | +14.0 | −35.3 | +29.2 | −7.3 / +2.5 |
@@ -1258,7 +1263,7 @@ Paris rings re-run). Same columns as above, payloads published since:
 
 - **The correction runs both ways.** Vacant land's share of the levy falls
   where building-plot sales had priced it above built land (Grenoble
-  11.8 → 3.5 %, La Rochelle 13.1 → 9.5 %) and rises where they had priced it
+  11.8 → 3.5 %, La Rochelle 13.1 → 9.3 %) and rises where they had priced it
   below (Annemasse 7.0 → 13.3 %, Paris 1.1 → 1.7 %; Villeurbanne's plot price
   was €141/m² against €1,229 now).
 - **Robust:** large blocks pay less everywhere; houses pay more in 10 of 13
@@ -1606,8 +1611,9 @@ Ranked by how much they move published (category/quintile) results.
     not private gardens or estates. A plan that states nothing leaves a U zone
     as housing land. Two valuation caveats: (a) `AU` land takes the density of
     the same-use fabric of its IRIS, net of a 25 % road and public-space share
-    that is an assumption (§3.4), not a sourced national ratio, and ignores the
-    plan's own density target (OAP) for the zone; (b) *built* shed-type business
+    that is an assumption (§3.4), not a sourced national ratio; it deducts the
+    land roads take, not the cost of building them (VRD), and ignores the plan's
+    own density target (OAP) for the zone; (b) *built* shed-type business
     land (DRC, §3.4) remains anchored to DVF terrain-à-bâtir sales while *vacant*
     business land now uses site value × `activity_land_ratio`, opening a gap
     where DVF plot sales diverge from the residual (Villeurbanne, Grenoble).

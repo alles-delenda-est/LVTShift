@@ -1147,6 +1147,9 @@ def test_land_method_round_trips_through_the_sidecar():
         got = ew.load_land_method("zzl", str(d))
         assert got["concept"] == "site" and got["density_elasticity"] == 0.3
         assert set(got) == {"concept", *config.SITE_VALUE}
+        old_run = {k: v for k, v in site.items() if k != "au_net_share"}   # before PR #84
+        meta.write_text(json.dumps({"land_value": old_run}))
+        assert ew.load_land_method("zzl", str(d))["au_net_share"] == 1.0
         import dataclasses
         cur = rp.land_method(dataclasses.replace(config.COMMUNES["zzl"], land_concept="current"))
         meta.write_text(json.dumps({"land_value": cur}))

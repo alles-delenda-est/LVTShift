@@ -1188,6 +1188,11 @@ def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
     return {"rent_price_elasticity": float(e), "groups_kept": g}
 
 
+# SITE_VALUE keys added after runs were published, with the value that
+# reproduces those runs: an old sidecar without the key still loads.
+SITE_VALUE_LEGACY = {"au_net_share": 1.0}
+
+
 def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     """How the run valued built land (households sidecar meta): site value with
     its parameters, or the residual at the existing density ("current"; also
@@ -1209,7 +1214,9 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
         raise ValueError(f"{path}: unknown land_value.density_rule {rule!r}")
     out["density_rule"] = rule
     for k in sorted(set(SITE_VALUE) - {"density_rule"}):
-        v = land.get(k)
+        # a key added after the run was made: the value that reproduces what
+        # that run did (au_net_share: no road deduction before PR #84)
+        v = land.get(k, SITE_VALUE_LEGACY.get(k))
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")
         out[k] = float(v)
