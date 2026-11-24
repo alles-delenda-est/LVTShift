@@ -18,6 +18,7 @@ import re
 import time
 import urllib.error
 import urllib.parse
+import http.client
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -82,7 +83,8 @@ def _get(url: str, timeout: int = 180, retries: int = 5) -> bytes:
         except urllib.error.HTTPError as e:
             if e.code not in _RETRY_HTTP or attempt == retries:
                 raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                http.client.IncompleteRead):      # a transfer cut off mid-body
             if attempt == retries:
                 raise
         wait = 2 ** attempt * 5
@@ -110,6 +112,8 @@ def _cacheable(body: bytes) -> bool:
     if not body:
         return False
     head = body[:512].lstrip().lower()
+    if head.startswith(b"# help"):              # a server metrics page, not data
+        return False
     if head.startswith(b"<") and (b"exception" in body[:4096].lower()
                                   or head.startswith((b"<!doctype html", b"<html"))):
         return False
@@ -277,13 +281,31 @@ def _wfs_features(typename: str, bbox_2154, page: int = 5000,
         # that need a 2nd page (batiment, keyed) only paginate from page 2.
         if start:
             params["STARTINDEX"] = start
-        batch = json.loads(_get(f"{SRC['bdtopo_wfs']}?{urllib.parse.urlencode(params)}")
-                           ).get("features", [])
+        batch = _wfs_json(f"{SRC['bdtopo_wfs']}?{urllib.parse.urlencode(params)}"
+                          ).get("features", [])
         feats.extend(batch)
         if len(batch) < page:
             break
         start += page
     return feats
+
+
+def _wfs_json(url: str, attempts: int = 4) -> dict:
+    """A WFS GetFeature response as JSON. The Géoplateforme now and then
+    answers 200 with something else (a server metrics page was seen,
+    2026-11-24): such a body is evicted from the cache and fetched again after
+    a pause; after `attempts` tries the error is raised."""
+    for k in range(attempts):
+        body = _get(url)
+        try:
+            return json.loads(body)
+        except ValueError:
+            _evict_cache(url)
+            if k == attempts - 1:
+                raise
+            print(f"  [non-JSON WFS reply, retry {k + 1}/{attempts - 1}] {url[:80]}")
+            time.sleep(5 * 2 ** k)
+    raise AssertionError("unreachable")
 
 
 def fetch_buildings(cfg, parcels: pd.DataFrame) -> pd.DataFrame:

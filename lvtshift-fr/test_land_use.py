@@ -346,3 +346,15 @@ def test_band_commune_factor_sums_clipped_iris_totals_and_tolerates_nan_flags():
     land = export_web._cost_shocked_land(df, 0.5)
     # I1 → 50, I2 → clipped at 0: commune factor (50 + 0) / 200 = 0.25
     assert np.allclose(land, [50.0, 0.0, 10.0, 60.0])
+
+
+def test_wfs_json_evicts_and_retries_a_non_json_reply(monkeypatch, tmp_path):
+    import ingest
+    replies = iter([b"# HELP jmx_exporter_build_info metrics", b'{"features": []}'])
+    evicted = []
+    monkeypatch.setattr(ingest, "_get", lambda url: next(replies))
+    monkeypatch.setattr(ingest, "_evict_cache", lambda url: evicted.append(url))
+    monkeypatch.setattr(ingest.time, "sleep", lambda s: None)
+    assert ingest._wfs_json("https://example.org/wfs") == {"features": []}
+    assert evicted == ["https://example.org/wfs"]
+    assert not ingest._cacheable(b"# HELP jmx_exporter_build_info A metric")
