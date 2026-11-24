@@ -7,11 +7,12 @@
  * The two variants are the site's two estimates of what businesses pay in
  * today's taxe foncière; readers met the labels with no definition on the
  * home page. Tap toggles the note because iOS Safari does not focus a button
- * on tap, so a hover/focus-only tooltip would never open on phones.
+ * on tap, so a hover/focus-only tooltip would never open on phones. When
+ * open, the note shifts left as needed to stay inside the viewport.
  */
 
 import Link from "next/link";
-import { ReactNode, useId, useState } from "react";
+import { ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
 
 export type VariantKind = "central" | "local";
 
@@ -43,19 +44,41 @@ export default function VariantTerm({
   tone?: "light" | "dark";
 }) {
   const [open, setOpen] = useState(false);
+  const [shift, setShift] = useState(0);
+  const boxRef = useRef<HTMLSpanElement>(null);
   const id = useId();
+  // Keep the note on screen: measure once it is open, nudge it left if it
+  // would run past the right edge (8 px margin).
+  useLayoutEffect(() => {
+    if (!open || !boxRef.current) {
+      setShift(0);
+      return;
+    }
+    const box = boxRef.current.getBoundingClientRect();
+    const overflow = box.right - shift - (document.documentElement.clientWidth - 8);
+    setShift(overflow > 0 ? Math.min(overflow, box.left - shift - 8) : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   const note = NOTES[kind];
   const underline =
     tone === "dark" ? "decoration-creme/60 focus-visible:outline-creme" : "decoration-gris focus-visible:outline-marine";
   return (
-    <span className="group relative inline-block" onMouseLeave={() => setOpen(false)}>
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={(e) => {
+        // stay open while focus moves to the "En savoir plus" link inside
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+      onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+    >
       <button
         type="button"
         aria-expanded={open}
         aria-describedby={id}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-        onBlur={() => setOpen(false)}
+        onClick={() => setOpen(true)}
         className={`cursor-help underline decoration-dotted underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 ${underline}`}
       >
         {children}
@@ -64,7 +87,9 @@ export default function VariantTerm({
       <span
         id={id}
         role="tooltip"
-        className={`${open ? "visible" : "invisible"} group-hover:visible group-focus-within:visible absolute left-0 top-full z-30 block w-80 max-w-[85vw] pt-2`}
+        ref={boxRef}
+        style={shift ? { transform: `translateX(-${shift}px)` } : undefined}
+        className={`${open ? "visible" : "invisible"} absolute left-0 top-full z-30 block w-80 max-w-[85vw] pt-2`}
       >
         <span className="block space-y-1.5 border border-lisere bg-white p-3 text-left text-xs font-normal normal-case tracking-normal leading-snug text-encre shadow-lg">
           <strong className="block font-semibold text-marine">{note.title}</strong>
@@ -74,7 +99,6 @@ export default function VariantTerm({
           <Link
             href="/methodologie#taxe-actuelle"
             className="block underline underline-offset-2 text-marine"
-            onMouseDown={(e) => e.preventDefault()}
           >
             En savoir plus
           </Link>
