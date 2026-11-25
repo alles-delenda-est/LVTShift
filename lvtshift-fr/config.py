@@ -638,7 +638,7 @@ SITE_VALUE = {
     # Plot areas above this quantile of the commune's pooled parcels are capped
     # (parks of horizontal copropriétés, estates with farmland attached).
     "plot_cap_quantile": 0.99,
-    # Surplus land: on a parcel built below its zone's reference density, plot
+    # Surplus land: on a *built* parcel below its zone's reference density, plot
     # area beyond this multiple of the zone's median plot (it could be split
     # into that many typical plots) counts at surplus_plot_weight. Vacant plot
     # prices rise far less than in proportion to size (EPTB: elasticity 0.11
@@ -659,13 +659,21 @@ SITE_VALUE = {
     # carry a building on its own: it counts at surplus_plot_weight, as garden
     # ground does.
     "vacant_sliver_fraction": 0.25,
-    # A building-less parcel in a to-be-urbanised (AU) zone is a greenfield
-    # site: part of it goes to roads, public space and facilities when it is
-    # developed. Share of the gross area that stays building land. In
+    # A large building-less site is development land, not a garden: when it is
+    # developed, part of it goes to roads, public space and facilities. Share
+    # of the gross area that stays building land, applied to the whole of a
+    # site in a to-be-urbanised (AU) zone (greenfield, no frontage) and, in
+    # house-scale U zones (reference density below surplus_max_ref_far), to the
+    # area beyond surplus_plot_multiple × the zone's median built plot (the
+    # first plots front an existing street; the rest needs new access roads).
+    # In denser U zones a large plot carries one large building and keeps its
+    # full area. In
     # collective-housing blocks roads alone take 7–29 % (Institut Paris Région,
-    # Référentiel de densités et de formes urbaines); a greenfield scheme builds
-    # all of its roads, so the upper part of that range: 25 % deducted.
-    "au_net_share": 0.75,
+    # Référentiel de densités et de formes urbaines); a scheme that builds all
+    # of its roads sits at the top of that range: 25 % deducted. A labelled
+    # assumption: no French national ratio was found. (Named au_net_share in
+    # PR #84, when it applied to AU land only.)
+    "development_net_share": 0.75,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

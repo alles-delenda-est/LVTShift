@@ -95,8 +95,8 @@ describe("quintileGaps on the published data", () => {
   });
 
   it("orders the widest advantage for the poorest first", () => {
-    expect(gaps[0].commune_key).toBe("roubaix"); // −32,7 % vs +49,1 %
-    expect(gaps[0]).toMatchObject({ poorest: -32.7, richest: 49.1 });
+    expect(gaps[0].commune_key).toBe("roubaix"); // −32,7 % vs +49,0 %
+    expect(gaps[0]).toMatchObject({ poorest: -32.7, richest: 49.0 });
     expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +0,9 % vs −4,6 %: the poorest fifth does worse
     const diffs = gaps.map((g) => g.poorest - g.richest);
     expect(diffs).toEqual([...diffs].sort((a, b) => a - b));
@@ -146,12 +146,13 @@ describe("bothPayLessNote", () => {
   const gaps = quintileGaps(communes);
   it("names the territories where both groups pay less and who pays more in total", () => {
     const note = bothPayLessNote(communes, gaps)!;
-    // November 2026: Grenoble, Annemasse and the Lyon ring
-    expect(note).toMatch(/^À Grenoble, à Annemasse et dans la couronne lyonnaise, les ménages/);
+    // November 2026 (PR #85): Grenoble, La Rochelle, Annemasse and the Lyon ring
+    expect(note).toMatch(/^À Grenoble, à La Rochelle, à Annemasse et dans la couronne lyonnaise, les ménages/);
     expect(note).toContain("×5 à Grenoble");
+    expect(note).toContain("×20 à La Rochelle");
     expect(note).toContain("dans la couronne lyonnaise");
-    // Commercial pays LESS in total in all 3 territories, even where its median rises
-    expect(note).not.toContain("les commerces");
+    // Commercial pays more in total in La Rochelle only (+0,6 %), though its median falls
+    expect(note).toContain("les commerces");
     expect(note).toContain("les bailleurs sociaux");
     expect(note).toContain("les autres bâtiments");
     expect(note).toContain("au sein même des ménages, sur les maisons individuelles");

@@ -1190,7 +1190,7 @@ def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
 
 # SITE_VALUE keys added after runs were published, with the value that
 # reproduces those runs: an old sidecar without the key still loads.
-SITE_VALUE_LEGACY = {"au_net_share": 1.0}
+SITE_VALUE_LEGACY = {"development_net_share": 1.0}
 
 
 def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
@@ -1215,8 +1215,10 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     out["density_rule"] = rule
     for k in sorted(set(SITE_VALUE) - {"density_rule"}):
         # a key added after the run was made: the value that reproduces what
-        # that run did (au_net_share: no road deduction before PR #84)
-        v = land.get(k, SITE_VALUE_LEGACY.get(k))
+        # that run did (development_net_share: au_net_share in PR #84, no road
+        # deduction before it)
+        v = land.get(k, land.get("au_net_share", SITE_VALUE_LEGACY.get(k))
+                     if k == "development_net_share" else SITE_VALUE_LEGACY.get(k))
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")
         out[k] = float(v)
