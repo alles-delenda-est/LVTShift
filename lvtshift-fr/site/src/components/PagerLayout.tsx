@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 // Shared readable-article wrapper for the campaign pagers. Renders the page
@@ -28,9 +29,9 @@ export default function PagerLayout({ eyebrow, title, lede, children }: PagerLay
         <p className="text-sm text-gris">
           Les chiffres cités sont des imputations modélisées à partir de données
           ouvertes, agrégées par commune et catégorie de bien.{" "}
-          <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
+          <Link href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
             Explorer les résultats commune par commune →
-          </a>
+          </Link>
         </p>
       </footer>
     </article>
