@@ -1428,8 +1428,8 @@ Mêmes colonnes que ci-dessus, données publiées depuis :
 | La Rochelle | 36,4 | −2,2 | −16,6 | −37,2 | −1,3 | −9,3 / −0,6 |
 | Paris | 23,2 | +117,0 | +35,7 | −14,7 | +67,3 | −25,3 / +6,3 |
 | Lyon | 28,3 | +74,3 | +22,7 | −16,0 | +11,8 | −17,1 / +9,1 |
-| Paris extra-muros (petite couronne) | 35,1 | +41,9 | +13,9 | −35,3 | +29,2 | −7,3 / +2,5 |
-| Lyon extra-muros (Métropole hors Lyon) | 38,8 | +44,0 | +2,3 | −39,3 | −27,1 | −4,5 / −0,8 |
+| Paris extra-muros (petite couronne) | 35,1 | +40,2 | +12,8 | −35,5 | +28,4 | −7,9 / +2,1 |
+| Lyon extra-muros (Métropole hors Lyon) | 38,3 | +39,9 | 0,0 | −39,8 | −27,8 | −5,5 / −1,1 |
 
 - **La correction joue dans les deux sens.** La part du terrain nu dans le
   produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
@@ -1443,11 +1443,13 @@ Mêmes colonnes que ci-dessus, données publiées depuis :
   +0,2 % (fourchette −1,0 à +1,0 %) contre −4,6 % pour le plus aisé.
 - **Ce qui bouge le plus :** le cinquième le plus aisé de Grenoble (−9,0 →
   −0,4 %) et de La Rochelle (−3,5 → −0,6 %) ; la PR #85 fait bouger les
-  maisons des villes pavillonnaires (Cahors +7,3 → +5,4 %, Figeac −3,5 →
-  −5,6 %, La Rochelle −0,7 → −2,2 %), les grands terrains nus prenant une plus
-  grande part de l'impôt ; les petits immeubles de 2 à 4
-  logements paient désormais davantage dans la couronne lyonnaise (−1,0 →
-  +2,3 %) et donc moins dans 4 territoires, et non 5.
+  maisons des villes pavillonnaires et de la couronne lyonnaise (Cahors
+  +7,3 → +5,4 %, Figeac −3,5 → −5,6 %, La Rochelle −0,7 → −2,2 %, couronne
+  lyonnaise +44,0 → +39,9 %), les grands terrains nus prenant une plus grande
+  part de l'impôt ; les petits immeubles de 2 à 4 logements de la couronne
+  lyonnaise reviennent à l'équilibre (0,0 % en cas central, −1,1 % en variante
+  locale), soit strictement moins dans 4 territoires en cas central (5 en
+  variante locale).
 
 **Constat de politique publique.** Dans le couloir chimique et industriel
 lyonnais, la LVT déplace l'impôt de l'industrie vers les ménages dans le cas

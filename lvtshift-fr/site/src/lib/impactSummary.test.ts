@@ -20,7 +20,7 @@ describe("impactSummary on the published data", () => {
   // plots as subdivision sites beyond 5 000 m², PR #85)
   it("matches the central-case figures in the November 2026 payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
-    expect(s.smallBuildingsPayLess).toBe(4); // the Lyon ring's 2–4 now +2.1 %
+    expect(s.smallBuildingsPayLess).toBe(4); // Lyon ring's 2–4 now 0.0 % (central)
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
     expect(s.poorestPayLess).toBe(10); // Villeurbanne: +0.2 %
@@ -34,7 +34,7 @@ describe("impactSummary on the published data", () => {
   it("matches the local-variant figures in the November 2026 payloads", () => {
     expect(s.alt).toEqual({
       housesPayMore: 11, // La Rochelle's houses +3.2 % in the local variant
-      smallBuildingsPayLess: 4,
+      smallBuildingsPayLess: 5, // Lyon ring's 2–4 −1.1 % in the local variant
       blocksPayLess: 13,
       poorestAnalysable: 11,
       poorestPayLess: 8,

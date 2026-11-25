@@ -1279,8 +1279,8 @@ Same columns as above, payloads published since:
 | La Rochelle | 36.4 | −2.2 | −16.6 | −37.2 | −1.3 | −9.3 / −0.6 |
 | Paris | 23.2 | +117.0 | +35.7 | −14.7 | +67.3 | −25.3 / +6.3 |
 | Lyon | 28.3 | +74.3 | +22.7 | −16.0 | +11.8 | −17.1 / +9.1 |
-| Paris extra-muros (petite couronne) | 35.1 | +41.9 | +13.9 | −35.3 | +29.2 | −7.3 / +2.5 |
-| Lyon extra-muros (Métropole hors Lyon) | 38.8 | +44.0 | +2.3 | −39.3 | −27.1 | −4.5 / −0.8 |
+| Paris extra-muros (petite couronne) | 35.1 | +40.2 | +12.8 | −35.5 | +28.4 | −7.9 / +2.1 |
+| Lyon extra-muros (Métropole hors Lyon) | 38.3 | +39.9 | 0.0 | −39.8 | −27.8 | −5.5 / −1.1 |
 
 - **The correction runs both ways.** Vacant land's share of the levy falls
   where building-plot sales had priced it above built land (Grenoble
@@ -1292,10 +1292,12 @@ Same columns as above, payloads published since:
   with income groups. Villeurbanne remains the exception, narrower: the
   poorest fifth +0.2 % (band −1.0 to +1.0 %) against −4.6 % for the richest.
 - **Moved most:** Grenoble's richest fifth (−9.0 → −0.4 %) and La Rochelle's
-  (−3.5 → −0.6 %); PR #85 moved houses in the house-scale towns (Cahors
-  +7.3 → +5.4 %, Figeac −3.5 → −5.6 %, La Rochelle −0.7 → −2.2 %) as large
-  vacant sites take more of the levy; small 2–4-dwelling buildings now pay more in the Lyon ring
-  (−1.0 → +2.3 %), so they pay less in 4 territories, not 5.
+  (−3.5 → −0.6 %); PR #85 moved houses in the house-scale towns and the Lyon
+  ring (Cahors +7.3 → +5.4 %, Figeac −3.5 → −5.6 %, La Rochelle
+  −0.7 → −2.2 %, Lyon ring +44.0 → +39.9 %) as large vacant sites take more of
+  the levy; small 2–4-dwelling buildings in the Lyon ring return to break-even
+  (0.0 % central, −1.1 % local variant), so they pay strictly less in 4
+  territories under the central case (5 under the local variant).
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (industrial
