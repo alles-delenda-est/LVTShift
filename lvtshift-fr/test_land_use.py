@@ -323,16 +323,59 @@ def test_vacant_land_takes_its_own_iris_rate_not_the_communes():
     assert abs(out.loc["W", "land_value"] - 1_200_000.0) < 1e-6      # commune's rate
 
 
-def test_vacant_site_value_applies_surplus_cap_and_min_zone_fallback():
-    p = _frame()
-    p["floor_area_m2"] = p["floor_area_m2"].where(p["floor_area_m2"] == 0, 250.0)   # FAR 0.5: house scale
-    p.loc[p["idpar"].eq("V"), "parcel_area_m2"] = 3000.0          # 6 × the typical plot
-    prm = {"min_zone_parcels": 2, "plot_cap_quantile": 1.0}
-    out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
-    rate = out.loc["B2", "land_value"] / 500.0
-    # surplus beyond 2 × 500 m² counts at 0.25: 1000 + 0.25 × 2000 = 1500 m²
-    assert abs(out.loc["V", "land_value"] - rate * 1500.0) < 1e-6
+def test_large_plot_rule_garden_band_then_subdivision_site():
+    """PR #85: in a house-scale zone extra area counts at the garden weight up
+    to subdivision_threshold_m2, then at development_net_share; in a dense zone
+    the whole plot counts."""
+    for far in (0.5, 2.0):                                         # house scale, dense
+        p = _frame()
+        p["floor_area_m2"] = p["floor_area_m2"].where(p["floor_area_m2"] == 0, 500.0 * far)
+        prm = {"min_zone_parcels": 2, "plot_cap_quantile": 1.0,
+               "development_net_share": 0.75, "subdivision_threshold_m2": 5000.0}
+        for size, house in ((1000.0, 1000.0), (3000.0, 1500.0), (5000.0, 2000.0),
+                            (20_000.0, 2000.0 + 0.75 * 15_000)):
+            p.loc[p["idpar"].eq("V"), "parcel_area_m2"] = size
+            out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
+            b = out.loc["B2"]
+            rate = b["land_value"] / (500.0 if far < 1.0 else b["parcel_area_m2"])
+            want = house if far < 1.0 else size
+            assert abs(out.loc["V", "land_value"] - rate * want) < 1e-6, (far, size)
 
+
+def test_building_on_a_plot_never_changes_its_land_value():
+    """Built and vacant plots of one IRIS, zone and size get the same land (the
+    review of PR #85 found a vacant 3 000 m² plot worth 1.67 × a built one)."""
+    for size in (3000.0, 8000.0, 20_000.0):
+        rows = _fabric("H", "I1", "UC", HAB, [0.5] * 5)
+        big = _fabric("BIG", "I1", "UC", HAB, [0.0001], area=size)
+        rows += big + [_vacant("V", "I1", "U", "UC", HAB, size)]
+        prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0}
+        out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
+        assert out.loc["BIG0", "lv_flag"] == "built_site_value"
+        assert abs(out.loc["V", "land_value"] / out.loc["BIG0", "land_value"] - 1.0) < 1e-9, size
+
+
+def test_above_the_built_plot_cap_vacant_land_keeps_gaining():
+    """Documented exception (review of PR #85): built plots are capped at the
+    commune's plot_cap_quantile plot, vacant ones are not."""
+    rows = _fabric("H", "I1", "UC", HAB, [0.5] * 60)
+    rows += _fabric("BIG", "I1", "UC", HAB, [0.0001], area=20_000.0)
+    rows += [_vacant("V", "I1", "U", "UC", HAB, 20_000.0)]
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 0.99}
+    out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
+    assert out.loc["V", "land_value"] > 2 * out.loc["BIG0", "land_value"]
+
+
+def test_house_scale_area_is_continuous_and_legacy_rule_is_the_garden_weight():
+    plot = pd.Series([999.0, 1000.0, 1001.0, 4999.0, 5000.0, 5001.0, 50_000.0])
+    typ = pd.Series(500.0, index=plot.index)
+    eff = estimate._house_scale_area(plot, typ, 2.0, 0.25, 0.75, 5000.0)
+    assert (eff.diff().dropna() > 0).all()                         # rises with size
+    assert abs(eff[2] - eff[1] - 0.25) < 1e-9 and abs(eff[5] - eff[4] - 0.75) < 1e-9
+    old = estimate._house_scale_area(plot, typ, 2.0, 0.25, 0.75, None)
+    assert abs(old.iloc[-1] - (1000 + 0.25 * 49_000)) < 1e-9
+    with pytest.raises(ValueError):
+        estimate._large_plot_params({"development_net_share": 0.75, "subdivision_threshold_m2": 0})
 
 def test_au_and_business_factors_multiply(monkeypatch):
     import run_commune
@@ -418,7 +461,7 @@ def _au_frame():
 
 
 def test_au_land_takes_the_density_of_same_use_urban_zones_net_of_roads():
-    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "au_net_share": 0.75}
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "development_net_share": 0.75}
     out = estimate.vacant_site_value(estimate.site_value_land(_au_frame(), prm), prm).set_index("idpar")
     assert out.loc["AUh", "site_density"] == 2.0       # the housing zone's, not the commune's
     assert out.loc["AUx", "site_density"] == 0.5       # the business zone's
@@ -455,7 +498,7 @@ def test_au_label_with_enough_built_parcels_keeps_its_own_density():
     out = estimate.vacant_site_value(estimate.site_value_land(p, prm), prm).set_index("idpar")
     assert out.loc["AUh", "site_density"] == 1.0
     with pytest.raises(ValueError):
-        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "au_net_share": 0.0})
+        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "development_net_share": 0.0})
 
 
 def _fabric(prefix, iris, label, long_, fars, area=500.0):
@@ -503,20 +546,26 @@ def test_au_density_steps_use_reference_densities_on_one_scale():
 
 
 def test_au_land_is_valued_as_u_land_of_the_same_density_net_of_roads():
-    """Same IRIS, use, density and size: AU = U × au_net_share, surplus rule
+    """Same IRIS, use, density and size: AU = U × development_net_share (roads once), garden and strip rules
     included (fresh-context review of PR #84: a 2 ha AU site must not come out
     dearer than a 2 ha U site)."""
     rows = _fabric("H", "I1", "UC", HAB, [0.5] * 4)
     rows += [_vacant("U2ha", "I1", "U", "UC", HAB, 20_000.0),
              _vacant("AU2ha", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 20_000.0)]
-    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "au_net_share": 0.75}
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "development_net_share": 0.75}
     out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
     assert out.loc["AU2ha", "site_density"] == out.loc["U2ha", "site_density"] == 0.5
-    assert abs(out.loc["AU2ha", "land_value"] - 0.75 * out.loc["U2ha", "land_value"]) < 1e-6
+    # AU = U × 0.75, roads deducted once: the U subdivision band beyond
+    # 5 000 m² is already net of them. U: 1000 + 0.25 × 4000 + 0.75 × 15 000;
+    # AU: 0.75 × (1000 + 0.25 × 4000) + 0.75 × 15 000 (review of PR #85)
+    ratio = out.loc["AU2ha", "land_value"] / out.loc["U2ha", "land_value"]
+    assert abs(ratio - 12_750 / 13_250) < 1e-9
     # an AU strip is a strip: same sliver rule as in U
-    rows.append(_vacant("AUstrip", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 50.0))
+    rows += [_vacant("AUstrip", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 50.0),
+             _vacant("Ustrip", "I1", "U", "UC", HAB, 50.0)]
     out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
     assert bool(out.loc["AUstrip", "vacant_sliver"])
+    assert abs(out.loc["AUstrip", "land_value"] - 0.75 * out.loc["Ustrip", "land_value"]) < 1e-6
 
 
 def test_au_density_ignores_parcels_without_iris_and_needs_no_optional_columns():
@@ -530,4 +579,4 @@ def test_au_density_ignores_parcels_without_iris_and_needs_no_optional_columns()
     bare = p.drop(columns=["zone_libelong"])
     estimate.vacant_site_value(estimate.site_value_land(bare, prm), prm)   # runs
     with pytest.raises(ValueError):
-        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "au_net_share": 1.5})
+        estimate.vacant_site_value(estimate.site_value_land(p, prm), {**prm, "development_net_share": 1.5})

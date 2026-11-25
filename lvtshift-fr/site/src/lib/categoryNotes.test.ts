@@ -26,7 +26,7 @@ describe("socialTotalSentence", () => {
 describe("categoryNotes on published payloads", () => {
   it("Paris: social housing total rises, so the note says « hausse »", () => {
     const notes = categoryNotes(publishedCategories(loadCommune("paris").by_category));
-    expect(notes.social?.totalSentence).toMatch(/en hausse de 2,7/);
+    expect(notes.social?.totalSentence).toMatch(/en hausse de 2,6/);
     expect(notes.industrial?.median).toBe(`−87,5${NBSP}%`);
     expect(notes.collective).not.toBeNull();
   });

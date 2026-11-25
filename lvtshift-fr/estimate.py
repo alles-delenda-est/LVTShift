@@ -585,7 +585,9 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     FAR below surplus_max_ref_far), plot area beyond surplus_plot_multiple ×
     the zone's median plot counts at surplus_plot_weight: a large plot is not
     as many building plots (vacant house plots sell for far less than
-    proportionally more as they grow). In a denser zone the whole plot counts.
+    proportionally more as they grow); beyond subdivision_threshold_m2 it is
+    a subdivision site and counts at development_net_share
+    (_house_scale_area). In a denser zone the whole plot counts.
     In agricultural or natural zones (A, N), where the rest of a plot cannot
     be built on, only a yard of DRC_CURTILAGE_FACTOR × floor area counts, as
     for shed-type parcels. The building keeps its
@@ -652,6 +654,56 @@ def site_value_land(p: pd.DataFrame, params: dict | None = None) -> pd.DataFrame
     return out
 
 
+def _house_scale_area(plot: pd.Series, typical: pd.Series, k_sur: float, w_sur: float,
+                      net: float, threshold: float | None) -> pd.Series:
+    """Effective area of a plot in a house-scale zone, built or vacant (PR #85):
+    in full up to k_sur × the zone's median plot; then at w_sur (garden ground,
+    one house plot) up to the subdivision threshold; then at net (a developer's
+    subdivision site, net of its access roads). Continuous in plot area.
+    threshold None: the garden weight throughout (the rule before PR #85).
+
+    Parameters
+    ----------
+    plot : plot areas, m²
+    typical : the zone's median built plot for each row, m²
+    k_sur, w_sur : surplus_plot_multiple, surplus_plot_weight
+    net : development_net_share
+    threshold : subdivision_threshold_m2, or None
+
+    Returns
+    -------
+    pd.Series of effective areas, m².
+    """
+    front = np.minimum(plot, k_sur * typical)
+    if threshold is None:
+        return front + w_sur * (plot - front)
+    top = np.maximum(float(threshold), k_sur * typical)
+    garden = (np.minimum(plot, top) - front).clip(lower=0.0)
+    return front + w_sur * garden + net * (plot - front - garden)
+
+
+def _subdivision_band(plot: pd.Series, typical: pd.Series, k_sur: float,
+                      threshold: float | None) -> pd.Series:
+    """Gross area of a house-scale plot beyond the subdivision threshold (the
+    band _house_scale_area counts net of roads), m²; 0 when threshold is None."""
+    if threshold is None:
+        return plot * 0.0
+    return (plot - np.maximum(float(threshold), k_sur * typical)).clip(lower=0.0)
+
+
+def _large_plot_params(prm: dict) -> tuple[float, float | None]:
+    """development_net_share and subdivision_threshold_m2, validated."""
+    net = float(prm["development_net_share"])
+    if not 0.0 < net <= 1.0:
+        raise ValueError(f"development_net_share must be in (0, 1], got {net}")
+    t = prm.get("subdivision_threshold_m2")
+    if t is not None:
+        t = float(t)
+        if not t > 0.0:
+            raise ValueError(f"subdivision_threshold_m2 must be > 0 or None, got {t}")
+    return net, t
+
+
 def _site_pool(out: pd.DataFrame, pool: pd.Series, prm: dict) -> dict:
     """Weights of the pooled built parcels for the site-value sharing
     (site_value_land), and what vacant_site_value needs to weigh building-less
@@ -686,8 +738,9 @@ def _site_pool(out: pd.DataFrame, pool: pd.Series, prm: dict) -> dict:
     else:
         density = np.maximum(far, ref)
         house_scale = (far < ref) & (ref < far_sur)
-    surplus = (plot - k_sur * typical_plot).clip(lower=0.0).where(house_scale, 0.0)
-    weight = (plot - (1.0 - w_sur) * surplus) * density ** theta
+    net, threshold = _large_plot_params(prm)
+    eff = _house_scale_area(plot, typical_plot, k_sur, w_sur, net, threshold)
+    weight = plot.where(~house_scale, eff) * density ** theta
     group = (out.loc[pool, "iris"].astype("object").fillna("_commune")
              if "iris" in out.columns else pd.Series("_commune", index=far.index))
     return {"density": density, "weight": weight, "group": group, "far": far,
@@ -801,13 +854,20 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
 
         effective plot area × density ** density_elasticity × vacant_price_factor,
 
-    with the density and surplus rule of site_value_land read for its PLU zone
-    label (then zone type, then commune). The built plots' area cap does not
-    apply: it is there for estates and copropriété parks attached to a
-    building, and a large building-less site is development land. A plot smaller than
-    vacant_sliver_fraction × its zone's median built plot counts at
-    surplus_plot_weight: a strip or leftover corner cannot carry a building on
-    its own. vacant_price_factor (run_commune.classify_and_price_land) is the
+    with the density of site_value_land read for its PLU zone label (then zone
+    type, then commune; AU zones: see _au_density). The built plots' area cap
+    (estates and copropriété parks attached to a building) does not apply: a
+    large building-less site is development land. It takes the effective area
+    of a built plot of the same zone
+    (_house_scale_area in house-scale zones: garden weight from
+    surplus_plot_multiple × the zone's median plot up to
+    subdivision_threshold_m2, development_net_share beyond; the whole plot in
+    denser zones), so building on a plot does not change its land value below
+    the plot cap that built plots alone carry. An AU site counts as U land of
+    its density and size × development_net_share, roads deducted once.
+    A plot smaller than vacant_sliver_fraction × its zone's median built plot
+    counts at surplus_plot_weight: a strip or leftover corner cannot carry a
+    building on its own. vacant_price_factor (run_commune.classify_and_price_land) is the
     business-land ratio for business zones and sites and the AU strict
     discount; missing means 1.
 
@@ -827,8 +887,8 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     q_ref = float(prm["ref_density_quantile"])
     min_n = int(prm["min_zone_parcels"])
     k_sur = float(prm["surplus_plot_multiple"])
-    w_sur = float(prm["surplus_plot_weight"])
     far_sur = float(prm["surplus_max_ref_far"])
+    w_sur = float(prm["surplus_plot_weight"])
     frac = float(prm["vacant_sliver_fraction"])
     if not 0.0 <= frac <= 1.0:
         raise ValueError(f"vacant_sliver_fraction must be in [0, 1], got {frac}")
@@ -857,39 +917,43 @@ def vacant_site_value(p: pd.DataFrame, params: dict | None = None) -> pd.DataFra
     else:
         density = pd.Series(float(sp["far"].quantile(q_ref)), index=out.index[vacant])
         typical = pd.Series(float(sp["plot"].median()), index=out.index[vacant])
+    net, threshold = _large_plot_params(prm)
     a = area[vacant]
     plot = a       # no plot cap: a large vacant site is development land
-    house_scale = density < far_sur
-    surplus = (plot - k_sur * typical).clip(lower=0.0).where(house_scale, 0.0)
-    eff = plot - (1.0 - w_sur) * surplus
     sliver = a < frac * typical
-    eff = eff.where(~sliver, plot * w_sur)
 
     # To-be-urbanised zones (AU…): greenfield development sites. Few built
     # parcels stand in them, so their zone label rarely has min_n pooled
     # parcels and the lookup above fell back to the zone type or the commune,
-    # i.e. to the dense urban fabric: raw AU land came out dearer per m² than
-    # serviced urban housing land (review of PR #83, La Rochelle, Sète). An AU
-    # parcel takes the density _au_density gives (its label's, else its IRIS's
-    # same-use U fabric, else the commune's same-use U labels) and is then
-    # valued exactly as U land of that density would be (same surplus and
-    # sliver rules), net of the share roads and public space take when it is
-    # developed (au_net_share). One rule on both sides of the U/AU boundary, so
-    # AU land never comes out dearer than U land of the same IRIS, use, density
-    # and size (fresh-context review, PR #84).
+    # i.e. to the dense urban fabric (review of PR #83, La Rochelle, Sète). An
+    # AU parcel takes the density _au_density gives (its label's, else its
+    # IRIS's same-use U fabric, else the commune's same-use U labels).
     zt = (out.loc[vacant, "zone_typ"].astype("object").fillna("")
           if "zone_typ" in out.columns else pd.Series("", index=a.index))
     au = zt.astype(str).str.upper().str.startswith("AU")
     if au.any():
-        net = float(prm["au_net_share"])
-        if not 0.0 < net <= 1.0:
-            raise ValueError(f"au_net_share must be in (0, 1], got {net}")
         density.loc[au] = _au_density(out, pooled, au, sp, q_ref, min_n)
-        house_scale = density < far_sur
-        surplus = (plot - k_sur * typical).clip(lower=0.0).where(house_scale, 0.0)
-        eff = plot - (1.0 - w_sur) * surplus
-        eff = eff.where(~sliver, plot * w_sur)
-        eff = eff.mask(au, eff * net)
+
+    # Effective area: the rule of built plots of the same zone (_site_pool),
+    # so building on a plot never changes its land value. House-scale zones:
+    # in full up to surplus_plot_multiple × the zone's median plot, garden
+    # weight up to subdivision_threshold_m2, development_net_share beyond
+    # (_house_scale_area; until PR #85 the garden weight went on for ever, so
+    # a 2 ha site was worth about a third of the same land split into plots).
+    # Denser zones: a large plot carries one large building from the street it
+    # fronts and keeps its whole area. A strip (sliver) counts at
+    # surplus_plot_weight. An AU site (greenfield, no frontage) is valued as
+    # U land of its density and size, net of roads on all of it, strip or not
+    # (0.25 × 0.75 for an AU strip), so AU land never comes out dearer than U
+    # land of the same IRIS, use, density and size. Roads are deducted once:
+    # the subdivision band of a house-scale site is already net of them.
+    house_scale = density < far_sur
+    eff = plot.where(~house_scale,
+                     _house_scale_area(plot, typical, k_sur, w_sur, net, threshold))
+    eff = eff.where(~sliver, plot * w_sur)
+    dev = (net * _subdivision_band(plot, typical, k_sur, threshold)
+           ).where(house_scale & ~sliver, 0.0)
+    eff = eff.mask(au, net * (eff - dev) + dev)
     factor = (pd.to_numeric(out.loc[vacant, "vacant_price_factor"], errors="coerce").fillna(1.0)
               if "vacant_price_factor" in out.columns else 1.0)
     grp = (out.loc[vacant, "iris"].astype("object").fillna("_commune")

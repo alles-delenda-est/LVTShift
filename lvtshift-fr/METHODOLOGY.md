@@ -320,8 +320,27 @@ today's tax on unbuilt land, which the reform replaces (excluding it would
 have counted that tax twice). Business land is valued × `activity_land_ratio`. Each remaining plot is then valued as the land under
 buildings is: its IRIS's land per unit of weight (the commune's where the IRIS
 has no built land in the pool) × effective plot area × its zone's reference
-density^0.5, with the same surplus rule in house-scale zones; the built plots'
-area cap does not apply (a large building-less site is development land). A plot under a quarter of
+density^0.5. The built plots' area cap does not apply (a large building-less
+site is development land); otherwise the effective area is a built plot's of
+the same zone and size (*Effective plot*, §3.7), so building on a plot does not
+change its land value, up to the commune's 99th-percentile plot, where built
+plots are capped (copropriété parks, estates) and vacant ones are not; strips,
+AU and business land have their own rules below. In a house-scale zone that
+means: in full up to twice
+the zone's median built plot; at the garden weight (0.25) up to
+`SITE_VALUE["subdivision_threshold_m2"]` = 5,000 m², the range of one house plot
+with a large garden (EPTB, DVF); beyond it net of the share new access roads
+and public space take when a developer subdivides
+(`SITE_VALUE["development_net_share"]` = 0.75, below); where twice the median
+plot already exceeds 5,000 m² there is no garden band. Until PR #85 the garden
+weight went on for ever, so a 2 ha site was worth about a third of the same
+land split into plots; a first version of PR #85 dropped the garden band for
+vacant land only, which made a vacant 3,000 m² plot worth 1.67 × the same plot
+with a house on it, and was replaced by this rule. Per m², a house-scale plot
+is thus cheapest around 5,000 m² (too large for one house, small for a
+developer); both the threshold and the 0.75 are labelled assumptions. In a
+denser zone a large plot carries one large building from the street it fronts
+and keeps its whole area. A plot under a quarter of
 its zone's median built plot (`SITE_VALUE["vacant_sliver_fraction"]`: strips,
 passages, leftover corners, most building-less parcels by count) cannot carry a
 building alone and counts at the garden weight (0.25). The rule is a threshold:
@@ -334,20 +353,18 @@ La Rochelle and Sète; review of PR #83). An AU parcel takes, in order: its
 label's own reference density where it has 20 built parcels; else the median,
 over the built parcels in U zones of the same stated use in its IRIS (20 at
 least: the fabric it will be planned against), of their zones' reference
-densities; else the median of the commune's same-use U label references. It
-is then valued exactly as U land of that density would be, garden-surplus and
-strip rules included (so AU land never comes out dearer than U land of the
-same IRIS, use, density and size), net of the 25 % taken by roads and public
-space when it is developed (`SITE_VALUE["au_net_share"]` = 0.75; roads
-alone take 7–29 % of collective-housing blocks, Institut Paris Région,
-*Référentiel de densités et de formes urbaines*; a greenfield scheme builds all
-its roads, hence the top of that range: a labelled assumption, no French
-national figure for the share was found). On strict AU zones the discount
-stacks with `au_strict_factor`: 0.55 × 0.75 ≈ 0.41 of the U value. Within one
-IRIS, AU land now sits below vacant U land of the same use: housing land at
-0.15 (La Rochelle, a 2.1 ha site against small infill plots) to 0.82 (Sète) of
-its €/m², business land at about a third. Large sites take the garden-surplus
-rule in house-scale zones, U or AU alike. The building-plot price
+densities; else the median of the commune's same-use U label references. A
+greenfield site has no frontage: it is valued as U land of its density and
+size, × `development_net_share` = 0.75 on all of it, roads deducted once (the
+subdivision band beyond 5,000 m² is already net of them; roads alone take 7–29 % of
+collective-housing blocks, Institut Paris Région, *Référentiel de densités et
+de formes urbaines*; a scheme that builds all its roads sits at the top of that
+range: a labelled assumption, no French national figure for the share was
+found). So AU land never comes out dearer than U land of the same IRIS, use,
+density and size. On strict AU zones the discount stacks with
+`au_strict_factor`: 0.55 × 0.75 ≈ 0.41. Within one IRIS, AU land sits at
+0.41–0.54 of the €/m² of vacant U land of the same use (La Rochelle, Cahors,
+Figeac): AU sites are large, the U plots mostly infill. The building-plot price
 stays in `land_value_current` for comparison. Valuing vacant and built land of
 one zone alike is what a tax on land "as if vacant" requires; it also avoids the
 thin, atypical building-plot sales of dense cities (Lyon €735/m² against
@@ -435,9 +452,12 @@ density = reference floor-area ratio of the zone      (permitted use)
   - *Natural and agricultural zones (A, N).* Only a yard of 3 × floor area
     counts, as for shed-type parcels. 84 % of Cahors's largest house plots lie
     there, and linear plot area gave them +149 %.
-  - *Surplus land.* On any built parcel of a house-scale zone (reference
-    below 1), whatever stands on it, area beyond twice the zone's median
-    plot counts at a quarter. Vacant house plots sell for far less than
+  - *Surplus land.* On any parcel of a house-scale zone (reference below 1),
+    built or vacant, whatever stands on it, area beyond twice the zone's
+    median plot counts at a quarter up to 5,000 m², and at 0.75 beyond it,
+    where the plot is a subdivision site rather than one house plot (PR #85;
+    `subdivision_threshold_m2`, `development_net_share`: labelled
+    assumptions). Vacant house plots sell for far less than
     proportionally more as they grow (EPTB: elasticity 0.45 at 477 m², 0.11 at
     2,000 m²; Combes, Duranton & Gobillon), and in DVF an extra m² of garden
     sells for 0.14–0.27 of a building-plot m². The rule does not apply in denser
@@ -957,8 +977,8 @@ dwellings, so a 200-flat block counts 200 times) and, for reference, the plain
 **parcel median**. The site draws the total as the bar and the household as a
 marker. The parcel median misleads where poorer areas mix many small houses
 with a few large blocks: in Villeurbanne the poorest fifth's median parcel pays
-+18.7 % and the group as a whole +0.9 %, while its typical household pays
-−22.8 % (central baseline), because the large blocks, where most of its
++17.9 % and the group as a whole +0.2 %, while its typical household pays
+−24.0 % (central baseline), because the large blocks, where most of its
 households live, gain the most.
 Dwellings come from BD TOPO `nombre_de_logements` (area-shared across parcels);
 residential parcels without a count are imputed (a house = 1; flats = gross floor
@@ -1242,37 +1262,42 @@ density (§3.4, §3.6), on the payloads published since (same columns):
 valued like built land of its IRIS and zone, open space as natural land,
 business land at the business-land ratio (§3.4, *Building-less urban land*),
 with the BD TOPO cross-check; AU land valued against its IRIS's same-use fabric
-net of roads (PR #84: Cahors, Figeac, Sète, La Rochelle, Lyon and the Lyon and
-Paris rings re-run). Same columns as above, payloads published since:
+net of roads (PR #84); house-scale plots beyond 5,000 m², built or vacant,
+valued as subdivision sites (PR #85, 25 November: every territory re-run).
+Same columns as above, payloads published since:
 
 | | Shift, % of levy | Houses | 2–4 | 5+ | Commercial | Q1 / Q5 totals |
 |---|---|---|---|---|---|---|
-| Grenoble | 40.1 | +71.9 | +26.2 | −29.8 | +24.5 | −49.1 / −0.4 |
-| Annemasse | 36.4 | +105.9 | +13.8 | −34.5 | +12.8 | −19.3 / −14.3 |
-| Villeurbanne | 32.6 | +63.8 | +28.8 | −26.0 | +58.0 | +0.9 / −4.6 |
+| Grenoble | 40.2 | +71.4 | +25.7 | −29.9 | +24.5 | −49.2 / −0.4 |
+| Annemasse | 36.3 | +104.1 | +13.5 | −34.5 | +13.2 | −19.6 / −14.3 |
+| Villeurbanne | 32.6 | +62.1 | +27.6 | −26.3 | +58.9 | +0.2 / −4.6 |
 | Roubaix | 39.5 | −23.0 | −28.4 | −41.9 | −22.6 | −32.7 / +49.1 |
-| Cahors | 38.5 | +7.3 | −15.9 | −38.9 | −37.8 | — / — |
+| Cahors | 38.5 | +5.4 | −16.7 | −39.3 | −37.9 | — / — |
 | Montreuil | 33.6 | +49.9 | +22.5 | −31.3 | +33.1 | −10.5 / +11.4 |
-| Figeac | 38.0 | −3.5 | −27.4 | −54.4 | −31.1 | — / — |
-| Sète | 33.9 | +38.5 | +0.5 | −37.7 | +34.4 | −22.0 / +4.9 |
-| La Rochelle | 36.0 | −0.7 | −15.3 | −36.5 | −0.1 | −8.1 / +0.6 |
-| Paris | 23.2 | +116.7 | +35.7 | −14.7 | +67.3 | −25.4 / +6.3 |
-| Lyon | 28.3 | +75.4 | +22.8 | −15.9 | +11.7 | −17.1 / +9.2 |
-| Paris extra-muros (petite couronne) | 35.1 | +41.9 | +13.9 | −35.3 | +29.2 | −7.3 / +2.5 |
-| Lyon extra-muros (Métropole hors Lyon) | 38.8 | +44.0 | +2.3 | −39.3 | −27.1 | −4.5 / −0.8 |
+| Figeac | 38.2 | −5.6 | −28.7 | −54.6 | −31.2 | — / — |
+| Sète | 33.8 | +37.7 | +0.1 | −37.6 | +34.4 | −22.1 / +4.9 |
+| La Rochelle | 36.4 | −2.2 | −16.6 | −37.2 | −1.3 | −9.3 / −0.6 |
+| Paris | 23.2 | +117.0 | +35.7 | −14.7 | +67.3 | −25.3 / +6.3 |
+| Lyon | 28.3 | +74.3 | +22.7 | −16.0 | +11.8 | −17.1 / +9.1 |
+| Paris extra-muros (petite couronne) | 35.1 | +40.2 | +12.8 | −35.5 | +28.4 | −7.9 / +2.1 |
+| Lyon extra-muros (Métropole hors Lyon) | 38.3 | +39.9 | 0.0 | −39.8 | −27.8 | −5.5 / −1.1 |
 
 - **The correction runs both ways.** Vacant land's share of the levy falls
   where building-plot sales had priced it above built land (Grenoble
-  11.8 → 3.5 %, La Rochelle 13.1 → 9.3 %) and rises where they had priced it
-  below (Annemasse 7.0 → 13.3 %, Paris 1.1 → 1.7 %; Villeurbanne's plot price
+  11.8 → 3.5 %, La Rochelle 13.1 → 10.5 %) and rises where they had priced it
+  below (Annemasse 7.0 → 13.2 %, Paris 1.1 → 1.7 %; Villeurbanne's plot price
   was €141/m² against €1,229 now).
 - **Robust:** large blocks pay less everywhere; houses pay more in 10 of 13
   territories; the poorest fifth fares better than the richest in 10 of the 11
   with income groups. Villeurbanne remains the exception, narrower: the
-  poorest fifth +0.9 % (band −0.3 to +1.8 %) against −4.6 % for the richest.
+  poorest fifth +0.2 % (band −1.0 to +1.0 %) against −4.6 % for the richest.
 - **Moved most:** Grenoble's richest fifth (−9.0 → −0.4 %) and La Rochelle's
-  (−3.5 → +0.6 %); small 2–4-dwelling buildings now pay more in the Lyon ring
-  (−1.0 → +2.3 %), so they pay less in 4 territories, not 5.
+  (−3.5 → −0.6 %); PR #85 moved houses in the house-scale towns and the Lyon
+  ring (Cahors +7.3 → +5.4 %, Figeac −3.5 → −5.6 %, La Rochelle
+  −0.7 → −2.2 %, Lyon ring +44.0 → +39.9 %) as large vacant sites take more of
+  the levy; small 2–4-dwelling buildings in the Lyon ring return to break-even
+  (0.0 % central, −1.1 % local variant), so they pay strictly less in 4
+  territories under the central case (5 under the local variant).
 
 **Policy finding.** In the Lyon chemical and industrial corridor, the LVT
 shifts tax from industry to households under the central baseline (industrial
@@ -1378,9 +1403,10 @@ published file (CI test).
   - reference density at the 75th percentile of the zone label's realised
     floor-area ratio (at least 20 parcels, else zone type, else commune);
   - plot capped at the commune's 99th percentile;
-  - surplus land beyond 2 × the zone's median plot at 0.25, on every built
-    parcel of a house-scale zone (reference below 1), whatever stands on it
-    (until 2026-11-11: on parcels below the reference only);
+  - surplus land beyond 2 × the zone's median plot at 0.25 up to 5,000 m² and
+    at 0.75 beyond (PR #85), on every parcel of a house-scale zone (reference
+    below 1), built or vacant, whatever stands on it (until 2026-11-11: on
+    parcels below the reference only; until PR #85: 0.25 throughout);
   - in A and N zones, a yard of 3 × floor area.
 
   Every value is a judgement informed by the sources cited in §3.4; none is
@@ -1609,14 +1635,25 @@ Ranked by how much they move published (category/quintile) results.
     land takes the business-land ratio (§3.4), but a plan's long label can be vague
     ("secteurs sans règlement", ZAC names) and BD TOPO maps public open space,
     not private gardens or estates. A plan that states nothing leaves a U zone
-    as housing land. Two valuation caveats: (a) `AU` land takes the density of
-    the same-use fabric of its IRIS, net of a 25 % road and public-space share
-    that is an assumption (§3.4), not a sourced national ratio; it deducts the
-    land roads take, not the cost of building them (VRD), and ignores the plan's
-    own density target (OAP) for the zone; (b) *built* shed-type business
+    as housing land. Two valuation caveats: (a) `AU` land and house-scale land
+    beyond 5,000 m² count net of a 25 % road and public-space share, and the
+    5,000 m² threshold itself, are assumptions (§3.4), not sourced figures; the
+    share deducts the land roads take, not the cost of building them (VRD);
+    `AU` land takes the density of its IRIS's same-use fabric and ignores the
+    plan's own density target (OAP); a very large site in a dense zone (a rail
+    yard) keeps its whole area; built plots remain capped at the commune's 99th
+    percentile (to protect copropriété parks and estates) whereas vacant plots
+    are uncapped, so above that threshold a vacant plot is valued higher than an
+    identical built plot (removing the cap in house-scale zones would be a
+    separate economic choice); (b) *built* shed-type business
     land (DRC, §3.4) remains anchored to DVF terrain-à-bâtir sales while *vacant*
     business land now uses site value × `activity_land_ratio`, opening a gap
     where DVF plot sales diverge from the residual (Villeurbanne, Grenoble).
+    Furthermore, "house-scale" is defined by reference density (< 1) rather than
+    permitted use, so low-density business zones receive house-scale plot rules;
+    since PR #85 values sites beyond 5,000 m² as subdivision land, this shows on
+    large business sites in mixed IRIS: La Rochelle's 8 ha UXM site takes the
+    IRIS's housing-derived rate × 0.45.
     `audit_land.py <commune>` quantifies the levy this land carries per zoning
     label.
 11. **Exemptions are only partly modelled.** Obviously exempt public property is

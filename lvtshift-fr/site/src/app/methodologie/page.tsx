@@ -274,7 +274,7 @@ export default function MethodologiePage() {
             l&apos;on ne peut guère construire au-delà de l&apos;existant, seule
             une cour autour du bâtiment compte. Le sol passe ainsi des
             immeubles denses aux parcelles peu bâties : à Villeurbanne, les
-            maisons paient au total +130&nbsp;%, les grands immeubles
+            maisons paient au total +129&nbsp;%, les grands immeubles
             &minus;23&nbsp;%. Deux éléments reflètent encore l&apos;usage
             actuel : le total foncier de chaque quartier, tiré des prix de
             marché de ce qui y est bâti, et le prix du sol des entrepôts et
@@ -1036,10 +1036,10 @@ export default function MethodologiePage() {
               de fois qu&apos;elle a de logements. Une simple médiane par
               parcelle compterait un immeuble de 200 logements une seule fois,
               comme une maison. À Villeurbanne, elle montrerait le quintile le
-              plus pauvre en forte hausse (+18,7&nbsp;%), alors que son ménage
-              type paie 22,8&nbsp;% de moins : les grands immeubles, où vivent la
+              plus pauvre en forte hausse (+17,9&nbsp;%), alors que son ménage
+              type paie 24,0&nbsp;% de moins : les grands immeubles, où vivent la
               plupart de ses ménages, sont les plus gagnants. Le groupe paie
-              pourtant 0,9&nbsp;% de plus au total, la hausse se concentrant sur
+              pourtant 0,2&nbsp;% de plus au total, la hausse se concentrant sur
               ses maisons et petits immeubles. Le nombre de logements vient
               de la BD TOPO de l&apos;IGN ; il est estimé pour 5 à 11&nbsp;% des
               parcelles résidentielles qui n&apos;en ont pas.
