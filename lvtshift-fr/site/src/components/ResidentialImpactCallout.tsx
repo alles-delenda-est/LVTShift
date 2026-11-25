@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadCommune } from "@/lib/data";
 import { pct, signedPct } from "@/lib/format";
 import type { CategoryRow } from "@/lib/types";
@@ -114,9 +115,9 @@ export default function ResidentialImpactCallout() {
         entre de nombreux logements, paie moins partout ; la maison
         individuelle sur un terrain de valeur paie souvent davantage, surtout
         là où le foncier est cher et les voisins plus denses.{" "}
-        <a href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
+        <Link href="/resultats" className="text-rouge underline underline-offset-2 hover:text-marine">
           Voir chaque commune en détail →
-        </a>
+        </Link>
       </p>
     </div>
   );
