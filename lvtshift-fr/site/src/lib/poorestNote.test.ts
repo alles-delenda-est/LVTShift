@@ -7,12 +7,12 @@ describe("poorestNote", () => {
   it("reads Villeurbanne's published figures", () => {
     const n = poorestNote(loadCommune("villeurbanne"));
     expect(n).not.toBeNull();
-    expect(n!.q1Total).toBe(0.9);
+    expect(n!.q1Total).toBe(0.2);
     expect(n!.q5Total).toBe(-4.6);
     expect(n!.q1Household).toBeLessThan(0);
     expect(n!.housesTotal).toBeGreaterThan(100);
     expect(n!.q1Income).toBeLessThan(n!.q5Income);
-    expect(n!.q1Band).toEqual([-0.4, 1.7]);   // reaches zero: the heading says "pas moins"
+    expect(n!.q1Band).toEqual([-1, 1]);   // reaches zero: the heading says "pas moins"
   });
 
   it("stays silent elsewhere, or once the poorest no longer fare worse", () => {

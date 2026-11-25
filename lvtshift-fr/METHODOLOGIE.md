@@ -361,21 +361,26 @@ aurait compté cet impôt deux fois). Le foncier d'activité est évalué ×
 restante est ensuite évaluée comme le terrain sous les bâtiments : le terrain
 par unité de poids de son IRIS (celui de la commune si l'IRIS n'a pas de
 terrain bâti dans le regroupement) × surface effective × densité de référence
-de sa zone^0,5. Un grand terrain nu est un terrain à aménager, pas un jardin :
-ni le plafond de surface des parcelles bâties ni leur règle du surplus de
-jardin ne s'appliquent (jusqu'à la PR #85, la règle du surplus comptait un
-terrain de zone pavillonnaire au-delà de deux fois la parcelle bâtie médiane
-à 0,25 le m², si bien qu'un terrain de 2 ha valait environ le tiers du même
-terrain divisé en lots). En zone à l'échelle de la maison (densité de
-référence sous 1), un grand terrain U s'aménage par division : jusqu'à deux
-fois la parcelle bâtie médiane de la zone, ce sont des lots sur une rue
-existante, comptés en entier ; au-delà, il compte net de la part que prennent
-les nouvelles voies de desserte et les espaces publics
-(`SITE_VALUE["development_net_share"]` = 0,75, ci-dessous). En zone plus dense,
-une grande parcelle porte un seul grand bâtiment depuis la rue qui la borde et
-garde toute sa surface, comme les parcelles bâties. La valeur au m² baisse
-ainsi régulièrement avec la taille (La Rochelle, hors bandes : 1 567 €/m² sous
-300 m², 860 €/m² au-delà d'un hectare ; Figeac 216 → 92). Une
+de sa zone^0,5. Le plafond de surface des parcelles bâties ne s'applique pas
+(un grand terrain nu est un terrain à aménager) ; pour le reste, la surface
+effective est celle d'une parcelle bâtie de même zone et de même taille
+(*Parcelle effective*, §3.7), si bien que bâtir sur une parcelle ne change
+jamais la valeur de son terrain. En zone à l'échelle de la maison, cela
+donne : en entier jusqu'à deux fois la parcelle bâtie médiane de la zone ; au
+poids d'un jardin (0,25) jusqu'à `SITE_VALUE["subdivision_threshold_m2"]` =
+5 000 m², le domaine d'un terrain de maison avec grand jardin (EPTB, DVF) ;
+au-delà, net de la part que prennent les nouvelles voies de desserte et les
+espaces publics quand un aménageur divise le terrain
+(`SITE_VALUE["development_net_share"]` = 0,75, ci-dessous). Jusqu'à la PR #85,
+le poids du jardin valait sans limite, si bien qu'un terrain de 2 ha valait
+environ le tiers du même terrain divisé en lots ; une première version de la
+PR #85 retirait la tranche jardin pour le seul terrain nu, ce qui rendait une
+parcelle nue de 3 000 m² 1,67 fois plus chère que la même parcelle bâtie
+d'une maison : elle a été remplacée par cette règle. Au m², une parcelle de
+zone pavillonnaire est donc la moins chère vers 5 000 m² (trop grande pour une
+maison, petite pour un aménageur) ; le seuil comme le 0,75 sont des hypothèses
+étiquetées. En zone plus dense, une grande parcelle porte un seul grand
+bâtiment depuis la rue qui la borde et garde toute sa surface. Une
 parcelle de moins du quart de la parcelle bâtie médiane de sa zone
 (`SITE_VALUE["vacant_sliver_fraction"]` : bandes, passages, délaissés, la
 plupart des parcelles non bâties en nombre) ne peut porter seule un bâtiment et
@@ -391,17 +396,17 @@ s'il compte 20 parcelles bâties ; sinon la médiane, sur les parcelles bâties 
 zones U de même vocation de son IRIS (20 au moins : le tissu contre lequel elle
 sera aménagée), des densités de référence de leurs zones ; sinon la médiane des
 références des libellés U de même vocation de la commune. Un terrain en
-extension n'a pas de façade sur rue : toute sa surface compte nette de la part
-que prennent voirie et espaces publics (`development_net_share` = 0,75 ; la
-voirie seule occupe 7 à 29 % des îlots d'habitat collectif, Institut Paris
-Région, *Référentiel de densités et de formes urbaines* ; une opération qui
-crée toute sa voirie est en haut de la fourchette : hypothèse étiquetée, aucun
-ratio national français n'a été trouvé). Le terrain AU ne ressort donc jamais
-plus cher qu'un terrain U de même IRIS, vocation, densité et taille (la règle
-des bandes vaut pour les deux). En zone AU stricte, l'abattement se cumule
-avec `au_strict_factor` : 0,55 × 0,75 ≈ 0,41. Dans un même IRIS, le terrain AU
-vaut 0,54 à 0,92 du prix au m² du terrain U non bâti de même vocation
-(La Rochelle, Sète, Cahors, Figeac).
+extension n'a pas de façade sur rue : il est évalué comme un terrain U de même
+densité et de même taille, × `development_net_share` = 0,75 sur toute sa
+surface (la voirie seule occupe 7 à 29 % des îlots d'habitat collectif,
+Institut Paris Région, *Référentiel de densités et de formes urbaines* ; une
+opération qui crée toute sa voirie est en haut de la fourchette : hypothèse
+étiquetée, aucun ratio national français n'a été trouvé). Le terrain AU ne
+ressort donc jamais plus cher qu'un terrain U de même IRIS, vocation, densité
+et taille. En zone AU stricte, l'abattement se cumule avec `au_strict_factor` :
+0,55 × 0,75 ≈ 0,41. Dans un même IRIS, le terrain AU vaut 0,33 à 0,53 du prix
+au m² du terrain U non bâti de même vocation (La Rochelle, Cahors, Figeac) :
+les sites AU sont grands, les parcelles U surtout des dents creuses.
 Le prix des terrains à bâtir reste dans
 `land_value_current` pour comparaison. Évaluer de la même façon le terrain nu et
 le terrain bâti d'une même zone est ce qu'exige un impôt sur le sol « comme
@@ -502,10 +507,13 @@ densité = coefficient de référence de la zone      (usage permis)
     de plancher compte, comme pour les parcelles de type hangar. 84 % des plus
     grandes parcelles de maisons de Cahors y sont, et une surface linéaire leur
     donnait +149 %.
-  - *Terrain en surplus.* Sur toute parcelle bâtie d'une zone d'habitat
-    individuel (référence inférieure à 1), quoi qu'il y soit construit, la
-    surface au-delà de deux
-    fois la parcelle médiane de la zone compte pour un quart. Les terrains à
+  - *Terrain en surplus.* Sur toute parcelle d'une zone d'habitat individuel
+    (référence inférieure à 1), bâtie ou nue, quoi qu'il y soit construit, la
+    surface au-delà de deux fois la parcelle médiane de la zone compte pour un
+    quart jusqu'à 5 000 m², et pour 0,75 au-delà, où la parcelle devient un
+    terrain à diviser plutôt qu'un terrain de maison (PR #85 ;
+    `subdivision_threshold_m2`, `development_net_share` : hypothèses
+    étiquetées). Les terrains à
     bâtir pour maisons se vendent bien moins que proportionnellement plus cher
     quand ils s'agrandissent (EPTB : élasticité 0,45 à 477 m², 0,11 à
     2 000 m² ; Combes, Duranton et Gobillon), et dans DVF un m² de jardin en
@@ -1088,8 +1096,8 @@ un immeuble de 200 logements compte 200 fois) et, pour mémoire, la simple
 **médiane par parcelle**. Le site trace le total en barre et le ménage type en
 losange. La médiane par parcelle trompe là où les quartiers modestes mêlent
 beaucoup de petites maisons et quelques grands immeubles : à Villeurbanne, la
-parcelle médiane du quintile le plus pauvre paie +18,7 % et le groupe +0,9 %,
-alors que son ménage type paie −22,8 % (base centrale), car les grands
+parcelle médiane du quintile le plus pauvre paie +17,9 % et le groupe +0,2 %,
+alors que son ménage type paie −24,0 % (base centrale), car les grands
 immeubles, où vivent la plupart de ses ménages, sont les plus gagnants. Les logements viennent de BD TOPO
 (`nombre_de_logements`, réparti entre parcelles au prorata de l'emprise) ; les
 parcelles résidentielles sans décompte sont imputées (maison = 1 ; appartements =
@@ -1397,40 +1405,41 @@ urbain non bâti est évalué comme le terrain bâti de son IRIS et de sa zone,
 l'espace ouvert comme du terrain naturel, le foncier d'activité au ratio du
 foncier d'activité (§3.4, *Foncier urbain non bâti*), avec le contrôle croisé
 BD TOPO ; le terrain AU évalué sur le tissu de même vocation de son IRIS, net de
-voirie (PR #84) ; les grands terrains nus évalués comme terrains à aménager,
-non comme jardins (PR #85, 25 novembre : tous les territoires recalculés).
+voirie (PR #84) ; les parcelles pavillonnaires de plus de 5 000 m², bâties ou
+nues, évaluées comme terrains à diviser (PR #85, 25 novembre : tous les
+territoires recalculés).
 Mêmes colonnes que ci-dessus, données publiées depuis :
 
 | | Part déplacée, % du produit | Maisons | 2–4 | 5+ | Commerce | Totaux Q1 / Q5 |
 |---|---|---|---|---|---|---|
-| Grenoble | 40,1 | +71,8 | +26,2 | −29,8 | +24,5 | −49,1 / −0,4 |
-| Annemasse | 36,5 | +105,8 | +13,7 | −34,6 | +12,7 | −19,4 / −14,4 |
-| Villeurbanne | 32,6 | +63,8 | +28,7 | −26,0 | +58,0 | +0,9 / −4,6 |
-| Roubaix | 39,5 | −23,0 | −28,5 | −42,0 | −22,6 | −32,7 / +49,0 |
-| Cahors | 39,2 | +4,9 | −17,8 | −40,3 | −39,2 | — / — |
+| Grenoble | 40,2 | +71,4 | +25,7 | −29,9 | +24,5 | −49,2 / −0,4 |
+| Annemasse | 36,3 | +104,1 | +13,5 | −34,5 | +13,2 | −19,6 / −14,3 |
+| Villeurbanne | 32,6 | +62,1 | +27,6 | −26,3 | +58,9 | +0,2 / −4,6 |
+| Roubaix | 39,5 | −23,0 | −28,4 | −41,9 | −22,6 | −32,7 / +49,1 |
+| Cahors | 38,5 | +5,5 | −16,6 | −39,2 | −37,9 | — / — |
 | Montreuil | 33,6 | +49,9 | +22,5 | −31,3 | +33,1 | −10,5 / +11,4 |
-| Figeac | 38,9 | −5,8 | −29,2 | −55,6 | −32,8 | — / — |
-| Sète | 34,0 | +38,2 | +0,3 | −37,8 | +34,1 | −22,2 / +4,7 |
-| La Rochelle | 36,9 | −3,1 | −17,3 | −38,0 | −2,4 | −10,3 / −1,7 |
-| Paris | 23,2 | +116,7 | +35,7 | −14,7 | +67,3 | −25,4 / +6,3 |
-| Lyon | 28,3 | +75,4 | +22,7 | −16,0 | +11,7 | −17,1 / +9,2 |
+| Figeac | 38,1 | −5,4 | −28,6 | −54,5 | −31,1 | — / — |
+| Sète | 33,8 | +37,7 | +0,1 | −37,6 | +34,4 | −22,1 / +4,9 |
+| La Rochelle | 36,4 | −2,2 | −16,5 | −37,2 | −1,3 | −9,3 / −0,6 |
+| Paris | 23,2 | +117,0 | +35,7 | −14,7 | +67,3 | −25,3 / +6,3 |
+| Lyon | 28,3 | +74,3 | +22,7 | −16,0 | +11,8 | −17,1 / +9,1 |
 | Paris extra-muros (petite couronne) | 35,1 | +41,9 | +13,9 | −35,3 | +29,2 | −7,3 / +2,5 |
 | Lyon extra-muros (Métropole hors Lyon) | 38,8 | +44,0 | +2,3 | −39,3 | −27,1 | −4,5 / −0,8 |
 
 - **La correction joue dans les deux sens.** La part du terrain nu dans le
   produit baisse là où les ventes de terrains à bâtir le plaçaient au-dessus du
-  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 11,5 %) et monte là où
-  elles le plaçaient en dessous (Annemasse 7,0 → 13,4 %, Paris 1,1 → 1,7 % ; le
+  terrain bâti (Grenoble 11,8 → 3,5 %, La Rochelle 13,1 → 10,4 %) et monte là où
+  elles le plaçaient en dessous (Annemasse 7,0 → 13,2 %, Paris 1,1 → 1,7 % ; le
   prix des terrains de Villeurbanne était de 141 €/m², contre 1 229 € désormais).
 - **Robuste :** les grands immeubles paient moins partout ; les maisons paient
   davantage dans 10 territoires sur 13 ; le cinquième le plus modeste s'en sort
   mieux que le plus aisé dans 10 des 11 territoires découpés par revenu.
   Villeurbanne reste l'exception, plus étroite : le cinquième le plus modeste
-  +0,9 % (fourchette −0,4 à +1,7 %) contre −4,6 % pour le plus aisé.
+  +0,2 % (fourchette −1,0 à +1,0 %) contre −4,6 % pour le plus aisé.
 - **Ce qui bouge le plus :** le cinquième le plus aisé de Grenoble (−9,0 →
-  −0,4 %) et de La Rochelle (−3,5 → −1,7 %) ; la PR #85 fait bouger les
-  maisons des villes pavillonnaires (Cahors +7,3 → +4,9 %, Figeac −3,5 →
-  −5,8 %, La Rochelle −0,7 → −3,1 %), les grands terrains nus prenant une plus
+  −0,4 %) et de La Rochelle (−3,5 → −0,6 %) ; la PR #85 fait bouger les
+  maisons des villes pavillonnaires (Cahors +7,3 → +5,5 %, Figeac −3,5 →
+  −5,4 %, La Rochelle −0,7 → −2,2 %), les grands terrains nus prenant une plus
   grande part de l'impôt ; les petits immeubles de 2 à 4
   logements paient désormais davantage dans la couronne lyonnaise (−1,0 →
   +2,3 %) et donc moins dans 4 territoires, et non 5.
@@ -1554,9 +1563,10 @@ ces règles à l'export et sur chaque fichier publié (test CI).
     libellé de zone (au moins 20 parcelles, sinon type de zone, sinon commune) ;
   - parcelle plafonnée au 99ᵉ centile de la commune ;
   - terrain en surplus au-delà de 2 × la parcelle médiane de la zone compté
-    à 0,25, sur toute parcelle bâtie d'une zone d'habitat individuel (référence
-    inférieure à 1), quoi qu'il y soit construit (jusqu'au 11 novembre 2026 :
-    sous la référence seulement) ;
+    à 0,25 jusqu'à 5 000 m² et à 0,75 au-delà (PR #85), sur toute parcelle
+    d'une zone d'habitat individuel (référence inférieure à 1), bâtie ou nue,
+    quoi qu'il y soit construit (jusqu'au 11 novembre 2026 : sous la référence
+    seulement ; jusqu'à la PR #85 : 0,25 partout) ;
   - en zones A et N, une cour de 3 × la surface de plancher.
 
   Chaque valeur est un jugement éclairé par les sources du §3.4 ; aucune n'est
@@ -1813,11 +1823,11 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (§3.4), mais le libellé long d'un plan peut être vague (« secteurs sans
     règlement », noms de ZAC) et la BD TOPO cartographie l'espace public ouvert,
     pas les jardins ni les domaines privés. Un plan muet laisse une zone U en
-    terrain d'habitat. Deux limites de valorisation : (a) le terrain `AU` et la
-    part des grands terrains U pavillonnaires au-delà des lots sur rue comptent
-    nets d'une part de 25 % pour voirie et espaces publics qui est une
-    hypothèse (§3.4), non un ratio national sourcé ; elle retire l'emprise de
-    la voirie, pas son coût de réalisation (VRD) ; le terrain `AU` prend la
+    terrain d'habitat. Deux limites de valorisation : (a) le terrain `AU` et le
+    terrain pavillonnaire au-delà de 5 000 m² comptent nets d'une part de 25 %
+    pour voirie et espaces publics ; cette part et le seuil de 5 000 m² sont
+    des hypothèses (§3.4), non des chiffres sourcés ; la part retire l'emprise
+    de la voirie, pas son coût de réalisation (VRD) ; le terrain `AU` prend la
     densité du tissu de même vocation de son IRIS et ignore l'objectif de
     densité propre à la zone (OAP) ; un très grand terrain en zone dense (une
     emprise ferroviaire) garde toute sa surface ;
@@ -1825,10 +1835,10 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     (CRD, §3.4) reste ancré sur les ventes DVF de terrains à bâtir alors que le
     foncier d'activité *non bâti* suit désormais la valeur du site ×
     `activity_land_ratio`, créant un écart là où les ventes DVF s'éloignent du
-    résiduel (Villeurbanne, Grenoble). Depuis que la PR #85 a retiré
-    l'abattement de jardin des grands terrains, l'écart se voit sur les grands
+    résiduel (Villeurbanne, Grenoble). Depuis que la PR #85 évalue les terrains
+    de plus de 5 000 m² comme terrains à diviser, l'écart se voit sur les grands
     terrains d'activité des IRIS mixtes : le site UXM de 8 ha de La Rochelle
-    ressort à 847 €/m², le prix d'habitat de l'IRIS × 0,45. `audit_land.py <commune>` chiffre, par
+    prend le prix d'habitat de l'IRIS × 0,45. `audit_land.py <commune>` chiffre, par
     libellé de zone, la part de l'impôt qu'il porte.
 11. **Les exonérations ne sont que partiellement modélisées.** Le foncier public
     manifestement exonéré est repéré (§3.5), mais prudemment : les locaux publics en

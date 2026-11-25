@@ -674,6 +674,16 @@ SITE_VALUE = {
     # assumption: no French national ratio was found. (Named au_net_share in
     # PR #84, when it applied to AU land only.)
     "development_net_share": 0.75,
+    # Size above which house-scale land (built or vacant) is priced as a
+    # subdivision site rather than as one house plot: between
+    # surplus_plot_multiple × the zone's median plot and this threshold, extra
+    # area counts at surplus_plot_weight (garden ground: EPTB, households'
+    # purchases of building plots, size elasticity 0.11 at 2 000 m²; DVF
+    # gardens 0.14–0.27); beyond it at development_net_share (a developer's
+    # lotissement of several plots with its own access road). 5 000 m² is about
+    # 6–10 typical house plots: a labelled assumption, not a sourced figure.
+    # None: no threshold, the garden weight throughout (runs before PR #85).
+    "subdivision_threshold_m2": 5000.0,
 }
 
 # Current-tax (FB baseline) VLC-proxy sensitivity weights — OFF by default.

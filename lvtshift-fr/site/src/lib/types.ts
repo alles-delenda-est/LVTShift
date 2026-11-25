@@ -143,7 +143,14 @@ export interface Commune {
       density_elasticity?: number; ref_density_quantile?: number;
       min_zone_parcels?: number; plot_cap_quantile?: number;
       surplus_plot_multiple?: number; surplus_plot_weight?: number;
-      surplus_max_ref_far?: number;
+      surplus_max_ref_far?: number; vacant_sliver_fraction?: number;
+      /** share of a large site left after roads (PR #84: AU land; PR #85: also
+       *  house-scale land beyond subdivision_threshold_m2) */
+      development_net_share?: number;
+      /** m² above which house-scale land is a subdivision site; null: garden
+       *  weight throughout (runs before PR #85) */
+      subdivision_threshold_m2?: number | null;
+      density_rule?: "zone" | "max_own";
     };
     /** the tax on non-agricultural unbuilt land (TFPNB, TAFNB) that the reform
      *  replaces: whether the run counted it, the amount, the non-agricultural

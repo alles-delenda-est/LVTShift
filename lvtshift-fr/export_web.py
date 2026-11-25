@@ -1190,7 +1190,11 @@ def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
 
 # SITE_VALUE keys added after runs were published, with the value that
 # reproduces those runs: an old sidecar without the key still loads.
-SITE_VALUE_LEGACY = {"development_net_share": 1.0}
+# development_net_share: au_net_share in PR #84 (AU land only); 1.0 before it
+# (no road deduction on AU land). subdivision_threshold_m2: None before PR #85
+# (garden weight throughout), which also tells a PR #84 run from a later one.
+SITE_VALUE_LEGACY = {"development_net_share": 1.0, "subdivision_threshold_m2": None}
+SITE_VALUE_NULLABLE = {"subdivision_threshold_m2"}
 
 
 def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
@@ -1215,12 +1219,17 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
     out["density_rule"] = rule
     for k in sorted(set(SITE_VALUE) - {"density_rule"}):
         # a key added after the run was made: the value that reproduces what
-        # that run did (development_net_share: au_net_share in PR #84, no road
-        # deduction before it)
-        v = land.get(k, land.get("au_net_share", SITE_VALUE_LEGACY.get(k))
-                     if k == "development_net_share" else SITE_VALUE_LEGACY.get(k))
+        # that run did (SITE_VALUE_LEGACY)
+        legacy = (land.get("au_net_share", SITE_VALUE_LEGACY[k])
+                  if k == "development_net_share" else SITE_VALUE_LEGACY.get(k))
+        src = k if k in land or k != "development_net_share" or "au_net_share" not in land \
+            else "au_net_share"
+        v = land.get(k, legacy)
+        if v is None and k in SITE_VALUE_NULLABLE:
+            out[k] = None
+            continue
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
-            raise ValueError(f"{path}: land_value.{k} must be a finite number, got {v!r}")
+            raise ValueError(f"{path}: land_value.{src} must be a finite number, got {v!r}")
         out[k] = float(v)
     return out
 

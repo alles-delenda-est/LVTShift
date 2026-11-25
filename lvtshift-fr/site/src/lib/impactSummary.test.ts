@@ -16,18 +16,19 @@ describe("impactSummary on the published data", () => {
   // November 2026 payloads: the land-only tax at permitted use (the reform
   // also replaces the tax on non-agricultural unbuilt land; social
   // landlords' parcels are outside the household figures; building-less
-  // urban land at site value, open space as natural land, 2026-11-24)
+  // urban land at site value, open space as natural land, 2026-11-24; large
+  // plots as subdivision sites beyond 5 000 m², PR #85)
   it("matches the central-case figures in the November 2026 payloads", () => {
     expect(s.housesPayMore).toBe(10); // all but Roubaix, Figeac and La Rochelle
     expect(s.smallBuildingsPayLess).toBe(4); // the Lyon ring's 2–4 now +2.1 %
     expect(s.blocksPayLess).toBe(13);
     expect(s.poorestAnalysable).toBe(11); // Cahors and Figeac: no quintiles
-    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +0.9 %
-    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +0.9 % vs −4.6 %
+    expect(s.poorestPayLess).toBe(10); // Villeurbanne: +0.2 %
+    expect(s.poorestBelowRichest).toBe(10); // Villeurbanne: +0.2 % vs −4.6 %
     expect(s.houseMedianMin).toBe(-23); // Roubaix
-    expect(s.houseMedianMax).toBe(116.7); // Paris
+    expect(s.houseMedianMax).toBe(117); // Paris
     expect(s.shiftMin).toBe(23.2); // Paris
-    expect(s.shiftMax).toBe(40.1); // Grenoble
+    expect(s.shiftMax).toBe(40.2); // Grenoble
   });
 
   it("matches the local-variant figures in the November 2026 payloads", () => {
@@ -37,7 +38,7 @@ describe("impactSummary on the published data", () => {
       blocksPayLess: 13,
       poorestAnalysable: 11,
       poorestPayLess: 8,
-      poorestBelowRichest: 10, // Villeurbanne: +13.7 % vs +6.5 %
+      poorestBelowRichest: 10, // Villeurbanne: +13.0 % vs +6.4 %
     });
     expect(s.poorestBelowRichestBoth).toBe(10);
   });
@@ -51,8 +52,8 @@ describe("the exception to the « sur 11 » headline", () => {
     expect(s.poorestExceptions).toEqual([
       {
         name: "Villeurbanne",
-        central: { poorest: 0.9, richest: -4.6 },
-        local: { poorest: 13.7, richest: 6.5 },
+        central: { poorest: 0.2, richest: -4.6 },
+        local: { poorest: 13, richest: 6.4 },
       },
     ]);
     expect(s.poorestAnalysable - s.poorestExceptions.length).toBe(s.poorestBelowRichestBoth);
@@ -61,8 +62,8 @@ describe("the exception to the « sur 11 » headline", () => {
   it("is written in two lines from the figures", () => {
     const nb = (t: string) => t.replace(/ /g, " ");
     expect(exceptionNote(s.poorestExceptions)!.map(nb)).toEqual([
-      nb("Exception : Villeurbanne, dans le cas central : les plus modestes +0,9 %, les plus aisés −4,6 %."),
-      nb("Dans la variante locale : les plus modestes +13,7 %, les plus aisés +6,5 %."),
+      nb("Exception : Villeurbanne, dans le cas central : les plus modestes +0,2 %, les plus aisés −4,6 %."),
+      nb("Dans la variante locale : les plus modestes +13,0 %, les plus aisés +6,4 %."),
     ]);
   });
 
@@ -95,9 +96,9 @@ describe("quintileGaps on the published data", () => {
   });
 
   it("orders the widest advantage for the poorest first", () => {
-    expect(gaps[0].commune_key).toBe("roubaix"); // −32,7 % vs +49,0 %
-    expect(gaps[0]).toMatchObject({ poorest: -32.7, richest: 49.0 });
-    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +0,9 % vs −4,6 %: the poorest fifth does worse
+    expect(gaps[0].commune_key).toBe("roubaix"); // −32,7 % vs +49,1 %
+    expect(gaps[0]).toMatchObject({ poorest: -32.7, richest: 49.1 });
+    expect(gaps.at(-1)!.commune_key).toBe("villeurbanne"); // +0,2 % vs −4,6 %: the poorest fifth does worse
     const diffs = gaps.map((g) => g.poorest - g.richest);
     expect(diffs).toEqual([...diffs].sort((a, b) => a - b));
   });
@@ -151,7 +152,7 @@ describe("bothPayLessNote", () => {
     expect(note).toContain("×5 à Grenoble");
     expect(note).toContain("×20 à La Rochelle");
     expect(note).toContain("dans la couronne lyonnaise");
-    // Commercial pays more in total in La Rochelle only (+0,6 %), though its median falls
+    // Commercial pays more in total in La Rochelle only, though its median falls
     expect(note).toContain("les commerces");
     expect(note).toContain("les bailleurs sociaux");
     expect(note).toContain("les autres bâtiments");

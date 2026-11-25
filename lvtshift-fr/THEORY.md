@@ -45,9 +45,10 @@ The pipeline is a value-decomposition chain, and the decisive discipline is that
   residual (market − building) sets each IRIS's land total only; within the
   IRIS that land is shared again by plot area × max(own, zone-typical
   floor-area ratio)^0.5, with surplus garden land in house zones at a quarter
-  and only a yard in A/N zones. Building-less urban land takes the same rate
-  as development land: no garden discount; in house zones the area beyond two
-  typical plots, and the whole of an AU site, net of a 25 % road share.
+  (beyond 5,000 m², a subdivision site: 0.75, net of roads) and only a yard
+  in A/N zones. Building-less urban land takes its IRIS's rate and the same
+  effective area as a built plot of its zone and size, so building never
+  changes a plot's land value; an AU site is valued as U land × 0.75.
   An LVT taxes land as if vacant at its permitted use; the residual follows
   the floor area standing on the plot (current use). Built parcels dominated
   by sheds, retail boxes, farm, sports or garage buildings: they

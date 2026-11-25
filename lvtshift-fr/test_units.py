@@ -1147,12 +1147,22 @@ def test_land_method_round_trips_through_the_sidecar():
         got = ew.load_land_method("zzl", str(d))
         assert got["concept"] == "site" and got["density_elasticity"] == 0.3
         assert set(got) == {"concept", *config.SITE_VALUE}
-        old_run = {k: v for k, v in site.items() if k != "development_net_share"}   # before PR #84
-        meta.write_text(json.dumps({"land_value": old_run}))
-        assert ew.load_land_method("zzl", str(d))["development_net_share"] == 1.0
+        assert got["subdivision_threshold_m2"] == config.SITE_VALUE["subdivision_threshold_m2"]
+        old_run = {k: v for k, v in site.items()
+                   if k not in ("development_net_share", "subdivision_threshold_m2")}
+        meta.write_text(json.dumps({"land_value": old_run}))                 # before PR #84
+        old = ew.load_land_method("zzl", str(d))
+        assert old["development_net_share"] == 1.0 and old["subdivision_threshold_m2"] is None
         meta.write_text(json.dumps({"land_value": {**old_run, "au_net_share": 0.75}}))   # PR #84
-        got = ew.load_land_method("zzl", str(d))
-        assert got["development_net_share"] == 0.75 and "au_net_share" not in got
+        pr84 = ew.load_land_method("zzl", str(d))
+        assert pr84["development_net_share"] == 0.75 and "au_net_share" not in pr84
+        assert pr84["subdivision_threshold_m2"] is None and pr84 != got   # told apart from PR #85
+        meta.write_text(json.dumps({"land_value": {**old_run, "au_net_share": "x"}}))
+        try:
+            ew.load_land_method("zzl", str(d))
+            raise AssertionError("bad au_net_share accepted")
+        except ValueError as e:
+            assert "au_net_share" in str(e)
         import dataclasses
         cur = rp.land_method(dataclasses.replace(config.COMMUNES["zzl"], land_concept="current"))
         meta.write_text(json.dumps({"land_value": cur}))

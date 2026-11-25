@@ -56,7 +56,7 @@ describe("socialSummary", () => {
   // protections page's sentence fails here first.
   it("matches the November 2026 payloads", () => {
     const communes = loadIndex().communes.map((c) => loadCommune(c.commune_key));
-    // land-only tax, vacant land at site value: La Rochelle −32.6 %, Villeurbanne +6.2 %
-    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 6, min: -32.6, max: 6.2 });
+    // land-only tax, vacant land at site value (PR #85): La Rochelle −31.8 %, Villeurbanne +6.7 %
+    expect(socialSummary(communes)).toEqual({ published: 10, payLess: 6, min: -31.8, max: 6.7 });
   });
 });
