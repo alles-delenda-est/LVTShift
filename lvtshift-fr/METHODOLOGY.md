@@ -1641,13 +1641,19 @@ Ranked by how much they move published (category/quintile) results.
     share deducts the land roads take, not the cost of building them (VRD);
     `AU` land takes the density of its IRIS's same-use fabric and ignores the
     plan's own density target (OAP); a very large site in a dense zone (a rail
-    yard) keeps its whole area; (b) *built* shed-type business
+    yard) keeps its whole area; built plots remain capped at the commune's 99th
+    percentile (to protect copropriété parks and estates) whereas vacant plots
+    are uncapped, so above that threshold a vacant plot is valued higher than an
+    identical built plot (removing the cap in house-scale zones would be a
+    separate economic choice); (b) *built* shed-type business
     land (DRC, §3.4) remains anchored to DVF terrain-à-bâtir sales while *vacant*
     business land now uses site value × `activity_land_ratio`, opening a gap
     where DVF plot sales diverge from the residual (Villeurbanne, Grenoble).
-    Since PR #85 values sites beyond 5,000 m² as subdivision land, the latter
-    shows on large business sites in mixed IRIS: La Rochelle's 8 ha UXM site
-    takes the IRIS's housing-derived rate × 0.45.
+    Furthermore, "house-scale" is defined by reference density (< 1) rather than
+    permitted use, so low-density business zones receive house-scale plot rules;
+    since PR #85 values sites beyond 5,000 m² as subdivision land, this shows on
+    large business sites in mixed IRIS: La Rochelle's 8 ha UXM site takes the
+    IRIS's housing-derived rate × 0.45.
     `audit_land.py <commune>` quantifies the levy this land carries per zoning
     label.
 11. **Exemptions are only partly modelled.** Obviously exempt public property is

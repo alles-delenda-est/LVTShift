@@ -1153,6 +1153,13 @@ def test_land_method_round_trips_through_the_sidecar():
         meta.write_text(json.dumps({"land_value": old_run}))                 # before PR #84
         old = ew.load_land_method("zzl", str(d))
         assert old["development_net_share"] == 1.0 and old["subdivision_threshold_m2"] is None
+        pre83_run = {k: v for k, v in old_run.items() if k != "vacant_sliver_fraction"}
+        meta.write_text(json.dumps({"land_value": pre83_run}))               # before PR #83
+        pre83 = ew.load_land_method("zzl", str(d))
+        assert pre83["vacant_sliver_fraction"] == 0.0
+        assert pre83["development_net_share"] == 1.0 and pre83["subdivision_threshold_m2"] is None
+        meta.write_text(json.dumps({"land_value": {**site, "vacant_sliver_fraction": 1.5}}))
+        _assert_raises(ValueError, ew.load_land_method, "zzl", str(d))
         meta.write_text(json.dumps({"land_value": {**old_run, "au_net_share": 0.75}}))   # PR #84
         pr84 = ew.load_land_method("zzl", str(d))
         assert pr84["development_net_share"] == 0.75 and "au_net_share" not in pr84

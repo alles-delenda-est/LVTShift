@@ -1193,7 +1193,12 @@ def _revaluation(commune_key: str, out_dir: str = "output") -> dict:
 # development_net_share: au_net_share in PR #84 (AU land only); 1.0 before it
 # (no road deduction on AU land). subdivision_threshold_m2: None before PR #85
 # (garden weight throughout), which also tells a PR #84 run from a later one.
-SITE_VALUE_LEGACY = {"development_net_share": 1.0, "subdivision_threshold_m2": None}
+# Runs from before PR #83 also pre-date vacant_sliver_fraction (0.0 = no sliver discount).
+SITE_VALUE_LEGACY = {
+    "vacant_sliver_fraction": 0.0,
+    "development_net_share": 1.0,
+    "subdivision_threshold_m2": None,
+}
 SITE_VALUE_NULLABLE = {"subdivision_threshold_m2"}
 
 
@@ -1237,6 +1242,10 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
         _large_plot_params(out)
     except ValueError as e:
         raise ValueError(f"{path}: land_value: {e}") from None
+    if not 0.0 <= out["vacant_sliver_fraction"] <= 1.0:
+        raise ValueError(
+            f"{path}: land_value.vacant_sliver_fraction must be in [0, 1], "
+            f"got {out['vacant_sliver_fraction']!r}")
     return out
 
 

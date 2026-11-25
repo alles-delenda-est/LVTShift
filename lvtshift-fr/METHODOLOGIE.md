@@ -1837,13 +1837,21 @@ Classées par impact sur les résultats publiés (catégorie/quintile).
     de la voirie, pas son coût de réalisation (VRD) ; le terrain `AU` prend la
     densité du tissu de même vocation de son IRIS et ignore l'objectif de
     densité propre à la zone (OAP) ; un très grand terrain en zone dense (une
-    emprise ferroviaire) garde toute sa surface ;
+    emprise ferroviaire) garde toute sa surface ; les parcelles bâties restent
+    plafonnées au 99ᵉ centile de la commune (pour protéger les parcs de
+    copropriété et les domaines) alors que les terrains nus ne le sont pas, si
+    bien qu'au-delà de ce seuil un terrain nu ressort plus cher qu'une parcelle
+    bâtie identique (lever ce plafond en zone pavillonnaire serait un choix
+    économique distinct) ;
     (b) le foncier d'activité *bâti*
     (CRD, §3.4) reste ancré sur les ventes DVF de terrains à bâtir alors que le
     foncier d'activité *non bâti* suit désormais la valeur du site ×
     `activity_land_ratio`, créant un écart là où les ventes DVF s'éloignent du
-    résiduel (Villeurbanne, Grenoble). Depuis que la PR #85 évalue les terrains
-    de plus de 5 000 m² comme terrains à diviser, l'écart se voit sur les grands
+    résiduel (Villeurbanne, Grenoble). De plus, le caractère « à l'échelle de
+    la maison » est défini par la densité de référence (< 1) et non par la
+    vocation, de sorte que les zones d'activité peu denses reçoivent les règles
+    de parcelle pavillonnaire ; depuis que la PR #85 évalue les terrains de
+    plus de 5 000 m² comme terrains à diviser, l'écart se voit sur les grands
     terrains d'activité des IRIS mixtes : le site UXM de 8 ha de La Rochelle
     prend le prix d'habitat de l'IRIS × 0,45. `audit_land.py <commune>` chiffre, par
     libellé de zone, la part de l'impôt qu'il porte.
