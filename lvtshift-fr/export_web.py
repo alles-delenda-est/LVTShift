@@ -1222,8 +1222,9 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
         # that run did (SITE_VALUE_LEGACY)
         legacy = (land.get("au_net_share", SITE_VALUE_LEGACY[k])
                   if k == "development_net_share" else SITE_VALUE_LEGACY.get(k))
-        src = k if k in land or k != "development_net_share" or "au_net_share" not in land \
-            else "au_net_share"
+        # name the key the value came from in errors (au_net_share for PR #84)
+        from_old = k == "development_net_share" and k not in land and "au_net_share" in land
+        src = "au_net_share" if from_old else k
         v = land.get(k, legacy)
         if v is None and k in SITE_VALUE_NULLABLE:
             out[k] = None
@@ -1231,6 +1232,11 @@ def load_land_method(commune_key: str, out_dir: str = "output") -> dict:
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             raise ValueError(f"{path}: land_value.{src} must be a finite number, got {v!r}")
         out[k] = float(v)
+    from estimate import _large_plot_params          # same bounds as the model
+    try:
+        _large_plot_params(out)
+    except ValueError as e:
+        raise ValueError(f"{path}: land_value: {e}") from None
     return out
 
 

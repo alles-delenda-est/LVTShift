@@ -638,7 +638,7 @@ SITE_VALUE = {
     # Plot areas above this quantile of the commune's pooled parcels are capped
     # (parks of horizontal copropriétés, estates with farmland attached).
     "plot_cap_quantile": 0.99,
-    # Surplus land: on a *built* parcel below its zone's reference density, plot
+    # Surplus land: on a parcel (built or vacant) of a house-scale zone, plot
     # area beyond this multiple of the zone's median plot (it could be split
     # into that many typical plots) counts at surplus_plot_weight. Vacant plot
     # prices rise far less than in proportion to size (EPTB: elasticity 0.11
@@ -659,13 +659,11 @@ SITE_VALUE = {
     # carry a building on its own: it counts at surplus_plot_weight, as garden
     # ground does.
     "vacant_sliver_fraction": 0.25,
-    # A large building-less site is development land, not a garden: when it is
-    # developed, part of it goes to roads, public space and facilities. Share
-    # of the gross area that stays building land, applied to the whole of a
-    # site in a to-be-urbanised (AU) zone (greenfield, no frontage) and, in
-    # house-scale U zones (reference density below surplus_max_ref_far), to the
-    # area beyond surplus_plot_multiple × the zone's median built plot (the
-    # first plots front an existing street; the rest needs new access roads).
+    # A large site is development land: when it is developed, part of it goes
+    # to roads, public space and facilities. Share of the gross area that stays
+    # building land, applied to house-scale land (built or vacant) beyond
+    # subdivision_threshold_m2 and to the whole of a building-less site in a
+    # to-be-urbanised (AU) zone (greenfield, no frontage; roads deducted once).
     # In denser U zones a large plot carries one large building and keeps its
     # full area. In
     # collective-housing blocks roads alone take 7–29 % (Institut Paris Région,
@@ -682,6 +680,9 @@ SITE_VALUE = {
     # gardens 0.14–0.27); beyond it at development_net_share (a developer's
     # lotissement of several plots with its own access road). 5 000 m² is about
     # 6–10 typical house plots: a labelled assumption, not a sourced figure.
+    # Where surplus_plot_multiple × the zone's median plot exceeds it, there is
+    # no garden band. Built plots are capped at plot_cap_quantile first, so
+    # above the commune's 99th-percentile plot built and vacant land part.
     # None: no threshold, the garden weight throughout (runs before PR #85).
     "subdivision_threshold_m2": 5000.0,
 }

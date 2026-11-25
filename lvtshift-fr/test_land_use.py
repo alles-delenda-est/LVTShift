@@ -355,6 +355,17 @@ def test_building_on_a_plot_never_changes_its_land_value():
         assert abs(out.loc["V", "land_value"] / out.loc["BIG0", "land_value"] - 1.0) < 1e-9, size
 
 
+def test_above_the_built_plot_cap_vacant_land_keeps_gaining():
+    """Documented exception (review of PR #85): built plots are capped at the
+    commune's plot_cap_quantile plot, vacant ones are not."""
+    rows = _fabric("H", "I1", "UC", HAB, [0.5] * 60)
+    rows += _fabric("BIG", "I1", "UC", HAB, [0.0001], area=20_000.0)
+    rows += [_vacant("V", "I1", "U", "UC", HAB, 20_000.0)]
+    prm = {"min_zone_parcels": 3, "plot_cap_quantile": 0.99}
+    out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
+    assert out.loc["V", "land_value"] > 2 * out.loc["BIG0", "land_value"]
+
+
 def test_house_scale_area_is_continuous_and_legacy_rule_is_the_garden_weight():
     plot = pd.Series([999.0, 1000.0, 1001.0, 4999.0, 5000.0, 5001.0, 50_000.0])
     typ = pd.Series(500.0, index=plot.index)
@@ -535,7 +546,7 @@ def test_au_density_steps_use_reference_densities_on_one_scale():
 
 
 def test_au_land_is_valued_as_u_land_of_the_same_density_net_of_roads():
-    """Same IRIS, use, density and size: AU = U × development_net_share, garden and strip rules
+    """Same IRIS, use, density and size: AU = U × development_net_share (roads once), garden and strip rules
     included (fresh-context review of PR #84: a 2 ha AU site must not come out
     dearer than a 2 ha U site)."""
     rows = _fabric("H", "I1", "UC", HAB, [0.5] * 4)
@@ -544,8 +555,11 @@ def test_au_land_is_valued_as_u_land_of_the_same_density_net_of_roads():
     prm = {"min_zone_parcels": 3, "plot_cap_quantile": 1.0, "development_net_share": 0.75}
     out = estimate.vacant_site_value(estimate.site_value_land(_finish(rows), prm), prm).set_index("idpar")
     assert out.loc["AU2ha", "site_density"] == out.loc["U2ha", "site_density"] == 0.5
-    # AU = 0.75 × the U value of the same density and size
-    assert abs(out.loc["AU2ha", "land_value"] - 0.75 * out.loc["U2ha", "land_value"]) < 1e-6
+    # AU = U × 0.75, roads deducted once: the U subdivision band beyond
+    # 5 000 m² is already net of them. U: 1000 + 0.25 × 4000 + 0.75 × 15 000;
+    # AU: 0.75 × (1000 + 0.25 × 4000) + 0.75 × 15 000 (review of PR #85)
+    ratio = out.loc["AU2ha", "land_value"] / out.loc["U2ha", "land_value"]
+    assert abs(ratio - 12_750 / 13_250) < 1e-9
     # an AU strip is a strip: same sliver rule as in U
     rows += [_vacant("AUstrip", "I1", "AUc", "1AU", "Zone à urbaniser à vocation d'habitat", 50.0),
              _vacant("Ustrip", "I1", "U", "UC", HAB, 50.0)]
