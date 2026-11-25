@@ -113,8 +113,8 @@ export default function VariantTerm({
         id={id}
         role="tooltip"
         ref={boxRef}
-        style={shift ? { transform: `translateX(-${shift}px)` } : undefined}
-        className={`${open ? "visible" : "invisible"} absolute left-0 top-full z-30 block w-80 max-w-[85vw] pt-2`}
+        style={shift ? { left: -shift } : undefined}
+        className={`${open ? "block" : "hidden"} absolute left-0 top-full z-30 w-80 max-w-[85vw] pt-2`}
       >
         <span className="block space-y-1.5 border border-lisere bg-white p-3 text-left text-xs font-normal normal-case tracking-normal leading-snug text-encre shadow-lg">
           <strong className="block font-semibold text-marine">{note.title}</strong>

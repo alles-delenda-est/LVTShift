@@ -12,6 +12,7 @@
  * under the chart, each building category also gets its figures per dwelling.
  */
 
+import type { ReactElement } from "react";
 import {
   BarChart,
   Bar,
@@ -24,6 +25,7 @@ import {
 import type { TooltipProps } from "recharts";
 import type { PublishedCategoryRow } from "@/lib/types";
 import { eurosExact, pct, signedPct } from "@/lib/format";
+import { wrapLabel } from "@/lib/labelWrap";
 import { MARINE, ROUGE, CREME, ENCRE, GRIS, LISERE, TICK } from "./theme";
 import { useNarrow } from "./useNarrow";
 
@@ -142,8 +144,50 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
     (r) => BUILDINGS.includes(r.category) && r.share_dwellings_paying_more_pct != null,
   );
 
-  const BAR_HEIGHT = 34;
+  const BAR_HEIGHT = narrow ? 44 : 34;
   const chartHeight = data.length * BAR_HEIGHT + 64;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoryTick = (props: any): ReactElement<SVGElement> => {
+    const label: string = props.payload?.value ?? "";
+    const x: number = props.x ?? 0;
+    const y: number = props.y ?? 0;
+    if (!narrow) {
+      return (
+        <text
+          x={x}
+          y={y}
+          textAnchor="end"
+          dominantBaseline="central"
+          fontSize={11}
+          fill={ENCRE}
+          fontFamily="var(--font-body)"
+        >
+          {label}
+        </text>
+      );
+    }
+    const lines = wrapLabel(label, 18);
+    const lineHeight = 12;
+    const startY = y - ((lines.length - 1) * lineHeight) / 2;
+    return (
+      <text
+        x={x}
+        y={startY}
+        textAnchor="end"
+        dominantBaseline="central"
+        fontSize={10}
+        fill={ENCRE}
+        fontFamily="var(--font-body)"
+      >
+        {lines.map((line, i) => (
+          <tspan key={i} x={x} dy={i === 0 ? 0 : lineHeight}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    );
+  };
 
   return (
     <figure aria-label="Part des parcelles qui paient davantage, par catégorie de bien">
@@ -159,7 +203,7 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
           <XAxis
             type="number"
             domain={[0, 100]}
-            tickFormatter={(v: number) => `${v} %`}
+            tickFormatter={(v: number) => `${v}\u00a0%`}
             tick={TICK}
             axisLine={{ stroke: LISERE }}
             tickLine={{ stroke: LISERE }}
@@ -167,8 +211,8 @@ export default function WinLoseSplit({ byCategory }: WinLoseSplitProps) {
           <YAxis
             type="category"
             dataKey="label_fr"
-            width={narrow ? 112 : 200}
-            tick={TICK}
+            width={narrow ? 120 : 200}
+            tick={categoryTick}
             axisLine={false}
             tickLine={false}
           />

@@ -56,6 +56,7 @@ import {
 import { bandSpan, byKey, categoryBandValue } from "@/lib/band";
 import { categoryAmount, BASIS_LABEL } from "@/lib/categoryAmount";
 import { symmetricAxis } from "@/lib/axis";
+import { wrapLabel } from "@/lib/labelWrap";
 import { ROUGE, GREEN, CREME, ENCRE, GRIS, GRIS_PALE, LISERE, TICK } from "./theme";
 import { useNarrow } from "./useNarrow";
 
@@ -216,6 +217,29 @@ function makeCategoryTick(data: ProcessedRow[], mode: CategoryBarMode, narrow: b
     const showFallback = mode === "household" && row?.isParcelFallback;
     const x: number = props.x ?? 0;
     const y: number = props.y ?? 0;
+    if (narrow) {
+      const display = showFallback ? `${label}‡` : label;
+      const lines = wrapLabel(display, 18);
+      const lineHeight = 12;
+      const startY = y - ((lines.length - 1) * lineHeight) / 2;
+      return (
+        <text
+          x={x}
+          y={startY}
+          textAnchor="end"
+          dominantBaseline="central"
+          fontSize={10}
+          fill={ENCRE}
+          fontFamily="var(--font-body)"
+        >
+          {lines.map((line, i) => (
+            <tspan key={i} x={x} dy={i === 0 ? 0 : lineHeight}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      );
+    }
     if (!showFallback) {
       return (
         <text
@@ -235,29 +259,27 @@ function makeCategoryTick(data: ProcessedRow[], mode: CategoryBarMode, narrow: b
       <g>
         <text
           x={x}
-          y={narrow ? y : y - 5}
+          y={y - 5}
           textAnchor="end"
           dominantBaseline="central"
           fontSize={11}
           fill={ENCRE}
           fontFamily="var(--font-body)"
         >
-          {narrow ? `${label}‡` : label}
+          {label}
         </text>
-        {!narrow && (
-          <text
-            x={x}
-            y={y + 8}
-            textAnchor="end"
-            dominantBaseline="central"
-            fontSize={9.5}
-            fontStyle="italic"
-            fill={GRIS}
-            fontFamily="var(--font-body)"
-          >
-            (par parcelle)
-          </text>
-        )}
+        <text
+          x={x}
+          y={y + 8}
+          textAnchor="end"
+          dominantBaseline="central"
+          fontSize={9.5}
+          fontStyle="italic"
+          fill={GRIS}
+          fontFamily="var(--font-body)"
+        >
+          (par parcelle)
+        </text>
       </g>
     );
   };
@@ -420,7 +442,7 @@ export default function CategoryImpactBars({
     return entry.barValue >= 0 ? ROUGE : GREEN;
   };
 
-  const BAR_HEIGHT = mode === "household" && !narrow ? 42 : 38;
+  const BAR_HEIGHT = narrow ? 46 : mode === "household" ? 42 : 38;
   const chartHeight = sortedData.length * BAR_HEIGHT + 64;
 
   const catTick = makeCategoryTick(sortedData, mode, narrow);
