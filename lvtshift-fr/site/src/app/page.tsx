@@ -158,7 +158,7 @@ export default function Home() {
                         type="button"
                         aria-label={`${value} ${label}`}
                         aria-describedby={`exception-note-${i}`}
-                        className="cursor-help text-left font-display text-3xl md:text-4xl font-medium leading-none text-creme underline decoration-dotted decoration-creme/60 underline-offset-[6px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-creme"
+                        className="cursor-help text-left font-display text-3xl md:text-4xl font-medium leading-tight text-creme underline decoration-dotted decoration-creme/60 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-creme"
                       >
                         {value}
                         <span aria-hidden="true" className="ml-1.5 align-top text-sm text-creme/70">ⓘ</span>
@@ -166,7 +166,7 @@ export default function Home() {
                       <div
                         id={`exception-note-${i}`}
                         role="tooltip"
-                        className="invisible group-hover:visible group-focus-within:visible absolute left-0 top-full z-20 w-80 max-w-[80vw] pt-3"
+                        className="hidden group-hover:block group-focus-within:block absolute left-0 top-full z-20 w-80 max-w-[80vw] pt-3"
                       >
                         <div className="space-y-1 border border-lisere bg-white p-3 text-xs leading-snug text-encre shadow-lg">
                           {note.map((line, j) => (

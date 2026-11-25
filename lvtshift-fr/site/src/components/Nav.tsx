@@ -28,11 +28,12 @@ export default function Nav() {
 
   return (
     <nav aria-label="Navigation principale" className="bg-marine">
-      <div className="max-w-6xl mx-auto px-3 md:px-6">
+      <div className="relative max-w-6xl mx-auto px-3 md:px-6">
         {/* Phones: one horizontally scrollable row (the wrapped menu took four
-            rows, a third of the first screen). From md up: wrap as before. */}
+            rows, a third of the first screen). From md up: wrap on tablets,
+            and fit all 11 links on a single line at lg+. */}
         <ul
-          className="flex overflow-x-auto md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto pr-8 md:pr-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
           {NAV_LINKS.map(({ label, href }) => {
@@ -42,7 +43,7 @@ export default function Nav() {
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`block px-3 py-2.5 text-xs whitespace-nowrap tracking-wide transition-colors duration-150 border-b-2 ${
+                  className={`block px-3 lg:px-2.5 py-2.5 text-xs whitespace-nowrap tracking-wide lg:tracking-normal transition-colors duration-150 border-b-2 ${
                     active
                       ? "text-white border-rouge"
                       : "text-white/75 border-transparent hover:text-white hover:bg-white/10"
@@ -54,6 +55,10 @@ export default function Nav() {
             );
           })}
         </ul>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-marine to-transparent md:hidden"
+        />
       </div>
     </nav>
   );
